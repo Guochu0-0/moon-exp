@@ -76,7 +76,16 @@
   .B input[type=text] { border:1px solid var(--line); border-radius:6px; padding:4px 8px; font:inherit; width:220px; }
 
   /* ---------- C 思路树 ---------- */
-  .C { display:grid; grid-template-columns:1fr 460px; height:100vh; }
+  .C { display:grid; grid-template-columns:1fr 660px; height:calc(100vh - 26px); }
+  .C .chips { display:flex; gap:6px; margin:6px 0 10px; flex-wrap:wrap; }
+  .C .chip { border:1px solid var(--line); border-radius:14px; padding:2px 10px; font-size:12px; cursor:pointer; background:#fff; }
+  .C .chip.on { color:#fff; }
+  .C .vcard { border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:10px; }
+  .C .vcard.hl { border-color:#0969da; box-shadow:0 0 0 2px #cfe3ff; }
+  .C .vcard .imgs { display:flex; gap:6px; }
+  .C .vcard figure { margin:0; font-size:11px; color:var(--mute); text-align:center; }
+  .C .vcard canvas { display:block; border-radius:4px; background:#222; }
+  .C .scat circle { cursor:pointer; }
   .C .canvas { position:relative; overflow:auto; background:
       radial-gradient(circle, #d8dee4 1px, transparent 1px) 0 0/18px 18px; }
   .C .canvas .title { position:absolute; left:18px; top:12px; }
@@ -139,7 +148,7 @@ const EXPS = [
     val:{s:.22,m:5.5}, test:{s:.20,m:5.8}, fm:[.81,.12,.07], steps:8000, curve:'collapse',
     verdict:'policy 熵在 2k step 内塌缩，出现 reward hacking：匹配全挤到边缘高亮区域，内点数反而升高。',
     next:'放弃。记下来：reward 只看内点数会被钻空子，需要约束。' },
-  { id:'E4', title:'reward 加入正反向一致性', parent:'E2', init:'eloftr', date:'2026-09-20', commit:'e19f4a8', status:'kept',
+  { id:'E4', title:'reward 加入正反向一致性', parent:'E2', init:'eloftr', date:'2026-09-20', commit:'e19f4a8', status:'kept', milestone:true,
     hyp:'光→SAR 和 SAR→光各估一次仿射，要求两者互逆，能惩罚「内点多但几何错」。',
     change:'reward = 内点数 × exp(−‖A·A′ − I‖)；同时防 E3 那种 hacking。',
     diff:['rl/reward.py              +46 −8','rl/policy_semidense.py    +14 −2','configs/e4_cycle.yaml     +6'],
@@ -238,7 +247,7 @@ function diffBlock(lines){ return `<div class="diff">${lines.map(l=>{ const m=l.
 function pill(st){ const t={kept:'保留',dead:'放弃',running:'运行中',baseline:'baseline'}[st]; return `<span class="pill ${st}">${t}</span>`; }
 
 let SPLIT='val';
-function splitToggle(){ return `<span class="seg"><button class="${SPLIT==='val'?'on':''}" onclick="SPLIT='val';render()">Val</button><button class="${SPLIT==='test'?'on':''}" onclick="SPLIT='test';render()">Test</button></span>`; }
+function splitToggle(){ if(VARIANTS[cur()][0]==='C'){ SPLIT='val'; return '<span class="pill">Val</span>'; } return `<span class="seg"><button class="${SPLIT==='val'?'on':''}" onclick="SPLIT='val';render()">Val</button><button class="${SPLIT==='test'?'on':''}" onclick="SPLIT='test';render()">Test</button></span>`; }
 function baselineTable(clickable){
   const rows = METHODS.map(m=>({m, k:metrics(m[SPLIT])})).sort((a,b)=>b.k.sr5-a.k.sr5);
   const best = Math.max(...rows.map(r=>r.k.sr5));
@@ -378,7 +387,7 @@ let C_sel='E4';
 function VariantC(){
   // 手工布局：列 = 代际，行 = 分支
   const pos={B0:[0,1.5],E1:[1,1.5],E2:[2,1.5],E3:[3,0],E4:[3,1.5],E5:[3,3],E6:[4,1.5]};
-  const bw=210,bh=78,gx=250,gy=110,ox=30,oy=70;
+  const bw=180,bh=78,gx=228,gy=110,ox=20,oy=80;
   const xy=id=>[ox+pos[id][0]*gx, oy+pos[id][1]*gy];
   const sr=e=>metrics(e[SPLIT]).sr5;
   const heat=v=>`hsl(${Math.round(v*140)},65%,${92-v*25}%)`;
@@ -389,12 +398,12 @@ function VariantC(){
       <text x="${(x1+bw+x2)/2}" y="${(y1+y2)/2+bh/2-6}" font-size="11" text-anchor="middle" fill="${d>0?'#1a7f37':'#cf222e'}" font-weight="600">${d>0?'+':''}${(d*100).toFixed(1)}</text>`; }
   // baseline 方法挂在 B0 左侧当「起点池」
   for(const e of EXPS){ const [x,y]=xy(e.id), dead=e.status==='dead';
-    g+=`<g class="node ${C_sel===e.id?'sel':''}" onclick="C_sel='${e.id}';render()" opacity="${dead?.55:1}">
+    g+=`<g class="node ${C_sel===e.id?'sel':''}" onclick="C_sel='${e.id}';C_cat=null;C_pair=null;render()" opacity="${dead?.55:1}">
       <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="8" fill="${heat(sr(e))}" stroke="${dead?'#cf222e':'#8c959f'}"/>
       <text x="${x+10}" y="${y+18}" font-size="12" font-weight="700">${e.id} <tspan font-weight="400" fill="#656d76">${e.date.slice(5)} · ${e.commit}</tspan></text>
-      <text x="${x+10}" y="${y+37}" font-size="11.5">${e.title.length>17?e.title.slice(0,17)+'…':e.title}</text>
+      <text x="${x+10}" y="${y+37}" font-size="11.5">${e.title.length>14?e.title.slice(0,14)+'…':e.title}</text>
       <text x="${x+10}" y="${y+62}" font-size="18" font-weight="700">${pct(sr(e))}%</text><text x="${x+70}" y="${y+62}" font-size="10.5" fill="#656d76">SR@5</text>
-      <text x="${x+bw-10}" y="${y+62}" font-size="11" text-anchor="end">${{kept:'✓ 保留',dead:'✗ 放弃',running:'◔ 运行中',baseline:'◆ 起点'}[e.status]}</text></g>`; }
+      ${e.milestone?`<text x="${x+bw-10}" y="${y+18}" font-size="11" text-anchor="end" fill="#bf8700">★ 里程碑</text>`:''}<text x="${x+bw-10}" y="${y+62}" font-size="11" text-anchor="end">${{kept:'✓ 保留',dead:'✗ 放弃',running:'◔ 运行中',baseline:'◆ 起点'}[e.status]}</text></g>`; }
   const W=ox+5*gx, H=oy+4*gy;
   const e=byId[C_sel];
   let panel;
@@ -403,16 +412,106 @@ function VariantC(){
     const kids=EXPS.filter(x=>x.parent===e.id);
     panel=`<div class="muted">${e.date} · commit <code>${e.commit}</code> · 父节点 <a onclick="C_sel='${p.id}';render()">${p.id}</a></div>
       <h2>${e.title} ${pill(e.status)}</h2>
-      <div class="row" style="gap:28px;margin:6px 0 10px"><div><div class="muted">SR@5 vs ${rn}</div><div class="delta">${delta(k.sr5,kp.sr5)}</div></div><div><div class="muted">误差中位数</div><div class="delta">${delta(k.med,kp.med,'px',true)}</div></div><div><div class="muted">当前</div><div class="delta">${pct(k.sr5)}%</div></div></div>
+      <div class="row" style="gap:28px;margin:6px 0 10px"><div><div class="muted">SR@5 vs ${rn}</div><div class="delta">${delta(k.sr5,kp.sr5)}</div></div><div><div class="muted">误差中位数</div><div class="delta">${delta(k.med,kp.med,'px',true)}</div></div><div><div class="muted">当前 SR@5 (Val)</div><div class="delta">${pct(k.sr5)}%</div></div>
+      <div><div class="muted">Test</div>${e.milestone?`<div class="delta">${pct(metrics(e.test).sr5)}%</div><div class="muted" style="font-size:11px">★ 里程碑，已开封</div>`:`<div class="muted" style="padding-top:6px">🔒 未开封</div>`}</div></div>
       <h4>为什么做</h4><p>${e.hyp}</p>
       <h4>相对父节点改了什么</h4><p>${e.change}</p>${diffBlock(e.diff)}
-      <h4 style="margin-top:12px">误差 CDF（本节点 vs ${rn}）</h4>${cdfChart([{name:e.id,p:e[SPLIT],color:'#0969da',width:2.4},{name:rn,p:r[SPLIT],color:'#8c959f',dash:'4 3'}],420,200)}
-      <h4>失败模式变化</h4>${fmBars([r,e].map(x=>({name:x.id||x.name,s:metrics(x[SPLIT]).sr5,fm:x.fm})),420)}
-      ${e.steps?`<h4 style="margin-top:12px">训练曲线</h4>${trainChart(e,420,170)}`:''}
+      <h4 style="margin-top:12px">误差 CDF（本节点 vs ${rn}）</h4>${cdfChart([{name:e.id,p:e[SPLIT],color:'#0969da',width:2.4},{name:rn,p:r[SPLIT],color:'#8c959f',dash:'4 3'}],600,200)}
+      <h4>失败模式变化</h4>${fmBars([r,e].map(x=>({name:x.id||x.name,s:metrics(x[SPLIT]).sr5,fm:x.fm})),600)}
+      ${visualSection(e, rn)}
+      ${e.steps?`<h4 style="margin-top:12px">训练曲线</h4>${trainChart(e,600,170)}`:''}
       <h4>结论</h4><p>${e.verdict}</p>
       <h4>由此派生</h4><p>${kids.length?kids.map(c=>`<a onclick="C_sel='${c.id}';render()">${c.id} ${c.title}</a>`).join('<br>'):`<span class="muted">（暂无）</span> 计划：${e.next}`}</p>`; }
-  return `<div class="C"><div class="canvas"><div class="title"><h2 style="margin:0">实验谱系</h2><span class="muted">节点 = 实验（颜色 = SR@5）；边上数字 = SR@5 变化（相对父节点；从 B0 派生的相对其 zero-shot 起点）；虚线/淡色 = 放弃的分支。点节点看详情，点 B0 看 Baseline 页。</span> ${splitToggle()}</div>
+  return `<div class="C"><div class="canvas"><div class="title"><h2 style="margin:0">实验谱系</h2><span class="muted">节点 = 实验（颜色 = SR@5）；边上数字 = SR@5 变化（相对父节点；从 B0 派生的相对其 zero-shot 起点）；虚线/淡色 = 放弃的分支。点节点看详情，点 B0 看 Baseline 页。<br>所有数字均为 <b>Val</b>（用于挑实验、选模）；Test 只在 ★ 里程碑节点开封。</span></div>
     <svg width="${W}" height="${H}" style="margin-top:20px">${g}</svg></div><div class="panel">${panel}</div></div>`;
+}
+
+
+/* ---------- C：可视化分析（假影像，程序生成的环形山地形） ---------- */
+let C_cat=null, C_pair=null;
+const CAT={fixed:['修好了','#1a7f37'],broke:['变坏了','#cf222e'],still:['仍失败','#bf8700'],ok:['一直成功','#8c959f']};
+function hashStr(t){ let h=7; for(const c of t) h=(h*31+c.charCodeAt(0))%2147483647; return h||1; }
+function invCdf(p,u){ if(cdf(p,150)<u) return 150; let lo=.05,hi=150; for(let i=0;i<40;i++){ const m=(lo+hi)/2; if(cdf(p,m)<u) lo=m; else hi=m; } return (lo+hi)/2; }
+function pairsFor(e){ // 同一 index = 同一对影像（跨实验一致）；两边误差按各自的误差模型抽样，强相关
+  if(e._pairs) return e._pairs;
+  const r=refOf(e), Rn=rng(hashStr(e.id)), out=[];
+  for(let i=0;i<160;i++){
+    const u=Rn(), u2=Math.min(.999,Math.max(.001,u+(Rn()-.5)*.35));
+    const er=invCdf(r.val,u), ee=invCdf(e.val,u2);
+    const cat= er>5&&ee<=5?'fixed': er<=5&&ee>5?'broke': er>5?'still':'ok';
+    out.push({i, id:'Val-'+String(3+(i*37)%997).padStart(3,'0'), roi:'ROI-'+String(1+(i*13)%62).padStart(2,'0'), er, ee, cat, thR:Rn()*6.283, thE:Rn()*6.283});
+  }
+  return e._pairs=out;
+}
+const SCENES={}, D0=-60, DN=300;
+function scene(seed){
+  if(SCENES[seed]) return SCENES[seed];
+  const Rn=rng(seed*9973+1), cr=[];
+  for(let k=0;k<26;k++) cr.push({x:D0+Rn()*DN, y:D0+Rn()*DN, r:5+Math.pow(Rn(),2)*45});
+  const a1=.02+Rn()*.03,a2=.02+Rn()*.03,p1=Rn()*6,p2=Rn()*6, sun=Rn()*6.283;
+  const h=new Float32Array(DN*DN);
+  for(let y=0;y<DN;y++) for(let x=0;x<DN;x++){ const X=x+D0,Y=y+D0; let v=3*(Math.sin(X*a1+p1)+Math.sin(Y*a2+p2));
+    for(const c of cr){ const d=Math.hypot(X-c.x,Y-c.y)/c.r; if(d<1.6) v+= c.r*(d<1? -.35*(1-d*d) : 0) + c.r*.12*Math.exp(-(((d-1)/.18)**2)); }
+    h[y*DN+x]=v; }
+  const opt=new Float32Array(DN*DN), sar=new Float32Array(DN*DN), sx=Math.cos(sun), sy=Math.sin(sun);
+  for(let y=1;y<DN-1;y++) for(let x=1;x<DN-1;x++){ const gx=(h[y*DN+x+1]-h[y*DN+x-1])/2, gy=(h[(y+1)*DN+x]-h[(y-1)*DN+x])/2, n=Math.sqrt(1+gx*gx+gy*gy);
+    opt[y*DN+x]=Math.max(0,Math.min(1,.55+.9*(gx*sx+gy*sy)/n+(Rn()-.5)*.06));
+    const b=Math.max(0,.3-1.1*gx/n); sar[y*DN+x]=Math.min(1,b*(-Math.log(Rn()+1e-6))*.9); }
+  return SCENES[seed]={opt,sar};
+}
+function smp(a,x,y){ x=Math.round(x-D0); y=Math.round(y-D0); return (x<0||y<0||x>=DN||y>=DN)?.12:a[y*DN+x]; }
+const S=140, OFF=40; // 显示窗口：世界坐标 [40,180)
+function resid(err,th){ const t=[err*Math.cos(th),err*Math.sin(th)], phi=(err>20?1:.3)*err/600, c=OFF+S/2;
+  return (x,y)=>{ const dx=x-c,dy=y-c; return [c+dx*Math.cos(phi)-dy*Math.sin(phi)+t[0], c+dx*Math.sin(phi)+dy*Math.cos(phi)+t[1]]; }; }
+function drawVis(){
+  document.querySelectorAll('canvas[data-k]').forEach(cv=>{
+    const {k,seed,err,th}=JSON.parse(cv.dataset.k), sc=scene(seed), ctx=cv.getContext('2d'), im=ctx.createImageData(S,S);
+    const Rf=err!=null?resid(err,th):null, g=.14, cs=Math.cos(g), sn=Math.sin(g);
+    for(let v=0;v<S;v++) for(let u=0;u<S;u++){ const X=u+OFF,Y=v+OFF; let val, sarBlk=false;
+      if(k==='opt') val=smp(sc.opt,X,Y);
+      else if(k==='sar'){ const dx=X-110,dy=Y-110; val=smp(sc.sar,110+(dx*cs-dy*sn)*1.08+9,110+(dx*sn+dy*cs)*1.08-6); }
+      else { if(((u/28|0)+(v/28|0))%2) val=smp(sc.opt,X,Y); else { const q=Rf(X,Y); val=smp(sc.sar,q[0],q[1]); sarBlk=true; } }
+      const o=(v*S+u)*4, c=val*255; im.data[o]=c; im.data[o+1]=c; im.data[o+2]=sarBlk?Math.min(255,c*1.3+12):c; im.data[o+3]=255; }
+    ctx.putImageData(im,0,0);
+    if(k==='ov'){ ctx.strokeStyle='#ffd33d'; ctx.fillStyle='#ffd33d'; ctx.lineWidth=1.6;
+      for(const [gx,gy] of [[.2,.2],[.8,.25],[.5,.5],[.25,.8],[.75,.78],[.5,.15]]){ const X=OFF+gx*S,Y=OFF+gy*S, q=Rf(X,Y);
+        const ex=(q[0]-X)*3, ey=(q[1]-Y)*3, x0=gx*S, y0=gy*S; ctx.beginPath(); ctx.arc(x0,y0,2.2,0,7); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x0+ex,y0+ey); ctx.stroke(); } }
+  });
+}
+function scatter(e, pairs, rn){
+  const w=600,h=270,L=46,B=34,T=8,Rr=12, W=w-L-Rr, H=h-T-B, lg=v=>Math.log10(Math.max(.5,Math.min(150,v))), lo=lg(.5), hi=lg(150);
+  const X=v=>L+(lg(v)-lo)/(hi-lo)*W, Y=v=>T+H-(lg(v)-lo)/(hi-lo)*H;
+  let g=`<rect x="${X(5)}" y="${Y(5)}" width="${L+W-X(5)}" height="${T+H-Y(5)}" fill="#e6f6ea"/>
+    <rect x="${L}" y="${T}" width="${X(5)-L}" height="${Y(5)-T}" fill="#fff0f0"/>
+    <line x1="${X(.5)}" y1="${Y(.5)}" x2="${X(150)}" y2="${Y(150)}" stroke="#afb8c1" stroke-dasharray="3 3"/>
+    <line x1="${X(5)}" x2="${X(5)}" y1="${T}" y2="${T+H}" stroke="#bf8700" stroke-dasharray="4 3"/><line x1="${L}" x2="${L+W}" y1="${Y(5)}" y2="${Y(5)}" stroke="#bf8700" stroke-dasharray="4 3"/>`;
+  for(const v of [.5,1,2,5,10,20,50,150]) g+=`<text x="${X(v)}" y="${T+H+13}" font-size="10" fill="#656d76" text-anchor="middle">${v}</text><text x="${L-5}" y="${Y(v)+3}" font-size="10" fill="#656d76" text-anchor="end">${v}</text>`;
+  g+=`<text x="${L+W/2}" y="${h-3}" font-size="10.5" fill="#656d76" text-anchor="middle">${rn} 误差 (px, log)</text><text x="11" y="${T+H/2}" font-size="10.5" fill="#656d76" text-anchor="middle" transform="rotate(-90 11 ${T+H/2})">${e.id} 误差 (px)</text>
+    <text x="${L+W-4}" y="${T+H-6}" font-size="11" fill="#1a7f37" text-anchor="end">修好了 ↘</text><text x="${L+6}" y="${T+14}" font-size="11" fill="#cf222e">↖ 变坏了</text>`;
+  for(const q of pairs){ const sel=C_pair===q.id;
+    g+=`<circle cx="${X(q.er)}" cy="${Y(q.ee)}" r="${sel?6:3.4}" fill="${CAT[q.cat][1]}" fill-opacity="${sel?1:.7}" ${sel?'stroke="#0969da" stroke-width="2.5"':''} onclick="C_pair='${q.id}';C_cat='${q.cat}';render()"><title>${q.id} · ${q.roi}\n${rn} ${q.er.toFixed(1)}px → ${e.id} ${q.ee.toFixed(1)}px</title></circle>`; }
+  return `<svg class="scat" width="${w}" height="${h}">${g}</svg>`;
+}
+function visualSection(e, rn){
+  const pairs=pairsFor(e), cnt={}; for(const k in CAT) cnt[k]=pairs.filter(q=>q.cat===k).length;
+  const cat=C_cat||(cnt.fixed?'fixed':'still');
+  let list=pairs.filter(q=>q.cat===cat); const sel=list.find(q=>q.id===C_pair); if(sel) list=[sel,...list.filter(q=>q!==sel)];
+  const fmt=v=>`${v>=150?'>150':v.toFixed(1)} px ${v<=5?'<span class="up">✓</span>':'<span class="down">✗</span>'}`;
+  const cards=list.slice(0,3).map(q=>{ const seed=q.i+1;
+    return `<div class="vcard ${q===sel?'hl':''}"><div style="font-size:12px;margin-bottom:5px"><b>${q.id}</b> <span class="muted">· ${q.roi}</span> <span class="pill" style="color:${CAT[q.cat][1]}">${CAT[q.cat][0]}</span></div>
+      <div class="imgs">
+        <figure><canvas width="${S}" height="${S}" data-k='${JSON.stringify({k:'opt',seed})}'></canvas>光学</figure>
+        <figure><canvas width="${S}" height="${S}" data-k='${JSON.stringify({k:'sar',seed})}'></canvas>SAR（原始）</figure>
+        <figure><canvas width="${S}" height="${S}" data-k='${JSON.stringify({k:'ov',seed,err:q.er,th:q.thR})}'></canvas>${rn}：${fmt(q.er)}</figure>
+        <figure><canvas width="${S}" height="${S}" data-k='${JSON.stringify({k:'ov',seed,err:q.ee,th:q.thE})}'></canvas>${e.id}：${fmt(q.ee)}</figure>
+      </div></div>`; }).join('');
+  return `<h4 style="margin-top:14px">可视化分析</h4>
+    <div class="muted" style="font-size:12px">每个点是一对 Val patch：横轴 = ${rn} 的误差，纵轴 = 本节点的误差。点一个点看这对影像。</div>
+    ${scatter(e,pairs,rn)}
+    <div class="chips">${Object.entries(CAT).map(([k,[t,c]])=>`<span class="chip ${k===cat?'on':''}" style="${k===cat?`background:${c};border-color:${c}`:`color:${c}`}" onclick="C_cat='${k}';C_pair=null;render()">${t} ${cnt[k]}</span>`).join('')}</div>
+    ${cards||'<p class="muted">（这一类没有样本）</p>'}
+    <div class="muted" style="font-size:11.5px">叠加图 = 棋盘格：光学块与经估计仿射变换后的 SAR 块（偏蓝）交替，看环形山边缘在格子交界处是否连续。黄色箭头 = GT 点残差（×3 放大）。</div>`;
 }
 
 /* ======================= 切换器 ======================= */
@@ -421,7 +520,7 @@ function cur(){ const v=new URLSearchParams(location.search).get('variant'); ret
 function go(d){ const i=(cur()+d+VARIANTS.length)%VARIANTS.length; const u=new URL(location); u.searchParams.set('variant',VARIANTS[i][0]); history.replaceState(null,'',u); render(); window.scrollTo(0,0); }
 function render(){ const [k,name,fn]=VARIANTS[cur()];
   document.getElementById('app').innerHTML=`<div class="banner">原型 · 全部为假数据 · 评价口径待「定义评价协议与指标」定稿 · 用 ← → 或底部浮条切换变体</div>`+fn();
-  document.getElementById('vlabel').textContent=`${k} (${name})`; }
+  document.getElementById('vlabel').textContent=`${k} (${name})`; if(k==='C') drawVis(); }
 document.getElementById('prev').onclick=()=>go(-1); document.getElementById('next').onclick=()=>go(1);
 addEventListener('keydown',ev=>{ const t=ev.target; if(t.matches&&t.matches('input,textarea,[contenteditable]')) return; if(ev.key==='ArrowLeft') go(-1); if(ev.key==='ArrowRight') go(1); });
 render();

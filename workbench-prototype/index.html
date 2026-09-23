@@ -86,6 +86,11 @@
   .C .vcard figure { margin:0; font-size:11px; color:var(--mute); text-align:center; }
   .C .vcard canvas { display:block; border-radius:4px; background:#222; }
   .C .scat circle { cursor:pointer; }
+  .C .zone { margin:20px 0 8px; padding:5px 10px; background:var(--bg); border-left:3px solid var(--ink); font-weight:600; }
+  .C .ctl { display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; margin:4px 0 6px; }
+  .C .ctl select, .C .ctl input { font:inherit; font-size:12.5px; border:1px solid var(--line); border-radius:6px; padding:2px 6px; }
+  .C .ctl input { width:110px; } .C .ctl button { font:inherit; font-size:12px; border:1px solid var(--line); background:#fff; border-radius:6px; padding:2px 10px; cursor:pointer; }
+  .C .chips { align-items:center; }
   .C .canvas { position:relative; overflow:auto; background:
       radial-gradient(circle, #d8dee4 1px, transparent 1px) 0 0/18px 18px; }
   .C .canvas .title { position:absolute; left:18px; top:12px; }
@@ -148,7 +153,7 @@ const EXPS = [
     val:{s:.22,m:5.5}, test:{s:.20,m:5.8}, fm:[.81,.12,.07], steps:8000, curve:'collapse',
     verdict:'policy 熵在 2k step 内塌缩，出现 reward hacking：匹配全挤到边缘高亮区域，内点数反而升高。',
     next:'放弃。记下来：reward 只看内点数会被钻空子，需要约束。' },
-  { id:'E4', title:'reward 加入正反向一致性', parent:'E2', init:'eloftr', date:'2026-09-20', commit:'e19f4a8', status:'kept', milestone:true,
+  { id:'E4', title:'reward 加入正反向一致性', parent:'E2', init:'eloftr', date:'2026-09-20', commit:'e19f4a8', status:'kept',
     hyp:'光→SAR 和 SAR→光各估一次仿射，要求两者互逆，能惩罚「内点多但几何错」。',
     change:'reward = 内点数 × exp(−‖A·A′ − I‖)；同时防 E3 那种 hacking。',
     diff:['rl/reward.py              +46 −8','rl/policy_semidense.py    +14 −2','configs/e4_cycle.yaml     +6'],
@@ -247,7 +252,7 @@ function diffBlock(lines){ return `<div class="diff">${lines.map(l=>{ const m=l.
 function pill(st){ const t={kept:'保留',dead:'放弃',running:'运行中',baseline:'baseline'}[st]; return `<span class="pill ${st}">${t}</span>`; }
 
 let SPLIT='val';
-function splitToggle(){ if(VARIANTS[cur()][0]==='C'){ SPLIT='val'; return '<span class="pill">Val</span>'; } return `<span class="seg"><button class="${SPLIT==='val'?'on':''}" onclick="SPLIT='val';render()">Val</button><button class="${SPLIT==='test'?'on':''}" onclick="SPLIT='test';render()">Test</button></span>`; }
+function splitToggle(){ if(VARIANTS[cur()][0]==='C'){ SPLIT='test'; return '<span class="pill">Test</span>'; } return `<span class="seg"><button class="${SPLIT==='val'?'on':''}" onclick="SPLIT='val';render()">Val</button><button class="${SPLIT==='test'?'on':''}" onclick="SPLIT='test';render()">Test</button></span>`; }
 function baselineTable(clickable){
   const rows = METHODS.map(m=>({m, k:metrics(m[SPLIT])})).sort((a,b)=>b.k.sr5-a.k.sr5);
   const best = Math.max(...rows.map(r=>r.k.sr5));
@@ -383,66 +388,115 @@ function VariantB(){
 }
 
 /* ======================= 变体 C：思路树（按实验谱系看分叉） ======================= */
-let C_sel='E4';
+// 口径（用户选定）：节点同时显示 Val 与 Test；「保留/放弃」结论只依据 Val（Val 选 epoch、选方向）。逐对分析在 Test 上。
+// 存储假设：每个实验每对只存估计仿射 2×3（+ 可选点对 N×4），误差由 GT 现算，影像从本地数据集读。
+let C_sel='E4', C_ref='parent', C_cat=null, C_pair=null, C_layer='checker', C_msg='';
+const vsr=e=>metrics(e.val).sr5, tsr=e=>metrics(e.test).sr5;
+const IDENT={id:'未配准', name:'未配准', val:{s:.03,m:6}, test:{s:.03,m:6}};
+function refModel(e){ return C_ref==='parent'? refOf(e) : C_ref==='none'? IDENT : byId[C_ref]; }
+const rname=r=>r.id||r.name;
+const NPAIR=160, pid=i=>'#'+String(i).padStart(4,'0');
+
 function VariantC(){
-  // 手工布局：列 = 代际，行 = 分支
   const pos={B0:[0,1.5],E1:[1,1.5],E2:[2,1.5],E3:[3,0],E4:[3,1.5],E5:[3,3],E6:[4,1.5]};
-  const bw=180,bh=78,gx=228,gy=110,ox=20,oy=80;
+  const bw=184,bh=84,gx=228,gy=112,ox=20,oy=84;
   const xy=id=>[ox+pos[id][0]*gx, oy+pos[id][1]*gy];
-  const sr=e=>metrics(e[SPLIT]).sr5;
   const heat=v=>`hsl(${Math.round(v*140)},65%,${92-v*25}%)`;
   let g='';
-  // 边 = 「改了什么」
-  for(const e of EXPS) if(e.parent){ const [x1,y1]=xy(e.parent),[x2,y2]=xy(e.id); const d=sr(e)-sr(refOf(e));
+  for(const e of EXPS) if(e.parent){ const [x1,y1]=xy(e.parent),[x2,y2]=xy(e.id); const d=vsr(e)-vsr(refOf(e));
     g+=`<path d="M${x1+bw} ${y1+bh/2} C${x1+bw+30} ${y1+bh/2} ${x2-30} ${y2+bh/2} ${x2} ${y2+bh/2}" fill="none" stroke="${e.status==='dead'?'#d0d7de':'#8c959f'}" stroke-width="2" ${e.status==='dead'?'stroke-dasharray="5 4"':''}/>
       <text x="${(x1+bw+x2)/2}" y="${(y1+y2)/2+bh/2-6}" font-size="11" text-anchor="middle" fill="${d>0?'#1a7f37':'#cf222e'}" font-weight="600">${d>0?'+':''}${(d*100).toFixed(1)}</text>`; }
-  // baseline 方法挂在 B0 左侧当「起点池」
   for(const e of EXPS){ const [x,y]=xy(e.id), dead=e.status==='dead';
-    g+=`<g class="node ${C_sel===e.id?'sel':''}" onclick="C_sel='${e.id}';C_cat=null;C_pair=null;render()" opacity="${dead?.55:1}">
-      <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="8" fill="${heat(sr(e))}" stroke="${dead?'#cf222e':'#8c959f'}"/>
+    g+=`<g class="node ${C_sel===e.id?'sel':''}" onclick="C_sel='${e.id}';C_cat=null;C_pair=null;C_ref='parent';C_msg='';render()" opacity="${dead?.55:1}">
+      <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="8" fill="${heat(vsr(e))}" stroke="${dead?'#cf222e':'#8c959f'}"/>
       <text x="${x+10}" y="${y+18}" font-size="12" font-weight="700">${e.id} <tspan font-weight="400" fill="#656d76">${e.date.slice(5)} · ${e.commit}</tspan></text>
+      <text x="${x+bw-8}" y="${y+18}" font-size="10.5" text-anchor="end">${{kept:'✓',dead:'✗',running:'◔',baseline:'◆'}[e.status]}</text>
       <text x="${x+10}" y="${y+37}" font-size="11.5">${e.title.length>14?e.title.slice(0,14)+'…':e.title}</text>
-      <text x="${x+10}" y="${y+62}" font-size="18" font-weight="700">${pct(sr(e))}%</text><text x="${x+70}" y="${y+62}" font-size="10.5" fill="#656d76">SR@5</text>
-      ${e.milestone?`<text x="${x+bw-10}" y="${y+18}" font-size="11" text-anchor="end" fill="#bf8700">★ 里程碑</text>`:''}<text x="${x+bw-10}" y="${y+62}" font-size="11" text-anchor="end">${{kept:'✓ 保留',dead:'✗ 放弃',running:'◔ 运行中',baseline:'◆ 起点'}[e.status]}</text></g>`; }
-  const W=ox+5*gx, H=oy+4*gy;
-  const e=byId[C_sel];
-  let panel;
-  if(e.id==='B0') panel = baselinePage();
-  else { const p=byId[e.parent], r=refOf(e), rn=r.id||r.name, k=metrics(e[SPLIT]), kp=metrics(r[SPLIT]);
-    const kids=EXPS.filter(x=>x.parent===e.id);
-    panel=`<div class="muted">${e.date} · commit <code>${e.commit}</code> · 父节点 <a onclick="C_sel='${p.id}';render()">${p.id}</a></div>
-      <h2>${e.title} ${pill(e.status)}</h2>
-      <div class="row" style="gap:28px;margin:6px 0 10px"><div><div class="muted">SR@5 vs ${rn}</div><div class="delta">${delta(k.sr5,kp.sr5)}</div></div><div><div class="muted">误差中位数</div><div class="delta">${delta(k.med,kp.med,'px',true)}</div></div><div><div class="muted">当前 SR@5 (Val)</div><div class="delta">${pct(k.sr5)}%</div></div>
-      <div><div class="muted">Test</div>${e.milestone?`<div class="delta">${pct(metrics(e.test).sr5)}%</div><div class="muted" style="font-size:11px">★ 里程碑，已开封</div>`:`<div class="muted" style="padding-top:6px">🔒 未开封</div>`}</div></div>
-      <h4>为什么做</h4><p>${e.hyp}</p>
-      <h4>相对父节点改了什么</h4><p>${e.change}</p>${diffBlock(e.diff)}
-      <h4 style="margin-top:12px">误差 CDF（本节点 vs ${rn}）</h4>${cdfChart([{name:e.id,p:e[SPLIT],color:'#0969da',width:2.4},{name:rn,p:r[SPLIT],color:'#8c959f',dash:'4 3'}],600,200)}
-      <h4>失败模式变化</h4>${fmBars([r,e].map(x=>({name:x.id||x.name,s:metrics(x[SPLIT]).sr5,fm:x.fm})),600)}
-      ${visualSection(e, rn)}
-      ${e.steps?`<h4 style="margin-top:12px">训练曲线</h4>${trainChart(e,600,170)}`:''}
-      <h4>结论</h4><p>${e.verdict}</p>
-      <h4>由此派生</h4><p>${kids.length?kids.map(c=>`<a onclick="C_sel='${c.id}';render()">${c.id} ${c.title}</a>`).join('<br>'):`<span class="muted">（暂无）</span> 计划：${e.next}`}</p>`; }
-  return `<div class="C"><div class="canvas"><div class="title"><h2 style="margin:0">实验谱系</h2><span class="muted">节点 = 实验（颜色 = SR@5）；边上数字 = SR@5 变化（相对父节点；从 B0 派生的相对其 zero-shot 起点）；虚线/淡色 = 放弃的分支。点节点看详情，点 B0 看 Baseline 页。<br>所有数字均为 <b>Val</b>（用于挑实验、选模）；Test 只在 ★ 里程碑节点开封。</span></div>
-    <svg width="${W}" height="${H}" style="margin-top:20px">${g}</svg></div><div class="panel">${panel}</div></div>`;
+      <text x="${x+10}" y="${y+66}" font-size="18" font-weight="700">${pct(vsr(e))}</text><text x="${x+10}" y="${y+78}" font-size="9.5" fill="#656d76">Val SR@5</text>
+      <text x="${x+96}" y="${y+66}" font-size="15" fill="#1f2328">${pct(tsr(e))}</text><text x="${x+96}" y="${y+78}" font-size="9.5" fill="#656d76">Test SR@5</text></g>`; }
+  const W=ox+5*gx, H=oy+4*gy, e=byId[C_sel];
+  const panel = e.id==='B0' ? baselinePage() : nodePanel(e);
+  return `<div class="C"><div class="canvas"><div class="title"><h2 style="margin:0">实验谱系</h2><span class="muted">节点 = 实验，颜色按 Val SR@5；边上数字 = Val SR@5 变化（相对父节点；从 B0 派生的相对其 zero-shot 起点）；虚线/淡色 = 放弃的分支。<br>节点同时列出 Val 和 Test；「保留/放弃」只依据 Val。点节点看详情，点 B0 看 Baseline 页。</span></div>
+    <svg width="${W}" height="${H}" style="margin-top:24px">${g}</svg></div><div class="panel">${panel}</div></div>`;
 }
 
+function nodePanel(e){
+  const p=byId[e.parent], r=refOf(e), rn=rname(r), kids=EXPS.filter(x=>x.parent===e.id);
+  const kv=metrics(e.val), kt=metrics(e.test), rv=metrics(r.val), rt=metrics(r.test);
+  const extras=EXTRA[e.id]||[];
+  return `<div class="muted">${e.date} · commit <code>${e.commit}</code> · 父节点 <a onclick="C_sel='${p.id}';C_cat=null;C_pair=null;C_ref='parent';render()">${p.id}</a></div>
+    <h2>${e.title} ${pill(e.status)}</h2>
+    <table style="width:auto;margin:4px 0 10px"><tr><th></th><th>SR@5 Val</th><th>SR@5 Test</th><th>SR@3 Test</th><th>SR@10 Test</th><th>AUC@10 Test</th><th>中位数 Test</th></tr>
+      <tr><td>${e.id}</td><td><b>${pct(kv.sr5)}</b></td><td><b>${pct(kt.sr5)}</b></td><td>${pct(kt.sr3)}</td><td>${pct(kt.sr10)}</td><td>${pct(kt.auc10)}</td><td>${f1(kt.med)}</td></tr>
+      <tr><td class="muted">vs ${rn}</td><td>${delta(kv.sr5,rv.sr5)}</td><td>${delta(kt.sr5,rt.sr5)}</td><td>${delta(kt.sr3,rt.sr3)}</td><td>${delta(kt.sr10,rt.sr10)}</td><td>${delta(kt.auc10,rt.auc10)}</td><td>${delta(kt.med,rt.med,'px',true)}</td></tr></table>
+    <h4>为什么做</h4><p>${e.hyp}</p>
+    <h4>相对父节点改了什么</h4><p>${e.change}</p>${diffBlock(e.diff)}
 
-/* ---------- C：可视化分析（假影像，程序生成的环形山地形） ---------- */
-let C_cat=null, C_pair=null;
-const CAT={fixed:['修好了','#1a7f37'],broke:['变坏了','#cf222e'],still:['仍失败','#bf8700'],ok:['一直成功','#8c959f']};
+    <div class="zone">固定区 <span class="muted" style="font-weight:400;font-size:12px">每个实验都有，格式统一</span></div>
+    <h4>定量 · 误差 CDF（Test，本节点 vs ${rn}）</h4>${cdfChart([{name:e.id,p:e.test,color:'#0969da',width:2.4},{name:rn,p:r.test,color:'#8c959f',dash:'4 3'}],600,190)}
+    <h4>定量 · 失败模式（Test）</h4>${fmBars([r,e].map(x=>({name:rname(x),s:metrics(x.test).sr5,fm:x.fm})),600)}
+    ${pairSection(e)}
+    ${e.steps?`<h4 style="margin-top:12px">训练曲线</h4>${trainChart(e,600,160)}`:''}
+
+    <div class="zone">灵活区 <span class="muted" style="font-weight:400;font-size:12px">本实验特地想刻画的东西，由实验自己产出，工作台只负责展示</span></div>
+    ${extras.length? extras.map(x=>extraCard(e,x)).join('') : '<p class="muted">（本实验没有额外可视化）</p>'}
+
+    <h4 style="margin-top:14px">结论 <span class="muted" style="font-weight:400;text-transform:none">（依据 Val）</span></h4><p>${e.verdict}</p>
+    <h4>由此派生</h4><p>${kids.length?kids.map(c=>`<a onclick="C_sel='${c.id}';C_cat=null;C_pair=null;C_ref='parent';render()">${c.id} ${c.title}</a>`).join('<br>'):`<span class="muted">（暂无）</span> 计划：${e.next}`}</p>`;
+}
+
+/* ---------- 逐对数据（假）：同一编号 = 同一对影像，难度跨实验一致 ---------- */
 function hashStr(t){ let h=7; for(const c of t) h=(h*31+c.charCodeAt(0))%2147483647; return h||1; }
 function invCdf(p,u){ if(cdf(p,150)<u) return 150; let lo=.05,hi=150; for(let i=0;i<40;i++){ const m=(lo+hi)/2; if(cdf(p,m)<u) lo=m; else hi=m; } return (lo+hi)/2; }
-function pairsFor(e){ // 同一 index = 同一对影像（跨实验一致）；两边误差按各自的误差模型抽样，强相关
-  if(e._pairs) return e._pairs;
-  const r=refOf(e), Rn=rng(hashStr(e.id)), out=[];
-  for(let i=0;i<160;i++){
-    const u=Rn(), u2=Math.min(.999,Math.max(.001,u+(Rn()-.5)*.35));
-    const er=invCdf(r.val,u), ee=invCdf(e.val,u2);
-    const cat= er>5&&ee<=5?'fixed': er<=5&&ee>5?'broke': er>5?'still':'ok';
-    out.push({i, id:'Val-'+String(3+(i*37)%997).padStart(3,'0'), roi:'ROI-'+String(1+(i*13)%62).padStart(2,'0'), er, ee, cat, thR:Rn()*6.283, thE:Rn()*6.283});
-  }
-  return e._pairs=out;
+function h01(str){ let h=hashStr(str); h^=h>>>16; h=Math.imul(h,0x7feb352d); h^=h>>>15; h=Math.imul(h,0x846ca68b); h^=h>>>16; return (h>>>0)/4294967296; }
+function errFor(model,key,i){ const u=h01('pair#'+i), u2=Math.min(.999,Math.max(.001,u+(h01(key+'#n'+i)-.5)*.35));
+  return {err:invCdf(model.test,u2), th:h01(key+'#t'+i)*6.283}; }
+const PAIRS={};
+function pairsFor(e){ const ref=refModel(e), key=e.id+'|'+rname(ref); if(PAIRS[key]) return PAIRS[key];
+  const out=[]; for(let i=0;i<NPAIR;i++){ const a=errFor(ref,rname(ref),i), b=errFor(e.test?e:e,e.id,i);
+    const cat= a.err>5&&b.err<=5?'fixed': a.err<=5&&b.err>5?'broke': a.err>5?'still':'ok';
+    out.push({i, id:pid(i), roi:'ROI-'+String(1+(i*13)%62).padStart(2,'0'), er:a.err, thR:a.th, ee:b.err, thE:b.th, cat}); }
+  return PAIRS[key]=out; }
+const CAT={fixed:['修好了','#1a7f37'],broke:['变坏了','#cf222e'],still:['仍失败','#bf8700'],ok:['一直成功','#8c959f']};
+
+function pairSearch(v){ const i=parseInt(String(v).replace(/[^0-9]/g,''),10); const e=byId[C_sel];
+  if(isNaN(i)||i<0||i>=NPAIR){ C_msg=`没有 Test ${v}（原型里只有 #0000–#${String(NPAIR-1).padStart(4,'0')}）`; render(); return; }
+  const q=pairsFor(e)[i]; C_pair=q.id; C_cat=q.cat; C_msg=''; render(); }
+
+function pairSection(e){
+  const ref=refModel(e), rn=rname(ref), pairs=pairsFor(e), cnt={}; for(const k in CAT) cnt[k]=pairs.filter(q=>q.cat===k).length;
+  const cat=C_cat||(cnt.fixed?'fixed':'still');
+  let list=pairs.filter(q=>q.cat===cat); const sel=pairs.find(q=>q.id===C_pair); if(sel) list=[sel,...list.filter(q=>q!==sel)];
+  const opts=[['parent',`父节点 / 起点（${rname(refOf(e))}）`],['none','未配准（数据集粗对齐）'],...EXPS.filter(x=>x.id!==e.id&&x.id!=='B0').map(x=>[x.id,x.id+' '+x.title.slice(0,12)])];
+  const layers=[['checker','棋盘格'],['match','点对连线'],['feat','中间特征']];
+  return `<h4 style="margin-top:14px">逐对可视化（Test）</h4>
+    <div class="ctl">
+      <label>和谁比 <select onchange="C_ref=this.value;C_cat=null;render()">${opts.map(([k,t])=>`<option value="${k}" ${C_ref===k?'selected':''}>${t}</option>`).join('')}</select></label>
+      <label>按编号查 <input id="pq" type="text" placeholder="如 10 或 #0010" onkeydown="if(event.key==='Enter')pairSearch(this.value)"> <button onclick="pairSearch(document.getElementById('pq').value)">查</button></label>
+    </div>
+    ${C_msg?`<div class="down" style="font-size:12px">${C_msg}</div>`:''}
+    <div class="muted" style="font-size:12px">每个点是一对 Test patch：横轴 = ${rn} 的误差，纵轴 = ${e.id} 的误差。点一个点看这对影像。</div>
+    ${scatter(e,pairs,rn)}
+    <div class="chips">${Object.entries(CAT).map(([k,[t,c]])=>`<span class="chip ${k===cat&&!sel?'on':''}" style="${k===cat&&!sel?`background:${c};border-color:${c}`:`color:${c}`}" onclick="C_cat='${k}';C_pair=null;render()">${t} ${cnt[k]}</span>`).join('')}
+      <span style="margin-left:auto" class="seg">${layers.map(([k,t])=>`<button class="${C_layer===k?'on':''}" onclick="C_layer='${k}';render()">${t}</button>`).join('')}</span></div>
+    ${list.slice(0,sel?1:3).map(q=>pairCard(e,q,rn)).join('')||'<p class="muted">（这一类没有样本）</p>'}
+    <div class="muted" style="font-size:11.5px">${{checker:'棋盘格：光学块与经估计仿射变换后的 SAR 块（偏蓝）交替，看环形山边缘在格子交界处是否连续。黄色箭头 = GT 点残差（×3 放大）。',
+      match:'点对连线：左光学、右 SAR（原始）。绿 = 与 GT 相差 ≤3px 的点对，红 = 错配。稠密方法画的是采样出的点对。',
+      feat:'中间特征：粗级特征 PCA→RGB。两模态特征越像，说明网络越学到了模态无关的表示。'}[C_layer]}</div>`;
 }
+function pairCard(e,q,rn){ const seed=q.i+1, fmt=v=>`${v>=150?'>150':v.toFixed(1)} px ${v<=5?'<span class="up">✓</span>':'<span class="down">✗</span>'}`;
+  const cv=(o,w=S)=>`<canvas width="${w}" height="${S}" data-k='${JSON.stringify(Object.assign({seed},o))}'></canvas>`;
+  let body;
+  if(C_layer==='checker') body=`<figure>${cv({k:'opt'})}光学</figure><figure>${cv({k:'sar'})}SAR（原始）</figure>
+      <figure>${cv({k:'ov',err:q.er,th:q.thR})}${rn}：${fmt(q.er)}</figure><figure>${cv({k:'ov',err:q.ee,th:q.thE})}${e.id}：${fmt(q.ee)}</figure>`;
+  else if(C_layer==='match') body=`<figure>${cv({k:'mt',err:q.er,th:q.thR},290)}${rn}：${fmt(q.er)}</figure><figure>${cv({k:'mt',err:q.ee,th:q.thE},290)}${e.id}：${fmt(q.ee)}</figure>`;
+  else body=`<figure>${cv({k:'ft',m:'opt',err:q.er})}${rn} 光学特征</figure><figure>${cv({k:'ft',m:'sar',err:q.er})}${rn} SAR 特征</figure>
+      <figure>${cv({k:'ft',m:'opt',err:q.ee})}${e.id} 光学特征</figure><figure>${cv({k:'ft',m:'sar',err:q.ee})}${e.id} SAR 特征</figure>`;
+  return `<div class="vcard ${q.id===C_pair?'hl':''}"><div style="font-size:12px;margin-bottom:5px"><b>Test ${q.id}</b> <span class="muted">· ${q.roi}</span> <span class="pill" style="color:${CAT[q.cat][1]}">${CAT[q.cat][0]}</span></div>
+    <div class="imgs">${body}</div>
+    <div class="muted mono" style="font-size:10.5px;margin-top:4px">数据：runs/${e.id}/test/${q.id.slice(1)}.json {affine 2×3, matches N×4} · 影像：本地 dataset/test/${q.id.slice(1)}_{opt,sar}.png</div></div>`; }
+
+/* ---------- 假影像：程序生成的环形山地形 ---------- */
 const SCENES={}, D0=-60, DN=300;
 function scene(seed){
   if(SCENES[seed]) return SCENES[seed];
@@ -460,27 +514,43 @@ function scene(seed){
   return SCENES[seed]={opt,sar};
 }
 function smp(a,x,y){ x=Math.round(x-D0); y=Math.round(y-D0); return (x<0||y<0||x>=DN||y>=DN)?.12:a[y*DN+x]; }
-const S=140, OFF=40; // 显示窗口：世界坐标 [40,180)
+const S=140, OFF=40, SG=.14, SC=1.08, ST=[9,-6]; // 显示窗口：世界坐标 [40,180)；SAR 原始帧 = 旋转 SG、缩放 SC、平移 ST
+function sarToWorld(X,Y){ const dx=X-110,dy=Y-110; return [110+(dx*Math.cos(SG)-dy*Math.sin(SG))*SC+ST[0], 110+(dx*Math.sin(SG)+dy*Math.cos(SG))*SC+ST[1]]; }
+function worldToSar(wx,wy){ const dx=(wx-110-ST[0])/SC, dy=(wy-110-ST[1])/SC; return [110+dx*Math.cos(SG)+dy*Math.sin(SG), 110-dx*Math.sin(SG)+dy*Math.cos(SG)]; }
 function resid(err,th){ const t=[err*Math.cos(th),err*Math.sin(th)], phi=(err>20?1:.3)*err/600, c=OFF+S/2;
   return (x,y)=>{ const dx=x-c,dy=y-c; return [c+dx*Math.cos(phi)-dy*Math.sin(phi)+t[0], c+dx*Math.sin(phi)+dy*Math.cos(phi)+t[1]]; }; }
+function paint(im,W,ox,f){ for(let v=0;v<S;v++) for(let u=0;u<S;u++){ const [r,g,b]=f(u,v), o=(v*W+u+ox)*4; im.data[o]=r; im.data[o+1]=g; im.data[o+2]=b; im.data[o+3]=255; } }
+const gray=val=>[val*255,val*255,val*255];
 function drawVis(){
   document.querySelectorAll('canvas[data-k]').forEach(cv=>{
-    const {k,seed,err,th}=JSON.parse(cv.dataset.k), sc=scene(seed), ctx=cv.getContext('2d'), im=ctx.createImageData(S,S);
-    const Rf=err!=null?resid(err,th):null, g=.14, cs=Math.cos(g), sn=Math.sin(g);
-    for(let v=0;v<S;v++) for(let u=0;u<S;u++){ const X=u+OFF,Y=v+OFF; let val, sarBlk=false;
-      if(k==='opt') val=smp(sc.opt,X,Y);
-      else if(k==='sar'){ const dx=X-110,dy=Y-110; val=smp(sc.sar,110+(dx*cs-dy*sn)*1.08+9,110+(dx*sn+dy*cs)*1.08-6); }
-      else { if(((u/28|0)+(v/28|0))%2) val=smp(sc.opt,X,Y); else { const q=Rf(X,Y); val=smp(sc.sar,q[0],q[1]); sarBlk=true; } }
-      const o=(v*S+u)*4, c=val*255; im.data[o]=c; im.data[o+1]=c; im.data[o+2]=sarBlk?Math.min(255,c*1.3+12):c; im.data[o+3]=255; }
+    const o=JSON.parse(cv.dataset.k), sc=scene(o.seed), ctx=cv.getContext('2d'), W=cv.width, im=ctx.createImageData(W,S);
+    const optPx=(u,v)=>smp(sc.opt,u+OFF,v+OFF), sarPx=(u,v)=>{ const w=sarToWorld(u+OFF,v+OFF); return smp(sc.sar,w[0],w[1]); };
+    if(o.k==='opt') paint(im,W,0,(u,v)=>gray(optPx(u,v)));
+    else if(o.k==='sar') paint(im,W,0,(u,v)=>gray(sarPx(u,v)));
+    else if(o.k==='ov'){ const Rf=resid(o.err,o.th);
+      paint(im,W,0,(u,v)=>{ if(((u/28|0)+(v/28|0))%2) return gray(optPx(u,v)); const q=Rf(u+OFF,v+OFF), c=smp(sc.sar,q[0],q[1])*255; return [c,c,Math.min(255,c*1.3+12)]; }); }
+    else if(o.k==='mt'){ paint(im,W,0,(u,v)=>gray(optPx(u,v))); paint(im,W,W-S,(u,v)=>gray(sarPx(u,v))); }
+    else if(o.k==='ft'){ const a=Math.max(0,Math.min(1,1-o.err/20))*.85, B=7;
+      const f=(u,v)=>{ const bu=(u/B|0)*B, bv=(v/B|0)*B; let so=0,ss=0,vo=0; for(let j=0;j<B;j+=2) for(let i=0;i<B;i+=2){ const x=optPx(bu+i,bv+j); so+=x; vo+=x*x; ss+=sarPx(bu+i,bv+j); }
+        const n=Math.ceil(B/2)**2, mo=so/n, sd=Math.sqrt(Math.max(0,vo/n-mo*mo))*3, ms=ss/n;
+        const fo=[mo,sd,1-mo], fs=[ms,Math.min(1,ms*1.7),.5+(ms-.3)];
+        const c= o.m==='opt'? fo : fs.map((x,k)=>x*(1-a)+fo[k]*a); return c.map(x=>Math.max(0,Math.min(1,x))*255); };
+      paint(im,W,0,f); }
     ctx.putImageData(im,0,0);
-    if(k==='ov'){ ctx.strokeStyle='#ffd33d'; ctx.fillStyle='#ffd33d'; ctx.lineWidth=1.6;
+    if(o.k==='ov'){ const Rf=resid(o.err,o.th); ctx.strokeStyle='#ffd33d'; ctx.fillStyle='#ffd33d'; ctx.lineWidth=1.6;
       for(const [gx,gy] of [[.2,.2],[.8,.25],[.5,.5],[.25,.8],[.75,.78],[.5,.15]]){ const X=OFF+gx*S,Y=OFF+gy*S, q=Rf(X,Y);
-        const ex=(q[0]-X)*3, ey=(q[1]-Y)*3, x0=gx*S, y0=gy*S; ctx.beginPath(); ctx.arc(x0,y0,2.2,0,7); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x0+ex,y0+ey); ctx.stroke(); } }
+        const x0=gx*S, y0=gy*S; ctx.beginPath(); ctx.arc(x0,y0,2.2,0,7); ctx.fill(); ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x0+(q[0]-X)*3,y0+(q[1]-Y)*3); ctx.stroke(); } }
+    if(o.k==='mt'){ const r=rng(o.seed*131+Math.round(o.err*10)+3), N=28, pc=Math.max(.08,Math.min(.95,1-o.err/25)); let ok=0; ctx.lineWidth=1;
+      for(let n=0;n<N;n++){ const px=OFF+6+r()*(S-12), py=OFF+6+r()*(S-12); let wx,wy;
+        if(r()<pc){ wx=px+(r()-.5)*2.5; wy=py+(r()-.5)*2.5; } else { wx=OFF+r()*S; wy=OFF+r()*S; }
+        const good=Math.hypot(wx-px,wy-py)<=3; if(good) ok++; const q=worldToSar(wx,wy);
+        ctx.strokeStyle=good?'rgba(46,160,67,.9)':'rgba(207,34,46,.85)'; ctx.beginPath(); ctx.moveTo(px-OFF,py-OFF); ctx.lineTo(q[0]-OFF+W-S,q[1]-OFF); ctx.stroke();
+        ctx.fillStyle=ctx.strokeStyle; ctx.fillRect(px-OFF-1.5,py-OFF-1.5,3,3); ctx.fillRect(q[0]-OFF+W-S-1.5,q[1]-OFF-1.5,3,3); }
+      ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(0,0,74,16); ctx.fillStyle='#fff'; ctx.font='11px sans-serif'; ctx.fillText(`内点 ${ok}/${N}`,4,12); }
   });
 }
 function scatter(e, pairs, rn){
-  const w=600,h=270,L=46,B=34,T=8,Rr=12, W=w-L-Rr, H=h-T-B, lg=v=>Math.log10(Math.max(.5,Math.min(150,v))), lo=lg(.5), hi=lg(150);
+  const w=600,h=260,L=46,B=34,T=8,Rr=12, W=w-L-Rr, H=h-T-B, lg=v=>Math.log10(Math.max(.5,Math.min(150,v))), lo=lg(.5), hi=lg(150);
   const X=v=>L+(lg(v)-lo)/(hi-lo)*W, Y=v=>T+H-(lg(v)-lo)/(hi-lo)*H;
   let g=`<rect x="${X(5)}" y="${Y(5)}" width="${L+W-X(5)}" height="${T+H-Y(5)}" fill="#e6f6ea"/>
     <rect x="${L}" y="${T}" width="${X(5)-L}" height="${Y(5)-T}" fill="#fff0f0"/>
@@ -490,29 +560,34 @@ function scatter(e, pairs, rn){
   g+=`<text x="${L+W/2}" y="${h-3}" font-size="10.5" fill="#656d76" text-anchor="middle">${rn} 误差 (px, log)</text><text x="11" y="${T+H/2}" font-size="10.5" fill="#656d76" text-anchor="middle" transform="rotate(-90 11 ${T+H/2})">${e.id} 误差 (px)</text>
     <text x="${L+W-4}" y="${T+H-6}" font-size="11" fill="#1a7f37" text-anchor="end">修好了 ↘</text><text x="${L+6}" y="${T+14}" font-size="11" fill="#cf222e">↖ 变坏了</text>`;
   for(const q of pairs){ const sel=C_pair===q.id;
-    g+=`<circle cx="${X(q.er)}" cy="${Y(q.ee)}" r="${sel?6:3.4}" fill="${CAT[q.cat][1]}" fill-opacity="${sel?1:.7}" ${sel?'stroke="#0969da" stroke-width="2.5"':''} onclick="C_pair='${q.id}';C_cat='${q.cat}';render()"><title>${q.id} · ${q.roi}\n${rn} ${q.er.toFixed(1)}px → ${e.id} ${q.ee.toFixed(1)}px</title></circle>`; }
+    g+=`<circle cx="${X(q.er)}" cy="${Y(q.ee)}" r="${sel?6:3.4}" fill="${CAT[q.cat][1]}" fill-opacity="${sel?1:.7}" ${sel?'stroke="#0969da" stroke-width="2.5"':''} onclick="C_pair='${q.id}';C_cat='${q.cat}';C_msg='';render()"><title>Test ${q.id} · ${q.roi}\n${rn} ${q.er.toFixed(1)}px → ${e.id} ${q.ee.toFixed(1)}px</title></circle>`; }
   return `<svg class="scat" width="${w}" height="${h}">${g}</svg>`;
 }
-function visualSection(e, rn){
-  const pairs=pairsFor(e), cnt={}; for(const k in CAT) cnt[k]=pairs.filter(q=>q.cat===k).length;
-  const cat=C_cat||(cnt.fixed?'fixed':'still');
-  let list=pairs.filter(q=>q.cat===cat); const sel=list.find(q=>q.id===C_pair); if(sel) list=[sel,...list.filter(q=>q!==sel)];
-  const fmt=v=>`${v>=150?'>150':v.toFixed(1)} px ${v<=5?'<span class="up">✓</span>':'<span class="down">✗</span>'}`;
-  const cards=list.slice(0,3).map(q=>{ const seed=q.i+1;
-    return `<div class="vcard ${q===sel?'hl':''}"><div style="font-size:12px;margin-bottom:5px"><b>${q.id}</b> <span class="muted">· ${q.roi}</span> <span class="pill" style="color:${CAT[q.cat][1]}">${CAT[q.cat][0]}</span></div>
-      <div class="imgs">
-        <figure><canvas width="${S}" height="${S}" data-k='${JSON.stringify({k:'opt',seed})}'></canvas>光学</figure>
-        <figure><canvas width="${S}" height="${S}" data-k='${JSON.stringify({k:'sar',seed})}'></canvas>SAR（原始）</figure>
-        <figure><canvas width="${S}" height="${S}" data-k='${JSON.stringify({k:'ov',seed,err:q.er,th:q.thR})}'></canvas>${rn}：${fmt(q.er)}</figure>
-        <figure><canvas width="${S}" height="${S}" data-k='${JSON.stringify({k:'ov',seed,err:q.ee,th:q.thE})}'></canvas>${e.id}：${fmt(q.ee)}</figure>
-      </div></div>`; }).join('');
-  return `<h4 style="margin-top:14px">可视化分析</h4>
-    <div class="muted" style="font-size:12px">每个点是一对 Val patch：横轴 = ${rn} 的误差，纵轴 = 本节点的误差。点一个点看这对影像。</div>
-    ${scatter(e,pairs,rn)}
-    <div class="chips">${Object.entries(CAT).map(([k,[t,c]])=>`<span class="chip ${k===cat?'on':''}" style="${k===cat?`background:${c};border-color:${c}`:`color:${c}`}" onclick="C_cat='${k}';C_pair=null;render()">${t} ${cnt[k]}</span>`).join('')}</div>
-    ${cards||'<p class="muted">（这一类没有样本）</p>'}
-    <div class="muted" style="font-size:11.5px">叠加图 = 棋盘格：光学块与经估计仿射变换后的 SAR 块（偏蓝）交替，看环形山边缘在格子交界处是否连续。黄色箭头 = GT 点残差（×3 放大）。</div>`;
+
+/* ---------- 灵活区：各实验自带的额外可视化（假） ---------- */
+const EXTRA={
+  E1:[{t:'关键点密度：月海 vs 高地', type:'bars', data:[['月海',.8],['高地',3.1],['撞击坑壁',4.6]], fmt:v=>v.toFixed(1)+' 点/千像素', slug:'kp_density'}],
+  E2:[{t:'粗级 policy 熵', type:'line', gen:'decay', slug:'entropy'}],
+  E3:[{t:'policy 熵（2k step 内塌缩）', type:'line', gen:'collapse', slug:'entropy'},{t:'匹配点位置热图：挤到边缘高亮区（reward hacking）', type:'heat', slug:'match_heatmap'}],
+  E4:[{t:'正反向一致性残差 ‖A·A′−I‖ 分布（Test）', type:'bars', data:[['0–0.01',.42],['0.01–0.02',.27],['0.02–0.05',.16],['0.05–0.1',.09],['>0.1',.06]], fmt:v=>(v*100).toFixed(0)+'%', slug:'cycle_residual'}],
+  E5:[{t:'梯度方差 vs step', type:'line', gen:'var', slug:'grad_var'}],
+  E6:[{t:'按旋转角分桶的 SR@5（Test）', type:'bars', data:[['0–5°',.74],['5–10°',.70],['10–20°',.61],['>20°',.44]], fmt:v=>(v*100).toFixed(0)+'%', slug:'sr_by_rotation'}],
+};
+function extraCard(e,x){
+  let body='';
+  if(x.type==='line'){ const r=rng(x.gen.length*977+3), pts=[]; for(let i=0;i<=40;i++){ const t=i/40; let y;
+      if(x.gen==='decay') y=2.6-1.1*t+(r()-.5)*.08; else if(x.gen==='collapse') y=(t<.08?2.6:Math.max(.15,2.6-(t-.08)*10))+(r()-.5)*.05; else y=1.4+.8*Math.sin(t*9)+r()*1.4;
+      pts.push([Math.round(t*(e.steps||30000)),y]); }
+    body=lineChart({series:[{name:x.t,color:'#8250df',points:pts}],w:600,h:150,yMax:3.5,yFmt:v=>v.toFixed(1),xFmt:v=>(v/1000).toFixed(0)+'k',xLabel:'step'}); }
+  else if(x.type==='bars'){ const mx=Math.max(...x.data.map(d=>d[1])), rh=22;
+    body=`<svg width="600" height="${x.data.length*rh+6}">${x.data.map(([k,v],i)=>`<text x="100" y="${i*rh+15}" font-size="11" text-anchor="end">${k}</text><rect x="108" y="${i*rh+4}" width="${v/mx*380}" height="${rh-8}" fill="#8250df" opacity=".75"/><text x="${114+v/mx*380}" y="${i*rh+15}" font-size="10.5" fill="#656d76">${x.fmt(v)}</text>`).join('')}</svg>`; }
+  else if(x.type==='heat'){ const r=rng(17), n=14, c=18; let s='';
+    for(let j=0;j<n;j++) for(let i=0;i<n;i++){ const d=Math.max(Math.abs(i-(n-1)/2),Math.abs(j-(n-1)/2))/((n-1)/2); const v=Math.min(1,Math.pow(d,4)*.95+r()*.12);
+      s+=`<rect x="${i*c}" y="${j*c}" width="${c-1}" height="${c-1}" fill="rgba(207,34,46,${v.toFixed(2)})"/>`; }
+    body=`<svg width="${n*c}" height="${n*c}">${s}</svg>`; }
+  return `<div class="card" style="margin-bottom:10px"><h3 style="font-size:13.5px">${x.t}</h3>${body}<div class="muted mono" style="font-size:10.5px">来源：runs/${e.id}/extra/${x.slug}.json（实验自带）</div></div>`;
 }
+
 
 /* ======================= 切换器 ======================= */
 const VARIANTS=[['A','研究日志 · 按时间讲故事',VariantA],['B','仪表盘+实验表 · 按指标查数',VariantB],['C','思路树 · 按谱系看分叉',VariantC]];

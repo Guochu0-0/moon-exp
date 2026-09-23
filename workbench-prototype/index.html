@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>【原型·假数据】实验工作台</title>
+<!--
+  PROTOTYPE — 可丢弃。回答「实验工作台原型」(moon-exp#4)：实验记录与浏览界面应该长什么样？
+  三个结构完全不同的变体，用 ?variant=A|B|C 切换（底部浮条或 ← → 键）。
+  A 研究日志：按时间讲故事   B 仪表盘+实验表：按指标查数   C 思路树：按实验谱系看分叉
+  所有数字都是编的。评价口径暂定，待「定义评价协议与指标」(#2) 定稿。双击打开即可，无外部依赖。
+-->
+<style>
+  :root { --ink:#1f2328; --mute:#656d76; --line:#d0d7de; --bg:#f6f8fa; --acc:#0969da; --good:#1a7f37; --bad:#cf222e; --warn:#9a6700; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.55 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif; color:var(--ink); background:#fff; }
+  h1,h2,h3,h4 { margin:.2em 0 .5em; line-height:1.3; }
+  h1 { font-size:22px; } h2 { font-size:18px; } h3 { font-size:15px; } h4 { font-size:13px; color:var(--mute); text-transform:uppercase; letter-spacing:.04em; }
+  a { color:var(--acc); text-decoration:none; cursor:pointer; } a:hover { text-decoration:underline; }
+  code, .mono { font-family:Consolas,"SFMono-Regular",monospace; font-size:12.5px; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { padding:5px 8px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  th:first-child, td:first-child { text-align:left; }
+  th { font-weight:600; color:var(--mute); font-size:12px; background:var(--bg); position:sticky; top:0; }
+  tr.click:hover td { background:#eef4ff; cursor:pointer; }
+  .pill { display:inline-block; padding:0 7px; border-radius:10px; font-size:11.5px; border:1px solid var(--line); background:#fff; color:var(--mute); }
+  .pill.kept { color:var(--good); border-color:#9bd3a8; background:#eefbf1; }
+  .pill.dead { color:var(--bad); border-color:#f3b0b5; background:#fff1f1; }
+  .pill.running { color:var(--warn); border-color:#e6cf85; background:#fff8e1; }
+  .pill.baseline { color:#6639ba; border-color:#cdb8f5; background:#f6f1ff; }
+  .up { color:var(--good); } .down { color:var(--bad); }
+  .banner { background:#fff8c5; border-bottom:1px solid #e6d27a; padding:4px 16px; font-size:12px; color:#6b5300; }
+  .muted { color:var(--mute); }
+  .row { display:flex; gap:16px; flex-wrap:wrap; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:12px 14px; background:#fff; }
+  .diff { background:#0d1117; color:#c9d1d9; border-radius:6px; padding:8px 10px; font-family:Consolas,monospace; font-size:12px; white-space:pre; overflow:auto; }
+  .diff .a { color:#3fb950; } .diff .d { color:#f85149; } .diff .h { color:#8b949e; }
+  .legend { display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--mute); }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:-1px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .seg button { border:0; background:#fff; padding:3px 10px; cursor:pointer; font:inherit; font-size:12px; }
+  .seg button.on { background:var(--ink); color:#fff; }
+  svg text { font-family:inherit; }
+
+  /* ---------- 切换浮条（不属于被评估的设计） ---------- */
+  #switcher { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); z-index:999; display:flex; align-items:center; gap:4px;
+    background:#111; color:#fff; border-radius:999px; padding:5px 8px; box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:13px; user-select:none; }
+  #switcher button { background:#333; color:#fff; border:0; border-radius:999px; width:28px; height:28px; cursor:pointer; font-size:14px; }
+  #switcher button:hover { background:#555; }
+  #switcher span { padding:0 10px; min-width:230px; text-align:center; }
+
+  /* ---------- A 研究日志 ---------- */
+  .A { display:grid; grid-template-columns:230px 1fr; min-height:100vh; }
+  .A nav { border-right:1px solid var(--line); background:var(--bg); padding:16px 12px; position:sticky; top:0; height:100vh; overflow:auto; }
+  .A nav a { display:block; padding:5px 8px; border-radius:6px; color:var(--ink); font-size:13px; }
+  .A nav a.on { background:#fff; box-shadow:0 0 0 1px var(--line); font-weight:600; }
+  .A nav .date { color:var(--mute); font-size:11px; display:block; }
+  .A main { padding:22px 36px 90px; max-width:980px; }
+  .A .round { position:relative; padding-left:28px; margin:26px 0; }
+  .A .round::before { content:""; position:absolute; left:8px; top:10px; bottom:-30px; width:2px; background:var(--line); }
+  .A .round:last-child::before { display:none; }
+  .A .dot { position:absolute; left:0; top:4px; width:18px; height:18px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 2px var(--line); }
+  .A .steps { display:grid; grid-template-columns:88px 1fr; gap:6px 14px; margin-top:8px; }
+  .A .steps > b { color:var(--mute); font-weight:600; font-size:12.5px; padding-top:2px; }
+  .A .next { border-left:3px solid var(--acc); padding:4px 10px; background:#f3f8ff; }
+
+  /* ---------- B 仪表盘 ---------- */
+  .B header { display:flex; align-items:center; gap:24px; padding:10px 20px; border-bottom:1px solid var(--line); background:#fff; position:sticky; top:0; z-index:5; }
+  .B header .tabs a { padding:14px 4px; margin-right:18px; color:var(--mute); font-weight:500; }
+  .B header .tabs a.on { color:var(--ink); border-bottom:2px solid #fd8c73; }
+  .B .body { padding:18px 20px 90px; background:var(--bg); min-height:calc(100vh - 50px); }
+  .B .kpi { flex:1; min-width:170px; }
+  .B .kpi .v { font-size:26px; font-weight:600; }
+  .B .grid2 { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; margin-top:16px; }
+  .B .drawer { position:fixed; right:0; top:0; bottom:0; width:560px; background:#fff; border-left:1px solid var(--line); box-shadow:-8px 0 24px rgba(0,0,0,.08); padding:18px 20px 80px; overflow:auto; z-index:20; }
+  .B .filters { display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+  .B input[type=text] { border:1px solid var(--line); border-radius:6px; padding:4px 8px; font:inherit; width:220px; }
+
+  /* ---------- C 思路树 ---------- */
+  .C { display:grid; grid-template-columns:1fr 460px; height:100vh; }
+  .C .canvas { position:relative; overflow:auto; background:
+      radial-gradient(circle, #d8dee4 1px, transparent 1px) 0 0/18px 18px; }
+  .C .canvas .title { position:absolute; left:18px; top:12px; }
+  .C .panel { border-left:1px solid var(--line); overflow:auto; padding:18px 20px 90px; background:#fff; }
+  .C .node { cursor:pointer; }
+  .C .node rect { stroke-width:1.5; }
+  .C .node.sel rect { stroke:#0969da; stroke-width:3; }
+  .C .delta { font-size:22px; font-weight:600; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="switcher">
+  <button id="prev" title="上一个变体 (←)">◀</button><span id="vlabel"></span><button id="next" title="下一个变体 (→)">▶</button>
+</div>
+<script>
+/* ======================= 假数据 ======================= */
+// 误差模型：成功比例 s 的对，其 GT 点平均误差 ~ LogNormal(median=m, σ=.6)；其余视为失败，误差均匀散布在 0–150 px。
+// fm = 失败模式占比 [完全乱匹配, 对上但精度不足(>10px), 匹配点太少/无输出]
+const METHODS = [
+  { id:'sift',   name:'SIFT + RANSAC', kind:'传统', val:{s:.06,m:6.8}, test:{s:.05,m:7.1}, fm:[.74,.06,.20], sec:0.4 },
+  { id:'sarsift',name:'SAR-SIFT',      kind:'传统', val:{s:.11,m:6.1}, test:{s:.09,m:6.4}, fm:[.63,.09,.28], sec:1.2 },
+  { id:'rift',   name:'RIFT',          kind:'传统', val:{s:.24,m:5.2}, test:{s:.21,m:5.5}, fm:[.48,.30,.22], sec:3.1 },
+  { id:'cfog',   name:'CFOG',          kind:'传统', val:{s:.29,m:4.4}, test:{s:.27,m:4.6}, fm:[.52,.40,.08], sec:0.9 },
+  { id:'lg',     name:'SuperPoint+LightGlue', kind:'深度', val:{s:.30,m:4.6}, test:{s:.28,m:4.8}, fm:[.55,.21,.24], sec:0.08 },
+  { id:'loftr',  name:'LoFTR',         kind:'深度', val:{s:.33,m:4.3}, test:{s:.30,m:4.5}, fm:[.58,.32,.10], sec:0.12 },
+  { id:'eloftr', name:'ELoFTR',        kind:'深度', val:{s:.37,m:4.0}, test:{s:.35,m:4.2}, fm:[.54,.38,.08], sec:0.07 },
+  { id:'xoftr',  name:'XoFTR',         kind:'深度', val:{s:.40,m:3.9}, test:{s:.37,m:4.0}, fm:[.47,.43,.10], sec:0.15 },
+  { id:'roma',   name:'RoMa',          kind:'深度', val:{s:.44,m:3.6}, test:{s:.41,m:3.8}, fm:[.42,.52,.06], sec:0.55 },
+  { id:'minima', name:'MINIMA-RoMa',   kind:'深度', val:{s:.47,m:3.5}, test:{s:.44,m:3.6}, fm:[.40,.54,.06], sec:0.56 },
+];
+
+// 实验 = 一次「改代码/改配置 → 跑 → 看结果 → 下结论」。parent 表示思路上从哪个实验派生。
+const EXPS = [
+  { id:'B0', title:'Baseline：10 个方法 zero-shot 全量重跑', parent:null, date:'2026-09-10', commit:'3f9a1c2', status:'baseline',
+    hyp:'现有多模态匹配器在月面光-SAR 上 zero-shot 不够好，但能提供一个可用的起点。',
+    change:'新增 eval/ 统一评测：所有方法走同一个 affine RANSAC 3 px，失败对计入。',
+    diff:['eval/protocol.py          +212','eval/run_baselines.py     +148','configs/baselines/*.yaml  +10 files'],
+    val:{s:.47,m:3.5}, test:{s:.44,m:3.6}, fm:[.40,.54,.06], ref:'minima',
+    verdict:'最强的 MINIMA-RoMa SR@5 也只有约 36%。失败里一半多是「对上了但不准」，说明起点可用。',
+    next:'先试 RIPE 式稀疏 RL，最省事、有现成代码。' },
+  { id:'E1', title:'稀疏 RL：RIPE 式 REINFORCE 微调 SuperPoint', parent:'B0', init:'lg', date:'2026-09-14', commit:'a41d7e0', status:'kept',
+    hyp:'RIPE 的 reward（MNN + RANSAC 内点数）不需要真值，能把 SP+LG 的起点往上推。',
+    change:'reward = 仿射 RANSAC 内点数；冻结前 2 层；在 train 无标注对上跑 20k step。',
+    diff:['rl/reinforce.py           +176','rl/reward.py              +84','models/superpoint.py      +12 −3','configs/e1_sparse.yaml    +41'],
+    val:{s:.41,m:3.9}, test:{s:.38,m:4.1}, fm:[.46,.31,.23], steps:20000, curve:'up',
+    verdict:'相对自己的起点 SP+LG 有效（SR@5 约 +10 pt），但仍不如最强 baseline，天花板低：低纹理月海区域检不出关键点，「点太少」这一类几乎没降。',
+    next:'换成半稠密（ELoFTR 粗级匹配作动作），绕开检测器。' },
+  { id:'E2', title:'半稠密 RL：ELoFTR 粗级匹配作为动作', parent:'E1', init:'eloftr', date:'2026-09-17', commit:'c7b20e5', status:'kept',
+    hyp:'半稠密动作空间能覆盖低纹理区域；reward 不变。',
+    change:'把粗级 softmax 当 policy，每格按概率采样匹配；精级照常。',
+    diff:['rl/policy_semidense.py    +231','models/eloftr/coarse.py   +38 −11','rl/reward.py              +9 −2','configs/e2_semidense.yaml +47'],
+    val:{s:.58,m:3.1}, test:{s:.55,m:3.2}, fm:[.39,.47,.14], steps:30000, curve:'up',
+    verdict:'明显好于 E1 和所有 baseline。剩下的失败主要是「对上但不准」。',
+    next:'两个方向同时开：调大学习率看能否更快，reward 加一致性约束看能否更准。' },
+  { id:'E3', title:'E2 + 学习率 ×5', parent:'E2', init:'eloftr', date:'2026-09-18', commit:'c7b20e5', status:'dead', configOnly:true,
+    hyp:'E2 收敛慢，学习率可能保守了。',
+    change:'只改配置：lr 2e-5 → 1e-4。',
+    diff:['configs/e3_lr.yaml        lr: 2e-5 → 1e-4'],
+    val:{s:.22,m:5.5}, test:{s:.20,m:5.8}, fm:[.81,.12,.07], steps:8000, curve:'collapse',
+    verdict:'policy 熵在 2k step 内塌缩，出现 reward hacking：匹配全挤到边缘高亮区域，内点数反而升高。',
+    next:'放弃。记下来：reward 只看内点数会被钻空子，需要约束。' },
+  { id:'E4', title:'reward 加入正反向一致性', parent:'E2', init:'eloftr', date:'2026-09-20', commit:'e19f4a8', status:'kept',
+    hyp:'光→SAR 和 SAR→光各估一次仿射，要求两者互逆，能惩罚「内点多但几何错」。',
+    change:'reward = 内点数 × exp(−‖A·A′ − I‖)；同时防 E3 那种 hacking。',
+    diff:['rl/reward.py              +46 −8','rl/policy_semidense.py    +14 −2','configs/e4_cycle.yaml     +6'],
+    val:{s:.66,m:2.7}, test:{s:.63,m:2.8}, fm:[.36,.44,.20], steps:30000, curve:'up',
+    verdict:'SR@5 再涨约 10 pt，误差中位数也明显下降。',
+    next:'试增强（旋转/尺度），针对 Test 里视角差大的对。' },
+  { id:'E5', title:'稠密 RL：RoMa warp 采样', parent:'E2', init:'roma', date:'2026-09-21', commit:'f02c311', status:'dead',
+    hyp:'RoMa zero-shot 起点更高，稠密 RL 上限应该更高。',
+    change:'从 RoMa 的 warp 置信度里采样 5k 对作为动作。',
+    diff:['rl/policy_dense.py        +198','models/roma_wrapper.py    +57','configs/e5_dense.yaml     +44'],
+    val:{s:.49,m:3.3}, test:{s:.46,m:3.4}, fm:[.42,.50,.08], steps:6000, curve:'noisy',
+    verdict:'梯度方差大，单卡 3.8 s/iter，6k step 只比 zero-shot 高一点。暂时搁置。',
+    next:'等方差问题有解法再回来（对应地图里「policy gradient 方差」那团迷雾）。' },
+  { id:'E6', title:'E4 + 旋转/尺度增强', parent:'E4', init:'eloftr', date:'2026-09-22', commit:'5b8d0e7', status:'running',
+    hyp:'Test 里失败多的是旋转 >10° 的对；训练时加旋转/尺度增强应该能补上。',
+    change:'训练对随机旋转 ±20°、缩放 0.8–1.25。',
+    diff:['data/augment.py           +63','configs/e6_aug.yaml       +8'],
+    val:{s:.72,m:2.4}, test:{s:.70,m:2.5}, fm:[.30,.45,.25], steps:18000, curve:'up', runningAt:.6,
+    verdict:'训到 60%，趋势向好（当前 SR@5 ≈ 65%）。',
+    next:'跑完后做消融。' },
+];
+const byId = Object.fromEntries(EXPS.map(e => [e.id, e]));
+const mById = Object.fromEntries(METHODS.map(m => [m.id, m]));
+
+/* ======================= 指标（从假误差模型算出来） ======================= */
+function erf(x){ const t=1/(1+.3275911*Math.abs(x)); const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x); return x>=0?y:-y; }
+function cdf(p, e){ if(e<=0) return 0; const ok = p.s*.5*(1+erf((Math.log(e)-Math.log(p.m))/(.6*Math.SQRT2))); return ok + (1-p.s)*Math.min(e/150,1); }
+function metrics(p){
+  let auc=0; for(let e=.05;e<=10;e+=.1) auc+=cdf(p,e)*.1; auc/=10;
+  let mean=0; for(let e=.25;e<150;e+=.5) mean+=(1-cdf(p,e))*.5;   // E[X] = ∫(1−F)
+  let med=0; for(let e=.1;e<150;e+=.1){ if(cdf(p,e)>=.5){ med=e; break; } } if(!med) med=150;
+  return { sr3:cdf(p,3), sr5:cdf(p,5), sr10:cdf(p,10), auc10:auc, mean, med };
+}
+// 比较基准：父是 B0 时和自己的 zero-shot 起点比，否则和父实验比
+const refOf = e => e.parent==='B0' ? mById[e.init] : e.parent ? byId[e.parent] : mById.minima;
+const pct = x => (x*100).toFixed(1);
+const f1 = x => x>=150 ? '>150' : x.toFixed(1);
+function delta(a,b,unit='pt',inv=false){ const d=(a-b)*(unit==='pt'?100:1); const good = inv? d<0 : d>0; if(Math.abs(d)<.05) return '<span class="muted">±0</span>'; return `<span class="${good?'up':'down'}">${d>0?'+':''}${d.toFixed(1)}${unit==='pt'?' pt':' px'}</span>`; }
+
+// 训练曲线（假）
+function rng(seed){ let s=seed; return ()=>{ s=(s*16807)%2147483647; return (s-1)/2147483646; }; }
+function curves(e){
+  const r=rng(e.id.charCodeAt(1)*97+7), n=40, out={reward:[],sr5:[]};
+  const start = metrics(mById[e.init]?.val || e.val).sr5, end = metrics(e.val).sr5;
+  const upto = e.runningAt ? Math.round(n*e.runningAt) : n;
+  for(let i=0;i<=upto;i++){
+    const t=i/n, step=Math.round(t*e.steps/(e.runningAt||1));
+    let v;
+    if(e.curve==='collapse') v = t<.2 ? start+(.1*t/.2) : Math.max(end, start+.1-(t-.2)*1.2);
+    else if(e.curve==='noisy') v = start+(end-start)*(1-Math.exp(-3*t))+(r()-.5)*.08;
+    else { const T = e.runningAt ? t/e.runningAt : t; v = start+(end-start)*(1-Math.exp(-4*T))/(1-Math.exp(-4))+(r()-.5)*.025; }
+    out.sr5.push([step, Math.max(0,v)]);
+    const rew = e.curve==='collapse' ? 40+t*260 : 40+(v-start)*420+(r()-.5)*12;
+    out.reward.push([step, rew]);
+  }
+  return out;
+}
+
+/* ======================= 手写 SVG 图表 ======================= */
+const PAL = ['#0969da','#cf222e','#1a7f37','#8250df','#bf8700','#1b7c83','#e16f24','#6e7781','#bf3989','#57606a'];
+function lineChart({series, w=520, h=220, xMax, yMax=1, yFmt=v=>(v*100).toFixed(0)+'%', xFmt=v=>v, xLabel='', yLabel='', vline}){
+  const L=44,R=10,T=10,B=30, W=w-L-R, H=h-T-B;
+  xMax = xMax ?? Math.max(...series.flatMap(s=>s.points.map(p=>p[0])));
+  const X=x=>L+x/xMax*W, Y=y=>T+H-Math.min(y,yMax)/yMax*H;
+  let g='';
+  for(let i=0;i<=4;i++){ const y=yMax*i/4; g+=`<line x1="${L}" x2="${L+W}" y1="${Y(y)}" y2="${Y(y)}" stroke="#eaeef2"/><text x="${L-6}" y="${Y(y)+4}" font-size="10" fill="#656d76" text-anchor="end">${yFmt(y)}</text>`; }
+  for(let i=0;i<=5;i++){ const x=xMax*i/5; g+=`<text x="${X(x)}" y="${T+H+14}" font-size="10" fill="#656d76" text-anchor="middle">${xFmt(x)}</text>`; }
+  if(vline!=null) g+=`<line x1="${X(vline)}" x2="${X(vline)}" y1="${T}" y2="${T+H}" stroke="#bf8700" stroke-dasharray="4 3"/>`;
+  g+=`<text x="${L+W/2}" y="${h-2}" font-size="10.5" fill="#656d76" text-anchor="middle">${xLabel}</text>`;
+  g+=`<text x="10" y="${T+H/2}" font-size="10.5" fill="#656d76" text-anchor="middle" transform="rotate(-90 10 ${T+H/2})">${yLabel}</text>`;
+  for(const s of series){
+    const d=s.points.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join('');
+    g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width||1.8}" ${s.dash?`stroke-dasharray="${s.dash}"`:''} opacity="${s.opacity??1}"><title>${s.name}</title></path>`;
+    if(s.label){ const p=s.points[s.points.length-1]; g+=`<text x="${X(p[0])-4}" y="${Y(p[1])-5}" font-size="10.5" fill="${s.color}" text-anchor="end">${s.label}</text>`; }
+    if(s.dots) for(const p of s.points) g+=`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="3.5" fill="${s.color}"><title>${p[2]||''}</title></circle>`;
+  }
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${g}</svg>`;
+}
+function cdfSeries(items){ return items.map((it,i)=>({ name:it.name, color:it.color||PAL[i%PAL.length], width:it.width, dash:it.dash, opacity:it.opacity,
+  points:Array.from({length:81},(_,k)=>[k/4, cdf(it.p,k/4)]) })); }
+function cdfChart(items, w=520, h=240){ return lineChart({series:cdfSeries(items), w, h, xMax:20, xFmt:v=>v+'px', xLabel:'GT 点平均误差阈值 (px)', yLabel:'成功率', vline:5}); }
+function legend(items){ return `<div class="legend">${items.map((it,i)=>`<span><i style="background:${it.color||PAL[i%PAL.length]}"></i>${it.name}</span>`).join('')}</div>`; }
+const FM_NAMES=['完全乱匹配','对上但精度不足','匹配点太少/无输出'], FM_COL=['#cf222e','#bf8700','#8c959f'];
+function fmBars(rows, w=520){ // rows: [{name, fm, s}]
+  const rh=20, L=150, W=w-L-80, h=rows.length*rh+8;
+  let g='';
+  rows.forEach((r,i)=>{ const y=i*rh+4; let x=L; const fail=1-r.s;
+    g+=`<text x="${L-6}" y="${y+13}" font-size="11" text-anchor="end" fill="#1f2328">${r.name}</text>`;
+    g+=`<rect x="${x}" y="${y+2}" width="${r.s*W}" height="${rh-6}" fill="#2da44e"><title>成功 ${pct(r.s)}%</title></rect>`; x+=r.s*W;
+    r.fm.forEach((f,j)=>{ const ww=f*fail*W; g+=`<rect x="${x}" y="${y+2}" width="${ww}" height="${rh-6}" fill="${FM_COL[j]}"><title>${FM_NAMES[j]} ${pct(f*fail)}%</title></rect>`; x+=ww; });
+    g+=`<text x="${L+W+6}" y="${y+13}" font-size="10.5" fill="#656d76">${pct(fail)}% 失败</text>`;
+  });
+  return `<svg width="${w}" height="${h}">${g}</svg><div class="legend"><span><i style="background:#2da44e"></i>成功 (≤5px)</span>${FM_NAMES.map((n,j)=>`<span><i style="background:${FM_COL[j]}"></i>${n}</span>`).join('')}</div>`;
+}
+function diffBlock(lines){ return `<div class="diff">${lines.map(l=>{ const m=l.match(/([+−-]\d+)/g)||[]; return l.replace(/(\+\d+)/g,'<span class="a">$1</span>').replace(/(−\d+)/g,'<span class="d">$1</span>'); }).join('\n')}</div>`; }
+function pill(st){ const t={kept:'保留',dead:'放弃',running:'运行中',baseline:'baseline'}[st]; return `<span class="pill ${st}">${t}</span>`; }
+
+let SPLIT='val';
+function splitToggle(){ return `<span class="seg"><button class="${SPLIT==='val'?'on':''}" onclick="SPLIT='val';render()">Val</button><button class="${SPLIT==='test'?'on':''}" onclick="SPLIT='test';render()">Test</button></span>`; }
+function baselineTable(clickable){
+  const rows = METHODS.map(m=>({m, k:metrics(m[SPLIT])})).sort((a,b)=>b.k.sr5-a.k.sr5);
+  const best = Math.max(...rows.map(r=>r.k.sr5));
+  return `<table><tr><th>方法</th><th>类型</th><th>SR@3</th><th>SR@5</th><th>SR@10</th><th>AUC@10</th><th>误差中位数</th><th>平均误差</th><th>s/对</th></tr>
+  ${rows.map(({m,k})=>`<tr><td>${m.name}</td><td class="muted">${m.kind}</td><td>${pct(k.sr3)}</td><td ${k.sr5===best?'style="font-weight:700"':''}>${pct(k.sr5)}</td><td>${pct(k.sr10)}</td><td>${pct(k.auc10)}</td><td>${f1(k.med)}</td><td>${f1(k.mean)}</td><td class="muted">${m.sec}</td></tr>`).join('')}</table>`;
+}
+function baselineAnalysis(){
+  const k = METHODS.map(m=>({m,k:metrics(m[SPLIT])})).sort((a,b)=>b.k.sr5-a.k.sr5);
+  const top=k[0], deep=k.filter(x=>x.m.kind==='深度'), trad=k.filter(x=>x.m.kind==='传统');
+  const avg=a=>a.reduce((s,x)=>s+x.k.sr5,0)/a.length;
+  return `<ul>
+    <li>zero-shot 最强是 <b>${top.m.name}</b>：SR@5 = ${pct(top.k.sr5)}%。即使是它，每 5 对里也有 3 对配不上。</li>
+    <li>深度方法平均 SR@5 ${pct(avg(deep))}%，传统方法 ${pct(avg(trad))}%。差距主要来自「完全乱匹配」减少。</li>
+    <li>RoMa 系的失败里，<b>「对上但精度不足」占一半以上</b>：粗位置对了，缺的是精度。这支持「以现有匹配器为起点再微调」的立论。</li>
+    <li>稀疏方法（SIFT、SP+LG）的「点太少」明显更多，对应月海低纹理区。选网络结构时要考虑这一点。</li>
+  </ul>`;
+}
+function baselinePage(){
+  const top=['minima','roma','xoftr','eloftr','lg','rift','sift'].map((id,i)=>({name:mById[id].name, p:mById[id][SPLIT], color:PAL[i]}));
+  return `<div class="row" style="align-items:center;justify-content:space-between"><div><h2 style="margin:0">Baseline：zero-shot 现状</h2>
+    <div class="muted">实验 B0 · commit <code>3f9a1c2</code> · 2026-09-10 · 评价口径<b>暂定</b>（affine RANSAC 3px 统一；失败对计入；按 split 统计）</div></div>${splitToggle()}</div>
+    <div class="card" style="margin-top:12px">${baselineTable()}</div>
+    <div class="row" style="margin-top:14px">
+      <div class="card"><h3>误差累积分布</h3>${cdfChart(top,480,240)}${legend(top)}</div>
+      <div class="card"><h3>失败模式</h3>${fmBars(METHODS.map(m=>({name:m.name, s:metrics(m[SPLIT]).sr5, fm:m.fm})).sort((a,b)=>b.s-a.s),460)}</div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3>分析</h3>${baselineAnalysis()}</div>`;
+}
+function expMetricsRow(e, ref){
+  const k=metrics(e[SPLIT]), r=metrics(ref[SPLIT]);
+  return `<table style="width:auto"><tr><th></th><th>SR@3</th><th>SR@5</th><th>SR@10</th><th>AUC@10</th><th>误差中位数</th></tr>
+    <tr><td>本实验</td><td>${pct(k.sr3)}</td><td><b>${pct(k.sr5)}</b></td><td>${pct(k.sr10)}</td><td>${pct(k.auc10)}</td><td>${f1(k.med)}</td></tr>
+    <tr><td class="muted">vs ${ref.id||ref.name}</td><td>${delta(k.sr3,r.sr3)}</td><td>${delta(k.sr5,r.sr5)}</td><td>${delta(k.sr10,r.sr10)}</td><td>${delta(k.auc10,r.auc10)}</td><td>${delta(k.med,r.med,'px',true)}</td></tr></table>`;
+}
+function trainChart(e,w=440,h=180){
+  const c=curves(e), base=metrics(mById[e.init][SPLIT==='val'?'val':'val']).sr5;
+  return lineChart({series:[{name:'Val SR@5',color:'#0969da',points:c.sr5},{name:'zero-shot 起点',color:'#8c959f',dash:'4 3',points:[[0,base],[e.steps,base]]}],
+    w,h,xMax:e.steps,xFmt:v=>(v/1000).toFixed(0)+'k',xLabel:'step',yLabel:'Val SR@5'+(e.runningAt?'（运行中）':''),yMax:1});
+}
+function progressChart(w=860,h=240){ // 各实验在时间轴上的 SR@5
+  const days=d=>(new Date(d)-new Date('2026-09-09'))/864e5;
+  const pts=EXPS.map(e=>[days(e.date), metrics(e[SPLIT]).sr5, e.id+' '+e.title]);
+  let best=0; const frontier=EXPS.filter(e=>e.status!=='dead').map(e=>{best=Math.max(best,metrics(e[SPLIT]).sr5); return [days(e.date),best];});
+  let svg=lineChart({series:[{name:'最佳',color:'#1a7f37',points:frontier,width:2.5},{name:'实验',color:'transparent',points:pts}],w,h,xMax:14,xFmt:v=>'9/'+(9+Math.round(v)),xLabel:'日期',yLabel:'SR@5 ('+SPLIT+')'});
+  const L=44,W=w-54,H=h-40,T=10;
+  const dots=EXPS.map(e=>{ const x=L+days(e.date)/14*W, y=T+H-metrics(e[SPLIT]).sr5*H, c={kept:'#1a7f37',dead:'#cf222e',running:'#bf8700',baseline:'#8250df'}[e.status];
+    return `<g><circle cx="${x}" cy="${y}" r="6" fill="${c}" stroke="#fff" stroke-width="2"><title>${e.id} ${e.title}</title></circle><text x="${x+8}" y="${y-8}" font-size="11" font-weight="600">${e.id}</text></g>`; }).join('');
+  return svg.replace('</svg>', dots+'</svg>');
+}
+
+/* ======================= 变体 A：研究日志（按时间讲故事） ======================= */
+let A_page='story';
+function VariantA(){
+  const navItems = [['story','研究脉络（全部）'],['baseline','Baseline 页']];
+  const nav = `<nav><h3 style="padding:0 8px">月面光-SAR 配准<br><span class="muted" style="font-weight:400;font-size:12px">实验日志</span></h3>
+    ${navItems.map(([k,t])=>`<a class="${A_page===k?'on':''}" onclick="A_page='${k}';render()">${t}</a>`).join('')}
+    <h4 style="padding:14px 8px 0">轮次</h4>
+    ${EXPS.map(e=>`<a onclick="A_page='story';render();setTimeout(()=>document.getElementById('r-${e.id}').scrollIntoView({behavior:'smooth'}),0)"><span class="date">${e.date.slice(5)} · ${e.id}</span>${e.title} ${e.status==='dead'?'✗':''}</a>`).join('')}
+  </nav>`;
+  if(A_page==='baseline') return `<div class="A">${nav}<main>${baselinePage()}</main></div>`;
+  const col={kept:'#1a7f37',dead:'#cf222e',running:'#bf8700',baseline:'#8250df'};
+  const rounds = EXPS.map(e=>{
+    const par = e.parent? byId[e.parent] : mById[e.ref];
+    const refForDelta = e.id==='B0'? METHODS.find(m=>m.id==='minima') : byId[e.parent];
+    return `<section class="round" id="r-${e.id}"><div class="dot" style="background:${col[e.status]}"></div>
+      <div class="muted" style="font-size:12px">${e.date} · ${e.id} ${e.parent?`· 接续 <a onclick="document.getElementById('r-${e.parent}').scrollIntoView({behavior:'smooth'})">${e.parent}</a>`:''}</div>
+      <h2>${e.title} ${pill(e.status)}</h2>
+      <div class="steps">
+        <b>动机/假设</b><div>${e.hyp}</div>
+        <b>代码改动</b><div>${e.change}<br><span class="muted">commit</span> <code>${e.commit}</code>${e.configOnly?' <span class="pill">仅配置，无代码改动</span>':''}${diffBlock(e.diff)}</div>
+        <b>结果</b><div>${e.id==='B0'
+            ? `<div class="card" style="padding:6px">${baselineTable()}</div><a onclick="A_page='baseline';render()">→ 打开完整 Baseline 页（CDF、失败模式、分析）</a>`
+            : `${expMetricsRow(e, refOf(e))}<div class="row" style="margin-top:8px"><div>${trainChart(e,400,170)}</div><div>${cdfChart([{name:e.id,p:e[SPLIT],color:'#0969da'},{name:refOf(e).id||refOf(e).name,p:refOf(e)[SPLIT],color:'#8c959f',dash:'4 3'}],380,170)}</div></div>`}
+        </div>
+        <b>结论</b><div>${e.verdict}</div>
+        <b>下一步</b><div class="next">${e.next}</div>
+      </div></section>`;
+  }).join('');
+  return `<div class="A">${nav}<main>
+    <div class="row" style="justify-content:space-between;align-items:center"><h1>研究脉络</h1>${splitToggle()}</div>
+    <p class="muted">从上往下读：每一轮都是「为什么做 → 改了什么代码 → 跑出什么 → 学到什么 → 下一步」。</p>
+    <div class="card">${progressChart(880,230)}<div class="legend"><span><i style="background:#1a7f37"></i>保留</span><span><i style="background:#cf222e"></i>放弃</span><span><i style="background:#bf8700"></i>运行中</span><span><i style="background:#8250df"></i>baseline</span><span>绿线 = 当前最佳</span></div></div>
+    ${rounds}</main></div>`;
+}
+
+/* ======================= 变体 B：仪表盘 + 实验表（按指标查数） ======================= */
+let B_tab='overview', B_sel=null, B_q='', B_hideDead=false, B_cmp=new Set(['E6','E4','B0']);
+function VariantB(){
+  const tabs=[['overview','总览'],['baseline','Baseline'],['runs','实验列表'],['compare','对比']];
+  const head=`<header><b>🌙 moon-exp</b><div class="tabs">${tabs.map(([k,t])=>`<a class="${B_tab===k?'on':''}" onclick="B_tab='${k}';B_sel=null;render()">${t}</a>`).join('')}</div><div style="margin-left:auto">${splitToggle()}</div></header>`;
+  let body='';
+  if(B_tab==='overview'){
+    const best=EXPS.filter(e=>e.status!=='dead').reduce((a,b)=>metrics(b[SPLIT]).sr5>metrics(a[SPLIT]).sr5?b:a);
+    const zs=metrics(mById.minima[SPLIT]), bk=metrics(best[SPLIT]);
+    body=`<div class="row">
+      ${[['当前最佳 SR@5',pct(bk.sr5)+'%',`${best.id} · ${best.title}`],['相对最强 zero-shot',`<span class="up">+${((bk.sr5-zs.sr5)*100).toFixed(1)} pt</span>`,'vs MINIMA-RoMa'],['误差中位数',f1(bk.med)+' px',`zero-shot ${f1(zs.med)} px`],['实验数',EXPS.length,`${EXPS.filter(e=>e.status==='dead').length} 个放弃 · ${EXPS.filter(e=>e.status==='running').length} 个运行中`]]
+        .map(([t,v,s])=>`<div class="card kpi"><div class="muted">${t}</div><div class="v">${v}</div><div class="muted" style="font-size:12px">${s}</div></div>`).join('')}</div>
+      <div class="grid2">
+        <div class="card"><h3>进展</h3>${progressChart(640,240)}</div>
+        <div class="card"><h3>最近实验</h3><table>${EXPS.slice().reverse().slice(0,6).map(e=>`<tr class="click" onclick="B_tab='runs';B_sel='${e.id}';render()"><td>${e.id} ${e.title.slice(0,18)}…</td><td>${pill(e.status)}</td><td>${pct(metrics(e[SPLIT]).sr5)}%</td></tr>`).join('')}</table></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h3>误差 CDF：最佳 vs baseline</h3>${cdfChart([{name:best.id,p:best[SPLIT],color:'#1a7f37',width:2.5},{name:'MINIMA-RoMa',p:mById.minima[SPLIT]},{name:'ELoFTR',p:mById.eloftr[SPLIT],color:'#8250df'}],600,230)}${legend([{name:best.id,color:'#1a7f37'},{name:'MINIMA-RoMa'},{name:'ELoFTR',color:'#8250df'}])}</div>
+        <div class="card"><h3>失败模式变化</h3>${fmBars([mById.minima,mById.eloftr,byId.E2,byId.E4,byId.E6].map(x=>({name:x.name||x.id,s:metrics(x[SPLIT]).sr5,fm:x.fm})),420)}</div>
+      </div>`;
+  } else if(B_tab==='baseline'){
+    body=baselinePage();
+  } else if(B_tab==='runs'){
+    const q=B_q.toLowerCase();
+    const list=EXPS.filter(e=>(!B_hideDead||e.status!=='dead')&&(!q||(e.id+e.title+e.commit+e.hyp).toLowerCase().includes(q)));
+    body=`<div class="filters"><input type="text" placeholder="搜索 id / 标题 / commit…" value="${B_q}" oninput="B_q=this.value;render();const i=document.querySelector('.filters input');i.focus();i.setSelectionRange(i.value.length,i.value.length)">
+      <label><input type="checkbox" ${B_hideDead?'checked':''} onchange="B_hideDead=this.checked;render()"> 隐藏放弃的</label><span class="muted">勾选行加入「对比」</span></div>
+      <div class="card" style="padding:0"><table><tr><th></th><th>ID</th><th style="text-align:left">标题</th><th>状态</th><th>日期</th><th>commit</th><th>父</th><th>初始化</th><th>SR@3</th><th>SR@5</th><th>SR@10</th><th>AUC@10</th><th>误差中位数</th></tr>
+      ${list.map(e=>{const k=metrics(e[SPLIT]);return `<tr class="click" onclick="if(event.target.type!=='checkbox'){B_sel='${e.id}';render()}"><td><input type="checkbox" ${B_cmp.has(e.id)?'checked':''} onchange="B_cmp.has('${e.id}')?B_cmp.delete('${e.id}'):B_cmp.add('${e.id}')"></td>
+        <td class="mono">${e.id}</td><td style="text-align:left">${e.title}</td><td>${pill(e.status)}</td><td class="muted">${e.date.slice(5)}</td><td class="mono">${e.commit}</td><td>${e.parent||'—'}</td><td class="muted">${e.init?mById[e.init].name:'—'}</td>
+        <td>${pct(k.sr3)}</td><td><b>${pct(k.sr5)}</b></td><td>${pct(k.sr10)}</td><td>${pct(k.auc10)}</td><td>${f1(k.med)}</td></tr>`;}).join('')}</table></div>`;
+    if(B_sel){ const e=byId[B_sel]; const ref=refOf(e);
+      body+=`<div class="drawer"><a style="float:right" onclick="B_sel=null;render()">✕ 关闭</a><div class="muted">${e.id} · ${e.date} · commit <code>${e.commit}</code></div><h2>${e.title} ${pill(e.status)}</h2>
+        <h4>假设</h4><p>${e.hyp}</p><h4>改动</h4><p>${e.change}</p>${diffBlock(e.diff)}
+        <h4 style="margin-top:14px">指标</h4>${expMetricsRow(e, ref)}
+        ${e.steps?`<h4 style="margin-top:14px">训练曲线</h4>${trainChart(e,510,190)}`:''}
+        <h4>失败模式</h4>${fmBars([ref,e].map(x=>({name:x.id||x.name,s:metrics(x[SPLIT]).sr5,fm:x.fm})),510)}
+        <h4 style="margin-top:14px">结论</h4><p>${e.verdict}</p><h4>下一步</h4><p>${e.next}</p></div>`; }
+  } else {
+    const items=[...B_cmp].map((id,i)=>({name:id+' '+byId[id].title.slice(0,14),p:byId[id][SPLIT],color:PAL[i%PAL.length]}));
+    body=`<p class="muted">从「实验列表」勾选要对比的实验。当前：${[...B_cmp].join('、')||'（无）'}</p>
+      <div class="row"><div class="card"><h3>误差 CDF</h3>${cdfChart(items,560,260)}${legend(items)}</div>
+      <div class="card"><h3>失败模式</h3>${fmBars([...B_cmp].map(id=>({name:id,s:metrics(byId[id][SPLIT]).sr5,fm:byId[id].fm})),440)}</div></div>
+      <div class="card" style="margin-top:14px"><table><tr><th>实验</th><th>SR@3</th><th>SR@5</th><th>SR@10</th><th>AUC@10</th><th>误差中位数</th><th>平均误差</th></tr>
+      ${[...B_cmp].map(id=>{const k=metrics(byId[id][SPLIT]);return `<tr><td>${id} ${byId[id].title}</td><td>${pct(k.sr3)}</td><td>${pct(k.sr5)}</td><td>${pct(k.sr10)}</td><td>${pct(k.auc10)}</td><td>${f1(k.med)}</td><td>${f1(k.mean)}</td></tr>`;}).join('')}</table></div>`;
+  }
+  return `<div class="B">${head}<div class="body">${body}</div></div>`;
+}
+
+/* ======================= 变体 C：思路树（按实验谱系看分叉） ======================= */
+let C_sel='E4';
+function VariantC(){
+  // 手工布局：列 = 代际，行 = 分支
+  const pos={B0:[0,1.5],E1:[1,1.5],E2:[2,1.5],E3:[3,0],E4:[3,1.5],E5:[3,3],E6:[4,1.5]};
+  const bw=210,bh=78,gx=250,gy=110,ox=30,oy=70;
+  const xy=id=>[ox+pos[id][0]*gx, oy+pos[id][1]*gy];
+  const sr=e=>metrics(e[SPLIT]).sr5;
+  const heat=v=>`hsl(${Math.round(v*140)},65%,${92-v*25}%)`;
+  let g='';
+  // 边 = 「改了什么」
+  for(const e of EXPS) if(e.parent){ const [x1,y1]=xy(e.parent),[x2,y2]=xy(e.id); const d=sr(e)-sr(refOf(e));
+    g+=`<path d="M${x1+bw} ${y1+bh/2} C${x1+bw+30} ${y1+bh/2} ${x2-30} ${y2+bh/2} ${x2} ${y2+bh/2}" fill="none" stroke="${e.status==='dead'?'#d0d7de':'#8c959f'}" stroke-width="2" ${e.status==='dead'?'stroke-dasharray="5 4"':''}/>
+      <text x="${(x1+bw+x2)/2}" y="${(y1+y2)/2+bh/2-6}" font-size="11" text-anchor="middle" fill="${d>0?'#1a7f37':'#cf222e'}" font-weight="600">${d>0?'+':''}${(d*100).toFixed(1)}</text>`; }
+  // baseline 方法挂在 B0 左侧当「起点池」
+  for(const e of EXPS){ const [x,y]=xy(e.id), dead=e.status==='dead';
+    g+=`<g class="node ${C_sel===e.id?'sel':''}" onclick="C_sel='${e.id}';render()" opacity="${dead?.55:1}">
+      <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="8" fill="${heat(sr(e))}" stroke="${dead?'#cf222e':'#8c959f'}"/>
+      <text x="${x+10}" y="${y+18}" font-size="12" font-weight="700">${e.id} <tspan font-weight="400" fill="#656d76">${e.date.slice(5)} · ${e.commit}</tspan></text>
+      <text x="${x+10}" y="${y+37}" font-size="11.5">${e.title.length>17?e.title.slice(0,17)+'…':e.title}</text>
+      <text x="${x+10}" y="${y+62}" font-size="18" font-weight="700">${pct(sr(e))}%</text><text x="${x+70}" y="${y+62}" font-size="10.5" fill="#656d76">SR@5</text>
+      <text x="${x+bw-10}" y="${y+62}" font-size="11" text-anchor="end">${{kept:'✓ 保留',dead:'✗ 放弃',running:'◔ 运行中',baseline:'◆ 起点'}[e.status]}</text></g>`; }
+  const W=ox+5*gx, H=oy+4*gy;
+  const e=byId[C_sel];
+  let panel;
+  if(e.id==='B0') panel = baselinePage();
+  else { const p=byId[e.parent], r=refOf(e), rn=r.id||r.name, k=metrics(e[SPLIT]), kp=metrics(r[SPLIT]);
+    const kids=EXPS.filter(x=>x.parent===e.id);
+    panel=`<div class="muted">${e.date} · commit <code>${e.commit}</code> · 父节点 <a onclick="C_sel='${p.id}';render()">${p.id}</a></div>
+      <h2>${e.title} ${pill(e.status)}</h2>
+      <div class="row" style="gap:28px;margin:6px 0 10px"><div><div class="muted">SR@5 vs ${rn}</div><div class="delta">${delta(k.sr5,kp.sr5)}</div></div><div><div class="muted">误差中位数</div><div class="delta">${delta(k.med,kp.med,'px',true)}</div></div><div><div class="muted">当前</div><div class="delta">${pct(k.sr5)}%</div></div></div>
+      <h4>为什么做</h4><p>${e.hyp}</p>
+      <h4>相对父节点改了什么</h4><p>${e.change}</p>${diffBlock(e.diff)}
+      <h4 style="margin-top:12px">误差 CDF（本节点 vs ${rn}）</h4>${cdfChart([{name:e.id,p:e[SPLIT],color:'#0969da',width:2.4},{name:rn,p:r[SPLIT],color:'#8c959f',dash:'4 3'}],420,200)}
+      <h4>失败模式变化</h4>${fmBars([r,e].map(x=>({name:x.id||x.name,s:metrics(x[SPLIT]).sr5,fm:x.fm})),420)}
+      ${e.steps?`<h4 style="margin-top:12px">训练曲线</h4>${trainChart(e,420,170)}`:''}
+      <h4>结论</h4><p>${e.verdict}</p>
+      <h4>由此派生</h4><p>${kids.length?kids.map(c=>`<a onclick="C_sel='${c.id}';render()">${c.id} ${c.title}</a>`).join('<br>'):`<span class="muted">（暂无）</span> 计划：${e.next}`}</p>`; }
+  return `<div class="C"><div class="canvas"><div class="title"><h2 style="margin:0">实验谱系</h2><span class="muted">节点 = 实验（颜色 = SR@5）；边上数字 = SR@5 变化（相对父节点；从 B0 派生的相对其 zero-shot 起点）；虚线/淡色 = 放弃的分支。点节点看详情，点 B0 看 Baseline 页。</span> ${splitToggle()}</div>
+    <svg width="${W}" height="${H}" style="margin-top:20px">${g}</svg></div><div class="panel">${panel}</div></div>`;
+}
+
+/* ======================= 切换器 ======================= */
+const VARIANTS=[['A','研究日志 · 按时间讲故事',VariantA],['B','仪表盘+实验表 · 按指标查数',VariantB],['C','思路树 · 按谱系看分叉',VariantC]];
+function cur(){ const v=new URLSearchParams(location.search).get('variant'); return Math.max(0,VARIANTS.findIndex(x=>x[0]===v)); }
+function go(d){ const i=(cur()+d+VARIANTS.length)%VARIANTS.length; const u=new URL(location); u.searchParams.set('variant',VARIANTS[i][0]); history.replaceState(null,'',u); render(); window.scrollTo(0,0); }
+function render(){ const [k,name,fn]=VARIANTS[cur()];
+  document.getElementById('app').innerHTML=`<div class="banner">原型 · 全部为假数据 · 评价口径待「定义评价协议与指标」定稿 · 用 ← → 或底部浮条切换变体</div>`+fn();
+  document.getElementById('vlabel').textContent=`${k} (${name})`; }
+document.getElementById('prev').onclick=()=>go(-1); document.getElementById('next').onclick=()=>go(1);
+addEventListener('keydown',ev=>{ const t=ev.target; if(t.matches&&t.matches('input,textarea,[contenteditable]')) return; if(ev.key==='ArrowLeft') go(-1); if(ev.key==='ArrowRight') go(1); });
+render();
+</script>
+</body>
+</html>

@@ -9,6 +9,18 @@
 
 ---
 
+## 0. 第一批（batch 1，用户已定，2026-09-25）
+
+用户定的第一批：三篇数据引擎论文（MatchAnything、MINIMA、AnyMatch）放出的全部多模态微调权重，再加 XoFTR、LoFTR、SuperPoint+SuperGlue、RIFT2。共 14 个 run。下面第 1 节的「推荐 12 个」是更早的候选，仅作参考。
+
+- [batch1-weights.md](batch1-weights.md)：14 个 run 各自的权重来源、下载地址、代码路径和阻碍。
+- [interfaces-a.md](interfaces-a.md)：代码级接口，覆盖 LoFTR、XoFTR、SuperPoint+SuperGlue、RIFT2。
+- [interfaces-b.md](interfaces-b.md)：代码级接口，覆盖 MatchAnything（ELoFTR、RoMa）和 MINIMA（5 个匹配器）。
+
+**更正**：XoFTR 在 forward 里对每张图各自做 z-score（`src/xoftr/xoftr.py:39-47`），应归入第 2 节的情形 C，不是情形 A。
+
+---
+
 ## 1. 结论先行：推荐基线清单（12 个）
 
 | # | 方法 | 类别 | 一句话理由 |

@@ -15,7 +15,8 @@ n = int(sys.argv[2]) if len(sys.argv) > 2 else 5
 import os  # noqa: E402
 
 repo = Path.cwd() / cfg["repo"] if cfg.get("repo") else None
-w = Path(os.environ["MOON_WEIGHTS"]) / cfg["weights"] if cfg.get("weights") else None
+wc = cfg.get("weights")
+w = (repo / wc[5:] if wc.startswith("repo:") else Path(os.environ["MOON_WEIGHTS"]) / wc) if wc else None
 m = adapters.load(cfg["adapter"])(repo=repo, weights=w, device="cuda", **cfg.get("params", {}))
 d = Data(os.environ["MOON_DATA"])
 dx, dy = map(float, os.environ.get("SHIFT", "7,-5").split(","))

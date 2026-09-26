@@ -34,3 +34,7 @@
 	path = third_party/RIFT2
 	url = https://github.com/LJY-RS/RIFT2-multimodal-matching-rotation
 	shallow = true
+[submodule "third_party/GeoFormer"]
+	path = third_party/GeoFormer
+	url = https://github.com/ruc-aimc-lab/GeoFormer
+	shallow = true

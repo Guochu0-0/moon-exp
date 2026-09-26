@@ -23,6 +23,7 @@ REGISTRY = {
     "splg": "baselines.adapters.splg:SPLGAdapter",
     "eloftr": "baselines.adapters.eloftr:ELoFTRAdapter",
     "edm": "baselines.adapters.edm:EDMAdapter",
+    "geoformer": "baselines.adapters.geoformer:GeoFormerAdapter",
 }
 
 

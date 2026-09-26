@@ -4,8 +4,10 @@
 
 ## 机器
 
-- 150 / 154 / 160 / 126 挂同一份 gpfs 存储。用户目录是 `/remote-home/xufang/YGC/`。
+- 154 / 160 / 126 挂同一份 gpfs 存储。用户目录是 `/remote-home/xufang/YGC/`。
+- **150 现在没有 YGC**：容器在 2026-09-26 00:18 重启，之后 `/remote-home/xufang` 变成本地 ext4 盘，没挂上 gpfs。之前是挂着的。用之前先 `df` 核实。
 - **A6000 是独立文件系统，没有 YGC**。155 不使用。
+- 容器重启后挂载可能变化。凡是涉及路径的事，每台机器单独核实（`df`、`hostname`），不要凭以前的印象。
 - 每台都是课题组统一管理的 Docker 容器，用户是 root。
 
 ## 规矩（和其他同学共用）
@@ -18,6 +20,7 @@
 - 远程命令都加 `timeout`。本机断开 ssh 并不会停掉远端进程。
 - `pkill -f` / `pgrep -f` 容易匹配到自己这条 ssh 命令。用 `[x]yz` 写法，或者把命令放进脚本再执行。
 - 服务器探查交给 sub agent，并把本节规矩原样写进它的提示。
+- Claude Code 会话处在 git worktree 里时，隔离检查会拦截大多数远程 `ssh … bash/nice` 命令。服务器操作要在主工作区里做。
 
 ## 代码、环境、数据放在哪
 
@@ -36,9 +39,9 @@
 - 不从宿舍电脑往服务器传大文件。数据集绝对不行，权重一般也不行。
 - 尽量少占服务器自己的外网带宽。
 
-**已建好的通道**：工位机（Windows，Clash Verge）上有计划任务 `ygc-tunnel`（`%USERPROFILE%\ygc-tunnel\ygc-tunnel.ps1`，断线自动重连）。它维持一条经内网连到 150（`root@10.254.1.150 -p 20128`）的反向 ssh 隧道。
+**已建好的通道**：工位机（Windows，Clash Verge）上有计划任务 `ygc-tunnel`（`%USERPROFILE%\ygc-tunnel\ygc-tunnel.ps1`，断线自动重连）。它维持一条经内网连到 154（`root@10.254.1.154 -p 20020`）的反向 ssh 隧道。2026-09-26 从 150 改到 154，因为 150 没了 YGC，下载的文件落不到共享存储上。
 
-以下两个端口**只在 150 上**可用：
+以下两个端口**只在 154 上**可用：
 
 | 端口 | 作用 |
 |---|---|
@@ -46,8 +49,11 @@
 | `127.0.0.1:17890` | 工位机的 Clash，能访问 Google Drive、huggingface.co |
 
 用法：
-- 在 150 上用 `curl -x socks5h://127.0.0.1:11080 ...` 下载，Google Drive 和 HF 用 `-x http://127.0.0.1:17890`。
-- 文件存到 `YGC/weights/`，154、160、126 同样可见。
+- 在 154 上用 `curl -x socks5h://127.0.0.1:11080 ...` 下载，Google Drive 和 HF 用 `-x http://127.0.0.1:17890`。
+  - Google Drive 大文件：`https://drive.usercontent.google.com/download?id=<ID>&export=download&confirm=t`。
+  - 文件夹里各文件的 ID 可以从 `https://drive.google.com/embeddedfolderview?id=<文件夹 ID>` 抓取。
+- 文件存到 `YGC/weights/`，160、126 同样可见。
+- 隧道目标写在工位机的 `ygc-tunnel.ps1` 里。要换机器，改其中的地址和端口，再执行 `Stop-ScheduledTask ygc-tunnel; Start-ScheduledTask ygc-tunnel`。154 的内网地址是 `10.254.1.154:20020`。
 - 两个端口不在时，说明工位机关机或已登出，请用户检查。
 - 停用隧道：在工位机上执行 `Unregister-ScheduledTask ygc-tunnel`。
 

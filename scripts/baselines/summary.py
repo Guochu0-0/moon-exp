@@ -5,7 +5,7 @@ from pathlib import Path
 R = Path("/remote-home/xufang/YGC/results/baselines")
 m = json.load(open("runs/B0/metrics.json"))["methods"]
 order = ["identity", "loftr", "xoftr", "spsg", "rift2", "minima_loftr", "minima_xoftr", "minima_splg", "minima_roma",
-         "minima_eloftr", "anymatch_loftr", "anymatch_edm", "anymatch_roma", "ma_eloftr", "ma_roma"]
+         "minima_eloftr", "anymatch_loftr", "anymatch_edm", "anymatch_roma", "ma_eloftr", "ma_roma", "geoformer"]
 keys = ["auc@3", "auc@5", "auc@10", "auc@20", "sr@3", "sr@5", "sr@10", "fail_rate", "mis_rate"]
 for s in ("val", "test"):
     print(f"\n### {s}\n")

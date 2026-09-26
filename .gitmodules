@@ -2,3 +2,11 @@
 	path = third_party/LoFTR
 	url = https://github.com/zju3dv/LoFTR
 	shallow = true
+[submodule "third_party/XoFTR"]
+	path = third_party/XoFTR
+	url = https://github.com/OnderT/XoFTR
+	shallow = true
+[submodule "third_party/SuperGlue"]
+	path = third_party/SuperGlue
+	url = https://github.com/magicleap/SuperGluePretrainedNetwork
+	shallow = true

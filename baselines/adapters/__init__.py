@@ -16,6 +16,8 @@ import importlib
 REGISTRY = {
     "identity": "baselines.adapters.identity:Identity",
     "loftr": "baselines.adapters.loftr:LoFTRAdapter",
+    "xoftr": "baselines.adapters.xoftr:XoFTRAdapter",
+    "spsg": "baselines.adapters.spsg:SPSGAdapter",
 }
 
 

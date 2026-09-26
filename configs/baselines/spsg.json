@@ -1,0 +1,9 @@
+{
+ "method": "spsg",
+ "adapter": "spsg",
+ "repo": "third_party/SuperGlue",
+ "params": {"long_side": 1600, "superglue": "outdoor", "max_keypoints": 2048, "nms_radius": 3,
+            "keypoint_threshold": 0.005, "sinkhorn_iterations": 20, "match_threshold": 0.2},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

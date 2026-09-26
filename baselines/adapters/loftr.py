@@ -34,7 +34,8 @@ class LoFTRAdapter:
         self.model.load_state_dict(sd, strict=True)
         self.model = self.model.eval().to(device)
         self.device, self.long_side = device, long_side
-        self.notes = f"long_side={long_side}, temp_bug_fix={temp_bug_fix}, float input (no uint8)"
+        self.notes = (f"long_side={long_side}, temp_bug_fix={temp_bug_fix}, coarse_thr={cfg['match_coarse']['thr']}, "
+                      f"float input (no uint8)")
 
     def _tensor(self, img):
         import cv2

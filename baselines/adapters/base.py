@@ -4,6 +4,25 @@ from __future__ import annotations
 import numpy as np
 
 
+def stub_rank_zero_only(pkg: str) -> bool:
+    """有些官方仓库的 src/utils/misc.py 只为 `rank_zero_only` 顶层 import (pytorch_)lightning，推理用不到。
+    环境里没有该包时注入只含 rank_zero_only 的桩模块，避免为此装 lightning（会牵动 torch 版本）。返回是否打了桩。"""
+    import importlib
+    import sys
+    import types
+
+    try:
+        importlib.import_module(f"{pkg}.utilities")
+        return False
+    except ImportError:
+        pass
+    parts = f"{pkg}.utilities".split(".")
+    for i in range(1, len(parts) + 1):
+        sys.modules.setdefault(".".join(parts[:i]), types.ModuleType(".".join(parts[:i])))
+    sys.modules[f"{pkg}.utilities"].rank_zero_only = lambda f: f
+    return True
+
+
 def load_ckpt(path):
     """torch.load 到 CPU。权重是官方/论文发布的 PL checkpoint，含非张量对象；torch ≥ 2.6 默认 weights_only=True 会拒读。"""
     import torch

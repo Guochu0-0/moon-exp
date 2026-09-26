@@ -1,0 +1,9 @@
+{
+ "method": "minima_roma",
+ "adapter": "romatch",
+ "repo": "third_party/RoMa_minima",
+ "weights": "minima/minima_roma.pth",
+ "params": {"long_side": 640},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

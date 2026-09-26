@@ -19,6 +19,10 @@ REGISTRY = {
     "xoftr": "baselines.adapters.xoftr:XoFTRAdapter",
     "spsg": "baselines.adapters.spsg:SPSGAdapter",
     "matchanything": "baselines.adapters.matchanything:MatchAnythingAdapter",
+    "romatch": "baselines.adapters.romatch:RomatchAdapter",
+    "splg": "baselines.adapters.splg:SPLGAdapter",
+    "eloftr": "baselines.adapters.eloftr:ELoFTRAdapter",
+    "edm": "baselines.adapters.edm:EDMAdapter",
 }
 
 

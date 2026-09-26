@@ -26,3 +26,7 @@
 	path = third_party/EfficientLoFTR
 	url = https://github.com/zju3dv/EfficientLoFTR
 	shallow = true
+[submodule "third_party/AnyMatch"]
+	path = third_party/AnyMatch
+	url = https://github.com/MnYangs/AnyMatch
+	shallow = true

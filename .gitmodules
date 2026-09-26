@@ -30,3 +30,7 @@
 	path = third_party/AnyMatch
 	url = https://github.com/MnYangs/AnyMatch
 	shallow = true
+[submodule "third_party/RIFT2"]
+	path = third_party/RIFT2
+	url = https://github.com/LJY-RS/RIFT2-multimodal-matching-rotation
+	shallow = true

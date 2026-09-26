@@ -1,0 +1,9 @@
+{
+ "method": "rift2",
+ "adapter": "matlab:rift2_split",
+ "repo": "third_party/RIFT2",
+ "params": {"s": 4, "o": 6, "npt": 5000, "patch_size": 96, "no": 6, "nbin": 6, "n_threads": 4},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0,
+ "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+}

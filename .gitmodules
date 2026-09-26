@@ -1,0 +1,4 @@
+[submodule "third_party/LoFTR"]
+	path = third_party/LoFTR
+	url = https://github.com/zju3dv/LoFTR
+	shallow = true

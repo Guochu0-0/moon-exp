@@ -7,6 +7,8 @@ MINIMA 只发布了 minima_eloftr.ckpt，没有推理代码（docs/research/base
 - 输入：沿用 MINIMA 的 LoFTR 系惯例长边 640（其 TEST.IMG*_RESIZE），cv2 双线性，边长须被 32 整除（640 满足）；
   官方从 uint8 /255 得到 [0,1]，这里直接喂 float。forward 内无归一化。
 - 输出：`mkpts0_f/mkpts1_f/mconf`，输入网格、整数 = 像素中心，按中心对齐公式回映。
+- 自检（光学对自身平移 (7,−5)）：零平移精确，非整格平移有 0.5–1 px 误差，512/640/832 都如此；其他方法 ≤0.2 px。
+  权重与配置的搭配没有官方依据，结果解读时注意。
 - 依赖：src/utils/misc.py 顶层 import pytorch_lightning 只为 rank_zero_only，没装时打桩（base.stub_rank_zero_only）。
 """
 from __future__ import annotations

@@ -38,8 +38,10 @@ class SPLGAdapter:
             sd = {k.replace(f"self_attn.{i}", f"transformers.{i}.self_attn"): v for k, v in sd.items()}
             sd = {k.replace(f"cross_attn.{i}", f"transformers.{i}.cross_attn"): v for k, v in sd.items()}
         res = self.matcher.load_state_dict(sd, strict=False)
-        if res.missing_keys:
-            raise RuntimeError(f"MINIMA LightGlue 权重缺键 {len(res.missing_keys)} 个，例如 {res.missing_keys[:5]}")
+        # confidence_thresholds 是构造时由 depth_confidence 算出的 buffer，不是学出来的参数；MINIMA 同样保留构造值
+        missing = [k for k in res.missing_keys if k != "confidence_thresholds"]
+        if missing:
+            raise RuntimeError(f"MINIMA LightGlue 权重缺键 {len(missing)} 个，例如 {missing[:5]}")
         self.device, self.long_side = device, long_side
         self.notes = (f"sp={SP_CONF}, lg filter 0.1 depth 0.95 width 0.99 flash, long_side={long_side} then extract "
                       f"resize 1024; unexpected_keys={len(res.unexpected_keys)}")

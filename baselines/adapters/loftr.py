@@ -21,14 +21,14 @@ from .base import load_ckpt, long_side_size, to_original
 
 
 class LoFTRAdapter:
-    def __init__(self, repo, weights, device="cuda", long_side=840, temp_bug_fix=False):
-        import torch
-
+    def __init__(self, repo, weights, device="cuda", long_side=840, temp_bug_fix=False, coarse_thr=None):
         sys.path.insert(0, str(repo))
         from src.loftr import LoFTR, default_cfg
 
         cfg = copy.deepcopy(default_cfg)
         cfg["coarse"]["temp_bug_fix"] = temp_bug_fix
+        if coarse_thr is not None:
+            cfg["match_coarse"]["thr"] = coarse_thr
         self.model = LoFTR(config=cfg)
         sd = load_ckpt(weights)["state_dict"]
         self.model.load_state_dict(sd, strict=True)

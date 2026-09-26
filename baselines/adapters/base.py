@@ -23,14 +23,46 @@ def stub_rank_zero_only(pkg: str) -> bool:
     return True
 
 
+def _lenient_pickle():
+    """pickle 模块替身：找不到的类（如完整训练 ckpt 里 pytorch_lightning 的回调对象）换成空壳，只为读出其中的 state_dict。"""
+    import pickle
+    import types
+
+    class Dummy:
+        def __init__(self, *a, **k):
+            pass
+
+        def __setstate__(self, state):
+            pass
+
+    class Unpickler(pickle.Unpickler):
+        def find_class(self, module, name):
+            try:
+                return super().find_class(module, name)
+            except (ModuleNotFoundError, AttributeError):
+                return Dummy
+
+    mod = types.ModuleType("lenient_pickle")
+    mod.__dict__.update({k: getattr(pickle, k) for k in dir(pickle) if not k.startswith("__")})
+    mod.Unpickler = Unpickler
+    return mod
+
+
 def load_ckpt(path):
-    """torch.load 到 CPU。权重是官方/论文发布的 PL checkpoint，含非张量对象；torch ≥ 2.6 默认 weights_only=True 会拒读。"""
+    """torch.load 到 CPU。权重是官方/论文发布的 PL checkpoint，含非张量对象；torch ≥ 2.6 默认 weights_only=True 会拒读。
+    完整训练 ckpt（如 AnyMatch 的）里 pickle 了 pytorch_lightning 的对象，环境里没有该包时退回宽松 unpickler。"""
     import torch
 
+    kw = {"map_location": "cpu"}
     try:
-        return torch.load(path, map_location="cpu", weights_only=False)
-    except TypeError:   # torch < 1.13 没有 weights_only
-        return torch.load(path, map_location="cpu")
+        torch.load.__code__.co_varnames.index("weights_only")
+        kw["weights_only"] = False
+    except ValueError:  # torch < 1.13
+        pass
+    try:
+        return torch.load(path, **kw)
+    except ModuleNotFoundError:
+        return torch.load(path, pickle_module=_lenient_pickle(), **kw)
 
 
 def long_side_size(h: int, w: int, long_side, df: int = 1) -> tuple:

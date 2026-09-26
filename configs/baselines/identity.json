@@ -1,0 +1,7 @@
+{
+ "method": "identity",
+ "adapter": "identity",
+ "params": {"step": 32},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

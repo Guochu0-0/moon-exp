@@ -1,0 +1,9 @@
+{
+ "method": "minima_splg",
+ "adapter": "splg",
+ "repo": "third_party/LightGlue",
+ "weights": "minima/minima_lightglue.pth",
+ "params": {"long_side": 640},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

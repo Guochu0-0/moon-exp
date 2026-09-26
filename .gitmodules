@@ -1,0 +1,44 @@
+[submodule "third_party/LoFTR"]
+	path = third_party/LoFTR
+	url = https://github.com/zju3dv/LoFTR
+	shallow = true
+[submodule "third_party/XoFTR"]
+	path = third_party/XoFTR
+	url = https://github.com/OnderT/XoFTR
+	shallow = true
+[submodule "third_party/SuperGlue"]
+	path = third_party/SuperGlue
+	url = https://github.com/magicleap/SuperGluePretrainedNetwork
+	shallow = true
+[submodule "third_party/MatchAnything"]
+	path = third_party/MatchAnything
+	url = https://huggingface.co/spaces/LittleFrog/MatchAnything
+	shallow = true
+[submodule "third_party/LightGlue"]
+	path = third_party/LightGlue
+	url = https://github.com/cvg/LightGlue
+	shallow = true
+[submodule "third_party/RoMa_minima"]
+	path = third_party/RoMa_minima
+	url = https://github.com/LSXI7/RoMa_minima
+	shallow = true
+[submodule "third_party/EfficientLoFTR"]
+	path = third_party/EfficientLoFTR
+	url = https://github.com/zju3dv/EfficientLoFTR
+	shallow = true
+[submodule "third_party/AnyMatch"]
+	path = third_party/AnyMatch
+	url = https://github.com/MnYangs/AnyMatch
+	shallow = true
+[submodule "third_party/RIFT2"]
+	path = third_party/RIFT2
+	url = https://github.com/LJY-RS/RIFT2-multimodal-matching-rotation
+	shallow = true
+[submodule "third_party/GeoFormer"]
+	path = third_party/GeoFormer
+	url = https://github.com/ruc-aimc-lab/GeoFormer
+	shallow = true
+[submodule "third_party/RMSO-ConvNeXt"]
+	path = third_party/RMSO-ConvNeXt
+	url = https://github.com/yeyuanxin110/RMSO-ConvNeXt
+	shallow = true

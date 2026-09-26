@@ -1,0 +1,10 @@
+{
+ "method": "anymatch_edm",
+ "adapter": "edm",
+ "repo": "third_party/AnyMatch/third_party/EDM_AnyMatch",
+ "weights": "anymatch/EDM_AnyMatch.ckpt",
+ "params": {"long_side": 640, "train_res": 832, "mconf_thr": 0.05, "sigma_thr": 1e-6, "border_rm": 0, "topk_ratio": 0.35},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0,
+ "_note": "AnyMatch 未给出 EDM 推理配置；这里是推断的配方（outdoor edm_base + NPE [832,832,640,640] + TOPK 公式），见 adapters/edm.py"
+}

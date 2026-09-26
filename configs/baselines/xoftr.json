@@ -1,0 +1,9 @@
+{
+ "method": "xoftr",
+ "adapter": "xoftr",
+ "repo": "third_party/XoFTR",
+ "weights": "official/xoftr/weights_xoftr_640.ckpt",
+ "params": {"long_side": 640},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

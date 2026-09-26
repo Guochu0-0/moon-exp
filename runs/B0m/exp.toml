@@ -1,0 +1,16 @@
+id = "B0m"
+title = "zero-shot baselines：SAR 输入映射消融（Val）"
+parent = "B0"
+date = "2026-09-26"
+commit = ""
+status = "baseline"
+hypothesis = """
+B0 里一批方法（XoFTR、SP+SG/LG、EDM、ELoFTR）几乎不出匹配。若换 SAR 输入映射后匹配数和指标明显回升，
+说明失败部分来自主表映射（逐 patch p2–p98）；若仍不出匹配，则是模型本身对 SAR 的问题。
+"""
+change = """
+只换 SAR 映射，其余同 B0：zscore_2p5（逐 patch z-score，±2.5σ → [0,1]）、minmax（逐 patch min–max，不截断）。
+只跑 Val。方法名 = <B0 方法>__<映射>。RIFT2 不做（太慢，且相位一致性对线性灰度变换近似不变）。
+"""
+verdict = ""
+next = ""

@@ -1,0 +1,9 @@
+{
+ "method": "geoformer",
+ "adapter": "geoformer",
+ "repo": "third_party/GeoFormer",
+ "weights": "geoformer/geoformer.ckpt",
+ "params": {"short_side": 480, "coarse_thr": 0.2},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

@@ -1,0 +1,10 @@
+{
+ "method": "minima_eloftr",
+ "adapter": "eloftr",
+ "repo": "third_party/EfficientLoFTR",
+ "weights": "minima/minima_eloftr.ckpt",
+ "params": {"long_side": 640, "model_type": "full", "coarse_thr": 0.2},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0,
+ "_note": "MINIMA 无 ELoFTR 推理代码，用上游官方路径；长边 640 沿用 MINIMA LoFTR 系惯例"
+}

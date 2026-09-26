@@ -1,0 +1,10 @@
+{
+ "method": "minima_loftr",
+ "adapter": "loftr",
+ "repo": "third_party/LoFTR",
+ "weights": "minima/minima_loftr.ckpt",
+ "params": {"long_side": 640, "temp_bug_fix": true},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0,
+ "_note": "MINIMA load_loftr（load_model.py:37-61）：上游 LoFTR 推理代码（LoFTR_minima 9ba0871 只改训练），非 outdoor_ds 权重设 temp_bug_fix=True，coarse thr 0.2（= default_cfg），MINIMA 测试长边 640（src/config/default.py:188-193）"
+}

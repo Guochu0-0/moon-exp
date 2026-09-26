@@ -1,0 +1,9 @@
+{
+ "method": "loftr",
+ "adapter": "loftr",
+ "repo": "third_party/LoFTR",
+ "weights": "official/loftr/outdoor_ds.ckpt",
+ "params": {"long_side": 840, "temp_bug_fix": false},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

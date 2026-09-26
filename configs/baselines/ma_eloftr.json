@@ -1,0 +1,9 @@
+{
+ "method": "ma_eloftr",
+ "adapter": "matchanything",
+ "repo": "third_party/MatchAnything",
+ "weights": "matchanything/matchanything_eloftr.ckpt",
+ "params": {"model": "eloftr", "size": 832, "coarse_thr": 0.05},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

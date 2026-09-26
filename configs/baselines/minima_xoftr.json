@@ -1,0 +1,10 @@
+{
+ "method": "minima_xoftr",
+ "adapter": "xoftr",
+ "repo": "third_party/XoFTR",
+ "weights": "minima/minima_xoftr.ckpt",
+ "params": {"long_side": 640},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0,
+ "_note": "MINIMA load_xoftr（load_model.py:143-155）：子模块 XoFTR@e9635d8 同上游，inference cfg，coarse 0.3 / fine 0.1（= 默认），长边 640；权重显式用 minima_xoftr.ckpt（MINIMA 默认路径指向原版）"
+}

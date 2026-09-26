@@ -29,7 +29,9 @@ def test_read_tif(tmp_path, kw, dtype, shape):
     if len(shape) == 3:
         kw.setdefault("planarconfig", "contig")
     p = tmp_path / "x.tif"
-    tifffile.imwrite(p, a, photometric="minisblack", **kw)
+    # separate 时 tifffile 要 (S, H, W)；读回来统一是 H×W×S
+    w = a.transpose(2, 0, 1) if kw.get("planarconfig") == "separate" else a
+    tifffile.imwrite(p, w, photometric="minisblack", **kw)
     b = read_tif(p)
     assert b.dtype == a.dtype and b.shape == a.shape
     np.testing.assert_array_equal(a, b)

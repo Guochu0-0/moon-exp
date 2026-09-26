@@ -1,4 +1,4 @@
-function rift2_split(in_dir, out_dir, seed, n_threads, n_workers)
+function rift2_split(in_dir, out_dir, seed, n_threads, n_workers, shard, n_shards)
 % RIFT2 (third_party/RIFT2, 0e980ce) over every <pair>.mat in in_dir; writes <pair>.mat to out_dir.
 % Input  .mat: opt, sar  (single H x W, already mapped to [0,1] by baselines/rift2.py).
 % Output .mat: p1, p2 (N x 2, MATLAB 1-based, raw matches BEFORE FSC), sec, err.
@@ -10,6 +10,7 @@ function rift2_split(in_dir, out_dir, seed, n_threads, n_workers)
 if nargin < 3, seed = 0; end
 if nargin < 4, n_threads = 4; end
 if nargin < 5, n_workers = 0; end
+if nargin < 7, shard = 1; n_shards = 1; end   % run several MATLAB processes on disjoint shards (1-based shard)
 warning('off', 'all');
 maxNumCompThreads(n_threads);
 try
@@ -21,6 +22,7 @@ end
 if ~exist(out_dir, 'dir'), mkdir(out_dir); end
 files = dir(fullfile(in_dir, '*.mat'));
 [~, order] = sort({files.name}); files = files(order);
+files = files(mod((1:numel(files)) - 1, n_shards) == shard - 1);
 fprintf('rift2_split: %d pairs in %s\n', numel(files), in_dir);
 for i = 1:numel(files)
     out = fullfile(out_dir, files(i).name);

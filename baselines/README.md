@@ -56,6 +56,7 @@ CUDA_VISIBLE_DEVICES=<空卡> nice -n 10 /opt/envs/loftr/bin/python -m baselines
 |---|---|---|
 | `wb` | 工作台、fit、测试 | python 3.11；numpy、opencv-python-headless、tifffile、Pillow、pytest |
 | `loftr` | LoFTR | python 3.10；torch + 对应 CUDA；kornia 0.6.x、einops、yacs、loguru、opencv-python-headless、numpy<2 |
+| `loftr` + JDK | CoMIR（mpicbg SIFT） | 在 `loftr` 里加 `JPype1`；JDK（`JAVA_HOME`）；`/opt/mpicbg/` 放 mpicbg、ij、jama 三个 jar（scijava maven） |
 
 ## 方法
 

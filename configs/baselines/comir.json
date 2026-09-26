@@ -1,0 +1,10 @@
+{
+ "method": "comir",
+ "adapter": "comir",
+ "repo": "third_party/CoMIR",
+ "weights": "official/comir/model_zurich_rot90_enabled.pt",
+ "params": {"channel": 0, "classpath": "/opt/mpicbg/*"},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0,
+ "_note": "zero-shot：官方 Release 1.0 的 Zurich（RGB↔NIR）模型；光学灰度×3 送 A、SAR 送 B；CoMIR 第 0 通道上跑 mpicbg SIFT（官方 Fiji 脚本参数，rod 0.9），取官方 RANSAC 之前的匹配"
+}

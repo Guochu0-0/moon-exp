@@ -25,6 +25,7 @@ REGISTRY = {
     "edm": "baselines.adapters.edm:EDMAdapter",
     "geoformer": "baselines.adapters.geoformer:GeoFormerAdapter",
     "rmso": "baselines.adapters.rmso:RMSOAdapter",
+    "comir": "baselines.adapters.comir:CoMIRAdapter",
 }
 
 

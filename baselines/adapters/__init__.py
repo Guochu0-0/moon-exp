@@ -18,6 +18,7 @@ REGISTRY = {
     "loftr": "baselines.adapters.loftr:LoFTRAdapter",
     "xoftr": "baselines.adapters.xoftr:XoFTRAdapter",
     "spsg": "baselines.adapters.spsg:SPSGAdapter",
+    "matchanything": "baselines.adapters.matchanything:MatchAnythingAdapter",
 }
 
 

@@ -10,3 +10,19 @@
 	path = third_party/SuperGlue
 	url = https://github.com/magicleap/SuperGluePretrainedNetwork
 	shallow = true
+[submodule "third_party/MatchAnything"]
+	path = third_party/MatchAnything
+	url = https://huggingface.co/spaces/LittleFrog/MatchAnything
+	shallow = true
+[submodule "third_party/LightGlue"]
+	path = third_party/LightGlue
+	url = https://github.com/cvg/LightGlue
+	shallow = true
+[submodule "third_party/RoMa_minima"]
+	path = third_party/RoMa_minima
+	url = https://github.com/LSXI7/RoMa_minima
+	shallow = true
+[submodule "third_party/EfficientLoFTR"]
+	path = third_party/EfficientLoFTR
+	url = https://github.com/zju3dv/EfficientLoFTR
+	shallow = true

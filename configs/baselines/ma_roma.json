@@ -1,0 +1,9 @@
+{
+ "method": "ma_roma",
+ "adapter": "matchanything",
+ "repo": "third_party/MatchAnything",
+ "weights": "matchanything/matchanything_roma.ckpt",
+ "params": {"model": "roma"},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

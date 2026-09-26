@@ -16,6 +16,7 @@
 - [batch1-weights.md](batch1-weights.md)：14 个 run 各自的权重来源、下载地址、代码路径和阻碍。
 - [interfaces-a.md](interfaces-a.md)：代码级接口，覆盖 LoFTR、XoFTR、SuperPoint+SuperGlue、RIFT2。
 - [interfaces-b.md](interfaces-b.md)：代码级接口，覆盖 MatchAnything（ELoFTR、RoMa）和 MINIMA（5 个匹配器）。
+- [modality-normalization.md](modality-normalization.md)：跨模态方法和光-SAR 数据集怎样归一化不同传感器的输入（主流做法：SAR 先逐图拉伸成普通灰度图，再走匹配器原生 loader）。
 
 **更正**：XoFTR 在 forward 里对每张图各自做 z-score（`src/xoftr/xoftr.py:39-47`），应归入第 2 节的情形 C，不是情形 A。
 

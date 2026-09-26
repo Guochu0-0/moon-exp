@@ -24,6 +24,7 @@ REGISTRY = {
     "eloftr": "baselines.adapters.eloftr:ELoFTRAdapter",
     "edm": "baselines.adapters.edm:EDMAdapter",
     "geoformer": "baselines.adapters.geoformer:GeoFormerAdapter",
+    "rmso": "baselines.adapters.rmso:RMSOAdapter",
 }
 
 

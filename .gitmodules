@@ -38,3 +38,7 @@
 	path = third_party/GeoFormer
 	url = https://github.com/ruc-aimc-lab/GeoFormer
 	shallow = true
+[submodule "third_party/RMSO-ConvNeXt"]
+	path = third_party/RMSO-ConvNeXt
+	url = https://github.com/yeyuanxin110/RMSO-ConvNeXt
+	shallow = true

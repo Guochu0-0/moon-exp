@@ -107,7 +107,11 @@ def main(argv=None):
     npz_path, log_path, meta_path = (out / f"{args.split}.{ext}" for ext in ("npz", "jsonl", "meta.json"))
 
     repo = (REPO / cfg["repo"]) if cfg.get("repo") else None
-    weights = (Path(args.weights_root) / cfg["weights"]) if cfg.get("weights") else None
+    w = cfg.get("weights")
+    if w and w.startswith("repo:"):          # 权重随方法仓库发布（在 submodule 里）
+        weights = repo / w[len("repo:"):]
+    else:
+        weights = (Path(args.weights_root) / w) if w else None
     map_opt = inputs.get("optical", cfg["input"]["optical"])
     map_sar = inputs.get("sar", cfg["input"]["sar"])
     seed = int(cfg.get("seed", 0))

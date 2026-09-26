@@ -1,0 +1,10 @@
+{
+ "method": "rmso",
+ "adapter": "rmso",
+ "repo": "third_party/RMSO-ConvNeXt",
+ "weights": "repo:weights/Pre-training-weight.pth",
+ "params": {"template": 256, "stride": 32},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0,
+ "_note": "模板匹配网络；官方只给单模板平移，这里用 256² 模板网格（stride 32，81 个）在整张 512 光学图上匹配，模板中心作对应点（我们的设计）"
+}

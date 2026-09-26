@@ -1,0 +1,652 @@
+{"pair": "ROI_035/patch_0", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.754}
+{"pair": "ROI_035/patch_1", "A": [[0.787494, -0.068838, 49.214135], [1.225065, 0.98108, 141.037566]], "n_matches": 3, "sec": 0.242, "n_inliers": 3}
+{"pair": "ROI_035/patch_2", "A": [[0.664319, -0.013561, 4.366164], [0.343799, 0.658659, -41.100132]], "n_matches": 3, "sec": 0.18, "n_inliers": 3}
+{"pair": "ROI_035/patch_3", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.179}
+{"pair": "ROI_035/patch_4", "A": [[1.055148, 0.011567, -47.66631], [-1.469144, 0.006852, 560.13045]], "n_matches": 5, "sec": 0.181, "n_inliers": 3}
+{"pair": "ROI_035/patch_5", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.195}
+{"pair": "ROI_035/patch_6", "A": [[1.002354, 5.504889, -2389.72967], [0.717347, 4.166054, -1658.135315]], "n_matches": 9, "sec": 0.174, "n_inliers": 3}
+{"pair": "ROI_035/patch_7", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.192}
+{"pair": "ROI_035/patch_8", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.201}
+{"pair": "ROI_035/patch_9", "A": [[0.562288, -1.628239, 703.590945], [0.888381, 0.703403, -179.817923]], "n_matches": 14, "sec": 0.171, "n_inliers": 5}
+{"pair": "ROI_035/patch_10", "A": [[0.696907, 0.10106, 58.641759], [0.051905, 0.265859, 343.393816]], "n_matches": 19, "sec": 0.18, "n_inliers": 4}
+{"pair": "ROI_035/patch_11", "A": [[3.347819, 1.523266, -1116.551033], [-0.707754, -0.278329, 453.970953]], "n_matches": 4, "sec": 0.21, "n_inliers": 3}
+{"pair": "ROI_035/patch_12", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.215}
+{"pair": "ROI_035/patch_13", "A": [[-0.008484, 0.019188, 426.454784], [0.004683, -0.034016, 470.504373]], "n_matches": 7, "sec": 0.216, "n_inliers": 4}
+{"pair": "ROI_035/patch_14", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.184}
+{"pair": "ROI_035/patch_15", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.24}
+{"pair": "ROI_035/patch_16", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.208}
+{"pair": "ROI_035/patch_17", "A": [[0.787463, 0.353573, -1.248303], [0.027078, 0.985726, -1.86994]], "n_matches": 4, "sec": 0.194, "n_inliers": 4}
+{"pair": "ROI_035/patch_18", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.188}
+{"pair": "ROI_035/patch_19", "A": [[0.810538, 0.559389, -45.822083], [-0.268076, 0.524229, 293.478833]], "n_matches": 8, "sec": 0.244, "n_inliers": 4}
+{"pair": "ROI_035/patch_20", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.199}
+{"pair": "ROI_035/patch_21", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.238}
+{"pair": "ROI_035/patch_22", "A": [[2.097292, -0.177066, -37.460471], [-0.411393, 0.777723, 164.586304]], "n_matches": 4, "sec": 0.182, "n_inliers": 3}
+{"pair": "ROI_035/patch_23", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.21}
+{"pair": "ROI_035/patch_24", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.183}
+{"pair": "ROI_035/patch_25", "A": [[1.180755, -0.330461, 99.35928], [-0.342446, 0.764039, 125.017378]], "n_matches": 6, "sec": 0.184, "n_inliers": 3}
+{"pair": "ROI_035/patch_26", "A": [[-1.476171, 0.92451, 712.178965], [-0.967264, 0.539833, 545.669769]], "n_matches": 3, "sec": 0.179, "n_inliers": 3}
+{"pair": "ROI_035/patch_27", "A": [[1.185484, -1.151377, 558.783274], [0.121777, 1.106973, -70.754368]], "n_matches": 5, "sec": 0.187, "n_inliers": 3}
+{"pair": "ROI_035/patch_28", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.18}
+{"pair": "ROI_035/patch_29", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.18}
+{"pair": "ROI_035/patch_30", "A": [[0.354673, 0.268103, 147.282015], [-0.433179, 0.352663, 432.520333]], "n_matches": 4, "sec": 0.187, "n_inliers": 3}
+{"pair": "ROI_035/patch_31", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.188}
+{"pair": "ROI_035/patch_32", "A": [[1.039855, -0.078994, 12.42865], [0.041727, 0.615702, -63.783095]], "n_matches": 18, "sec": 0.186, "n_inliers": 4}
+{"pair": "ROI_035/patch_33", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.173}
+{"pair": "ROI_035/patch_34", "A": [[0.3087, -0.194366, 347.791392], [-0.09293, 0.0382, 396.129619]], "n_matches": 5, "sec": 0.189, "n_inliers": 3}
+{"pair": "ROI_035/patch_35", "A": [[-1.301536, -1.097091, 1151.414891], [1.415019, 0.790516, -463.154729]], "n_matches": 3, "sec": 0.19, "n_inliers": 3}
+{"pair": "ROI_035/patch_36", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.172}
+{"pair": "ROI_035/patch_37", "A": [[-2.802606, 20.070012, -6614.355412], [-1.188412, 8.306159, -2451.276385]], "n_matches": 4, "sec": 0.172, "n_inliers": 3}
+{"pair": "ROI_035/patch_38", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.168}
+{"pair": "ROI_035/patch_39", "A": [[0.174094, 0.155623, 3.514141], [1.577458, 1.519333, -495.021275]], "n_matches": 4, "sec": 0.181, "n_inliers": 3}
+{"pair": "ROI_035/patch_40", "A": [[-5e-06, -0.002953, 241.398155], [0.012207, 0.013517, 331.455857]], "n_matches": 6, "sec": 0.179, "n_inliers": 4}
+{"pair": "ROI_035/patch_41", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.186}
+{"pair": "ROI_035/patch_42", "A": [[1.261191, -1.84024, 652.4678], [-0.023386, 0.258662, 157.435463]], "n_matches": 6, "sec": 0.176, "n_inliers": 3}
+{"pair": "ROI_035/patch_43", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.167}
+{"pair": "ROI_035/patch_44", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.184}
+{"pair": "ROI_035/patch_45", "A": [[1.064905, -1.044652, 407.333022], [0.1603, 0.362857, 200.084838]], "n_matches": 4, "sec": 0.163, "n_inliers": 3}
+{"pair": "ROI_035/patch_46", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.17}
+{"pair": "ROI_035/patch_47", "A": [[0.565585, -0.066926, 83.452617], [0.621261, -0.310048, 221.039417]], "n_matches": 4, "sec": 0.173, "n_inliers": 3}
+{"pair": "ROI_035/patch_48", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.165}
+{"pair": "ROI_035/patch_49", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.173}
+{"pair": "ROI_035/patch_50", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.169}
+{"pair": "ROI_035/patch_51", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.155}
+{"pair": "ROI_035/patch_52", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.165}
+{"pair": "ROI_035/patch_53", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.163}
+{"pair": "ROI_035/patch_54", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.166}
+{"pair": "ROI_035/patch_55", "A": [[-0.774342, -0.396205, 664.630486], [0.048176, 0.848911, 71.689702]], "n_matches": 3, "sec": 0.193, "n_inliers": 3}
+{"pair": "ROI_035/patch_56", "A": [[0.506509, 0.331751, 131.571533], [-0.011727, 0.02105, 422.52328]], "n_matches": 81, "sec": 0.194, "n_inliers": 8}
+{"pair": "ROI_035/patch_57", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.182}
+{"pair": "ROI_035/patch_58", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.184}
+{"pair": "ROI_035/patch_59", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.165}
+{"pair": "ROI_035/patch_60", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.165}
+{"pair": "ROI_035/patch_62", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.164}
+{"pair": "ROI_035/patch_63", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.186}
+{"pair": "ROI_035/patch_64", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.176}
+{"pair": "ROI_035/patch_66", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.173}
+{"pair": "ROI_035/patch_67", "A": [[-0.030464, -0.022359, 91.668677], [-0.011725, 0.016974, 387.071492]], "n_matches": 4, "sec": 0.178, "n_inliers": 3}
+{"pair": "ROI_035/patch_68", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.163}
+{"pair": "ROI_035/patch_70", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.18}
+{"pair": "ROI_035/patch_71", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.167}
+{"pair": "ROI_035/patch_72", "A": [[1.433, -0.543, 250.830728], [0.260418, 0.185973, 315.014465]], "n_matches": 6, "sec": 0.185, "n_inliers": 4}
+{"pair": "ROI_035/patch_73", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.191}
+{"pair": "ROI_035/patch_74", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.187}
+{"pair": "ROI_035/patch_76", "A": [[0.934915, -0.041055, 73.720604], [-0.870351, 0.103851, 391.859558]], "n_matches": 3, "sec": 0.173, "n_inliers": 3}
+{"pair": "ROI_035/patch_79", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.177}
+{"pair": "ROI_035/patch_81", "A": [[1.230805, -0.328012, 26.698895], [0.453451, 0.610691, 9.154801]], "n_matches": 17, "sec": 0.184, "n_inliers": 4}
+{"pair": "ROI_035/patch_82", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.159}
+{"pair": "ROI_035/patch_85", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.177}
+{"pair": "ROI_035/patch_87", "A": [[0.935809, 0.887204, -220.217099], [-0.117992, 0.505703, 280.728183]], "n_matches": 9, "sec": 0.164, "n_inliers": 4}
+{"pair": "ROI_035/patch_89", "A": [[1.463005, -0.352855, -94.642832], [0.288013, -0.309703, 459.377093]], "n_matches": 5, "sec": 0.165, "n_inliers": 4}
+{"pair": "ROI_035/patch_90", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.162}
+{"pair": "ROI_035/patch_93", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.16}
+{"pair": "ROI_035/patch_94", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.183}
+{"pair": "ROI_035/patch_95", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.163}
+{"pair": "ROI_035/patch_96", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.169}
+{"pair": "ROI_035/patch_97", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.171}
+{"pair": "ROI_035/patch_98", "A": [[2.246391, 0.373609, -222.489002], [1.338652, 1.262866, -312.56184]], "n_matches": 5, "sec": 0.174, "n_inliers": 4}
+{"pair": "ROI_035/patch_99", "A": [[1.079465, -1.044208, 87.952773], [0.027986, -0.018332, 326.553326]], "n_matches": 7, "sec": 0.181, "n_inliers": 4}
+{"pair": "ROI_035/patch_100", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.169}
+{"pair": "ROI_035/patch_101", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.164}
+{"pair": "ROI_035/patch_102", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.175}
+{"pair": "ROI_035/patch_103", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.154}
+{"pair": "ROI_035/patch_104", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.166}
+{"pair": "ROI_035/patch_105", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.175}
+{"pair": "ROI_035/patch_106", "A": [[0.920192, 0.773056, -199.2264], [-0.411487, 0.864091, 228.233064]], "n_matches": 4, "sec": 0.168, "n_inliers": 3}
+{"pair": "ROI_035/patch_107", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.178}
+{"pair": "ROI_035/patch_109", "A": [[2.621357, 1.813143, -673.234866], [1.523088, 2.23235, -543.252006]], "n_matches": 3, "sec": 0.165, "n_inliers": 3}
+{"pair": "ROI_035/patch_110", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.184}
+{"pair": "ROI_035/patch_111", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.153}
+{"pair": "ROI_035/patch_112", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.162}
+{"pair": "ROI_035/patch_113", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.155}
+{"pair": "ROI_035/patch_114", "A": [[0.743497, -0.569412, 40.711248], [0.391664, 0.839496, -7.434006]], "n_matches": 11, "sec": 0.171, "n_inliers": 5}
+{"pair": "ROI_035/patch_115", "A": [[0.759491, -1.088411, 441.666622], [-0.433252, 0.616095, 151.993554]], "n_matches": 3, "sec": 0.167, "n_inliers": 3}
+{"pair": "ROI_035/patch_116", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.168}
+{"pair": "ROI_035/patch_117", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.151}
+{"pair": "ROI_035/patch_118", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.154}
+{"pair": "ROI_035/patch_120", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.16}
+{"pair": "ROI_035/patch_121", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.178}
+{"pair": "ROI_035/patch_122", "A": [[1.359957, -0.414182, 171.327668], [0.89867, 0.463872, -26.703794]], "n_matches": 3, "sec": 0.176, "n_inliers": 3}
+{"pair": "ROI_035/patch_123", "A": [[1.893867, -0.442395, 83.13633], [-0.874306, 0.197472, 344.172829]], "n_matches": 5, "sec": 0.176, "n_inliers": 3}
+{"pair": "ROI_035/patch_124", "A": [[1.064429, -0.13792, 41.837584], [0.079569, 0.98849, -5.454816]], "n_matches": 47, "sec": 0.185, "n_inliers": 8}
+{"pair": "ROI_035/patch_125", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.16}
+{"pair": "ROI_035/patch_126", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.179}
+{"pair": "ROI_035/patch_127", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.162}
+{"pair": "ROI_035/patch_128", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.153}
+{"pair": "ROI_035/patch_130", "A": [[-1.326885, 0.367632, 373.286737], [-1.023968, 0.330797, 494.446136]], "n_matches": 7, "sec": 0.173, "n_inliers": 4}
+{"pair": "ROI_035/patch_131", "A": [[0.541431, -0.370205, 222.908746], [-0.581622, 0.021087, 494.622527]], "n_matches": 5, "sec": 0.191, "n_inliers": 3}
+{"pair": "ROI_035/patch_132", "A": [[0.716469, 6.645256, -1905.583291], [-0.317499, 0.410212, 302.36613]], "n_matches": 3, "sec": 0.168, "n_inliers": 3}
+{"pair": "ROI_035/patch_135", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.157}
+{"pair": "ROI_035/patch_136", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.169}
+{"pair": "ROI_035/patch_137", "A": [[0.57917, 0.182684, 21.969812], [-0.263794, 0.439, 301.144885]], "n_matches": 9, "sec": 0.182, "n_inliers": 4}
+{"pair": "ROI_035/patch_138", "A": [[0.862007, -0.734205, 303.486417], [0.206717, -0.017298, 401.957369]], "n_matches": 20, "sec": 0.191, "n_inliers": 5}
+{"pair": "ROI_035/patch_139", "A": [[1.596844, 0.283382, -356.357997], [0.479971, -0.169003, 344.327838]], "n_matches": 13, "sec": 0.189, "n_inliers": 3}
+{"pair": "ROI_035/patch_142", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.18}
+{"pair": "ROI_035/patch_150", "A": [[-0.147219, 0.165166, 253.923055], [-0.07945, 0.123448, 308.936097]], "n_matches": 3, "sec": 0.175, "n_inliers": 3}
+{"pair": "ROI_035/patch_152", "A": [[25.377576, 4.265978, -11806.108153], [5.611402, 1.158196, -2348.215944]], "n_matches": 4, "sec": 0.182, "n_inliers": 3}
+{"pair": "ROI_035/patch_154", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.183}
+{"pair": "ROI_035/patch_155", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.179}
+{"pair": "ROI_035/patch_156", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.182}
+{"pair": "ROI_035/patch_157", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.152}
+{"pair": "ROI_035/patch_158", "A": [[-0.196755, 0.008794, 253.864099], [0.205097, 0.660661, 122.869352]], "n_matches": 7, "sec": 0.177, "n_inliers": 6}
+{"pair": "ROI_035/patch_160", "A": [[-5.306197, -1.936967, 1928.140094], [-2.667529, -0.192276, 971.908637]], "n_matches": 5, "sec": 0.172, "n_inliers": 3}
+{"pair": "ROI_035/patch_161", "A": [[0.757382, 2.143057, -802.034258], [-0.013256, 0.903988, 82.66058]], "n_matches": 5, "sec": 0.174, "n_inliers": 4}
+{"pair": "ROI_035/patch_162", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.186}
+{"pair": "ROI_035/patch_164", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.168}
+{"pair": "ROI_035/patch_165", "A": [[-0.745562, -1.281625, 806.26984], [-0.106382, 0.172678, 338.535938]], "n_matches": 3, "sec": 0.171, "n_inliers": 3}
+{"pair": "ROI_035/patch_166", "A": [[0.599548, -0.599053, 244.335005], [-0.034171, 0.794142, 88.161901]], "n_matches": 5, "sec": 0.182, "n_inliers": 3}
+{"pair": "ROI_035/patch_170", "A": [[0.175978, 0.073133, 310.612511], [0.116246, 0.438376, 231.966957]], "n_matches": 3, "sec": 0.242, "n_inliers": 3}
+{"pair": "ROI_035/patch_171", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.168}
+{"pair": "ROI_035/patch_172", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.187}
+{"pair": "ROI_035/patch_173", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.179}
+{"pair": "ROI_035/patch_175", "A": [[-1.049748, 2.753036, -432.585109], [1.022699, -0.516762, 109.144984]], "n_matches": 4, "sec": 0.169, "n_inliers": 3}
+{"pair": "ROI_035/patch_176", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.164}
+{"pair": "ROI_035/patch_177", "A": [[0.798024, 0.791347, -162.006043], [0.06564, 0.804578, 133.203012]], "n_matches": 16, "sec": 0.181, "n_inliers": 5}
+{"pair": "ROI_035/patch_178", "A": [[1.225823, 1.254464, -617.682271], [-0.130947, 0.504083, 226.386753]], "n_matches": 3, "sec": 0.167, "n_inliers": 3}
+{"pair": "ROI_035/patch_179", "A": [[-9.202169, -0.557909, 2901.905686], [1.450217, 1.271097, -558.95184]], "n_matches": 3, "sec": 0.193, "n_inliers": 3}
+{"pair": "ROI_035/patch_180", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.176}
+{"pair": "ROI_035/patch_181", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.169}
+{"pair": "ROI_035/patch_183", "A": [[0.072789, 0.126915, 10.678739], [-0.865067, -2.03043, 1466.974678]], "n_matches": 3, "sec": 0.172, "n_inliers": 3}
+{"pair": "ROI_035/patch_184", "A": [[1.971329, 0.22162, -138.650757], [0.010101, 0.045396, 326.060816]], "n_matches": 16, "sec": 0.173, "n_inliers": 5}
+{"pair": "ROI_035/patch_187", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.163}
+{"pair": "ROI_035/patch_188", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.172}
+{"pair": "ROI_035/patch_189", "A": [[3.993724, -2.638288, 552.529514], [-2.197118, 2.233471, -34.567702]], "n_matches": 4, "sec": 0.169, "n_inliers": 3}
+{"pair": "ROI_035/patch_190", "A": [[9.138215, -14.033574, 2064.936344], [-15.536197, 23.267454, -3008.964793]], "n_matches": 4, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_035/patch_191", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.185}
+{"pair": "ROI_035/patch_192", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.173}
+{"pair": "ROI_035/patch_194", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.177}
+{"pair": "ROI_035/patch_195", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.175}
+{"pair": "ROI_035/patch_196", "A": [[1.33897, 0.131755, -93.169209], [0.4397, 1.16633, -65.49923]], "n_matches": 4, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_035/patch_197", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.181}
+{"pair": "ROI_035/patch_198", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.172}
+{"pair": "ROI_035/patch_199", "A": [[0.036889, -0.018435, 376.006913], [-0.004359, 0.068777, 445.340976]], "n_matches": 20, "sec": 0.187, "n_inliers": 5}
+{"pair": "ROI_035/patch_200", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.183}
+{"pair": "ROI_035/patch_201", "A": [[1.149216, -0.412202, 146.149838], [0.178326, -0.062684, 356.624738]], "n_matches": 9, "sec": 0.174, "n_inliers": 5}
+{"pair": "ROI_035/patch_202", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.152}
+{"pair": "ROI_035/patch_203", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.151}
+{"pair": "ROI_035/patch_205", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.158}
+{"pair": "ROI_035/patch_207", "A": [[-0.059034, 0.043773, 246.773353], [-0.011963, 0.68245, 42.180809]], "n_matches": 5, "sec": 0.158, "n_inliers": 3}
+{"pair": "ROI_035/patch_208", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.165}
+{"pair": "ROI_035/patch_209", "A": [[-0.059767, 1.138264, -51.294387], [2.13431, 0.581592, -35.008103]], "n_matches": 7, "sec": 0.168, "n_inliers": 3}
+{"pair": "ROI_035/patch_210", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.17}
+{"pair": "ROI_035/patch_212", "A": [[0.787312, -0.100761, 149.098638], [-0.108579, 1.426232, 4.3582]], "n_matches": 6, "sec": 0.163, "n_inliers": 4}
+{"pair": "ROI_035/patch_213", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.167}
+{"pair": "ROI_049/patch_0", "A": [[-0.257222, 1.979251, 49.215128], [-0.765721, 0.877277, 434.64838]], "n_matches": 11, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_049/patch_1", "A": [[0.745224, -3.090922, 308.908652], [-0.011949, -0.275787, 361.611988]], "n_matches": 3, "sec": 0.178, "n_inliers": 3}
+{"pair": "ROI_049/patch_2", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.173}
+{"pair": "ROI_049/patch_3", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.167}
+{"pair": "ROI_049/patch_4", "A": [[0.96006, -0.405581, 44.648753], [-0.869822, 0.999471, 313.384682]], "n_matches": 16, "sec": 0.167, "n_inliers": 4}
+{"pair": "ROI_049/patch_5", "A": [[-12.313376, 19.347174, -3851.196897], [-5.547801, 8.309446, -1284.544359]], "n_matches": 8, "sec": 0.2, "n_inliers": 3}
+{"pair": "ROI_049/patch_6", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.165}
+{"pair": "ROI_049/patch_7", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.199}
+{"pair": "ROI_049/patch_8", "A": [[1.555929, 0.37931, -158.967238], [-2.062243, 0.139926, 553.256308]], "n_matches": 5, "sec": 0.192, "n_inliers": 3}
+{"pair": "ROI_049/patch_10", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.19}
+{"pair": "ROI_049/patch_11", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.174}
+{"pair": "ROI_049/patch_12", "A": [[0.415941, -0.581796, 373.091415], [0.070355, 0.270983, 305.086133]], "n_matches": 15, "sec": 0.193, "n_inliers": 4}
+{"pair": "ROI_049/patch_13", "A": [[0.01823, 0.112273, 288.45379], [0.03007, 0.224888, 367.756522]], "n_matches": 15, "sec": 0.178, "n_inliers": 4}
+{"pair": "ROI_049/patch_15", "A": [[0.340401, 1.219167, -211.536938], [-0.267362, 0.643634, 219.561635]], "n_matches": 5, "sec": 0.171, "n_inliers": 4}
+{"pair": "ROI_049/patch_16", "A": [[0.503282, 0.407545, -154.897268], [0.015583, 0.90781, 49.872477]], "n_matches": 31, "sec": 0.174, "n_inliers": 5}
+{"pair": "ROI_049/patch_17", "A": [[0.773975, 0.991892, -134.170546], [0.697617, 2.019202, -414.55764]], "n_matches": 13, "sec": 0.179, "n_inliers": 4}
+{"pair": "ROI_049/patch_19", "A": [[-0.20124, 0.027492, 321.875075], [0.128726, 0.50186, 364.162325]], "n_matches": 3, "sec": 0.183, "n_inliers": 3}
+{"pair": "ROI_049/patch_20", "A": [[2.814118, 2.883162, -1269.603274], [-4.309891, -2.705548, 2216.647824]], "n_matches": 7, "sec": 0.171, "n_inliers": 3}
+{"pair": "ROI_049/patch_21", "A": [[0.930221, 0.499772, -202.279829], [-0.6833, 0.493011, 422.764993]], "n_matches": 15, "sec": 0.191, "n_inliers": 5}
+{"pair": "ROI_049/patch_22", "A": [[3.299382, -3.822139, -535.866703], [-0.88959, 0.701389, 400.746879]], "n_matches": 6, "sec": 0.16, "n_inliers": 3}
+{"pair": "ROI_049/patch_23", "A": [[1.882016, 1.070279, -578.827714], [-0.321633, 0.614209, 200.708492]], "n_matches": 5, "sec": 0.183, "n_inliers": 3}
+{"pair": "ROI_049/patch_24", "A": [[0.107316, 0.115919, 260.611858], [-0.124491, 0.786595, 129.267494]], "n_matches": 23, "sec": 0.171, "n_inliers": 6}
+{"pair": "ROI_049/patch_26", "A": [[-184.920818, -80.42468, 80839.124677], [74.93572, 32.615, -32415.479636]], "n_matches": 3, "sec": 0.175, "n_inliers": 3}
+{"pair": "ROI_049/patch_27", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.181}
+{"pair": "ROI_049/patch_28", "A": [[0.956086, -1.316295, 616.331276], [-0.040464, -0.634924, 714.022445]], "n_matches": 16, "sec": 0.183, "n_inliers": 4}
+{"pair": "ROI_049/patch_29", "A": [[-0.546984, 0.484351, 162.757124], [0.62618, 0.586081, 95.847739]], "n_matches": 23, "sec": 0.177, "n_inliers": 5}
+{"pair": "ROI_049/patch_30", "A": [[0.271394, -0.088912, 406.558623], [-0.426712, 0.278644, 453.778066]], "n_matches": 24, "sec": 0.183, "n_inliers": 4}
+{"pair": "ROI_049/patch_31", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.173}
+{"pair": "ROI_049/patch_32", "A": [[0.561535, 1.374909, -117.537414], [-0.197961, 0.295442, 419.407237]], "n_matches": 24, "sec": 0.189, "n_inliers": 5}
+{"pair": "ROI_049/patch_33", "A": [[-0.543234, 1.962765, -392.439975], [-0.499967, 0.156466, 440.607668]], "n_matches": 6, "sec": 0.188, "n_inliers": 3}
+{"pair": "ROI_049/patch_34", "A": [[-1.229484, 1.723579, 193.972466], [0.459843, 0.614633, -15.291551]], "n_matches": 6, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_049/patch_35", "A": [[-0.577643, 0.061515, 333.531951], [-1.555005, 0.130573, 847.520365]], "n_matches": 6, "sec": 0.187, "n_inliers": 3}
+{"pair": "ROI_049/patch_36", "A": [[0.471119, -0.841024, 299.348614], [-1.226453, -3.544046, 1589.157125]], "n_matches": 3, "sec": 0.178, "n_inliers": 3}
+{"pair": "ROI_049/patch_37", "A": [[-0.259752, -0.162566, 285.543128], [-0.309621, 0.935076, 123.930618]], "n_matches": 13, "sec": 0.197, "n_inliers": 4}
+{"pair": "ROI_049/patch_38", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.198}
+{"pair": "ROI_049/patch_39", "A": [[-1.557706, -0.836645, 1028.494094], [-0.742571, -0.539136, 771.042298]], "n_matches": 12, "sec": 0.189, "n_inliers": 3}
+{"pair": "ROI_049/patch_41", "A": [[-1.043203, 0.443211, 503.196469], [-2.046232, 0.505946, 937.131367]], "n_matches": 7, "sec": 0.168, "n_inliers": 3}
+{"pair": "ROI_049/patch_42", "A": [[1.078822, 0.969487, -207.651754], [-0.667972, -0.006436, 550.198637]], "n_matches": 6, "sec": 0.16, "n_inliers": 3}
+{"pair": "ROI_049/patch_43", "A": [[0.049081, -0.079452, 289.426349], [-0.129163, 0.462747, 331.520683]], "n_matches": 23, "sec": 0.194, "n_inliers": 4}
+{"pair": "ROI_049/patch_44", "A": [[0.660028, 1.5773, -484.210097], [-0.217387, 0.443663, 283.146424]], "n_matches": 6, "sec": 0.181, "n_inliers": 3}
+{"pair": "ROI_049/patch_46", "A": [[-0.60202, 0.609704, 192.342096], [0.218867, 1.922622, -230.880598]], "n_matches": 3, "sec": 0.15, "n_inliers": 3}
+{"pair": "ROI_049/patch_47", "A": [[0.137765, 0.240206, 47.610375], [-0.187193, -0.242708, 437.89428]], "n_matches": 9, "sec": 0.17, "n_inliers": 5}
+{"pair": "ROI_049/patch_48", "A": [[0.166258, 0.495772, 150.320661], [-0.027852, -0.296632, 526.142223]], "n_matches": 16, "sec": 0.176, "n_inliers": 5}
+{"pair": "ROI_049/patch_49", "A": [[0.693963, 0.38846, -18.372018], [-0.184115, 0.663221, 180.677299]], "n_matches": 5, "sec": 0.186, "n_inliers": 3}
+{"pair": "ROI_049/patch_50", "A": [[-0.108615, 0.907349, -22.842911], [-0.145359, 0.110429, 208.943169]], "n_matches": 3, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_049/patch_51", "A": [[0.505882, 0.506605, 34.487243], [-0.259916, 0.160862, 441.421408]], "n_matches": 42, "sec": 0.204, "n_inliers": 6}
+{"pair": "ROI_049/patch_53", "A": [[0.110646, 1.095387, 34.642906], [0.017004, 1.646087, 20.583047]], "n_matches": 11, "sec": 0.184, "n_inliers": 4}
+{"pair": "ROI_049/patch_54", "A": [[0.749635, -0.097445, 187.518302], [0.098793, 1.15697, -4.094282]], "n_matches": 6, "sec": 0.169, "n_inliers": 4}
+{"pair": "ROI_049/patch_56", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.183}
+{"pair": "ROI_049/patch_57", "A": [[-0.461672, -0.381347, 574.44092], [-0.886453, 0.350432, 389.482326]], "n_matches": 12, "sec": 0.177, "n_inliers": 3}
+{"pair": "ROI_049/patch_59", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.152}
+{"pair": "ROI_049/patch_60", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.167}
+{"pair": "ROI_049/patch_61", "A": [[0.259758, 0.169956, 255.076534], [-0.408164, -0.416466, 532.601295]], "n_matches": 6, "sec": 0.195, "n_inliers": 3}
+{"pair": "ROI_049/patch_63", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.181}
+{"pair": "ROI_049/patch_64", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.163}
+{"pair": "ROI_049/patch_65", "A": [[-0.163448, 0.407263, 178.250729], [-0.250883, 0.632177, 263.881307]], "n_matches": 5, "sec": 0.178, "n_inliers": 3}
+{"pair": "ROI_049/patch_66", "A": [[0.665856, -0.476594, 253.180998], [-0.576971, 0.153652, 443.259391]], "n_matches": 14, "sec": 0.185, "n_inliers": 5}
+{"pair": "ROI_049/patch_67", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.185}
+{"pair": "ROI_049/patch_69", "A": [[2.653026, 0.008104, -728.569402], [-2.71737, 0.838412, 1166.869892]], "n_matches": 3, "sec": 0.165, "n_inliers": 3}
+{"pair": "ROI_049/patch_71", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.17}
+{"pair": "ROI_049/patch_72", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.159}
+{"pair": "ROI_049/patch_73", "A": [[51.545835, 368.592837, -77849.183264], [23.109309, 190.70639, -38572.593969]], "n_matches": 3, "sec": 0.163, "n_inliers": 3}
+{"pair": "ROI_049/patch_74", "A": [[0.96706, 2.336408, -953.851847], [-0.544726, -17.954351, 8146.066072]], "n_matches": 6, "sec": 0.164, "n_inliers": 3}
+{"pair": "ROI_049/patch_75", "A": [[-1.324731, -0.515082, 848.868605], [-0.65257, 0.558317, 394.299889]], "n_matches": 3, "sec": 0.184, "n_inliers": 3}
+{"pair": "ROI_049/patch_77", "A": [[-0.23506, -0.23586, 375.881961], [-0.102182, 0.136724, 346.998763]], "n_matches": 4, "sec": 0.194, "n_inliers": 3}
+{"pair": "ROI_049/patch_80", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.174}
+{"pair": "ROI_049/patch_82", "A": [[-1.469487, -2.761746, 925.972348], [0.608149, 0.167112, -173.243849]], "n_matches": 4, "sec": 0.167, "n_inliers": 3}
+{"pair": "ROI_049/patch_83", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.167}
+{"pair": "ROI_049/patch_84", "A": [[0.651724, 0.702539, -109.237375], [-0.422238, 0.369006, 409.18407]], "n_matches": 8, "sec": 0.185, "n_inliers": 5}
+{"pair": "ROI_049/patch_85", "A": [[-0.610545, 0.258119, 377.971527], [0.173283, 0.029643, 439.347071]], "n_matches": 7, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_049/patch_86", "A": [[-11.488617, 3.323316, 2824.741825], [4.066622, -0.164995, -881.396002]], "n_matches": 4, "sec": 0.15, "n_inliers": 3}
+{"pair": "ROI_049/patch_88", "A": [[11.22419, -22.26766, 754.653726], [0.760002, -1.390439, 155.284042]], "n_matches": 9, "sec": 0.157, "n_inliers": 3}
+{"pair": "ROI_049/patch_90", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.18}
+{"pair": "ROI_049/patch_91", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.159}
+{"pair": "ROI_049/patch_93", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.165}
+{"pair": "ROI_049/patch_96", "A": [[-0.740478, -0.642424, 492.266667], [-0.359734, 0.275502, 322.740594]], "n_matches": 7, "sec": 0.184, "n_inliers": 4}
+{"pair": "ROI_049/patch_98", "A": [[0.397234, 0.484807, 79.972369], [-0.908238, 0.69374, 501.742668]], "n_matches": 16, "sec": 0.164, "n_inliers": 5}
+{"pair": "ROI_049/patch_99", "A": [[-0.487168, -0.541625, 403.305081], [0.381205, 0.526365, 249.308432]], "n_matches": 26, "sec": 0.175, "n_inliers": 5}
+{"pair": "ROI_049/patch_103", "A": [[0.704045, 0.44493, -47.626226], [0.18293, 0.263112, 272.543269]], "n_matches": 34, "sec": 0.174, "n_inliers": 5}
+{"pair": "ROI_049/patch_104", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.163}
+{"pair": "ROI_049/patch_105", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.169}
+{"pair": "ROI_049/patch_106", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.16}
+{"pair": "ROI_049/patch_107", "A": [[0.437668, 0.910855, -290.970113], [-0.041821, 0.327389, 340.24742]], "n_matches": 21, "sec": 0.158, "n_inliers": 7}
+{"pair": "ROI_049/patch_108", "A": [[1.595765, 0.835165, -157.356709], [0.307717, 2.389396, -151.239524]], "n_matches": 14, "sec": 0.175, "n_inliers": 3}
+{"pair": "ROI_049/patch_109", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.176}
+{"pair": "ROI_049/patch_110", "A": [[-0.178448, 1.067426, -35.092184], [0.033216, 0.467908, 228.601143]], "n_matches": 5, "sec": 0.173, "n_inliers": 3}
+{"pair": "ROI_049/patch_111", "A": [[-5.443233, -37.541976, 18907.064827], [-2.197544, -18.788626, 9599.509618]], "n_matches": 8, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_049/patch_112", "A": [[-0.024678, 0.710416, 153.382088], [0.134781, 0.957048, -52.241887]], "n_matches": 7, "sec": 0.179, "n_inliers": 4}
+{"pair": "ROI_070/patch_0", "A": [[-0.710365, -0.213117, 783.78201], [-0.090593, 0.346409, 320.612443]], "n_matches": 16, "sec": 0.199, "n_inliers": 4}
+{"pair": "ROI_070/patch_1", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.16}
+{"pair": "ROI_070/patch_2", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.158}
+{"pair": "ROI_070/patch_3", "A": [[0.189361, 0.624303, -55.057956], [-0.86338, 0.413501, 415.580407]], "n_matches": 30, "sec": 0.175, "n_inliers": 4}
+{"pair": "ROI_070/patch_4", "A": [[-0.267611, 0.90378, 102.718793], [0.290381, 0.405947, 53.165475]], "n_matches": 21, "sec": 0.179, "n_inliers": 3}
+{"pair": "ROI_070/patch_5", "A": [[1.018718, 0.127822, -45.069151], [-0.119219, 1.6661, -33.926743]], "n_matches": 13, "sec": 0.179, "n_inliers": 5}
+{"pair": "ROI_070/patch_6", "A": [[-0.549153, -1.15165, 876.649723], [-0.295674, -0.259715, 624.724875]], "n_matches": 13, "sec": 0.174, "n_inliers": 4}
+{"pair": "ROI_070/patch_7", "A": [[0.336739, -0.268103, 328.718135], [-0.404168, 0.398183, 280.743923]], "n_matches": 4, "sec": 0.185, "n_inliers": 3}
+{"pair": "ROI_070/patch_8", "A": [[1.167562, 0.427276, -185.957063], [-0.129985, 0.875971, 26.909169]], "n_matches": 3, "sec": 0.157, "n_inliers": 3}
+{"pair": "ROI_070/patch_9", "A": [[-4.028648, -1.909531, 2171.523872], [0.266361, 1.042583, -60.997444]], "n_matches": 11, "sec": 0.174, "n_inliers": 3}
+{"pair": "ROI_070/patch_10", "A": [[1.154602, 0.122024, 141.598275], [-1.536256, 0.690778, 595.211232]], "n_matches": 31, "sec": 0.182, "n_inliers": 5}
+{"pair": "ROI_070/patch_11", "A": [[0.930525, 0.017639, 27.620581], [0.019507, 0.772402, 95.788823]], "n_matches": 5, "sec": 0.189, "n_inliers": 3}
+{"pair": "ROI_070/patch_12", "A": [[0.055497, 0.043111, 284.637737], [0.017189, 0.003563, 438.457907]], "n_matches": 11, "sec": 0.187, "n_inliers": 5}
+{"pair": "ROI_070/patch_13", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.164}
+{"pair": "ROI_070/patch_14", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.172}
+{"pair": "ROI_070/patch_15", "A": [[1.413489, -0.690538, -8.065779], [-4.739544, -2.263704, 2170.537839]], "n_matches": 3, "sec": 0.166, "n_inliers": 3}
+{"pair": "ROI_070/patch_16", "A": [[0.528192, -0.449623, 298.369354], [-0.675069, -0.223771, 619.162883]], "n_matches": 6, "sec": 0.181, "n_inliers": 3}
+{"pair": "ROI_070/patch_17", "A": [[1.236633, 1.493699, -471.192108], [-0.070436, 1.296093, -149.781044]], "n_matches": 9, "sec": 0.18, "n_inliers": 4}
+{"pair": "ROI_070/patch_18", "A": [[210.12142, -84.615489, -47634.810476], [-10.991895, 4.903319, 2669.865416]], "n_matches": 3, "sec": 0.167, "n_inliers": 3}
+{"pair": "ROI_070/patch_19", "A": [[1.565522, -2.858482, 295.009483], [-4.699404, 8.617951, -241.428112]], "n_matches": 5, "sec": 0.179, "n_inliers": 3}
+{"pair": "ROI_070/patch_20", "A": [[-0.014446, 0.010372, 382.220404], [0.024468, -0.017305, 489.81813]], "n_matches": 98, "sec": 0.179, "n_inliers": 7}
+{"pair": "ROI_070/patch_21", "A": [[0.645041, -0.861263, 499.68555], [-0.70996, -5.785891, 3416.398918]], "n_matches": 8, "sec": 0.16, "n_inliers": 3}
+{"pair": "ROI_070/patch_22", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.161}
+{"pair": "ROI_070/patch_23", "A": [[-0.940871, 1.188014, -15.636133], [0.488026, 1.178377, -15.036024]], "n_matches": 15, "sec": 0.173, "n_inliers": 5}
+{"pair": "ROI_070/patch_24", "A": [[1.056583, 0.827369, -154.751429], [-1.725149, -0.351134, 683.673738]], "n_matches": 6, "sec": 0.169, "n_inliers": 3}
+{"pair": "ROI_070/patch_25", "A": [[0.513347, 0.18584, 131.628083], [0.337805, 0.939368, -99.230556]], "n_matches": 17, "sec": 0.174, "n_inliers": 5}
+{"pair": "ROI_070/patch_26", "A": [[1.903838, -0.091066, -418.404014], [1.367761, 0.816712, -466.88268]], "n_matches": 10, "sec": 0.164, "n_inliers": 3}
+{"pair": "ROI_070/patch_27", "A": [[5.414633, 4.671729, -2028.128857], [-3.207139, -1.811397, 1439.930705]], "n_matches": 4, "sec": 0.177, "n_inliers": 3}
+{"pair": "ROI_070/patch_28", "A": [[0.716465, -0.197856, 127.776994], [-2.094745, -1.091749, 1275.904347]], "n_matches": 7, "sec": 0.175, "n_inliers": 3}
+{"pair": "ROI_070/patch_29", "A": [[-8.0215, -4.502441, 2486.978609], [-19.104647, -11.008086, 6026.924274]], "n_matches": 7, "sec": 0.157, "n_inliers": 3}
+{"pair": "ROI_070/patch_31", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.166}
+{"pair": "ROI_070/patch_33", "A": [[-0.495018, 0.197252, 518.618708], [1.324301, -0.471255, 31.946601]], "n_matches": 4, "sec": 0.162, "n_inliers": 3}
+{"pair": "ROI_070/patch_35", "A": [[-0.102741, 0.05109, 405.170635], [0.03307, 0.331719, 318.20576]], "n_matches": 8, "sec": 0.172, "n_inliers": 3}
+{"pair": "ROI_070/patch_36", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.173}
+{"pair": "ROI_070/patch_37", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.173}
+{"pair": "ROI_070/patch_38", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.173}
+{"pair": "ROI_070/patch_39", "A": [[-0.475321, 1.717647, 45.484125], [-0.654389, 0.899752, 350.937432]], "n_matches": 10, "sec": 0.185, "n_inliers": 4}
+{"pair": "ROI_070/patch_40", "A": [[-0.905667, -2.105888, 1248.639697], [-0.905996, 0.301565, 456.556801]], "n_matches": 9, "sec": 0.189, "n_inliers": 3}
+{"pair": "ROI_070/patch_41", "A": [[1.043874, 0.418613, 50.207884], [0.623477, 1.309064, -213.948477]], "n_matches": 32, "sec": 0.169, "n_inliers": 5}
+{"pair": "ROI_070/patch_42", "A": [[15.137699, 8.575628, -4056.983762], [7.317401, 4.80201, -2010.395907]], "n_matches": 3, "sec": 0.174, "n_inliers": 3}
+{"pair": "ROI_070/patch_43", "A": [[0.872945, 0.279941, -19.714876], [-0.81584, 0.332792, 419.720143]], "n_matches": 40, "sec": 0.177, "n_inliers": 6}
+{"pair": "ROI_070/patch_45", "A": [[0.272002, -0.315386, 355.095342], [-0.633552, -1.278098, 812.358375]], "n_matches": 4, "sec": 0.149, "n_inliers": 3}
+{"pair": "ROI_070/patch_46", "A": [[-0.126787, 0.937607, 32.561982], [0.660542, 0.657991, -58.548178]], "n_matches": 20, "sec": 0.17, "n_inliers": 4}
+{"pair": "ROI_070/patch_47", "A": [[0.582659, 0.59112, 19.902206], [0.252161, 0.206465, 144.198985]], "n_matches": 53, "sec": 0.169, "n_inliers": 6}
+{"pair": "ROI_070/patch_48", "A": [[1.070462, -1.649972, 725.36794], [0.016405, -0.175017, 521.605801]], "n_matches": 26, "sec": 0.18, "n_inliers": 5}
+{"pair": "ROI_070/patch_49", "A": [[0.125305, 0.180639, 320.352607], [0.028113, 0.031002, 454.059668]], "n_matches": 35, "sec": 0.188, "n_inliers": 5}
+{"pair": "ROI_070/patch_50", "A": [[0.94757, 0.157963, -112.513103], [-0.29922, 0.871876, 127.416246]], "n_matches": 22, "sec": 0.171, "n_inliers": 5}
+{"pair": "ROI_070/patch_51", "A": [[0.037142, 0.582536, 197.257254], [-0.540716, 0.037733, 522.122346]], "n_matches": 10, "sec": 0.165, "n_inliers": 5}
+{"pair": "ROI_070/patch_52", "A": [[0.012458, 0.161885, 326.463308], [-0.361686, 1.08228, 161.226731]], "n_matches": 21, "sec": 0.155, "n_inliers": 4}
+{"pair": "ROI_070/patch_53", "A": [[0.791862, 0.375482, 39.760067], [0.367868, 0.518446, 91.249981]], "n_matches": 38, "sec": 0.168, "n_inliers": 5}
+{"pair": "ROI_070/patch_54", "A": [[0.231438, 0.551266, 14.448905], [-0.087513, 0.484901, 180.251098]], "n_matches": 37, "sec": 0.189, "n_inliers": 5}
+{"pair": "ROI_070/patch_57", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.179}
+{"pair": "ROI_070/patch_58", "A": [[0.402441, 3.052402, -522.766263], [1.126884, 3.03366, -745.056443]], "n_matches": 12, "sec": 0.18, "n_inliers": 4}
+{"pair": "ROI_070/patch_59", "A": [[1.097664, 0.449066, -61.743197], [-0.15145, -0.163087, 134.100304]], "n_matches": 3, "sec": 0.161, "n_inliers": 3}
+{"pair": "ROI_070/patch_60", "A": [[2.633168, -1.278627, -613.293341], [-0.427882, 1.191156, 185.291117]], "n_matches": 27, "sec": 0.181, "n_inliers": 4}
+{"pair": "ROI_070/patch_61", "A": [[-0.21665, -0.226674, 596.781677], [0.669716, 1.128491, -244.844895]], "n_matches": 23, "sec": 0.168, "n_inliers": 4}
+{"pair": "ROI_070/patch_62", "A": [[-1.103508, 1.559481, 204.860264], [-0.038817, 0.396254, 284.233606]], "n_matches": 56, "sec": 0.165, "n_inliers": 6}
+{"pair": "ROI_070/patch_63", "A": [[1.583991, 0.719186, -255.230345], [0.824997, 1.508969, -388.182511]], "n_matches": 7, "sec": 0.183, "n_inliers": 3}
+{"pair": "ROI_070/patch_66", "A": [[0.041817, -0.254984, 376.010483], [-0.141765, 0.540344, 146.814328]], "n_matches": 52, "sec": 0.153, "n_inliers": 6}
+{"pair": "ROI_070/patch_67", "A": [[0.993492, 0.009463, -0.941223], [-0.580359, 0.604044, 340.251219]], "n_matches": 66, "sec": 0.166, "n_inliers": 5}
+{"pair": "ROI_070/patch_69", "A": [[3.018824, -1.562356, -301.844448], [-1.604703, 2.3907, 49.570334]], "n_matches": 5, "sec": 0.167, "n_inliers": 3}
+{"pair": "ROI_070/patch_70", "A": [[-10.96163, -1.172746, 2267.622581], [6.164372, 1.850934, -1279.098083]], "n_matches": 8, "sec": 0.193, "n_inliers": 3}
+{"pair": "ROI_070/patch_71", "A": [[0.3275, -0.26506, 391.137194], [-0.263076, 0.737897, 108.068407]], "n_matches": 20, "sec": 0.169, "n_inliers": 5}
+{"pair": "ROI_070/patch_72", "A": [[0.212199, 0.406653, 264.665657], [-1.035654, 0.451081, 618.289197]], "n_matches": 37, "sec": 0.174, "n_inliers": 4}
+{"pair": "ROI_070/patch_73", "A": [[1.25827, 2.081147, -407.997382], [-0.343312, 0.132918, 416.603423]], "n_matches": 18, "sec": 0.168, "n_inliers": 5}
+{"pair": "ROI_070/patch_74", "A": [[0.781121, 0.031035, 108.6914], [0.36448, 1.515404, -168.413975]], "n_matches": 37, "sec": 0.166, "n_inliers": 7}
+{"pair": "ROI_070/patch_77", "A": [[-2.155462, 0.654399, 501.458317], [-2.179186, 2.51655, -191.978198]], "n_matches": 23, "sec": 0.162, "n_inliers": 4}
+{"pair": "ROI_070/patch_78", "A": [[5446.449933, -327.983371, -2175476.713063], [142.156517, -6.872922, -56841.208962]], "n_matches": 11, "sec": 0.168, "n_inliers": 3}
+{"pair": "ROI_070/patch_87", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.161}
+{"pair": "ROI_070/patch_90", "A": [[0.168118, 0.34263, 243.505598], [0.208649, 0.802681, -34.230365]], "n_matches": 29, "sec": 0.17, "n_inliers": 6}
+{"pair": "ROI_070/patch_92", "A": [[0.977872, 0.475902, -214.736377], [-0.090503, 0.457054, 286.178922]], "n_matches": 42, "sec": 0.184, "n_inliers": 6}
+{"pair": "ROI_070/patch_93", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.165}
+{"pair": "ROI_070/patch_96", "A": [[2.428728, 0.968069, -855.40551], [5.950242, 2.948071, -2283.4313]], "n_matches": 15, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_070/patch_97", "A": [[2.178401, 3.672635, -1726.664109], [-0.787458, -0.339745, 653.16888]], "n_matches": 17, "sec": 0.181, "n_inliers": 3}
+{"pair": "ROI_070/patch_98", "A": [[1.490374, -0.836848, 168.985971], [-0.832723, 1.611444, 83.44643]], "n_matches": 33, "sec": 0.173, "n_inliers": 5}
+{"pair": "ROI_070/patch_99", "A": [[-1.423758, -1.865337, 969.474998], [-0.125854, -0.132565, 310.85395]], "n_matches": 4, "sec": 0.176, "n_inliers": 3}
+{"pair": "ROI_070/patch_100", "A": [[1.021668, -0.315284, 25.492582], [-0.076255, 0.932036, -180.584733]], "n_matches": 60, "sec": 0.167, "n_inliers": 6}
+{"pair": "ROI_070/patch_102", "A": [[0.822988, 1.077742, -353.100668], [-0.216755, 0.678034, 228.177552]], "n_matches": 36, "sec": 0.173, "n_inliers": 6}
+{"pair": "ROI_070/patch_103", "A": [[1.714803, -0.449856, -292.468132], [-0.022563, 0.86572, 17.500886]], "n_matches": 29, "sec": 0.178, "n_inliers": 6}
+{"pair": "ROI_070/patch_105", "A": [[-2.277536, -3.818843, 1730.178623], [-1.320599, -3.165544, 1379.04036]], "n_matches": 15, "sec": 0.18, "n_inliers": 3}
+{"pair": "ROI_070/patch_106", "A": [[0.80529, 2.239584, -688.654487], [-0.606985, 0.666031, 198.998419]], "n_matches": 4, "sec": 0.16, "n_inliers": 3}
+{"pair": "ROI_070/patch_108", "A": [[0.584688, -0.10174, 135.579123], [-0.375762, -0.42232, 590.603276]], "n_matches": 8, "sec": 0.173, "n_inliers": 4}
+{"pair": "ROI_070/patch_109", "A": [[0.432453, 1.864884, -81.857234], [-1.34245, 2.467231, 346.4612]], "n_matches": 29, "sec": 0.164, "n_inliers": 6}
+{"pair": "ROI_070/patch_110", "A": [[1.318808, -0.028021, -123.44914], [-0.611042, 0.863226, 189.092356]], "n_matches": 21, "sec": 0.173, "n_inliers": 4}
+{"pair": "ROI_070/patch_112", "A": [[0.87886, -0.105903, 69.81186], [-0.170929, 0.435417, 159.402127]], "n_matches": 109, "sec": 0.184, "n_inliers": 9}
+{"pair": "ROI_070/patch_113", "A": [[0.763836, 0.324185, -204.253694], [0.511764, 1.483801, -362.301077]], "n_matches": 8, "sec": 0.163, "n_inliers": 4}
+{"pair": "ROI_070/patch_114", "A": [[0.704062, 5.221128, -2270.64149], [-0.15626, -1.018808, 982.961305]], "n_matches": 60, "sec": 0.171, "n_inliers": 6}
+{"pair": "ROI_070/patch_115", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.15}
+{"pair": "ROI_070/patch_117", "A": [[-23.256987, -0.776169, 6779.253045], [21.287879, 0.839304, -5697.83199]], "n_matches": 28, "sec": 0.162, "n_inliers": 4}
+{"pair": "ROI_070/patch_118", "A": [[0.058666, 0.435066, 193.700637], [-0.075315, 1.198706, 89.580104]], "n_matches": 50, "sec": 0.161, "n_inliers": 5}
+{"pair": "ROI_070/patch_120", "A": [[0.602997, 0.227339, -49.037795], [0.156759, 0.977712, -17.010706]], "n_matches": 25, "sec": 0.156, "n_inliers": 4}
+{"pair": "ROI_070/patch_121", "A": [[0.879744, 0.112328, 1.313612], [0.035952, 2.258593, -35.835926]], "n_matches": 49, "sec": 0.164, "n_inliers": 7}
+{"pair": "ROI_070/patch_122", "A": [[-1.059397, -0.753168, 566.112897], [-0.790388, 0.443293, 254.60712]], "n_matches": 26, "sec": 0.162, "n_inliers": 4}
+{"pair": "ROI_070/patch_123", "A": [[0.759193, 0.176682, 39.20046], [0.10566, 1.003166, -4.233018]], "n_matches": 34, "sec": 0.167, "n_inliers": 5}
+{"pair": "ROI_070/patch_125", "A": [[2.238604, -0.202614, -118.176527], [0.280793, 0.74731, 142.761227]], "n_matches": 36, "sec": 0.177, "n_inliers": 4}
+{"pair": "ROI_070/patch_126", "A": [[0.717641, 0.213152, 175.297306], [-0.128569, 0.339139, 338.452073]], "n_matches": 63, "sec": 0.177, "n_inliers": 8}
+{"pair": "ROI_070/patch_127", "A": [[1.511253, 1.285005, -630.268689], [-0.679417, -0.243516, 543.620117]], "n_matches": 4, "sec": 0.175, "n_inliers": 3}
+{"pair": "ROI_070/patch_129", "A": [[0.307801, -0.503443, 344.563467], [-0.704688, 0.051566, 490.065277]], "n_matches": 43, "sec": 0.181, "n_inliers": 5}
+{"pair": "ROI_070/patch_131", "A": [[-0.045465, 0.384237, 246.018734], [-0.055624, 0.218903, 368.857067]], "n_matches": 53, "sec": 0.185, "n_inliers": 8}
+{"pair": "ROI_070/patch_133", "A": [[0.262768, -0.336474, 418.228649], [-0.238652, 0.449636, 80.716483]], "n_matches": 93, "sec": 0.17, "n_inliers": 8}
+{"pair": "ROI_070/patch_135", "A": [[0.230826, 0.359947, 264.579844], [-0.561305, 0.819494, 183.86498]], "n_matches": 35, "sec": 0.17, "n_inliers": 6}
+{"pair": "ROI_070/patch_137", "A": [[1.058359, 0.252337, -148.449548], [-0.138568, 1.088662, 94.783079]], "n_matches": 82, "sec": 0.18, "n_inliers": 8}
+{"pair": "ROI_070/patch_151", "A": [[0.805138, 0.206767, 4.789636], [0.092706, 1.178237, -95.320301]], "n_matches": 42, "sec": 0.176, "n_inliers": 7}
+{"pair": "ROI_070/patch_152", "A": [[0.938875, 0.163985, -18.252819], [-0.029401, 1.004185, 10.512747]], "n_matches": 64, "sec": 0.178, "n_inliers": 7}
+{"pair": "ROI_070/patch_155", "A": [[-0.094052, 0.827729, 68.327869], [-1.019624, 1.38279, 211.202166]], "n_matches": 47, "sec": 0.161, "n_inliers": 5}
+{"pair": "ROI_070/patch_157", "A": [[0.812017, 0.535956, -156.297479], [0.062255, 0.695295, 115.531753]], "n_matches": 21, "sec": 0.177, "n_inliers": 5}
+{"pair": "ROI_070/patch_158", "A": [[-0.187602, -0.21144, 581.458665], [-0.644861, 0.614075, 383.408227]], "n_matches": 23, "sec": 0.184, "n_inliers": 5}
+{"pair": "ROI_070/patch_159", "A": [[0.648327, 0.36105, 65.667345], [-0.139483, 0.767706, -46.377505]], "n_matches": 6, "sec": 0.183, "n_inliers": 5}
+{"pair": "ROI_070/patch_160", "A": [[0.498104, 0.343735, 88.073747], [-0.25192, 0.667671, 317.926364]], "n_matches": 87, "sec": 0.16, "n_inliers": 6}
+{"pair": "ROI_070/patch_161", "A": [[0.305051, -2.074544, 280.56416], [-0.135277, 2.509539, -22.431903]], "n_matches": 23, "sec": 0.165, "n_inliers": 4}
+{"pair": "ROI_070/patch_163", "A": [[1.762444, 0.360749, -179.463084], [-0.395552, 1.210336, -37.939186]], "n_matches": 24, "sec": 0.185, "n_inliers": 6}
+{"pair": "ROI_070/patch_164", "A": [[0.748411, 0.955235, -55.875939], [-0.40775, 0.308746, 337.407608]], "n_matches": 24, "sec": 0.184, "n_inliers": 5}
+{"pair": "ROI_070/patch_167", "A": [[-0.005636, 0.004448, 346.303343], [-0.004797, 0.002502, 467.992038]], "n_matches": 98, "sec": 0.182, "n_inliers": 13}
+{"pair": "ROI_071/patch_0", "A": [[0.759539, -0.163083, 253.730399], [0.010618, 0.766454, 118.996689]], "n_matches": 25, "sec": 0.172, "n_inliers": 5}
+{"pair": "ROI_071/patch_1", "A": [[0.844684, 0.086376, -215.121462], [-0.464634, 0.20462, 330.667485]], "n_matches": 23, "sec": 0.159, "n_inliers": 4}
+{"pair": "ROI_071/patch_2", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.156}
+{"pair": "ROI_071/patch_3", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.18}
+{"pair": "ROI_071/patch_4", "A": [[-0.021129, -0.000153, 436.878573], [0.00298, -0.021624, 499.794125]], "n_matches": 88, "sec": 0.154, "n_inliers": 10}
+{"pair": "ROI_071/patch_5", "A": [[-0.108886, -1.133571, 613.917868], [0.097597, 0.998483, 10.807257]], "n_matches": 31, "sec": 0.167, "n_inliers": 5}
+{"pair": "ROI_071/patch_6", "A": [[0.493468, 0.079067, 181.806037], [-0.293252, -0.003245, 482.665518]], "n_matches": 14, "sec": 0.17, "n_inliers": 5}
+{"pair": "ROI_071/patch_7", "A": [[-21.218633, -0.929313, 6998.801733], [-12.940325, 0.072114, 4285.390394]], "n_matches": 5, "sec": 0.167, "n_inliers": 3}
+{"pair": "ROI_071/patch_8", "A": [[-2.375802, -1.616915, 1426.305423], [0.517865, 1.417219, -301.756147]], "n_matches": 7, "sec": 0.17, "n_inliers": 4}
+{"pair": "ROI_071/patch_9", "A": [[1.083691, 4.381613, -1273.96247], [-1.202775, -3.250265, 1477.075833]], "n_matches": 24, "sec": 0.17, "n_inliers": 5}
+{"pair": "ROI_071/patch_15", "A": [[-1.290659, 1.409959, 311.184849], [-4.967122, -0.311301, 1859.535551]], "n_matches": 6, "sec": 0.162, "n_inliers": 3}
+{"pair": "ROI_071/patch_16", "A": [[0.483921, 0.266163, 125.310323], [-0.493962, 0.820457, 304.854905]], "n_matches": 70, "sec": 0.158, "n_inliers": 6}
+{"pair": "ROI_071/patch_17", "A": [[0.027436, 0.236594, 194.110278], [0.007295, 0.073287, 236.196821]], "n_matches": 3, "sec": 0.157, "n_inliers": 3}
+{"pair": "ROI_071/patch_18", "A": [[0.59182, 0.221331, 205.358647], [-0.030309, -0.022844, 500.195792]], "n_matches": 52, "sec": 0.174, "n_inliers": 6}
+{"pair": "ROI_071/patch_19", "A": [[0.372432, 2.249352, -751.938365], [-1.78407, -0.295255, 1023.681909]], "n_matches": 13, "sec": 0.188, "n_inliers": 3}
+{"pair": "ROI_071/patch_20", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.188}
+{"pair": "ROI_071/patch_21", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.183}
+{"pair": "ROI_071/patch_22", "A": [[-0.003377, -0.008791, 428.267839], [-0.078433, -0.194652, 327.448821]], "n_matches": 16, "sec": 0.179, "n_inliers": 5}
+{"pair": "ROI_071/patch_23", "A": [[1.382306, 2.050147, -657.163671], [-1.972611, -0.947663, 1193.301418]], "n_matches": 33, "sec": 0.17, "n_inliers": 6}
+{"pair": "ROI_071/patch_24", "A": [[0.104575, 0.703361, 110.109211], [-0.460066, 0.526535, 296.068111]], "n_matches": 5, "sec": 0.187, "n_inliers": 3}
+{"pair": "ROI_071/patch_25", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.172}
+{"pair": "ROI_071/patch_26", "A": [[-2.279947, 7.781008, -1575.93626], [-1.043786, 3.185099, -251.908198]], "n_matches": 3, "sec": 0.156, "n_inliers": 3}
+{"pair": "ROI_071/patch_27", "A": [[-0.68649, 0.035123, 390.642364], [-0.097755, -0.015842, 508.440338]], "n_matches": 8, "sec": 0.179, "n_inliers": 4}
+{"pair": "ROI_071/patch_28", "A": [[1.393414, 1.424236, -683.623773], [-1.756148, -2.577511, 1812.793512]], "n_matches": 4, "sec": 0.188, "n_inliers": 3}
+{"pair": "ROI_071/patch_29", "A": [[1.498448, -0.096479, 3.638212], [-1.985691, 0.821819, 280.81027]], "n_matches": 3, "sec": 0.167, "n_inliers": 3}
+{"pair": "ROI_071/patch_35", "A": [[8.84284, 1.274939, -2244.810745], [-3.962822, 1.134893, 1056.761983]], "n_matches": 4, "sec": 0.175, "n_inliers": 3}
+{"pair": "ROI_071/patch_36", "A": [[-1.256484, 1.7125, 177.681979], [-0.536549, 0.100861, 491.349444]], "n_matches": 3, "sec": 0.162, "n_inliers": 3}
+{"pair": "ROI_071/patch_37", "A": [[0.937633, 1.371015, -320.387749], [-1.038871, 0.549163, 586.924583]], "n_matches": 19, "sec": 0.168, "n_inliers": 4}
+{"pair": "ROI_071/patch_38", "A": [[-0.163549, 0.628342, 154.087034], [-0.010874, -0.252953, 495.479438]], "n_matches": 4, "sec": 0.179, "n_inliers": 3}
+{"pair": "ROI_071/patch_39", "A": [[-0.547691, -35.021139, 8075.386283], [-1.152847, -6.848292, 2114.115361]], "n_matches": 9, "sec": 0.169, "n_inliers": 3}
+{"pair": "ROI_075/patch_0", "A": [[0.77185, 0.566766, -165.365642], [0.005023, 0.290848, 348.84424]], "n_matches": 18, "sec": 0.185, "n_inliers": 4}
+{"pair": "ROI_075/patch_1", "A": [[1.424772, 0.386779, -246.109552], [0.431019, 0.560913, 232.284486]], "n_matches": 26, "sec": 0.152, "n_inliers": 4}
+{"pair": "ROI_075/patch_2", "A": [[0.804552, -0.106601, 150.494033], [-0.471571, 0.087563, 247.527199]], "n_matches": 10, "sec": 0.167, "n_inliers": 4}
+{"pair": "ROI_075/patch_3", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.155}
+{"pair": "ROI_075/patch_4", "A": [[0.646673, 0.538549, -129.624887], [-0.316179, 0.649078, 278.634095]], "n_matches": 10, "sec": 0.158, "n_inliers": 4}
+{"pair": "ROI_075/patch_5", "A": [[0.388606, 0.620037, 12.426676], [0.007547, 0.027089, 417.256088]], "n_matches": 6, "sec": 0.175, "n_inliers": 4}
+{"pair": "ROI_075/patch_6", "A": [[0.777652, 0.184984, 25.061876], [0.023934, 0.660808, 157.311787]], "n_matches": 55, "sec": 0.156, "n_inliers": 8}
+{"pair": "ROI_075/patch_7", "A": [[-1.371565, -2.364924, 469.349547], [3.772531, 4.875514, -605.057689]], "n_matches": 24, "sec": 0.167, "n_inliers": 4}
+{"pair": "ROI_075/patch_8", "A": [[0.669874, 0.095782, 87.040115], [0.251171, -0.139127, 397.77011]], "n_matches": 10, "sec": 0.167, "n_inliers": 4}
+{"pair": "ROI_075/patch_10", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.15}
+{"pair": "ROI_075/patch_11", "A": [[1.106918, 0.193213, -83.2439], [-0.147437, 0.487408, 173.846337]], "n_matches": 26, "sec": 0.162, "n_inliers": 8}
+{"pair": "ROI_075/patch_12", "A": [[0.240506, 0.187822, 330.098868], [-0.528449, 0.403504, 327.530314]], "n_matches": 15, "sec": 0.161, "n_inliers": 5}
+{"pair": "ROI_075/patch_13", "A": [[0.193798, 0.334611, 194.12833], [0.258921, -0.28993, 422.213325]], "n_matches": 29, "sec": 0.163, "n_inliers": 5}
+{"pair": "ROI_075/patch_14", "A": [[0.980798, 0.04683, 87.64923], [0.463261, 0.792036, -11.169897]], "n_matches": 14, "sec": 0.161, "n_inliers": 4}
+{"pair": "ROI_075/patch_15", "A": [[7.202883, -19.846357, 3055.543866], [-1.541419, 6.644059, -865.636676]], "n_matches": 12, "sec": 0.155, "n_inliers": 3}
+{"pair": "ROI_075/patch_16", "A": [[0.508667, -0.260531, 194.428621], [-0.187823, 0.687178, 188.434449]], "n_matches": 25, "sec": 0.157, "n_inliers": 6}
+{"pair": "ROI_075/patch_17", "A": [[-2.947933, -4.718666, 2462.609036], [-0.261223, 0.41038, 300.149357]], "n_matches": 5, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_075/patch_18", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.164}
+{"pair": "ROI_075/patch_19", "A": [[1.800858, -0.016655, -126.561923], [0.489298, 0.689318, 76.938789]], "n_matches": 14, "sec": 0.17, "n_inliers": 5}
+{"pair": "ROI_075/patch_20", "A": [[1.847449, 0.416766, -368.786898], [-0.275746, 1.103938, 98.091596]], "n_matches": 10, "sec": 0.154, "n_inliers": 3}
+{"pair": "ROI_075/patch_21", "A": [[0.954617, 0.161673, -91.42273], [-0.118425, 0.713329, 167.922509]], "n_matches": 30, "sec": 0.161, "n_inliers": 8}
+{"pair": "ROI_075/patch_22", "A": [[1.107035, -1.435371, 626.529854], [-0.144979, 0.180668, 414.930024]], "n_matches": 72, "sec": 0.155, "n_inliers": 8}
+{"pair": "ROI_075/patch_23", "A": [[0.833637, 0.151588, 195.856275], [0.03559, 0.477831, 328.874803]], "n_matches": 68, "sec": 0.17, "n_inliers": 7}
+{"pair": "ROI_075/patch_24", "A": [[-0.076863, 0.175717, 367.36104], [0.36938, 0.954768, -140.341957]], "n_matches": 9, "sec": 0.169, "n_inliers": 4}
+{"pair": "ROI_075/patch_25", "A": [[1.033413, -1.784711, 925.339708], [-0.841519, 2.371264, -542.34996]], "n_matches": 12, "sec": 0.165, "n_inliers": 3}
+{"pair": "ROI_075/patch_26", "A": [[1.134194, 0.772173, -139.810399], [-0.016147, 0.511092, 129.215996]], "n_matches": 9, "sec": 0.158, "n_inliers": 4}
+{"pair": "ROI_075/patch_27", "A": [[0.663504, -0.193088, 218.5859], [-0.121003, 0.547746, 282.347063]], "n_matches": 51, "sec": 0.178, "n_inliers": 6}
+{"pair": "ROI_075/patch_28", "A": [[1.038546, -0.043421, 6.116711], [0.16859, 0.721332, 97.833936]], "n_matches": 63, "sec": 0.164, "n_inliers": 6}
+{"pair": "ROI_075/patch_29", "A": [[0.80603, 0.129841, 8.820401], [0.093816, 0.447302, 253.23475]], "n_matches": 135, "sec": 0.164, "n_inliers": 8}
+{"pair": "ROI_075/patch_30", "A": [[-0.071095, -0.220503, 524.397165], [0.136433, 0.424695, 115.350756]], "n_matches": 18, "sec": 0.169, "n_inliers": 6}
+{"pair": "ROI_075/patch_31", "A": [[1.120522, 0.106565, -19.053363], [0.143247, 1.0547, -12.530716]], "n_matches": 16, "sec": 0.171, "n_inliers": 4}
+{"pair": "ROI_075/patch_32", "A": [[1.210934, 1.420267, -682.661441], [2.120329, 7.335735, -3609.011621]], "n_matches": 6, "sec": 0.164, "n_inliers": 3}
+{"pair": "ROI_075/patch_33", "A": [[0.407043, 0.431229, 63.541712], [-0.024361, 0.701619, 138.609615]], "n_matches": 11, "sec": 0.165, "n_inliers": 5}
+{"pair": "ROI_075/patch_34", "A": [[0.795089, 0.019866, 97.470138], [-0.383448, 0.371366, 385.522018]], "n_matches": 28, "sec": 0.173, "n_inliers": 6}
+{"pair": "ROI_075/patch_35", "A": [[0.793209, -0.167972, -81.614542], [-0.069342, 0.56012, 301.652697]], "n_matches": 76, "sec": 0.154, "n_inliers": 11}
+{"pair": "ROI_075/patch_36", "A": [[1.183433, -0.100725, -31.375813], [0.173794, 0.863315, 29.18833]], "n_matches": 19, "sec": 0.165, "n_inliers": 6}
+{"pair": "ROI_075/patch_37", "A": [[1.006967, 0.004157, 12.379099], [0.233347, 0.813882, -20.894057]], "n_matches": 73, "sec": 0.171, "n_inliers": 7}
+{"pair": "ROI_075/patch_38", "A": [[0.967925, 0.116345, 10.571381], [0.063813, 0.595623, 25.406988]], "n_matches": 52, "sec": 0.154, "n_inliers": 7}
+{"pair": "ROI_075/patch_39", "A": [[-0.255846, 0.649309, 218.121148], [0.211638, 0.421175, 161.33987]], "n_matches": 13, "sec": 0.173, "n_inliers": 4}
+{"pair": "ROI_075/patch_40", "A": [[0.423704, 0.36356, 87.386313], [0.049271, 0.627794, 169.163434]], "n_matches": 25, "sec": 0.172, "n_inliers": 6}
+{"pair": "ROI_075/patch_41", "A": [[1.046741, 0.062355, -9.511275], [0.039477, 1.012997, -9.024261]], "n_matches": 81, "sec": 0.157, "n_inliers": 14}
+{"pair": "ROI_075/patch_42", "A": [[0.942481, 0.106187, -6.035002], [0.280189, 0.306101, 222.376625]], "n_matches": 78, "sec": 0.158, "n_inliers": 7}
+{"pair": "ROI_075/patch_43", "A": [[0.331055, 0.020976, 321.543724], [-0.172681, 0.669723, 241.344162]], "n_matches": 66, "sec": 0.155, "n_inliers": 8}
+{"pair": "ROI_075/patch_44", "A": [[0.035494, 0.082205, 405.942877], [-0.201329, 0.364826, 411.215855]], "n_matches": 85, "sec": 0.161, "n_inliers": 6}
+{"pair": "ROI_075/patch_45", "A": [[0.61361, 0.349576, 31.852414], [0.00976, 0.96316, 62.838619]], "n_matches": 28, "sec": 0.175, "n_inliers": 6}
+{"pair": "ROI_075/patch_46", "A": [[0.891632, 0.056003, 17.518377], [-0.54847, 1.262116, 160.789791]], "n_matches": 16, "sec": 0.167, "n_inliers": 4}
+{"pair": "ROI_075/patch_47", "A": [[1.219558, -0.01207, 82.161626], [0.250601, 0.209491, 364.834726]], "n_matches": 83, "sec": 0.164, "n_inliers": 7}
+{"pair": "ROI_075/patch_48", "A": [[0.816205, 0.119189, 10.525715], [0.272454, 0.87083, 113.656726]], "n_matches": 169, "sec": 0.178, "n_inliers": 7}
+{"pair": "ROI_075/patch_49", "A": [[1.290542, 1.017298, -108.765365], [0.183057, 0.923873, 157.748205]], "n_matches": 181, "sec": 0.151, "n_inliers": 10}
+{"pair": "ROI_075/patch_50", "A": [[0.973722, 0.345277, 21.754009], [-0.22305, 0.771232, 307.556424]], "n_matches": 117, "sec": 0.165, "n_inliers": 9}
+{"pair": "ROI_075/patch_51", "A": [[0.929123, -0.534438, 217.470179], [0.144546, 0.049815, 323.92022]], "n_matches": 6, "sec": 0.159, "n_inliers": 3}
+{"pair": "ROI_075/patch_52", "A": [[1.732945, -0.358241, 20.592384], [1.628014, 0.514595, 66.303766]], "n_matches": 7, "sec": 0.17, "n_inliers": 3}
+{"pair": "ROI_075/patch_53", "A": [[0.95045, -0.103521, 98.52966], [0.53133, 0.611288, -79.926195]], "n_matches": 12, "sec": 0.152, "n_inliers": 4}
+{"pair": "ROI_075/patch_54", "A": [[0.409016, 0.155702, 254.544746], [-0.272186, 0.017103, 465.04114]], "n_matches": 23, "sec": 0.173, "n_inliers": 5}
+{"pair": "ROI_075/patch_55", "A": [[0.804929, -0.161172, 199.695424], [-0.055596, 0.127326, 414.925408]], "n_matches": 18, "sec": 0.158, "n_inliers": 4}
+{"pair": "ROI_075/patch_56", "A": [[0.361102, 0.476782, 16.142703], [-1.490857, 0.96721, 215.066593]], "n_matches": 10, "sec": 0.174, "n_inliers": 3}
+{"pair": "ROI_075/patch_57", "A": [[-0.188462, -2.608076, 1376.427117], [-0.061806, 0.049118, 339.997945]], "n_matches": 13, "sec": 0.16, "n_inliers": 4}
+{"pair": "ROI_075/patch_58", "A": [[2.107919, -0.896732, 219.149214], [-1.072391, 2.105245, -402.586951]], "n_matches": 3, "sec": 0.162, "n_inliers": 3}
+{"pair": "ROI_075/patch_59", "A": [[-4.539378, -0.721069, 2437.592464], [0.61997, 0.954823, -216.586878]], "n_matches": 22, "sec": 0.178, "n_inliers": 5}
+{"pair": "ROI_075/patch_60", "A": [[1.164392, 0.312861, -158.052741], [0.056326, 0.830544, 50.760481]], "n_matches": 103, "sec": 0.174, "n_inliers": 8}
+{"pair": "ROI_075/patch_61", "A": [[1.133206, 0.00433, 1.876879], [-0.205285, 0.811523, 89.430187]], "n_matches": 12, "sec": 0.162, "n_inliers": 5}
+{"pair": "ROI_075/patch_62", "A": [[0.043286, -0.067911, 313.774489], [-0.607684, 0.608327, 250.592177]], "n_matches": 46, "sec": 0.176, "n_inliers": 8}
+{"pair": "ROI_075/patch_63", "A": [[0.65947, 0.303012, 34.672023], [-0.10023, 0.726802, 156.399343]], "n_matches": 136, "sec": 0.16, "n_inliers": 12}
+{"pair": "ROI_075/patch_64", "A": [[0.849542, 0.444063, 72.247917], [-0.009313, 0.558736, 293.576001]], "n_matches": 347, "sec": 0.167, "n_inliers": 15}
+{"pair": "ROI_075/patch_65", "A": [[0.765777, -0.0946, 173.302435], [0.005401, 0.436957, 269.128826]], "n_matches": 28, "sec": 0.174, "n_inliers": 5}
+{"pair": "ROI_075/patch_66", "A": [[0.636092, -0.077222, 169.633147], [-0.164576, 0.769764, 125.704917]], "n_matches": 79, "sec": 0.166, "n_inliers": 8}
+{"pair": "ROI_075/patch_67", "A": [[1.016545, 0.178286, -52.847706], [0.010563, 0.847033, 72.190222]], "n_matches": 192, "sec": 0.167, "n_inliers": 10}
+{"pair": "ROI_075/patch_68", "A": [[1.760293, -0.148362, 53.016092], [-0.073781, 0.655085, 172.583874]], "n_matches": 46, "sec": 0.152, "n_inliers": 6}
+{"pair": "ROI_075/patch_69", "A": [[0.690813, 0.551252, -80.845201], [-0.128656, 0.634504, 241.176881]], "n_matches": 140, "sec": 0.155, "n_inliers": 8}
+{"pair": "ROI_075/patch_70", "A": [[0.590803, 0.379307, 116.88212], [-0.071577, 0.508416, 411.858041]], "n_matches": 95, "sec": 0.163, "n_inliers": 11}
+{"pair": "ROI_075/patch_71", "A": [[0.793089, -0.277885, 227.881895], [-0.211017, 1.123202, 42.103706]], "n_matches": 35, "sec": 0.157, "n_inliers": 8}
+{"pair": "ROI_075/patch_72", "A": [[0.416312, -0.405159, 215.674272], [-0.146895, 0.362271, 343.485719]], "n_matches": 43, "sec": 0.163, "n_inliers": 5}
+{"pair": "ROI_075/patch_73", "A": [[0.873749, 0.272655, 21.072144], [0.086906, 0.809331, 30.542585]], "n_matches": 52, "sec": 0.165, "n_inliers": 6}
+{"pair": "ROI_075/patch_74", "A": [[0.652781, -0.058111, 160.063794], [0.201215, 0.978181, -22.567752]], "n_matches": 50, "sec": 0.158, "n_inliers": 6}
+{"pair": "ROI_075/patch_75", "A": [[0.768187, -0.184309, 237.890124], [-0.012249, 1.381437, 192.353705]], "n_matches": 72, "sec": 0.154, "n_inliers": 7}
+{"pair": "ROI_075/patch_76", "A": [[1.018724, -0.109768, -12.736364], [0.409382, 0.493481, 53.196101]], "n_matches": 10, "sec": 0.165, "n_inliers": 4}
+{"pair": "ROI_075/patch_77", "A": [[0.721443, -0.598938, 342.252107], [0.366683, -0.355843, 323.897894]], "n_matches": 5, "sec": 0.167, "n_inliers": 3}
+{"pair": "ROI_075/patch_78", "A": [[0.004352, -0.001172, 412.031293], [0.006256, -0.000339, 472.040901]], "n_matches": 23, "sec": 0.17, "n_inliers": 8}
+{"pair": "ROI_075/patch_79", "A": [[0.085025, -0.256, 429.023575], [-0.092337, 0.197994, 426.328317]], "n_matches": 98, "sec": 0.172, "n_inliers": 7}
+{"pair": "ROI_075/patch_80", "A": [[0.720416, 0.181057, 22.341774], [-0.0066, 0.557333, 201.613918]], "n_matches": 222, "sec": 0.164, "n_inliers": 15}
+{"pair": "ROI_075/patch_81", "A": [[0.661476, 0.283339, 55.771127], [-0.015714, 0.784546, 88.11887]], "n_matches": 30, "sec": 0.17, "n_inliers": 6}
+{"pair": "ROI_075/patch_82", "A": [[0.624832, 0.06023, 94.181852], [0.032, 0.984373, 3.659235]], "n_matches": 84, "sec": 0.176, "n_inliers": 11}
+{"pair": "ROI_075/patch_83", "A": [[0.59613, 0.270172, 134.69746], [-0.484135, -0.626657, 802.462613]], "n_matches": 45, "sec": 0.163, "n_inliers": 6}
+{"pair": "ROI_075/patch_84", "A": [[2.505436, -0.145968, -7.143468], [2.925031, 0.693363, -152.123922]], "n_matches": 3, "sec": 0.16, "n_inliers": 3}
+{"pair": "ROI_075/patch_85", "A": [[-2.797843, -2.200586, 1558.340834], [-6.957955, -5.513308, 3509.779281]], "n_matches": 7, "sec": 0.163, "n_inliers": 3}
+{"pair": "ROI_075/patch_86", "A": [[-1.383005, 1.040541, 233.069289], [-1.720387, 1.091998, 416.096357]], "n_matches": 10, "sec": 0.169, "n_inliers": 4}
+{"pair": "ROI_075/patch_87", "A": [[1.217521, 0.03228, -20.458141], [-0.115935, 0.449052, 249.182368]], "n_matches": 92, "sec": 0.163, "n_inliers": 10}
+{"pair": "ROI_075/patch_88", "A": [[0.305106, 0.092213, 281.194806], [0.040501, 0.640468, 228.697212]], "n_matches": 90, "sec": 0.153, "n_inliers": 9}
+{"pair": "ROI_075/patch_89", "A": [[1.206608, -0.35916, 2.966938], [-0.083656, 0.540773, 234.567433]], "n_matches": 24, "sec": 0.155, "n_inliers": 4}
+{"pair": "ROI_075/patch_90", "A": [[0.971058, -0.013994, 53.960774], [-0.014763, 0.999616, 1.43185]], "n_matches": 42, "sec": 0.163, "n_inliers": 7}
+{"pair": "ROI_075/patch_91", "A": [[0.838975, 0.740105, -33.112927], [-0.314866, 0.207999, 458.139449]], "n_matches": 58, "sec": 0.156, "n_inliers": 7}
+{"pair": "ROI_075/patch_92", "A": [[1.031336, -0.180379, 66.472783], [-0.146979, 0.745157, 174.888869]], "n_matches": 18, "sec": 0.153, "n_inliers": 4}
+{"pair": "ROI_075/patch_93", "A": null, "fail": "few_matches", "n_matches": 2, "sec": 0.158}
+{"pair": "ROI_075/patch_94", "A": [[0.262298, 0.055386, 316.701941], [-0.553079, 0.487074, 529.676768]], "n_matches": 20, "sec": 0.145, "n_inliers": 5}
+{"pair": "ROI_075/patch_95", "A": [[0.716509, -0.213861, 229.414166], [-0.021573, 0.27696, 307.038377]], "n_matches": 52, "sec": 0.153, "n_inliers": 6}
+{"pair": "ROI_075/patch_96", "A": [[0.910101, 0.07683, 214.509548], [0.068359, 0.786086, 71.294337]], "n_matches": 30, "sec": 0.156, "n_inliers": 5}
+{"pair": "ROI_075/patch_97", "A": [[0.269395, 0.072616, 64.848906], [-0.024178, 1.283559, -69.590915]], "n_matches": 15, "sec": 0.163, "n_inliers": 4}
+{"pair": "ROI_075/patch_98", "A": [[1.137709, -2.777242, 526.459232], [0.106121, -4.898346, 1358.863673]], "n_matches": 15, "sec": 0.166, "n_inliers": 4}
+{"pair": "ROI_075/patch_99", "A": [[1.310351, 0.613406, -176.533579], [-0.194729, 0.902828, 417.517182]], "n_matches": 290, "sec": 0.161, "n_inliers": 11}
+{"pair": "ROI_075/patch_101", "A": [[-0.645125, 0.492678, 301.884383], [0.332424, 0.980318, -89.59845]], "n_matches": 10, "sec": 0.159, "n_inliers": 4}
+{"pair": "ROI_075/patch_102", "A": [[0.703058, -0.087599, 34.299002], [-0.001518, 0.513859, 247.586707]], "n_matches": 63, "sec": 0.157, "n_inliers": 6}
+{"pair": "ROI_075/patch_103", "A": [[0.663571, 0.016463, 19.175337], [0.246377, 0.938981, -27.490783]], "n_matches": 99, "sec": 0.17, "n_inliers": 12}
+{"pair": "ROI_075/patch_104", "A": [[0.214619, 0.07217, 358.667538], [-0.703549, 0.563462, 515.875112]], "n_matches": 283, "sec": 0.179, "n_inliers": 9}
+{"pair": "ROI_075/patch_105", "A": [[1.325017, -1.53976, 521.794839], [0.146654, -0.288043, 508.853027]], "n_matches": 19, "sec": 0.171, "n_inliers": 4}
+{"pair": "ROI_075/patch_106", "A": [[1.416138, -0.342412, 112.716239], [0.110046, 0.035403, 382.020679]], "n_matches": 12, "sec": 0.165, "n_inliers": 5}
+{"pair": "ROI_075/patch_107", "A": [[1.421302, 0.075179, -218.321305], [-0.511516, 1.054799, 200.234881]], "n_matches": 146, "sec": 0.167, "n_inliers": 9}
+{"pair": "ROI_075/patch_108", "A": [[0.916838, -0.202324, 147.161812], [1.529846, -0.146685, -15.601024]], "n_matches": 4, "sec": 0.174, "n_inliers": 3}
+{"pair": "ROI_075/patch_109", "A": [[0.814842, 0.183359, -4.408086], [0.107673, 0.541705, 205.590065]], "n_matches": 30, "sec": 0.162, "n_inliers": 5}
+{"pair": "ROI_075/patch_110", "A": [[-0.029645, 0.163817, 231.770762], [0.060832, 0.23928, 371.873583]], "n_matches": 42, "sec": 0.173, "n_inliers": 5}
+{"pair": "ROI_075/patch_111", "A": [[1.048806, -0.352372, 91.052029], [0.077774, 0.533183, 136.231524]], "n_matches": 25, "sec": 0.176, "n_inliers": 9}
+{"pair": "ROI_075/patch_112", "A": [[-0.247993, 0.772594, 154.232142], [0.423221, 0.857985, -43.316508]], "n_matches": 32, "sec": 0.166, "n_inliers": 5}
+{"pair": "ROI_075/patch_116", "A": [[2.804464, -1.720259, 86.982068], [1.0721, -0.16759, 52.576663]], "n_matches": 32, "sec": 0.164, "n_inliers": 6}
+{"pair": "ROI_075/patch_117", "A": [[1.606492, 0.872049, -473.656263], [0.994312, 1.837137, -493.9014]], "n_matches": 24, "sec": 0.195, "n_inliers": 4}
+{"pair": "ROI_075/patch_118", "A": [[0.577841, -0.168363, 236.189281], [0.167208, 0.988145, -68.21278]], "n_matches": 88, "sec": 0.178, "n_inliers": 7}
+{"pair": "ROI_075/patch_119", "A": [[1.032004, 0.492601, -152.38951], [-0.284171, 0.635061, 253.732836]], "n_matches": 179, "sec": 0.172, "n_inliers": 10}
+{"pair": "ROI_075/patch_120", "A": [[1.056361, 0.25086, -21.899157], [-0.391999, 0.521959, 341.629081]], "n_matches": 74, "sec": 0.167, "n_inliers": 8}
+{"pair": "ROI_075/patch_121", "A": [[0.599218, 0.147256, 82.150452], [-0.22679, 0.829299, 353.464141]], "n_matches": 15, "sec": 0.161, "n_inliers": 3}
+{"pair": "ROI_075/patch_122", "A": [[-1.525741, -0.088711, 720.451955], [-1.073916, -0.059816, 701.453504]], "n_matches": 6, "sec": 0.153, "n_inliers": 3}
+{"pair": "ROI_075/patch_123", "A": [[0.847343, 0.490658, -8.376016], [-0.094225, 0.555684, 233.45304]], "n_matches": 94, "sec": 0.165, "n_inliers": 9}
+{"pair": "ROI_075/patch_124", "A": [[0.109995, -0.066584, 400.913733], [-0.485901, 0.159387, 525.654257]], "n_matches": 131, "sec": 0.169, "n_inliers": 9}
+{"pair": "ROI_075/patch_125", "A": [[0.843958, -0.150328, 48.442331], [0.11462, 1.012598, -13.137246]], "n_matches": 22, "sec": 0.16, "n_inliers": 4}
+{"pair": "ROI_075/patch_127", "A": [[0.788605, -0.017723, 82.171058], [0.381863, 0.775805, -39.288463]], "n_matches": 48, "sec": 0.168, "n_inliers": 9}
+{"pair": "ROI_075/patch_128", "A": [[-0.431483, -0.084325, 281.446482], [-0.080461, 0.059773, 447.580004]], "n_matches": 15, "sec": 0.18, "n_inliers": 4}
+{"pair": "ROI_075/patch_129", "A": [[0.516924, 3.949369, -1079.842993], [0.014111, 8.070447, -2267.073474]], "n_matches": 6, "sec": 0.162, "n_inliers": 3}
+{"pair": "ROI_075/patch_130", "A": [[-0.144703, 1.367443, 25.137116], [-0.519598, 1.468368, 144.567444]], "n_matches": 7, "sec": 0.164, "n_inliers": 4}
+{"pair": "ROI_075/patch_131", "A": [[-0.084775, -6.745917, 2993.328096], [0.095856, 2.614478, -664.375014]], "n_matches": 9, "sec": 0.166, "n_inliers": 3}
+{"pair": "ROI_075/patch_132", "A": [[0.97669, 0.008388, 11.614476], [0.057924, 0.600948, 215.79105]], "n_matches": 54, "sec": 0.157, "n_inliers": 7}
+{"pair": "ROI_075/patch_133", "A": [[1.259698, 0.014942, -88.732537], [0.263855, 0.648651, 80.670496]], "n_matches": 17, "sec": 0.188, "n_inliers": 3}
+{"pair": "ROI_075/patch_134", "A": [[0.985227, 0.417153, 19.850233], [-0.063366, 0.562782, 300.952013]], "n_matches": 69, "sec": 0.159, "n_inliers": 14}
+{"pair": "ROI_075/patch_135", "A": [[0.97766, -0.342749, 56.38461], [0.347476, 0.732131, 46.524095]], "n_matches": 74, "sec": 0.162, "n_inliers": 8}
+{"pair": "ROI_075/patch_137", "A": [[-0.728089, -0.477559, 383.482864], [0.903175, 0.053888, 208.842471]], "n_matches": 6, "sec": 0.154, "n_inliers": 3}
+{"pair": "ROI_075/patch_138", "A": [[0.660966, 0.720195, -219.703832], [-0.179803, 1.506732, -179.637556]], "n_matches": 13, "sec": 0.184, "n_inliers": 3}
+{"pair": "ROI_075/patch_139", "A": [[0.797494, -0.266195, 79.995111], [-0.027821, -0.267989, 231.396744]], "n_matches": 11, "sec": 0.18, "n_inliers": 3}
+{"pair": "ROI_075/patch_140", "A": [[0.789332, 0.32624, -51.890333], [0.083445, 0.843246, 25.946076]], "n_matches": 95, "sec": 0.185, "n_inliers": 7}
+{"pair": "ROI_075/patch_141", "A": [[1.134796, 0.272857, -158.802308], [0.081018, 0.660369, 137.050098]], "n_matches": 44, "sec": 0.164, "n_inliers": 7}
+{"pair": "ROI_075/patch_142", "A": [[0.784662, -0.41949, 280.460304], [0.071402, 0.966643, 68.352839]], "n_matches": 247, "sec": 0.195, "n_inliers": 8}
+{"pair": "ROI_075/patch_143", "A": [[0.807816, 0.433697, -63.569003], [-0.094885, 0.591369, 275.930596]], "n_matches": 141, "sec": 0.181, "n_inliers": 9}
+{"pair": "ROI_075/patch_144", "A": [[0.833665, -0.189925, 216.429937], [0.065536, 0.73825, 137.572973]], "n_matches": 159, "sec": 0.182, "n_inliers": 9}
+{"pair": "ROI_075/patch_145", "A": [[1.236212, 0.316757, -5.65043], [0.260942, 0.844046, 160.26629]], "n_matches": 355, "sec": 0.172, "n_inliers": 10}
+{"pair": "ROI_075/patch_146", "A": [[0.919181, -0.015069, 113.040042], [0.014962, 0.957721, 184.165731]], "n_matches": 279, "sec": 0.163, "n_inliers": 11}
+{"pair": "ROI_075/patch_147", "A": [[0.149615, -0.158948, 495.225765], [-0.158799, 0.197495, 451.411511]], "n_matches": 164, "sec": 0.16, "n_inliers": 10}
+{"pair": "ROI_075/patch_148", "A": [[0.782368, -0.003058, 83.408767], [0.0729, 0.928245, -1.88694]], "n_matches": 68, "sec": 0.166, "n_inliers": 8}
+{"pair": "ROI_075/patch_149", "A": [[0.908705, 0.13853, 22.85275], [0.243852, 0.907492, 5.025145]], "n_matches": 9, "sec": 0.191, "n_inliers": 4}
+{"pair": "ROI_075/patch_150", "A": [[0.125905, -0.097876, 183.319286], [-0.40843, 0.187026, 428.304075]], "n_matches": 77, "sec": 0.193, "n_inliers": 6}
+{"pair": "ROI_075/patch_151", "A": [[0.736165, -0.150533, 88.239097], [0.313227, 0.84439, 62.49799]], "n_matches": 85, "sec": 0.18, "n_inliers": 11}
+{"pair": "ROI_075/patch_152", "A": [[0.786903, 1.214439, -151.198739], [0.290073, 0.6354, 188.163301]], "n_matches": 125, "sec": 0.203, "n_inliers": 7}
+{"pair": "ROI_075/patch_153", "A": [[0.612455, 0.635287, 27.208809], [0.282628, 0.612768, -22.007485]], "n_matches": 17, "sec": 0.182, "n_inliers": 4}
+{"pair": "ROI_075/patch_154", "A": [[0.956862, 0.047397, 1.705711], [0.02957, 0.690796, 129.849657]], "n_matches": 56, "sec": 0.188, "n_inliers": 9}
+{"pair": "ROI_075/patch_155", "A": [[0.949726, 0.547872, -170.195524], [-0.122727, 0.719313, 190.383604]], "n_matches": 149, "sec": 0.185, "n_inliers": 10}
+{"pair": "ROI_075/patch_156", "A": [[0.633899, -0.423712, 281.023304], [-0.364454, 0.946707, 87.103685]], "n_matches": 22, "sec": 0.217, "n_inliers": 4}
+{"pair": "ROI_075/patch_157", "A": [[0.658542, -0.336325, 207.011407], [0.023522, 1.0678, 53.03609]], "n_matches": 95, "sec": 0.189, "n_inliers": 6}
+{"pair": "ROI_075/patch_158", "A": [[-10.486208, 13.870756, -445.876961], [8.145696, -8.259876, 288.641942]], "n_matches": 24, "sec": 0.173, "n_inliers": 4}
+{"pair": "ROI_075/patch_159", "A": [[0.807587, 0.296516, -4.30511], [-0.128403, 0.86727, 252.338651]], "n_matches": 166, "sec": 0.165, "n_inliers": 8}
+{"pair": "ROI_075/patch_160", "A": [[0.002389, 0.001278, 290.954852], [-0.006945, 0.006387, 439.151282]], "n_matches": 58, "sec": 0.173, "n_inliers": 8}
+{"pair": "ROI_075/patch_161", "A": [[1.138448, -0.010252, -109.746805], [-0.032958, 0.949317, 28.881091]], "n_matches": 69, "sec": 0.16, "n_inliers": 9}
+{"pair": "ROI_075/patch_162", "A": [[0.623553, 0.783728, -6.665647], [-0.360048, 0.59302, 334.035048]], "n_matches": 80, "sec": 0.17, "n_inliers": 5}
+{"pair": "ROI_075/patch_163", "A": [[1.213059, -0.08405, -65.365859], [0.419649, 0.767947, -42.672652]], "n_matches": 51, "sec": 0.178, "n_inliers": 7}
+{"pair": "ROI_075/patch_164", "A": [[2.24006, 0.202376, -524.197986], [0.537863, 2.173964, -669.791765]], "n_matches": 14, "sec": 0.162, "n_inliers": 4}
+{"pair": "ROI_075/patch_165", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.18}
+{"pair": "ROI_075/patch_166", "A": [[0.741053, 0.27564, 86.803293], [0.444213, 0.411891, 239.397798]], "n_matches": 53, "sec": 0.175, "n_inliers": 6}
+{"pair": "ROI_075/patch_167", "A": [[0.667502, 0.13665, 83.834741], [-0.228838, 0.567382, 306.910168]], "n_matches": 116, "sec": 0.191, "n_inliers": 9}
+{"pair": "ROI_075/patch_168", "A": [[1.049294, -0.207784, 113.88828], [0.448274, 0.963493, 57.301788]], "n_matches": 97, "sec": 0.183, "n_inliers": 11}
+{"pair": "ROI_075/patch_169", "A": [[-1.405376, 4.03778, -973.887635], [-0.430665, 1.263153, -3.90776]], "n_matches": 16, "sec": 0.19, "n_inliers": 3}
+{"pair": "ROI_075/patch_170", "A": [[-0.387879, 0.051517, 150.670464], [-0.086048, 0.714645, 149.342729]], "n_matches": 5, "sec": 0.184, "n_inliers": 3}
+{"pair": "ROI_075/patch_171", "A": [[0.974081, 0.219675, -34.410811], [0.218758, 0.842045, -12.147278]], "n_matches": 51, "sec": 0.171, "n_inliers": 9}
+{"pair": "ROI_075/patch_172", "A": [[0.49754, -0.020591, 223.529683], [0.032407, 0.820364, 115.550804]], "n_matches": 12, "sec": 0.172, "n_inliers": 4}
+{"pair": "ROI_075/patch_173", "A": [[0.709231, 0.467092, -242.810517], [-0.197042, 0.528171, 263.181638]], "n_matches": 16, "sec": 0.195, "n_inliers": 4}
+{"pair": "ROI_075/patch_174", "A": null, "fail": "few_matches", "n_matches": 0, "sec": 0.177}
+{"pair": "ROI_075/patch_175", "A": [[0.820297, 0.015435, 92.769379], [0.025404, -0.075696, 459.656363]], "n_matches": 120, "sec": 0.172, "n_inliers": 7}
+{"pair": "ROI_075/patch_177", "A": [[0.881736, 0.99831, -45.917994], [0.996909, 1.163943, -5.571923]], "n_matches": 46, "sec": 0.169, "n_inliers": 5}
+{"pair": "ROI_075/patch_178", "A": [[0.967457, -0.360974, 193.21733], [0.020535, 0.958687, 71.157688]], "n_matches": 107, "sec": 0.18, "n_inliers": 8}
+{"pair": "ROI_075/patch_179", "A": [[0.904386, 0.219831, 15.257305], [-0.041292, 1.281899, -5.302369]], "n_matches": 96, "sec": 0.176, "n_inliers": 7}
+{"pair": "ROI_075/patch_180", "A": [[0.906034, -0.130802, 20.100958], [-0.50762, 0.318582, 360.344393]], "n_matches": 36, "sec": 0.165, "n_inliers": 6}
+{"pair": "ROI_075/patch_181", "A": [[0.566656, -0.042173, 173.078586], [-0.346533, 0.509223, 289.821945]], "n_matches": 137, "sec": 0.153, "n_inliers": 8}
+{"pair": "ROI_080/patch_1", "A": [[2.83987, 1.004547, -354.927329], [-1.53932, 0.610369, 257.889412]], "n_matches": 13, "sec": 0.207, "n_inliers": 4}
+{"pair": "ROI_080/patch_3", "A": [[0.336377, 0.22691, 38.929906], [-0.196256, 0.970539, 90.55282]], "n_matches": 16, "sec": 0.181, "n_inliers": 4}
+{"pair": "ROI_080/patch_4", "A": [[0.73891, 0.204518, 32.051069], [-1.372191, 2.089781, 20.731884]], "n_matches": 38, "sec": 0.185, "n_inliers": 4}
+{"pair": "ROI_080/patch_5", "A": [[1.117496, 0.028019, -230.076983], [-0.245377, 0.990349, 115.00005]], "n_matches": 70, "sec": 0.164, "n_inliers": 5}
+{"pair": "ROI_080/patch_7", "A": [[0.426889, 0.3691, -48.648479], [0.167251, 0.24939, 307.266106]], "n_matches": 46, "sec": 0.185, "n_inliers": 5}
+{"pair": "ROI_080/patch_8", "A": [[0.476374, 0.379355, 96.976262], [-0.07542, 0.417426, 417.334413]], "n_matches": 157, "sec": 0.17, "n_inliers": 11}
+{"pair": "ROI_080/patch_9", "A": [[1.342283, -0.810306, 66.375178], [-0.283435, -0.76025, 357.822682]], "n_matches": 36, "sec": 0.194, "n_inliers": 6}
+{"pair": "ROI_080/patch_11", "A": [[0.398196, 0.044692, 144.207767], [-0.658584, 0.422147, 386.223335]], "n_matches": 34, "sec": 0.161, "n_inliers": 4}
+{"pair": "ROI_080/patch_14", "A": [[1.229345, -0.072534, 50.237198], [0.114887, 0.29639, 319.059809]], "n_matches": 30, "sec": 0.172, "n_inliers": 5}
+{"pair": "ROI_080/patch_18", "A": [[0.955467, -0.08441, 123.843682], [-0.818711, 0.085302, 526.380632]], "n_matches": 27, "sec": 0.169, "n_inliers": 4}
+{"pair": "ROI_080/patch_19", "A": [[0.118428, -0.249614, 112.131006], [-0.424666, 0.597131, 51.679601]], "n_matches": 64, "sec": 0.179, "n_inliers": 6}
+{"pair": "ROI_080/patch_22", "A": [[0.672515, 0.613697, -71.640658], [-0.431958, 0.559049, 273.644604]], "n_matches": 28, "sec": 0.172, "n_inliers": 5}
+{"pair": "ROI_080/patch_24", "A": [[0.584911, 0.356974, 102.2915], [-0.970689, 0.938223, 310.73023]], "n_matches": 103, "sec": 0.166, "n_inliers": 7}
+{"pair": "ROI_080/patch_25", "A": [[0.987289, -0.073964, -2.941087], [-0.530017, 1.174343, 86.93317]], "n_matches": 89, "sec": 0.178, "n_inliers": 5}
+{"pair": "ROI_080/patch_28", "A": [[1.178997, -0.127148, -112.264965], [-0.909891, 0.84122, 456.684907]], "n_matches": 56, "sec": 0.176, "n_inliers": 6}
+{"pair": "ROI_080/patch_29", "A": [[1.023507, -0.123331, 39.180657], [-0.174137, 0.75762, 175.786368]], "n_matches": 72, "sec": 0.182, "n_inliers": 7}
+{"pair": "ROI_080/patch_30", "A": [[0.796854, -0.349946, 94.435461], [-0.183284, 1.064386, 65.234645]], "n_matches": 135, "sec": 0.182, "n_inliers": 9}
+{"pair": "ROI_080/patch_32", "A": [[0.393946, 0.444268, 121.171194], [-0.290138, 0.691853, 68.108884]], "n_matches": 47, "sec": 0.183, "n_inliers": 6}
+{"pair": "ROI_080/patch_33", "A": [[0.934544, 0.768695, -72.453253], [-0.337802, 0.938245, 122.024154]], "n_matches": 88, "sec": 0.177, "n_inliers": 6}
+{"pair": "ROI_080/patch_34", "A": [[1.933017, 1.186769, -570.509712], [0.424956, 0.927452, -53.934263]], "n_matches": 27, "sec": 0.17, "n_inliers": 5}
+{"pair": "ROI_080/patch_35", "A": [[0.329105, 0.279218, 169.939729], [-0.17745, 1.113602, 6.498302]], "n_matches": 57, "sec": 0.189, "n_inliers": 6}
+{"pair": "ROI_080/patch_38", "A": [[0.863473, -0.233107, 131.404682], [-0.055244, 0.324985, 116.718546]], "n_matches": 42, "sec": 0.166, "n_inliers": 5}
+{"pair": "ROI_080/patch_39", "A": [[3.287491, 1.648219, -1050.019797], [-0.929329, 0.513866, 469.213157]], "n_matches": 41, "sec": 0.168, "n_inliers": 4}
+{"pair": "ROI_080/patch_44", "A": [[0.89525, 0.09675, 182.850947], [-0.077899, 0.903139, 92.654639]], "n_matches": 131, "sec": 0.167, "n_inliers": 7}
+{"pair": "ROI_080/patch_45", "A": [[0.667538, 0.146013, 3.446889], [-0.238698, 0.877965, 19.962402]], "n_matches": 72, "sec": 0.172, "n_inliers": 10}
+{"pair": "ROI_080/patch_46", "A": [[0.967625, 0.082105, -26.444359], [-0.316924, 0.60806, 302.622703]], "n_matches": 61, "sec": 0.183, "n_inliers": 5}
+{"pair": "ROI_080/patch_48", "A": [[0.936326, 0.317396, -0.188932], [-0.204749, 0.808748, 139.894015]], "n_matches": 21, "sec": 0.181, "n_inliers": 5}
+{"pair": "ROI_080/patch_50", "A": [[0.623621, -0.232877, 341.769671], [-0.679559, 1.29772, 159.200464]], "n_matches": 125, "sec": 0.16, "n_inliers": 6}
+{"pair": "ROI_080/patch_51", "A": [[0.353825, 0.83391, 48.595836], [-1.270371, 1.387001, 321.38712]], "n_matches": 50, "sec": 0.167, "n_inliers": 5}
+{"pair": "ROI_080/patch_52", "A": [[1.361686, 0.239249, -190.671784], [-0.510683, 0.459327, 304.528586]], "n_matches": 84, "sec": 0.174, "n_inliers": 8}
+{"pair": "ROI_080/patch_53", "A": [[0.145434, 1.180807, -86.282632], [-0.429078, 0.701761, 222.564913]], "n_matches": 121, "sec": 0.17, "n_inliers": 7}
+{"pair": "ROI_080/patch_54", "A": [[0.328424, 0.572311, -81.851228], [-0.966515, 0.222635, 665.531836]], "n_matches": 35, "sec": 0.163, "n_inliers": 4}
+{"pair": "ROI_080/patch_55", "A": [[0.424877, 0.042229, 179.600141], [-0.169185, 0.585743, 245.946408]], "n_matches": 158, "sec": 0.173, "n_inliers": 9}
+{"pair": "ROI_080/patch_57", "A": [[1.329941, 0.24177, -113.893262], [-0.267258, 0.921539, -266.198504]], "n_matches": 117, "sec": 0.18, "n_inliers": 7}
+{"pair": "ROI_080/patch_58", "A": [[0.877374, -0.027111, 60.457345], [-0.116858, 0.265317, 14.806957]], "n_matches": 31, "sec": 0.166, "n_inliers": 5}
+{"pair": "ROI_080/patch_59", "A": [[0.49797, 0.421981, -19.758638], [-0.218841, 0.842518, 190.197756]], "n_matches": 86, "sec": 0.177, "n_inliers": 6}
+{"pair": "ROI_080/patch_61", "A": [[0.713197, 1.032354, -220.227794], [-0.202164, 0.196082, 392.738719]], "n_matches": 208, "sec": 0.162, "n_inliers": 11}
+{"pair": "ROI_080/patch_63", "A": [[0.251139, 0.425349, 131.945932], [-0.152711, 0.883161, 213.162718]], "n_matches": 205, "sec": 0.172, "n_inliers": 8}
+{"pair": "ROI_080/patch_65", "A": [[0.271858, -0.151192, -28.170534], [-0.418535, 1.007995, 169.406571]], "n_matches": 68, "sec": 0.186, "n_inliers": 5}
+{"pair": "ROI_080/patch_67", "A": [[0.178428, 0.280511, 95.000527], [0.039851, 0.733834, 58.335571]], "n_matches": 122, "sec": 0.17, "n_inliers": 8}
+{"pair": "ROI_080/patch_69", "A": [[0.981716, 0.009618, 22.924325], [0.046261, 0.843341, 56.724453]], "n_matches": 76, "sec": 0.181, "n_inliers": 10}
+{"pair": "ROI_080/patch_70", "A": [[1.124429, 0.102593, 58.981233], [0.290027, 0.604045, 118.884242]], "n_matches": 72, "sec": 0.181, "n_inliers": 6}
+{"pair": "ROI_080/patch_71", "A": [[1.094156, -0.66069, -94.802353], [-0.600608, 1.20289, 283.831425]], "n_matches": 25, "sec": 0.171, "n_inliers": 4}
+{"pair": "ROI_080/patch_72", "A": [[0.323709, 0.181281, 327.277576], [0.056454, 1.06681, 25.4462]], "n_matches": 119, "sec": 0.174, "n_inliers": 6}
+{"pair": "ROI_080/patch_73", "A": [[0.494863, 0.339758, 131.698379], [-0.288276, 0.665639, 198.175278]], "n_matches": 75, "sec": 0.17, "n_inliers": 8}
+{"pair": "ROI_080/patch_74", "A": [[0.334563, -0.154741, 273.848224], [-0.366316, 0.543443, 305.548286]], "n_matches": 52, "sec": 0.155, "n_inliers": 5}
+{"pair": "ROI_080/patch_75", "A": [[0.323455, 0.435563, 17.392176], [-0.26859, 0.376428, 367.702307]], "n_matches": 42, "sec": 0.173, "n_inliers": 6}
+{"pair": "ROI_080/patch_76", "A": [[-0.238374, 2.793027, -325.600226], [0.425818, -4.015996, 1198.590049]], "n_matches": 16, "sec": 0.177, "n_inliers": 4}
+{"pair": "ROI_080/patch_77", "A": [[1.278673, 5.002863, -1631.717438], [-0.125996, 1.705877, -129.885887]], "n_matches": 22, "sec": 0.169, "n_inliers": 4}
+{"pair": "ROI_080/patch_78", "A": [[-0.298431, -0.553804, 590.548631], [-1.259132, 0.600513, 614.319532]], "n_matches": 132, "sec": 0.174, "n_inliers": 8}
+{"pair": "ROI_080/patch_79", "A": [[0.418088, 0.337239, 133.865539], [-0.581513, 1.015223, 250.657187]], "n_matches": 50, "sec": 0.17, "n_inliers": 5}
+{"pair": "ROI_080/patch_80", "A": [[0.634533, 0.948176, -36.803732], [-0.225883, 0.976337, 61.568852]], "n_matches": 20, "sec": 0.157, "n_inliers": 4}
+{"pair": "ROI_080/patch_83", "A": [[1.007005, 0.745957, -184.964854], [0.060334, 0.96799, -7.88936]], "n_matches": 47, "sec": 0.167, "n_inliers": 6}
+{"pair": "ROI_080/patch_84", "A": [[0.322237, 1.434948, -206.836186], [-0.317071, 0.299624, 179.882404]], "n_matches": 13, "sec": 0.17, "n_inliers": 4}
+{"pair": "ROI_080/patch_85", "A": [[0.687095, 0.656699, -101.656557], [0.07848, 0.753556, 166.358345]], "n_matches": 45, "sec": 0.178, "n_inliers": 6}
+{"pair": "ROI_080/patch_86", "A": [[1.079552, 0.095701, -39.412467], [-1.414827, 0.114221, 660.638716]], "n_matches": 16, "sec": 0.18, "n_inliers": 4}
+{"pair": "ROI_080/patch_87", "A": [[0.113176, 1.473938, -200.108438], [0.089027, -0.255963, 557.013536]], "n_matches": 40, "sec": 0.176, "n_inliers": 5}
+{"pair": "ROI_080/patch_88", "A": [[0.672547, 0.663092, -116.921664], [-0.120332, 0.74736, 216.779538]], "n_matches": 39, "sec": 0.166, "n_inliers": 6}
+{"pair": "ROI_080/patch_89", "A": [[0.942448, 0.203121, -64.434567], [-0.035618, 0.641234, 165.786216]], "n_matches": 60, "sec": 0.175, "n_inliers": 9}
+{"pair": "ROI_080/patch_90", "A": [[-0.20954, 0.175942, 94.616804], [0.709672, 1.262172, -96.096452]], "n_matches": 33, "sec": 0.181, "n_inliers": 5}
+{"pair": "ROI_080/patch_91", "A": [[0.620265, 0.208533, 127.595993], [-0.709128, 0.994805, 295.314766]], "n_matches": 123, "sec": 0.18, "n_inliers": 6}
+{"pair": "ROI_080/patch_92", "A": [[0.821619, 0.252848, 12.04551], [-0.06164, 0.949669, 45.205752]], "n_matches": 95, "sec": 0.168, "n_inliers": 7}
+{"pair": "ROI_080/patch_93", "A": [[0.133582, 0.424807, 262.14377], [0.181406, 0.192891, 360.564595]], "n_matches": 102, "sec": 0.179, "n_inliers": 6}
+{"pair": "ROI_080/patch_94", "A": [[0.962795, 0.428147, -39.899785], [-0.454825, 0.696481, 230.957348]], "n_matches": 87, "sec": 0.19, "n_inliers": 6}
+{"pair": "ROI_080/patch_95", "A": [[0.533353, 0.46071, -78.570388], [-0.177104, -0.040758, 479.387287]], "n_matches": 58, "sec": 0.185, "n_inliers": 6}
+{"pair": "ROI_080/patch_96", "A": [[0.664188, 0.082441, 153.266998], [0.337758, 0.215098, 191.620217]], "n_matches": 18, "sec": 0.191, "n_inliers": 3}
+{"pair": "ROI_080/patch_98", "A": [[0.456118, 0.571047, 76.350327], [0.143306, 0.209991, 106.001229]], "n_matches": 27, "sec": 0.185, "n_inliers": 4}
+{"pair": "ROI_080/patch_99", "A": [[0.771123, 0.652859, 33.64942], [-0.054244, 0.357166, 305.864416]], "n_matches": 75, "sec": 0.187, "n_inliers": 9}
+{"pair": "ROI_080/patch_100", "A": [[0.44249, 0.280652, 156.522927], [-0.334155, 0.673437, 249.800542]], "n_matches": 94, "sec": 0.182, "n_inliers": 7}
+{"pair": "ROI_080/patch_101", "A": [[0.469905, 0.602458, 79.363569], [-0.385319, 0.759357, 233.319513]], "n_matches": 70, "sec": 0.187, "n_inliers": 7}
+{"pair": "ROI_080/patch_102", "A": [[0.043306, -0.123065, 422.73626], [-0.331334, 0.070475, 430.489555]], "n_matches": 43, "sec": 0.183, "n_inliers": 5}
+{"pair": "ROI_080/patch_103", "A": [[-0.036217, -0.008343, 324.786771], [-0.009657, -0.011811, 331.080385]], "n_matches": 78, "sec": 0.191, "n_inliers": 7}
+{"pair": "ROI_080/patch_104", "A": [[0.562182, -0.084791, 67.44909], [-0.445365, 0.498797, 280.32168]], "n_matches": 54, "sec": 0.173, "n_inliers": 6}
+{"pair": "ROI_080/patch_105", "A": [[0.631069, -0.014276, 119.766002], [-0.239893, 0.54993, 124.994434]], "n_matches": 127, "sec": 0.173, "n_inliers": 11}
+{"pair": "ROI_080/patch_106", "A": [[1.063116, 0.439206, -200.165476], [0.145869, 0.906469, 0.943922]], "n_matches": 64, "sec": 0.186, "n_inliers": 8}

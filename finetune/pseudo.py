@@ -87,10 +87,17 @@ def fine_l2_std(expec_f, gt, mask):
     return (l2 * wgt[mask]).mean()
 
 
-def pseudo_loss(data, s, affines=None, thr=3.0, min_inliers=0, w_coarse=1.0, w_fine=1.0):
+def inlier_cells(A, k0, k1, i_ids, s, thr):
+    """本步匹配里相对伪仿射残差 < thr（原网格 px）的那些光学粗格。"""
+    d = np.linalg.norm(apply_affine(A, in_to_orig(k0, s)) - in_to_orig(k1, s), axis=1)
+    return np.unique(i_ids[d < thr])
+
+
+def pseudo_loss(data, s, affines=None, thr=3.0, min_inliers=0, w_coarse=1.0, w_fine=1.0, coarse_set="all"):
     """一个 batch 的伪标签损失。data 是 LoFTR 前向后的字典（模块 eval、开梯度，见 finetune/model.py）。
     s = 原尺寸 / 输入尺寸（标量）。affines：离线伪仿射，每对一个 2×3 或 None（None 的对不监督）；
-    不给则用本步匹配在线估计。返回 (loss, 统计 dict)。"""
+    不给则用本步匹配在线估计。coarse_set：all = 所有落在图内的光学格（上游 LoFTR 形式）；
+    inliers = 只取本步内点所在的格。返回 (loss, 统计 dict)。"""
     conf, expec_f = data["conf_matrix"], data["expec_f"]
     B = conf.shape[0]
     hw_c = tuple(int(x) for x in data["hw0_c"])
@@ -98,7 +105,8 @@ def pseudo_loss(data, s, affines=None, thr=3.0, min_inliers=0, w_coarse=1.0, w_f
     half = (data["W"] // 2) * (data["hw0_i"][0] / data["hw0_f"][0])
 
     b_ids = data["b_ids"].cpu().numpy()
-    k0 = data["mkpts0_c"].cpu().numpy().astype(np.float64)
+    i_all = data["i_ids"].cpu().numpy()
+    k0 =data["mkpts0_c"].cpu().numpy().astype(np.float64)
     k1c = data["mkpts1_c"].cpu().numpy().astype(np.float64)
     k1f = data["mkpts1_f"].detach().cpu().numpy().astype(np.float64)
 
@@ -117,6 +125,9 @@ def pseudo_loss(data, s, affines=None, thr=3.0, min_inliers=0, w_coarse=1.0, w_f
             continue
         used += 1
         i, j = coarse_targets(A, hw_c, scale_c, s)
+        if coarse_set == "inliers":   # 只监督本步内点所在的格：全格子稠密监督在在线模式下会塌（S2）
+            keep = np.isin(i, inlier_cells(A, k0[sel], k1f[sel], i_all[sel], s, thr))
+            i, j = i[keep], j[keep]
         cb.append(np.full(len(i), k)); ci.append(i); cj.append(j)
         g = fine_targets(A, k0[sel], k1c[sel], half, s)
         gt[sel] = g

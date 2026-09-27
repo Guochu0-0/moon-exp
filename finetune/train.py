@@ -48,6 +48,8 @@ def main(argv=None):
     ap.add_argument("--wd", type=float, default=0.0)
     ap.add_argument("--ransac", type=float, default=3.0, help="伪仿射的 RANSAC 阈值（原网格 px），与评测同口径")
     ap.add_argument("--min-inliers", type=int, default=20, help="在线模式：伪仿射内点少于此数的对不监督（同 SCENES 的筛选）")
+    ap.add_argument("--coarse-set", default="all", choices=("all", "inliers"),
+                    help="粗级正样本：all = 所有图内格（上游形式）；inliers = 只取本步内点所在的格")
     ap.add_argument("--w-coarse", type=float, default=1.0)
     ap.add_argument("--w-fine", type=float, default=1.0)
     ap.add_argument("--save-every", type=int, default=1000)
@@ -87,7 +89,8 @@ def main(argv=None):
                 t0 = time.time()
                 data = base.forward(batch["image0"].to(args.device), batch["image1"].to(args.device))
                 affines = None if labels is None else [np.asarray(labels[p]) for p in batch["pair"]]
-                loss, st = pseudo_loss(data, s, affines, args.ransac, args.min_inliers, args.w_coarse, args.w_fine)
+                loss, st = pseudo_loss(data, s, affines, args.ransac, args.min_inliers, args.w_coarse, args.w_fine,
+                                       args.coarse_set)
                 opt.zero_grad(set_to_none=True)
                 if st["pairs_used"]:
                     loss.backward()

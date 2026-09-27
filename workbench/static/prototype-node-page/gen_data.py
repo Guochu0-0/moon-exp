@@ -42,7 +42,7 @@ for d in sorted((REPO / "runs").iterdir()):
     mj = json.loads((d / "metrics.json").read_text(encoding="utf-8"))
     metrics = {m: {s: {"summary": clean(v["summary"]), "errors": errs_out(v["errors"])} for s, v in sp.items()}
                for m, sp in mj["methods"].items()}
-    runs[d.name] = {"id": d.name, "meta": meta, "lit": True, "mock": False, "metrics": metrics, "extras": []}
+    runs[d.name] = {"id": d.name, "meta": meta, "lit": True, "mock": False, "metrics": metrics}
 
 # ---- 模拟实验 ----
 b0 = runs["B0"]["metrics"]
@@ -66,33 +66,35 @@ for s in ("val", "test"):
     arr = np.array([np.inf if v is None else v for v in er])
     e1[s] = {"summary": clean(protocol.summarize(arr)), "errors": er}
 
-steps = list(range(0, 20001, 1000))
+steps = list(range(0, 20001, 500))
+noise = np.random.default_rng(1)
+tb = {   # 模拟 runs/E1/tb/ 里 TensorBoard 日志的 scalar
+    "train/loss": [round(1.2 * math.exp(-s / 6000) + 0.15 + 0.03 * float(noise.normal()), 4) for s in steps],
+    "train/lr": [round(1e-5 * (0.5 + 0.5 * math.cos(math.pi * s / 20000)), 9) for s in steps],
+    "val/auc@10": [round(0.506 + 0.062 * (1 - math.exp(-s / 5000)) + 0.004 * float(noise.normal()), 4) for s in steps],
+}
 runs["E1"] = {
-    "id": "E1", "lit": True, "mock": True, "extras": [{
-        "name": "train_curve.json", "type": "line", "x": steps, "xlabel": "step",
-        "series": {"loss": [round(1.2 * math.exp(-s / 6000) + 0.15 + 0.02 * math.sin(s / 900), 3) for s in steps],
-                   "val auc@10": [round(0.2 + 0.25 * (1 - math.exp(-s / 5000)), 3) for s in steps]}}],
+    "id": "E1", "lit": True, "mock": True, "tb": {"logdir": "runs/E1/tb", "step": steps, "scalars": tb},
     "metrics": {"main": e1},
-    "meta": {"id": "E1", "title": f"{best} 伪标签自训练（模拟数据）", "parent": "B0", "init": f"B0/{best}",
-             "date": "2026-10-03", "commit": "a1b2c3d", "verdict_tag": "",
-             "hypothesis": f"用 {best} 在无标注训练集上的高置信匹配当伪标签微调，能修掉一部分失败 pair。\n",
-             "change": "伪标签：RANSAC 内点 ≥ 30 且残差 < 2 px 的 pair；lr 1e-5，20k step。\n",
-             "verdict": "", "next": ""},
+    "meta": {"id": "E1", "title": f"{best} 伪标签自训练", "parent": "B0", "init": f"B0/{best}",
+             "date": "2026-10-03", "commit": "a1b2c3d",
+             "notes": f"假设：用 {best} 在无标注训练集上的高置信匹配当伪标签微调，能修掉一部分失败 pair。\n"
+                      "改动：伪标签取 RANSAC 内点 ≥ 30 且残差 < 2 px 的 pair；lr 1e-5，余弦退火，20k step。"},
 }
 runs["E2"] = {
-    "id": "E2", "lit": False, "mock": True, "extras": [], "metrics": {},
-    "meta": {"id": "E2", "title": "SAR 先去斑再匹配（想法）", "parent": "E1", "init": "",
-             "hypothesis": "E1 剩下的失败 pair 多在强斑点区域；先做 Lee 滤波可能让匹配器出更多点。\n",
-             "change": "", "verdict": "", "next": ""},
+    "id": "E2", "lit": False, "mock": True, "metrics": {},
+    "meta": {"id": "E2", "title": "SAR 先去斑再匹配", "parent": "E1", "init": "",
+             "notes": "假设：E1 剩下的失败 pair 多在强斑点区域；先做 Lee 滤波可能让匹配器出更多点。"},
 }
-# 真实记录补上 v2 的字段拆分：status → baseline 标记 + 判定
+# 真实记录：hypothesis + change 合并成 notes（v2 只有一个 Notes）
 for r in ("B0", "B0m"):
     m = runs[r]["meta"]
-    m["baseline"] = True
-    m["verdict_tag"] = ""
-runs["E1"]["meta"]["baseline"] = False
-runs["E2"]["meta"]["baseline"] = False
+    m["notes"] = "\n".join(x for x in (f"假设：{m.get('hypothesis', '').strip()}" if m.get("hypothesis", "").strip() else "",
+                                        f"改动：{m.get('change', '').strip()}" if m.get("change", "").strip() else "") if x)
+for r in runs.values():
+    r.setdefault("tb", None)
+    r["meta"]["baseline"] = r["id"] in ("B0", "B0m")
 
-data = {"protocol": clean(protocol.protocol_info()), "runs": runs, "best_b0": best}
+data = {"protocol": clean(protocol.protocol_info()), "runs": runs}
 (HERE / "data.js").write_text("window.DATA = " + json.dumps(data, ensure_ascii=False) + ";\n", encoding="utf-8")
-print("wrote data.js", {k: list(v["metrics"]) [:3] for k, v in runs.items()}, "best B0 =", best)
+print("wrote data.js", {k: list(v["metrics"])[:3] for k, v in runs.items()}, "best B0 =", best)

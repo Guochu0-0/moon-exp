@@ -10,27 +10,37 @@
   `baselines.match <cfg> --weights <ckpt> --name <新名字>` → `baselines.fit` → `workbench eval`。
 - 统一的仿射 RANSAC 在 `baselines/ransac.py`，训练侧和评测侧共用同一份实现。
 
-## SCENES 式伪标签微调（#26）
+## 组件
 
-`pseudo.py` + `label.py` + `train.py`：拿 RANSAC 仿射当几何伪真值，按上游 LoFTR 原始监督的形式训练
-（粗级：光学格经伪仿射落到的 SAR 格为正样本，sparse focal；细级：窗口内的归一化偏移，l2_with_std）。
+| 模块 | 作用 |
+|---|---|
+| `model.py` `Base` | 按 `configs/baselines/anymatch_loftr.json` 构造底座；`forward` 返回带梯度的 `conf_matrix`、`expec_f`；`state_dict()` 存成适配器能读的格式 |
+| `data.py` `PairSet` | 一个 split 的全部 patch 对（Train 无标注，7907 对），输入映射同 baseline 主表 |
+| `pseudo.py` | 伪标签损失：RANSAC 仿射当几何伪真值，按上游 LoFTR 原始监督形式出粗级正样本（sparse focal）与细级窗口内偏移（l2_with_std）（#26） |
+| `label.py` | SCENES 式离线伪标签：起点模型在 Train 上估一次伪仿射，筛掉匹配 < 100 或内点 < 20 的对 |
+| `rl.py` | 细级 RL：以 soft-argmax 为均值的高斯策略（逐匹配噪声 + 共享整体平移），整对 reward（梯度 NCC / CFOG）与逐匹配残差 reward，组内 baseline |
+| `train.py` | 训练循环：伪标签项（`--labels` 离线；不给则在线重估，会塌缩，见 `runs/S2`）+ RL 项（`--rl-pair`、`--rl-match`）+ L2-SP |
 
-- **离线**（SCENES 原做法）：`finetune.label` 用 zero-shot 底座在 Train 上估一次伪仿射，筛掉匹配 < 100 或内点 < 20 的对；
-  `finetune.train --labels <jsonl>` 只在保留的对上训练，伪标签不再更新。
-- **在线**：`finetune.train` 不给 `--labels`，每步用当前模型自己的匹配重估；后续 RL 方案的伪标签监督项复用这一条。
+实测（显存、吞吐、RANSAC 耗时）与「lr=0 走训练循环后推理与 zero-shot 逐点一致」的验证记在 #25 的解答里；
+当时用的一次性脚本不在库中。
 
-一键跑（打标 → 训练 → 逐 ckpt 在 Val 上评测）：`GPU=<空卡> scripts/finetune/scenes.sh <name> [train 参数]`，见脚本头注释。
+## 训练（154 / 126，loftr 环境）
 
-## 用法（154 / 126，loftr 环境）
+一键跑（打标 → 训练 → 逐 ckpt 在 Val 上评测）：`GPU=<空卡> scripts/finetune/scenes.sh <name> [train 参数]`，见脚本头注释。例：
+
+```bash
+# SCENES 式离线伪标签（S1）
+GPU=0 scripts/finetune/scenes.sh S1 --labels $MOON_RESULTS/finetune/labels_b0.jsonl --steps 8000 --save-every 1000
+# 从 S1 出发，伪标签项 + 整对 RL
+GPU=0 scripts/finetune/scenes.sh R1 --init $MOON_RESULTS/finetune/S1/ckpt_6000.pt \
+    --labels $MOON_RESULTS/finetune/labels_b0.jsonl --steps 4000 --save-every 1000 --rl-pair 1
+```
+
+## 评测微调后的权重（154 / 126，loftr 环境）
 
 ```bash
 export MOON_DATA=/remote-home/xufang/YGC/dataset/Moon MOON_WEIGHTS=/remote-home/xufang/YGC/weights MOON_RESULTS=/remote-home/xufang/YGC/results
-# 最小训练循环 + 实测
-CUDA_VISIBLE_DEVICES=<空卡> nice -n 10 /opt/envs/loftr/bin/python -m finetune.smoke configs/baselines/anymatch_loftr.json \
-    --split train --steps 30 --batch 1 --out $MOON_RESULTS/finetune/smoke
-# 验证接入不改行为：lr=0 走一遍训练循环，存 ckpt，再按 baseline 流程在 Val 上推理，与 zero-shot 原始点对比较
-... -m finetune.smoke ... --lr 0 --save --out $MOON_RESULTS/finetune/lr0
-... -m baselines.match configs/baselines/anymatch_loftr.json --split val --weights $MOON_RESULTS/finetune/lr0/ckpt.pt \
-    --name anymatch_loftr_lr0 --out $MOON_RESULTS/finetune/verify
-... -m finetune.compare $MOON_RESULTS/baselines/anymatch_loftr/val.npz $MOON_RESULTS/finetune/verify/anymatch_loftr_lr0/val.npz
+CUDA_VISIBLE_DEVICES=<空卡> nice -n 10 /opt/envs/loftr/bin/python -m baselines.match configs/baselines/anymatch_loftr.json \
+    --split val --weights <ckpt.pt> --name <run 名> --out $MOON_RESULTS/finetune
+/opt/envs/wb/bin/python -m baselines.fit $MOON_RESULTS/finetune/<run 名> --split val --run runs/<id>
 ```

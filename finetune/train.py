@@ -61,6 +61,8 @@ def main(argv=None):
     ap.add_argument("--sig-g", type=float, default=0.25, help="共享整体平移的采样标准差（归一化窗口坐标，1 = 窗口半宽）")
     ap.add_argument("--sig-i", type=float, default=0.1, help="逐匹配独立噪声的标准差（同上）")
     ap.add_argument("--w-l2sp", type=float, default=0.0, help="参数空间锚定（L2-SP）权重")
+    ap.add_argument("--inject-shift", type=int, default=0,
+                    help="健全性测试：SAR 输入水平平移的像素数（输入网格），只配合 --w-pseudo 0 使用")
     ap.add_argument("--accum", type=int, default=1, help="梯度累积：每 accum 步（对）更新一次；步数、存 ckpt 仍按前向步计")
     ap.add_argument("--train-modules", default="all", choices=("all", "fine"),
                     help="fine：只训细级模块，粗匹配保持起点不变")
@@ -107,7 +109,10 @@ def main(argv=None):
         while step < args.steps:
             for batch in dl:
                 t0 = time.time()
-                data = base.forward(batch["image0"].to(args.device), batch["image1"].to(args.device))
+                i1 = batch["image1"].to(args.device)
+                if args.inject_shift:   # 健全性测试：SAR 内容右移，reward 的最优点明确偏离当前位置
+                    i1 = torch.roll(i1, args.inject_shift, dims=-1)
+                data = base.forward(batch["image0"].to(args.device), i1)
                 affines = None if labels is None else [np.asarray(labels[p]) for p in batch["pair"]]
                 loss, st = pseudo_loss(data, s, affines, args.ransac, args.min_inliers, args.w_coarse, args.w_fine,
                                        args.coarse_set)

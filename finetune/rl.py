@@ -136,6 +136,10 @@ def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.
             r[~ok] = np.nanmin(r)
             sd = r.std()
             st["r_pair"].append(float(r[ok].mean())); st["r_pair_std"].append(float(sd))
+            # 事后分析用：组内 reward 对共享平移 z 回归出局部坡度；μ 均值看细级输出是否整体移动
+            st["z"] = (eps[:, 0, :] * half).cpu().numpy().round(3).tolist()        # 输入网格 px
+            st["r"] = [None if not np.isfinite(x) else round(float(x), 6) for x in r]
+            st["mu_mean_px"] = (mu.detach().mean(0) * half).cpu().numpy().round(4).tolist()
             if sd > 1e-6:
                 adv = torch.tensor((r - r.mean()) / sd, dtype=torch.float32, device=dev)
                 if sig_i > 0:
@@ -158,5 +162,6 @@ def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.
             continue
         losses.append(loss_b)
     loss = torch.stack(losses).sum() if losses else mu_all.sum() * 0
-    agg = {k: (round(float(np.mean(v)), 5) if isinstance(v, list) and v else v) for k, v in st.items()}
+    agg = {k: (round(float(np.mean(v)), 5) if isinstance(v, list) and v and k not in ("z", "r", "mu_mean_px") else v)
+           for k, v in st.items()}
     return loss, {("rl_" + k): (None if v == [] else v) for k, v in agg.items()}

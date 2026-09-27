@@ -138,16 +138,24 @@ def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.
             st["r_pair"].append(float(r[ok].mean())); st["r_pair_std"].append(float(sd))
             if sd > 1e-6:
                 adv = torch.tensor((r - r.mean()) / sd, dtype=torch.float32, device=dev)
-                c = sig_g ** 2 / (sig_i ** 2 + M * sig_g ** 2)
-                sinv_v = (v - c * v.sum(1, keepdim=True)) / sig_i ** 2           # Σ⁻¹ v，逐轴
-                logp = -0.5 * (v * sinv_v).sum((1, 2))                          # (K,)
-                loss_b = loss_b - w_pair * (adv * logp).mean() / M
+                if sig_i > 0:
+                    c = sig_g ** 2 / (sig_i ** 2 + M * sig_g ** 2)
+                    sinv_v = (v - c * v.sum(1, keepdim=True)) / sig_i ** 2       # Σ⁻¹ v，逐轴
+                    logp = -0.5 * (v * sinv_v).sum((1, 2)) / M                  # (K,)
+                else:
+                    # σ_i → 0 的极限：只有共享平移 z，log π = −‖mean_m(a − μ)‖² / 2σ_g²，每个匹配的梯度 = z / (M σ_g²)。
+                    # σ_i > 0 时独立噪声项 ε/σ_i² 主导梯度却几乎不影响整对 reward（信号被淹没，见 #27 记录）
+                    logp = -0.5 * (v.mean(1) ** 2).sum(-1) / sig_g ** 2
+                loss_b = loss_b - w_pair * (adv * logp).mean()
         if w_match > 0 and ok.any():
             rm = np.where(resid < TAU, np.exp(-resid ** 2 / (2 * DELTA ** 2)), OUT_R)[ok]
             advm = torch.tensor(rm - rm.mean(0, keepdims=True), dtype=torch.float32, device=dev)
             logpm = -(v[torch.from_numpy(ok).to(dev)] ** 2).sum(-1) / (2 * (sig_i ** 2 + sig_g ** 2))
             loss_b = loss_b - w_match * (advm * logpm).mean()
             st["r_match"].append(float(rm.mean()))
+        if not torch.isfinite(loss_b):
+            st["nonfinite"] = st.get("nonfinite", 0) + 1
+            continue
         losses.append(loss_b)
     loss = torch.stack(losses).sum() if losses else mu_all.sum() * 0
     agg = {k: (round(float(np.mean(v)), 5) if isinstance(v, list) and v else v) for k, v in st.items()}

@@ -39,7 +39,7 @@ def test_rl_pair_gradient_points_to_true_shift():
     n, w = 128, 16
     k0 = _grid(w, w, 8)
     k0 = k0[(k0 >= 24).all(1) & (k0 < n - 24).all(1)]
-    for kind, ff in FEATS.items():
+    for kind, ff, sig_i in [(k, f, si) for k, f in FEATS.items() for si in (0.05, 0.0)]:
         torch.manual_seed(0)
         mu = torch.zeros(len(k0), 3)
         mu.requires_grad_(True)
@@ -48,10 +48,10 @@ def test_rl_pair_gradient_points_to_true_shift():
                 "conf_matrix": torch.zeros(1, 1, 1)}
         feats = (ff(torch.from_numpy(_texture())[None, None]), ff(torch.from_numpy(_texture(shift=2))[None, None]))
         for _ in range(20):
-            loss, st = rl_loss(data, 1.0, K=8, sig_g=0.25, sig_i=0.05, w_pair=1.0, feats=feats, kind=kind)
+            loss, st = rl_loss(data, 0.8, K=8, sig_g=0.25, sig_i=sig_i, w_pair=1.0, feats=feats, kind=kind)
             loss.backward()
-        assert st["rl_ransac_fail"] == 0
-        assert mu.grad[:, 0].mean() < 0 and abs(mu.grad[:, 1].mean()) < abs(mu.grad[:, 0].mean()), kind
+        assert st["rl_ransac_fail"] == 0 and torch.isfinite(mu.grad).all()
+        assert mu.grad[:, 0].mean() < 0 and abs(mu.grad[:, 1].mean()) < abs(mu.grad[:, 0].mean()), (kind, sig_i)
 
 
 def _grid(w=10, h=10, step=8):

@@ -42,3 +42,7 @@
 	path = third_party/RMSO-ConvNeXt
 	url = https://github.com/yeyuanxin110/RMSO-ConvNeXt
 	shallow = true
+[submodule "third_party/CoMIR"]
+	path = third_party/CoMIR
+	url = https://github.com/MIDA-group/CoMIR
+	shallow = true

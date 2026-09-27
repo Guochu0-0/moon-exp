@@ -61,6 +61,7 @@ def main(argv=None):
     ap.add_argument("--sig-g", type=float, default=0.25, help="共享整体平移的采样标准差（归一化窗口坐标，1 = 窗口半宽）")
     ap.add_argument("--sig-i", type=float, default=0.1, help="逐匹配独立噪声的标准差（同上）")
     ap.add_argument("--w-l2sp", type=float, default=0.0, help="参数空间锚定（L2-SP）权重")
+    ap.add_argument("--accum", type=int, default=1, help="梯度累积：每 accum 步（对）更新一次；步数、存 ckpt 仍按前向步计")
     ap.add_argument("--train-modules", default="all", choices=("all", "fine"),
                     help="fine：只训细级模块，粗匹配保持起点不变")
     ap.add_argument("--limit", type=int, default=0, help="只用 Train 前 N 对（过拟合测试：RL 能否在固定小集合上推高 reward）")
@@ -124,11 +125,13 @@ def main(argv=None):
                     l_sp = sum(((p - p0) ** 2).sum() for p, p0 in zip(params, params0))
                     loss = loss + args.w_l2sp * l_sp
                     st["l2sp"] = round(float(l_sp), 6)
-                opt.zero_grad(set_to_none=True)
                 if active:
-                    loss.backward()
-                    opt.step()
+                    (loss / args.accum).backward()
                 step += 1
+                if step % args.accum == 0:   # 梯度累积：攒 accum 对再更新一次（RL 梯度信噪比低）
+                    if any(p.grad is not None for p in params):
+                        opt.step()
+                    opt.zero_grad(set_to_none=True)
                 rec = {"step": step, "pairs": batch["pair"], "loss": round(float(loss), 5), **st,
                        "sec": round(time.time() - t0, 3)}
                 log.write(json.dumps(rec, ensure_ascii=False) + "\n")

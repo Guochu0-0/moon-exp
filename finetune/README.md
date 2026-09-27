@@ -10,6 +10,17 @@
   `baselines.match <cfg> --weights <ckpt> --name <新名字>` → `baselines.fit` → `workbench eval`。
 - 统一的仿射 RANSAC 在 `baselines/ransac.py`，训练侧和评测侧共用同一份实现。
 
+## SCENES 式伪标签微调（#26）
+
+`pseudo.py` + `label.py` + `train.py`：拿 RANSAC 仿射当几何伪真值，按上游 LoFTR 原始监督的形式训练
+（粗级：光学格经伪仿射落到的 SAR 格为正样本，sparse focal；细级：窗口内的归一化偏移，l2_with_std）。
+
+- **离线**（SCENES 原做法）：`finetune.label` 用 zero-shot 底座在 Train 上估一次伪仿射，筛掉匹配 < 100 或内点 < 20 的对；
+  `finetune.train --labels <jsonl>` 只在保留的对上训练，伪标签不再更新。
+- **在线**：`finetune.train` 不给 `--labels`，每步用当前模型自己的匹配重估；后续 RL 方案的伪标签监督项复用这一条。
+
+一键跑（打标 → 训练 → 逐 ckpt 在 Val 上评测）：`GPU=<空卡> scripts/finetune/scenes.sh <name> [train 参数]`，见脚本头注释。
+
 ## 用法（154 / 126，loftr 环境）
 
 ```bash

@@ -59,8 +59,21 @@ def cfog(img):
 
 
 @torch.no_grad()
-def pair_scores(F0, F1, As, s):
-    """F0/F1: (9,H,W) 光学 / SAR 的 CFOG（输入网格）；As: 原网格角点约定的 2×3 列表。返回每个 A 的平均余弦。"""
+def gradmag(img):
+    """img (B,1,H,W) → 梯度幅值 (B,1,H,W)。与 baselines/diagnose_reward.py 的 gradncc 同一定义。"""
+    img = _blur(img.float(), 1.0)
+    kx = torch.tensor([[-1., 0, 1], [-2, 0, 2], [-1, 0, 1]], device=img.device).view(1, 1, 3, 3)
+    p = F.pad(img, (1, 1, 1, 1), mode="replicate")
+    return (F.conv2d(p, kx) ** 2 + F.conv2d(p, kx.transpose(2, 3)) ** 2).sqrt()
+
+
+FEATS = {"cfog": cfog, "gradncc": gradmag}
+
+
+@torch.no_grad()
+def pair_scores(F0, F1, As, s, kind="cfog"):
+    """F0/F1: (C,H,W) 光学 / SAR 的特征（输入网格）；As: 原网格角点约定的 2×3 列表。
+    kind=cfog：重叠区平均余弦；gradncc：重叠区 NCC。诊断（修正后）：Val 上 gradncc 的峰离真值更近，见 PR 说明。"""
     C, H, W = F1.shape
     Ms = []
     for A in As:
@@ -77,11 +90,18 @@ def pair_scores(F0, F1, As, s):
     inside = (grid.abs() <= 1).all(-1)
     inside[:, :MARGIN] = False; inside[:, -MARGIN:] = False
     inside[:, :, :MARGIN] = False; inside[:, :, -MARGIN:] = False
-    cos = (warped * F1[None]).sum(1)
-    return ((cos * inside).sum((1, 2)) / inside.sum((1, 2)).clamp_min(1)).cpu().numpy()
+    w = inside.float()
+    n = w.sum((1, 2)).clamp_min(1)
+    if kind == "cfog":
+        cos = (warped * F1[None]).sum(1)
+        return ((cos * w).sum((1, 2)) / n).cpu().numpy()
+    a, b = warped[:, 0], F1[0].expand_as(warped[:, 0])
+    ma, mb = (a * w).sum((1, 2)) / n, (b * w).sum((1, 2)) / n
+    a, b = (a - ma[:, None, None]) * w, (b - mb[:, None, None]) * w
+    return ((a * b).sum((1, 2)) / ((a * a).sum((1, 2)) * (b * b).sum((1, 2))).sqrt().clamp_min(1e-9)).cpu().numpy()
 
 
-def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.0, feats=None):
+def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.0, feats=None, kind="cfog"):
     """一个 batch 的 RL 代理损失。feats = (F0, F1)：batch 的 CFOG（只有 w_pair > 0 时需要）。返回 (loss, 统计)。"""
     mu_all = data["expec_f"][:, :2]
     dev = mu_all.device
@@ -112,7 +132,7 @@ def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.
         loss_b = mu.sum() * 0
         if w_pair > 0 and ok.sum() >= 2:
             r = np.full(K, np.nan)
-            r[ok] = pair_scores(feats[0][b], feats[1][b], [A for A in As if A is not None], s)
+            r[ok] = pair_scores(feats[0][b], feats[1][b], [A for A in As if A is not None], s, kind)
             r[~ok] = np.nanmin(r)
             sd = r.std()
             st["r_pair"].append(float(r[ok].mean())); st["r_pair_std"].append(float(sd))

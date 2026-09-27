@@ -27,13 +27,14 @@ def _texture(n=128, shift=0, seed=0):
 
 def test_pair_scores_prefers_true_shift():
     import torch
-    from finetune.rl import cfog, pair_scores
+    from finetune.rl import FEATS, pair_scores
 
-    F0 = cfog(torch.from_numpy(_texture())[None, None])[0]
-    F1 = cfog(torch.from_numpy(_texture(shift=3))[None, None])[0]
-    A = lambda t: np.array([[1.0, 0, t], [0, 1.0, 0]])
-    sc = pair_scores(F0, F1, [A(0), A(3), A(1.5), A(5)], 1.0)
-    assert sc.argmax() == 1 and sc[1] > sc[2] > sc[0]
+    for kind, ff in FEATS.items():
+        F0 = ff(torch.from_numpy(_texture())[None, None])[0]
+        F1 = ff(torch.from_numpy(_texture(shift=3))[None, None])[0]
+        A = lambda t: np.array([[1.0, 0, t], [0, 1.0, 0]])
+        sc = pair_scores(F0, F1, [A(0), A(3), A(1.5), A(5)], 1.0, kind)
+        assert sc.argmax() == 1 and sc[1] > sc[2] > sc[0], kind
 
 
 def test_diagnose_reward_surface_peak():
@@ -49,23 +50,24 @@ def test_diagnose_reward_surface_peak():
 
 def test_rl_pair_gradient_points_to_true_shift():
     import torch
-    from finetune.rl import cfog, rl_loss
+    from finetune.rl import FEATS, rl_loss
 
     n, w = 128, 16
-    torch.manual_seed(0)
     k0 = _grid(w, w, 8)
     k0 = k0[(k0 >= 24).all(1) & (k0 < n - 24).all(1)]
-    mu = torch.zeros(len(k0), 3)
-    mu.requires_grad_(True)
-    data = {"expec_f": mu, "b_ids": torch.zeros(len(k0), dtype=torch.long), "W": 5, "hw0_i": (n, n),
-            "hw0_f": (n // 2, n // 2), "mkpts0_c": torch.from_numpy(k0), "mkpts1_c": torch.from_numpy(k0),
-            "conf_matrix": torch.zeros(1, 1, 1)}
-    feats = (cfog(torch.from_numpy(_texture())[None, None]), cfog(torch.from_numpy(_texture(shift=2))[None, None]))
-    for _ in range(20):
-        loss, st = rl_loss(data, 1.0, K=8, sig_g=0.25, sig_i=0.05, w_pair=1.0, feats=feats)
-        loss.backward()
-    assert st["rl_ransac_fail"] == 0
-    assert mu.grad[:, 0].mean() < 0 and abs(mu.grad[:, 1].mean()) < abs(mu.grad[:, 0].mean())
+    for kind, ff in FEATS.items():
+        torch.manual_seed(0)
+        mu = torch.zeros(len(k0), 3)
+        mu.requires_grad_(True)
+        data = {"expec_f": mu, "b_ids": torch.zeros(len(k0), dtype=torch.long), "W": 5, "hw0_i": (n, n),
+                "hw0_f": (n // 2, n // 2), "mkpts0_c": torch.from_numpy(k0), "mkpts1_c": torch.from_numpy(k0),
+                "conf_matrix": torch.zeros(1, 1, 1)}
+        feats = (ff(torch.from_numpy(_texture())[None, None]), ff(torch.from_numpy(_texture(shift=2))[None, None]))
+        for _ in range(20):
+            loss, st = rl_loss(data, 1.0, K=8, sig_g=0.25, sig_i=0.05, w_pair=1.0, feats=feats, kind=kind)
+            loss.backward()
+        assert st["rl_ransac_fail"] == 0
+        assert mu.grad[:, 0].mean() < 0 and abs(mu.grad[:, 1].mean()) < abs(mu.grad[:, 0].mean()), kind
 
 
 def _grid(w=10, h=10, step=8):

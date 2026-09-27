@@ -29,7 +29,7 @@ from .data import PairSet
 from .label import load_labels
 from .model import Base
 from .pseudo import pseudo_loss
-from .rl import cfog, rl_loss
+from .rl import FEATS, rl_loss
 
 REPO = Path(__file__).resolve().parents[1]
 HW = 512  # patch 原尺寸
@@ -55,6 +55,7 @@ def main(argv=None):
     ap.add_argument("--w-fine", type=float, default=1.0)
     ap.add_argument("--w-pseudo", type=float, default=1.0, help="伪标签监督项的权重；0 = 不用")
     ap.add_argument("--rl-pair", type=float, default=0.0, help="整对 CFOG reward 的 RL 项权重（finetune/rl.py）")
+    ap.add_argument("--reward", default="gradncc", choices=("cfog", "gradncc"), help="整对 reward 的相似度")
     ap.add_argument("--rl-match", type=float, default=0.0, help="逐匹配残差 reward 的 RL 项权重")
     ap.add_argument("--K", type=int, default=4, help="每对采样组数（组内 baseline）")
     ap.add_argument("--sig-g", type=float, default=0.25, help="共享整体平移的采样标准差（归一化窗口坐标，1 = 窗口半宽）")
@@ -103,9 +104,10 @@ def main(argv=None):
                 loss = args.w_pseudo * loss
                 active = st["pairs_used"] > 0 and args.w_pseudo > 0
                 if args.rl_pair > 0 or args.rl_match > 0:
-                    feats = (cfog(data["image0"]), cfog(data["image1"])) if args.rl_pair > 0 else None
+                    ff = FEATS[args.reward]
+                    feats = (ff(data["image0"]), ff(data["image1"])) if args.rl_pair > 0 else None
                     l_rl, st_rl = rl_loss(data, s, args.K, args.sig_g, args.sig_i, args.rl_pair, args.rl_match,
-                                          args.ransac, feats)
+                                          args.ransac, feats, args.reward)
                     loss = loss + l_rl
                     st.update(st_rl, rl=round(float(l_rl), 6))
                     active = active or l_rl.requires_grad

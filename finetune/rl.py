@@ -101,7 +101,8 @@ def pair_scores(F0, F1, As, s, kind="cfog"):
     return ((a * b).sum((1, 2)) / ((a * a).sum((1, 2)) * (b * b).sum((1, 2))).sqrt().clamp_min(1e-9)).cpu().numpy()
 
 
-def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.0, feats=None, kind="cfog"):
+def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.0, feats=None, kind="cfog",
+            placebo=False):
     """一个 batch 的 RL 代理损失。feats = (F0, F1)：batch 的 CFOG（只有 w_pair > 0 时需要）。返回 (loss, 统计)。"""
     mu_all = data["expec_f"][:, :2]
     dev = mu_all.device
@@ -134,6 +135,8 @@ def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.
             r = np.full(K, np.nan)
             r[ok] = pair_scores(feats[0][b], feats[1][b], [A for A in As if A is not None], s, kind)
             r[~ok] = np.nanmin(r)
+            if placebo:   # 安慰剂对照：reward 换成与动作无关的随机数，更新只剩同等幅度的噪声扰动
+                r = np.random.default_rng().normal(size=K)
             sd = r.std()
             st["r_pair"].append(float(r[ok].mean())); st["r_pair_std"].append(float(sd))
             # 事后分析用：组内 reward 对共享平移 z 回归出局部坡度；μ 均值看细级输出是否整体移动

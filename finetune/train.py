@@ -61,6 +61,7 @@ def main(argv=None):
     ap.add_argument("--sig-g", type=float, default=0.25, help="共享整体平移的采样标准差（归一化窗口坐标，1 = 窗口半宽）")
     ap.add_argument("--sig-i", type=float, default=0.1, help="逐匹配独立噪声的标准差（同上）")
     ap.add_argument("--w-l2sp", type=float, default=0.0, help="参数空间锚定（L2-SP）权重")
+    ap.add_argument("--placebo", action="store_true", help="安慰剂对照：整对 reward 换成随机数")
     ap.add_argument("--inject-shift", type=int, default=0,
                     help="健全性测试：SAR 输入水平平移的像素数（输入网格），只配合 --w-pseudo 0 使用")
     ap.add_argument("--accum", type=int, default=1, help="梯度累积：每 accum 步（对）更新一次；步数、存 ckpt 仍按前向步计")
@@ -122,7 +123,7 @@ def main(argv=None):
                     ff = FEATS[args.reward]
                     feats = (ff(data["image0"]), ff(data["image1"])) if args.rl_pair > 0 else None
                     l_rl, st_rl = rl_loss(data, s, args.K, args.sig_g, args.sig_i, args.rl_pair, args.rl_match,
-                                          args.ransac, feats, args.reward)
+                                          args.ransac, feats, args.reward, args.placebo)
                     loss = loss + l_rl
                     st.update(st_rl, rl=round(float(l_rl), 6))
                     active = active or l_rl.requires_grad

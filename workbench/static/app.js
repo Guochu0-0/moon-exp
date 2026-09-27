@@ -46,7 +46,7 @@ const PAL = ['#0969da', '#cf222e', '#1a7f37', '#8250df', '#bf8700', '#1b7c83', '
 
 /* ---------------- 图表 ---------------- */
 function cdfChart(items, w = 660, h = 210) {   // items: [{name, errors, color, dash, width}]
-  const L = 44, R = 10, T = 8, B = 30, W = w - L - R, H = h - T - B, xMax = D.protocol.t_coarse;
+  const L = 44, R = 10, T = 8, B = 30, W = w - L - R, H = h - T - B, xMax = Math.max(...D.protocol.auc_thresholds, ...D.protocol.sr_thresholds);
   const X = x => L + x / xMax * W, Y = y => T + H - y * H;
   let g = '';
   for (let i = 0; i <= 4; i++) g += `<line x1="${L}" x2="${L + W}" y1="${Y(i / 4)}" y2="${Y(i / 4)}" stroke="#eaeef2"/><text x="${L - 6}" y="${Y(i / 4) + 4}" font-size="10" fill="#656d76" text-anchor="end">${i * 25}%</text>`;
@@ -65,10 +65,10 @@ function cdfChart(items, w = 660, h = 210) {   // items: [{name, errors, color, 
   return `<svg width="${w}" height="${h}">${g}</svg>` + legend(items);
 }
 function legend(items) { return `<div class="legend">${items.map((it, i) => `<span><i style="background:${it.color || PAL[i % PAL.length]}"></i>${esc(it.name)}</span>`).join('')}</div>`; }
-function outcomeBars(rows, w = 660) {   // rows: [{name, errors}]；按协议分：≤阈值 / 成功但超阈值 / 错配 / 失败
-  const tc = D.protocol.t_coarse, thr = S.thr, rh = 20, L = 150, W = w - L - 10, h = rows.length * rh + 6;
-  const segs = [[`≤ ${thr} px`, '#2da44e', e => e != null && e <= thr], [`成功但 > ${thr} px`, '#a2d9ae', e => e != null && e > thr && e <= tc],
-                [`错配 (> ${tc} px)`, '#bf8700', e => e != null && e > tc], ['失败', '#cf222e', e => e == null]];
+function outcomeBars(rows, w = 660) {   // rows: [{name, errors}]；按协议分：≤阈值 / 超阈值 / 失败
+  const thr = S.thr, rh = 20, L = 150, W = w - L - 10, h = rows.length * rh + 6;
+  const segs = [[`≤ ${thr} px`, '#2da44e', e => e != null && e <= thr], [`> ${thr} px`, '#bf8700', e => e != null && e > thr],
+                ['失败', '#cf222e', e => e == null]];
   let g = '';
   rows.forEach((r, i) => {
     const y = i * rh + 3, n = r.errors.length || 1; let x = L;
@@ -119,8 +119,11 @@ function tree() {
 /* ---------------- 节点详情 ---------------- */
 function metricRows() {
   const p = D.protocol;
-  return [...p.auc_thresholds.map(t => [`AUC@${t}`, `auc@${t}`, false, 'pt']), ...p.sr_thresholds.map(t => [`SR@${t}`, `sr@${t}`, false, 'pt']),
-    ['失败率', 'fail_rate', true, 'pt'], [`错配率 (> ${p.t_coarse} px)`, 'mis_rate', true, 'pt'], ['成功子集误差均值', 'succ_mean', true, 'px'], ['成功子集误差中位数', 'succ_median', true, 'px']];
+  // 主表档位在前；其余档位与中位误差是附表项，灰显（第 5 项为附表标记）
+  const rows = (tab, all, n, k) => all.map(t => [`${n}@${t}`, `${k}@${t}`, false, 'pt', !tab.includes(t)]);
+  const r = [...rows(p.table_auc, p.auc_thresholds, 'AUC', 'auc'), ...rows(p.table_sr, p.sr_thresholds, 'SR', 'sr')];
+  return [...r.filter(x => !x[4]), ['失败率', 'fail_rate', true, 'pt', false], ...r.filter(x => x[4]),
+    ['误差中位数（失败计 ∞）', 'median', true, 'px', true]];
 }
 function metricTable(key, ref) {
   const sv = sumOf(key, 'val') || {}, st = sumOf(key, 'test') || {}, rv = sumOf(ref, 'val') || {}, rt = sumOf(ref, 'test') || {};
@@ -129,14 +132,14 @@ function metricTable(key, ref) {
   const dl = (a, b, k, low, u) => u === 'px' ? delta(a[k], b[k], true, 1, ' px') : delta(a[k], b[k], low);
   const cov = s => evalOf(key, s)?.coverage;
   return `<table style="margin:4px 0 6px"><tr><th>指标</th><th>Val</th><th>Test</th><th>Δ Val vs ${esc(label(ref))}</th><th>Δ Test</th></tr>
-    ${metricRows().map(([n, k, low, u]) => `<tr ${k === MAIN() ? 'style="font-weight:700"' : ''}><td>${n}</td><td>${cell(sv, k, u)}</td><td>${cell(st, k, u)}</td><td>${dl(sv, rv, k, low, u)}</td><td>${dl(st, rt, k, low, u)}</td></tr>`).join('')}
+    ${metricRows().map(([n, k, low, u, sup]) => `<tr ${k === MAIN() ? 'style="font-weight:700"' : sup ? 'class="muted"' : ''}><td>${n}</td><td>${cell(sv, k, u)}</td><td>${cell(st, k, u)}</td><td>${dl(sv, rv, k, low, u)}</td><td>${dl(st, rt, k, low, u)}</td></tr>`).join('')}
     <tr class="muted"><td>有标注 pair / 缺预测</td><td>${cov('val') ? `${cov('val').n_labelled} / ${cov('val').missing}` : '—'}</td><td>${cov('test') ? `${cov('test').n_labelled} / ${cov('test').missing}` : '—'}</td><td></td><td></td></tr></table>
     <div class="muted" style="font-size:11.5px">AUC、SR、率均为 %；主指标 ${MAIN().toUpperCase()} 附 bootstrap 95% CI。缺预测的有标注 pair 按失败计。</div>`;
 }
 function methodTable(r) {
   const rows = r.methods.map(m => ({ m, k: keyOf(r.id, m) })).sort((a, b) => (mainOf(b.k, 'val') ?? -1) - (mainOf(a.k, 'val') ?? -1));
   const cols = [[`Val ${MAIN().toUpperCase()}`, 'val', MAIN(), pct], [`Test ${MAIN().toUpperCase()}`, 'test', MAIN(), pct], ['Test SR@5', 'test', 'sr@5', pct],
-    ['Test 失败率', 'test', 'fail_rate', pct], ['Test 错配率', 'test', 'mis_rate', pct], ['Test 成功中位误差', 'test', 'succ_median', px]];
+    ['Test 失败率', 'test', 'fail_rate', pct], ['Test 中位误差', 'test', 'median', px]];
   const idv = [IDENT, ...cols.map(([, s, k, f]) => f(sumOf(IDENT, s)?.[k]))];
   return `<table style="margin:6px 0"><tr><th>方法（点选）</th>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr>
     ${rows.map(({ m, k }) => `<tr class="click ${S.method === m ? 'on' : ''}" onclick="S.method='${m}';S.cat=null;S.pair=null;render()"><td>${esc(r.meta.methods?.[m]?.name || m)}</td>${cols.map(([, s, kk, f]) => `<td>${f(sumOf(k, s)?.[kk])}</td>`).join('')}</tr>`).join('')}
@@ -338,7 +341,7 @@ function render() {
   if (D && S.sel) syncHash();
   const p = D.protocol;
   document.getElementById('app').innerHTML = `<div class="topbar"><b>🌙 moon-exp 实验工作台</b><span class="muted">${D.runs.length} 个实验 · Val ${D.labelled.val.length}/${D.pairs.val.length} · Test ${D.labelled.test.length}/${D.pairs.test.length} 有标注</span>
-      ${p.provisional ? `<span class="warnbox">档位暂定（AUC@${p.auc_thresholds.join('/')}，T_粗=${p.t_coarse}），待「锁定评价阈值档位」</span>` : ''}
+      ${p.provisional ? `<span class="warnbox">档位暂定（AUC@${p.auc_thresholds.join('/')}），待「锁定评价阈值档位」</span>` : ''}
       <button style="margin-left:auto" onclick="reload()">重新加载 runs/</button></div>
     <div class="main"><div class="canvas">${D.runs.length ? tree() : '<p class="muted">runs/ 下还没有实验。用 <code>python -m workbench new &lt;id&gt;</code> 新建。</p>'}</div><div class="panel">${panel()}</div></div>`;
   drawCanvases(); drawExtras();

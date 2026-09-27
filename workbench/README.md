@@ -86,7 +86,7 @@ with PredWriter("runs/B0", "roma", "test") as w:
 - pair 误差 = 光学检查点经 A 映射后到 SAR 检查点的平均距离；失败记 ∞。
 - split 内全部有标注 pair 等权。
 - 主指标附 bootstrap 95% CI。
-- 档位（AUC / SR / T_粗）目前是**暂定值**，等「锁定评价阈值档位」(#9) 锁定后只改 `protocol.py` 顶部，再重跑 `eval`。
+- 档位已按「锁定评价阈值档位」(#9) 锁定：主表 AUC@3/5/10 + SR@3/5/10，选模用 Val AUC@5，不设 T_粗；其余档位照算，供附表。改档位只改 `protocol.py` 顶部，再重跑 `eval`。
 
 ## 页面口径
 

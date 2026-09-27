@@ -2,7 +2,7 @@
 
     python -m baselines.fit $MOON_RESULTS/baselines/loftr --split val --run runs/B0 [--ransac 3] [--name loftr]
 
-口径（「定义评价协议与指标」#2）：cv2.estimateAffine2D，RANSAC 阈值 3 px，confidence 0.99999，每个 pair 前重置种子；
+口径（「定义评价协议与指标」#2）：RANSAC 阈值 3 px，实现在 baselines/ransac.py（微调代码在 matcher 环境里也要用）；
 点对少于 3 或内点少于 3 记失败。有标注但没跑到（或匹配阶段报错）的 pair 也写一行失败。
 
 坐标：matcher 输出「整数 = 像素中心」，而标注（workbench 的检查点）是 ArcGIS 角点原点，像素中心在 c + 0.5，
@@ -15,30 +15,14 @@ import json
 import os
 from pathlib import Path
 
-import cv2
 import numpy as np
 
 from workbench.dataset import Dataset
 from workbench.records import PredWriter
 
-CONFIDENCE = 0.99999
-MAX_ITERS = 10000
-SEED = 0
+from .ransac import fit_affine
+
 MATCHES_CAP = 100   # 每个 pair 在记录里最多存多少对内点（按置信度），只供页面画连线
-
-
-def fit_affine(M: np.ndarray, thr: float):
-    """M: N×5 (x0, y0, x1, y1, conf)，中心约定。返回 (A 或 None, 内点掩码 或 None, 失败原因 或 None)。"""
-    if len(M) < 3:
-        return None, None, "few_matches"
-    src = M[:, :2].astype(np.float64) + 0.5
-    dst = M[:, 2:4].astype(np.float64) + 0.5
-    cv2.setRNGSeed(SEED)
-    A, inl = cv2.estimateAffine2D(src, dst, method=cv2.RANSAC, ransacReprojThreshold=thr,
-                                  maxIters=MAX_ITERS, confidence=CONFIDENCE)
-    if A is None or inl is None or int(inl.sum()) < 3:
-        return None, None, "few_inliers"
-    return A, inl.ravel().astype(bool), None
 
 
 def main(argv=None):

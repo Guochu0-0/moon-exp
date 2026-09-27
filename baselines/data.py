@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .tif import read_tif
 
-SPLIT_DIRS = {"val": "Val", "test": "Test"}
+SPLIT_DIRS = {"train": "Train", "val": "Val", "test": "Test"}   # Train 没有 Label，用 labelled_only=False
 
 
 class Data:

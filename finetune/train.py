@@ -29,6 +29,7 @@ from .data import PairSet
 from .label import load_labels
 from .model import Base
 from .pseudo import pseudo_loss
+from .rl import cfog, rl_loss
 
 REPO = Path(__file__).resolve().parents[1]
 HW = 512  # patch 原尺寸
@@ -52,6 +53,13 @@ def main(argv=None):
                     help="粗级正样本：all = 所有图内格（上游形式）；inliers = 只取本步内点所在的格")
     ap.add_argument("--w-coarse", type=float, default=1.0)
     ap.add_argument("--w-fine", type=float, default=1.0)
+    ap.add_argument("--w-pseudo", type=float, default=1.0, help="伪标签监督项的权重；0 = 不用")
+    ap.add_argument("--rl-pair", type=float, default=0.0, help="整对 CFOG reward 的 RL 项权重（finetune/rl.py）")
+    ap.add_argument("--rl-match", type=float, default=0.0, help="逐匹配残差 reward 的 RL 项权重")
+    ap.add_argument("--K", type=int, default=4, help="每对采样组数（组内 baseline）")
+    ap.add_argument("--sig-g", type=float, default=0.25, help="共享整体平移的采样标准差（归一化窗口坐标，1 = 窗口半宽）")
+    ap.add_argument("--sig-i", type=float, default=0.1, help="逐匹配独立噪声的标准差（同上）")
+    ap.add_argument("--w-l2sp", type=float, default=0.0, help="参数空间锚定（L2-SP）权重")
     ap.add_argument("--save-every", type=int, default=1000)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--seed", type=int, default=0)
@@ -74,8 +82,9 @@ def main(argv=None):
     g = torch.Generator().manual_seed(args.seed)
     dl = torch.utils.data.DataLoader(ds, batch_size=args.batch, shuffle=True, generator=g,
                                      num_workers=args.workers, drop_last=True, persistent_workers=args.workers > 0)
-    opt = torch.optim.AdamW([p for p in base.model.parameters() if p.requires_grad], lr=args.lr,
-                            weight_decay=args.wd)
+    params = [p for p in base.model.parameters() if p.requires_grad]
+    params0 = [p.detach().clone() for p in params] if args.w_l2sp > 0 else None   # L2-SP 锚点 = 起点权重
+    opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=args.wd)
     (out / "args.json").write_text(json.dumps({"args": vars(args), "config": cfg, "weights": weights,
                                                "n_train": len(ds), "commit": git_head(REPO), "env": env_info()},
                                               ensure_ascii=False, indent=1), encoding="utf-8")
@@ -91,8 +100,21 @@ def main(argv=None):
                 affines = None if labels is None else [np.asarray(labels[p]) for p in batch["pair"]]
                 loss, st = pseudo_loss(data, s, affines, args.ransac, args.min_inliers, args.w_coarse, args.w_fine,
                                        args.coarse_set)
+                loss = args.w_pseudo * loss
+                active = st["pairs_used"] > 0 and args.w_pseudo > 0
+                if args.rl_pair > 0 or args.rl_match > 0:
+                    feats = (cfog(data["image0"]), cfog(data["image1"])) if args.rl_pair > 0 else None
+                    l_rl, st_rl = rl_loss(data, s, args.K, args.sig_g, args.sig_i, args.rl_pair, args.rl_match,
+                                          args.ransac, feats)
+                    loss = loss + l_rl
+                    st.update(st_rl, rl=round(float(l_rl), 6))
+                    active = active or l_rl.requires_grad
+                if args.w_l2sp > 0:
+                    l_sp = sum(((p - p0) ** 2).sum() for p, p0 in zip(params, params0))
+                    loss = loss + args.w_l2sp * l_sp
+                    st["l2sp"] = round(float(l_sp), 6)
                 opt.zero_grad(set_to_none=True)
-                if st["pairs_used"]:
+                if active:
                     loss.backward()
                     opt.step()
                 step += 1

@@ -18,6 +18,45 @@ def test_compare_identical_and_diff():
     assert r["n_diff_count"] == 1 and r["only_a"] == ["R__p1"] and r["only_b"] == ["R__p2"]
 
 
+def _texture(n=128, shift=0, seed=0):
+    import cv2
+    rng = np.random.default_rng(seed)
+    img = cv2.GaussianBlur(rng.random((n, n)).astype(np.float32), (0, 0), 2.0)
+    return np.roll(img, shift, axis=1)          # 内容右移 shift px：光学 x → SAR x + shift
+
+
+def test_pair_scores_prefers_true_shift():
+    import torch
+    from finetune.rl import cfog, pair_scores
+
+    F0 = cfog(torch.from_numpy(_texture())[None, None])[0]
+    F1 = cfog(torch.from_numpy(_texture(shift=3))[None, None])[0]
+    A = lambda t: np.array([[1.0, 0, t], [0, 1.0, 0]])
+    sc = pair_scores(F0, F1, [A(0), A(3), A(1.5), A(5)], 1.0)
+    assert sc.argmax() == 1 and sc[1] > sc[2] > sc[0]
+
+
+def test_rl_pair_gradient_points_to_true_shift():
+    import torch
+    from finetune.rl import cfog, rl_loss
+
+    n, w = 128, 16
+    torch.manual_seed(0)
+    k0 = _grid(w, w, 8)
+    k0 = k0[(k0 >= 24).all(1) & (k0 < n - 24).all(1)]
+    mu = torch.zeros(len(k0), 3)
+    mu.requires_grad_(True)
+    data = {"expec_f": mu, "b_ids": torch.zeros(len(k0), dtype=torch.long), "W": 5, "hw0_i": (n, n),
+            "hw0_f": (n // 2, n // 2), "mkpts0_c": torch.from_numpy(k0), "mkpts1_c": torch.from_numpy(k0),
+            "conf_matrix": torch.zeros(1, 1, 1)}
+    feats = (cfog(torch.from_numpy(_texture())[None, None]), cfog(torch.from_numpy(_texture(shift=2))[None, None]))
+    for _ in range(20):
+        loss, st = rl_loss(data, 1.0, K=8, sig_g=0.25, sig_i=0.05, w_pair=1.0, feats=feats)
+        loss.backward()
+    assert st["rl_ransac_fail"] == 0
+    assert mu.grad[:, 0].mean() < 0 and abs(mu.grad[:, 1].mean()) < abs(mu.grad[:, 0].mean())
+
+
 def _grid(w=10, h=10, step=8):
     ii = np.arange(w * h)
     return np.stack([ii % w, ii // w], 1).astype(np.float64) * step

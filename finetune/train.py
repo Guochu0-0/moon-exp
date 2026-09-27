@@ -88,7 +88,7 @@ def main(argv=None):
     (out / "args.json").write_text(json.dumps({"args": vars(args), "config": cfg, "weights": weights,
                                                "n_train": len(ds), "commit": git_head(REPO), "env": env_info()},
                                               ensure_ascii=False, indent=1), encoding="utf-8")
-    if args.save_every:
+    if args.save_every and not args.init:   # 从已有 ckpt 出发时，step 0 就是它，已评过
         torch.save(base.state_dict(), out / "ckpt_0.pt")
 
     step, t_start = 0, time.time()

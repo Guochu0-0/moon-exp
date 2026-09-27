@@ -36,6 +36,17 @@ def test_pair_scores_prefers_true_shift():
     assert sc.argmax() == 1 and sc[1] > sc[2] > sc[0]
 
 
+def test_diagnose_reward_surface_peak():
+    from baselines import diagnose_reward as dr
+
+    Fo, Fs = dr.cfog(_texture(160)), dr.cfog(_texture(160, shift=3))
+    A = lambda t: np.array([[1.0, 0, t], [0, 1.0, 0]])
+    dx, dy, _ = dr.peak(dr.surface(dr.warp_feat(Fo, A(3), Fs.shape[1:]), Fs, "cfog"))
+    assert abs(dx) < 0.3 and abs(dy) < 0.3                  # 基准已对准：峰在 0
+    dx, dy, _ = dr.peak(dr.surface(dr.warp_feat(Fo, A(1), Fs.shape[1:]), Fs, "cfog"))
+    assert abs(dx + 2) < 0.3 and abs(dy) < 0.3              # 基准差 2 px：峰在 d = −2，A' = A − d 对准
+
+
 def test_rl_pair_gradient_points_to_true_shift():
     import torch
     from finetune.rl import cfog, rl_loss

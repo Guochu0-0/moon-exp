@@ -60,7 +60,9 @@ def warp_feat(F, A, shape):
     Ac = np.c_[L, t + L @ [0.5, 0.5] - 0.5]
     M = cv2.invertAffineTransform(Ac)
     H, W = shape
-    Wf = np.stack([cv2.warpAffine(f, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=np.nan) for f in F])
+    # M 是 dst → src，必须带 WARP_INVERSE_MAP；否则 cv2 会再求一次逆，等于按 A⁻¹ warp
+    Wf = np.stack([cv2.warpAffine(f, M, (W, H), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP,
+                                  borderValue=np.nan) for f in F])
     return Wf
 
 

@@ -22,6 +22,7 @@
 
   /* ================= 共用 ================= */
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body { margin: 0; background: var(--desk); color: var(--ink); font: var(--size)/1.7 var(--font); }
   button, select, input { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--me); outline-offset: 2px; }
@@ -34,6 +35,7 @@
   h1 .id { margin-right: .6em; }
   h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
   .sec { margin-top: 40px; padding-top: 12px; border-top: 1px solid var(--rule); }
+  .sec.head { margin-top: 0; padding-top: 0; border-top: 0; }
   .sec .n { display: none; }
 
   .meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 32px; margin: 0; padding: 12px 0; border-top: 1.5px solid var(--strong); border-bottom: 1px solid var(--rule); font-size: 14.5px; }
@@ -129,12 +131,17 @@
   /* ================= A 纸面 ================= */
   body[data-style=A] .page { background: var(--paper); max-width: 1240px; margin: 28px auto 90px; padding: 44px 56px 56px; border: 1px solid var(--rule); }
   /* 左栏章节名 + 右栏内容 */
-  .head { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 0 36px; }
-  .head .back { padding-top: 16px; }
-  .sec { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 0 36px; }
-  .sec > h2 { font-size: 16.5px; margin: 0; position: sticky; top: 16px; align-self: start; }
-  .sec > .body { min-width: 0; }
-  .sec > .body > :first-child { margin-top: 0; }
+  /* 左侧导航 + 右侧正文 */
+  .layout { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 0 40px; }
+  .nav { position: sticky; top: 24px; align-self: start; font-size: 14.5px; }
+  .nav .back { display: block; margin-bottom: 22px; }
+  .nav ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+  .nav li a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 2px solid transparent; color: var(--muted); }
+  .nav li a:hover { color: var(--ink); text-decoration: none; }
+  .nav li a[aria-current=true] { color: var(--ink); font-weight: 600; border-left-color: var(--strong); }
+  .content { min-width: 0; }
+  .content h1 { margin-top: 0; }
+  .sec { scroll-margin-top: 20px; }
 
 
   /* 原型控制（不属于页面） */
@@ -152,7 +159,7 @@
     .meta { grid-template-columns: 1fr; }
     .figs, .vr-top, .panes, .tb { grid-template-columns: 1fr; }
     .grid, .vr-top:not(.noref) .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .sec, .head { grid-template-columns: 1fr; } .sec > h2 { position: static; margin-bottom: 10px; }
+    .layout { grid-template-columns: 1fr; } .nav { position: static; margin-bottom: 16px; } .nav ol { display: flex; flex-wrap: wrap; gap: 0 4px; border-left: 0; } .nav li a { padding: 2px 8px; border-left: 0; }
   }
 </style>
 </head>
@@ -211,7 +218,7 @@ function header(r) {
     ['状态', (r.lit ? '已点亮' : '未点亮') + (r.meta.baseline ? '，基线' : '')], ['日期', esc(r.meta.date || '—')],
     ['commit', r.meta.commit ? `<span class="num">${esc(r.meta.commit)}</span>` : '—']];
   if (multi(r)) rows.splice(3, 0, ['方法数', `<span class="num">${methods(r).length}</span>`]);
-  return `<div class="head"><a class="back" href="#" onclick="return false">← 画布</a><div class="hmain"><h1><span class="id">${r.id}</span>${esc(r.meta.title)}</h1>
+  return `<div class="head sec" id="sec-info"><div class="hmain"><h1><span class="id">${r.id}</span>${esc(r.meta.title)}</h1>
     <dl class="meta">${rows.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>${r.lit ? compare(r) : ''}</div></div>`;
 }
 function refOptions(r) {
@@ -438,8 +445,20 @@ function page(r) {
     if (r.tb) secs.push(['train', '训练图表', tbFigure(r)]);
   }
   secs.push(['notes', 'Notes', notes(r)]);
-  return header(r) + secs.map(([id, t, b]) => sec(id, t, b)).join('');
+  const nav = [['info', '实验信息'], ...secs.map(([id, t]) => [id, t])];
+  return `<div class="layout"><nav class="nav" aria-label="章节"><a class="back" href="#" onclick="return false">← 画布</a>
+      <ol>${nav.map(([id, t]) => `<li><a href="#sec-${id}" data-sec="${id}">${t}</a></li>`).join('')}</ol></nav>
+    <div class="content">${header(r)}${secs.map(([id, t, b]) => sec(id, t, b)).join('')}</div></div>`;
 }
+/* 高亮当前章节：取顶端已越过视口上方 1/4 处的最后一节 */
+function markNav() {
+  const secs = [...document.querySelectorAll('.content .sec')], y = innerHeight / 4;
+  let cur = secs[0]?.id;
+  for (const el of secs) if (el.getBoundingClientRect().top <= y) cur = el.id;
+  if (innerHeight + scrollY >= document.documentElement.scrollHeight - 2) cur = secs[secs.length - 1]?.id;
+  document.querySelectorAll('.nav a[data-sec]').forEach(a => a.setAttribute('aria-current', 'sec-' + a.dataset.sec === cur));
+}
+addEventListener('scroll', markNav, { passive: true });
 function proto() {
   const el = document.getElementById('proto');
   if (!S.protoOpen) { el.innerHTML = `<div class="t" style="margin:0"><span>原型控制</span><button onclick="S.protoOpen=true;proto()">展开</button></div>`; return; }
@@ -454,11 +473,13 @@ function render() {
   document.body.dataset.style = S.style;
   const u = new URL(location); u.searchParams.set('exp', S.exp); history.replaceState(null, '', u);
   document.getElementById('app').innerHTML = page(r);
+  markNav();
   proto();
 }
 addEventListener('keydown', e => { if (e.target.closest('input,select,textarea,[contenteditable]')) return;
   if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); });
 render();
+if (location.hash) document.querySelector(location.hash)?.scrollIntoView({ behavior: 'instant' });   // 内容由脚本生成，打开时的锚点要手动跳
 </script>
 </body>
 </html>

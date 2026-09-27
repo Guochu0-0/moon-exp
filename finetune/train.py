@@ -61,6 +61,7 @@ def main(argv=None):
     ap.add_argument("--sig-g", type=float, default=0.25, help="共享整体平移的采样标准差（归一化窗口坐标，1 = 窗口半宽）")
     ap.add_argument("--sig-i", type=float, default=0.1, help="逐匹配独立噪声的标准差（同上）")
     ap.add_argument("--w-l2sp", type=float, default=0.0, help="参数空间锚定（L2-SP）权重")
+    ap.add_argument("--limit", type=int, default=0, help="只用 Train 前 N 对（过拟合测试：RL 能否在固定小集合上推高 reward）")
     ap.add_argument("--save-every", type=int, default=1000)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--seed", type=int, default=0)
@@ -80,6 +81,8 @@ def main(argv=None):
     if args.labels:
         labels = load_labels(args.labels)
         ds.pairs = [p for p in ds.pairs if labels.get(p) is not None]
+    if args.limit:
+        ds.pairs = ds.pairs[:: max(1, len(ds.pairs) // args.limit)][: args.limit]   # 均匀取样，覆盖各 ROI
     g = torch.Generator().manual_seed(args.seed)
     dl = torch.utils.data.DataLoader(ds, batch_size=args.batch, shuffle=True, generator=g,
                                      num_workers=args.workers, drop_last=True, persistent_workers=args.workers > 0)

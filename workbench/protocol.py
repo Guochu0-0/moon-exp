@@ -1,7 +1,8 @@
 """评价协议：检查点误差、pair 误差与 split 级汇总。
 
 口径见「定义评价协议与指标」(#2) 的结论，术语见 CONTEXT.md。
-阈值档位尚未锁定（「锁定评价阈值档位」#9），下面的数值是暂定值，锁定后只改这里。
+阈值档位见「锁定评价阈值档位」(#9) 的结论：主表 AUC@3/5/10 + SR@3/5/10，选模用 Val AUC@5；
+不设 T_粗（无错配率、无 FIRE 式三分）。其余档位照算、照落盘，供附表用。
 """
 from __future__ import annotations
 
@@ -9,11 +10,12 @@ import math
 
 import numpy as np
 
-# ---- 暂定档位（待 #9 锁定） ----
-AUC_THRESHOLDS = (3.0, 5.0, 10.0, 20.0)
+# ---- 档位（#9 锁定） ----
+AUC_THRESHOLDS = (3.0, 5.0, 10.0, 20.0)       # 全部计算、落盘
 SR_THRESHOLDS = (1.0, 2.0, 3.0, 5.0, 10.0, 20.0)
-T_COARSE = 20.0          # 错配判据 T_粗
-MAIN_AUC = 10.0          # 选模与思路树上展示用的主指标 AUC@MAIN_AUC
+TABLE_AUC = (3.0, 5.0, 10.0)                  # 主表档位；其余进附表
+TABLE_SR = (3.0, 5.0, 10.0)
+MAIN_AUC = 5.0           # 选模与思路树上展示用的主指标 AUC@MAIN_AUC
 BOOTSTRAP = 1000
 SEED = 0
 
@@ -43,14 +45,10 @@ def auc(err: np.ndarray, T: float) -> float:
 def _point(err: np.ndarray) -> dict:
     n = len(err)
     fail = ~np.isfinite(err)
-    mis = np.isfinite(err) & (err > T_COARSE)
-    ok = ~fail & ~mis
     out = {
         "n": n,
         "fail_rate": float(fail.mean()) if n else math.nan,
-        "mis_rate": float(mis.mean()) if n else math.nan,
-        "succ_mean": float(err[ok].mean()) if ok.any() else math.nan,
-        "succ_median": float(np.median(err[ok])) if ok.any() else math.nan,
+        "median": float(np.median(err)) if n else math.nan,   # 全部 pair，失败计 ∞；过半失败时为 ∞
     }
     for T in AUC_THRESHOLDS:
         out[f"auc@{T:g}"] = auc(err, T)
@@ -84,7 +82,8 @@ def protocol_info() -> dict:
     return {
         "auc_thresholds": list(AUC_THRESHOLDS),
         "sr_thresholds": list(SR_THRESHOLDS),
-        "t_coarse": T_COARSE,
+        "table_auc": list(TABLE_AUC),
+        "table_sr": list(TABLE_SR),
         "main": f"auc@{MAIN_AUC:g}",
-        "provisional": True,  # #9 锁定后改为 False
+        "provisional": False,
     }

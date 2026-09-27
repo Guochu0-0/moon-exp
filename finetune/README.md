@@ -10,16 +10,21 @@
   `baselines.match <cfg> --weights <ckpt> --name <新名字>` → `baselines.fit` → `workbench eval`。
 - 统一的仿射 RANSAC 在 `baselines/ransac.py`，训练侧和评测侧共用同一份实现。
 
-## 用法（154 / 126，loftr 环境）
+## 组件
+
+| 模块 | 作用 |
+|---|---|
+| `model.py` `Base` | 按 `configs/baselines/anymatch_loftr.json` 构造底座；`forward` 返回带梯度的 `conf_matrix`、`expec_f`；`state_dict()` 存成适配器能读的格式 |
+| `data.py` `PairSet` | 一个 split 的全部 patch 对（Train 无标注，7907 对），输入映射同 baseline 主表 |
+
+实测（显存、吞吐、RANSAC 耗时）与「lr=0 走训练循环后推理与 zero-shot 逐点一致」的验证记在 #25 的解答里；
+当时用的一次性脚本不在库中。
+
+## 评测微调后的权重（154 / 126，loftr 环境）
 
 ```bash
 export MOON_DATA=/remote-home/xufang/YGC/dataset/Moon MOON_WEIGHTS=/remote-home/xufang/YGC/weights MOON_RESULTS=/remote-home/xufang/YGC/results
-# 最小训练循环 + 实测
-CUDA_VISIBLE_DEVICES=<空卡> nice -n 10 /opt/envs/loftr/bin/python -m finetune.smoke configs/baselines/anymatch_loftr.json \
-    --split train --steps 30 --batch 1 --out $MOON_RESULTS/finetune/smoke
-# 验证接入不改行为：lr=0 走一遍训练循环，存 ckpt，再按 baseline 流程在 Val 上推理，与 zero-shot 原始点对比较
-... -m finetune.smoke ... --lr 0 --save --out $MOON_RESULTS/finetune/lr0
-... -m baselines.match configs/baselines/anymatch_loftr.json --split val --weights $MOON_RESULTS/finetune/lr0/ckpt.pt \
-    --name anymatch_loftr_lr0 --out $MOON_RESULTS/finetune/verify
-... -m finetune.compare $MOON_RESULTS/baselines/anymatch_loftr/val.npz $MOON_RESULTS/finetune/verify/anymatch_loftr_lr0/val.npz
+CUDA_VISIBLE_DEVICES=<空卡> nice -n 10 /opt/envs/loftr/bin/python -m baselines.match configs/baselines/anymatch_loftr.json \
+    --split val --weights <ckpt.pt> --name <run 名> --out $MOON_RESULTS/finetune
+/opt/envs/wb/bin/python -m baselines.fit $MOON_RESULTS/finetune/<run 名> --split val --run runs/<id>
 ```

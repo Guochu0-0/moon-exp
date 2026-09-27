@@ -1,84 +1,86 @@
 <!doctype html>
-<!-- PROTOTYPE（一次性）：「节点页内容：自动生成与可编辑的边界」#20，第三版。
-     结构固定：页头元数据 → 比较设置 → 指标表 → 误差图 → 逐对查看 → 训练图表（TensorBoard 日志）→ Notes。
-     ?exp=B0|B0m|E1|E2。数据是 data.js 快照（gen_data.py 生成）；E1 / E2 是模拟实验。Notes 的修改只存在内存里。 -->
+<!-- PROTOTYPE（一次性）：「节点页内容：自动生成与可编辑的边界」#20，第四版。
+     结构固定：页头元数据 → 比较设置 → 结果（表、图）→ 可视化结果 → 训练图表（TensorBoard 日志）→ Notes。
+     ?exp=B0|B0m|E1|E2 切实验，?style=A|B|C 切风格。
+     data.js 由 gen_data.py 生成；img/ 与 pairs.js 由 render_pairs.py 从本地数据集生成（不进 git）。 -->
 <html lang="zh">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PROTOTYPE · 节点页</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Noto+Serif+SC:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="data.js"></script>
+<script src="pairs.js"></script>
 <style>
-  :root {
-    --desk: #ECEEF1; --paper: #fff; --ink: #1D2230; --muted: #676D78; --rule: #D5D8DD; --wash: #F3F5F8;
-    --me: #1F3A93; --ref: #8A8F99; --other: #C9CDD4;
-    --serif: "Source Serif 4", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+  /* ================= 风格变量 ================= */
+  body[data-style=A] {
+    --desk: #ECEEF1; --paper: #fff; --ink: #1D2230; --muted: #676D78; --rule: #D5D8DD; --wash: #F3F5F8; --sel: #E8ECF6;
+    --me: #1F3A93; --ref: #8A8F99; --other: #C9CDD4; --strong: #1D2230;
+    --font: "Source Serif 4", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif; --size: 15.5px;
   }
+  body[data-style=B] {
+    --desk: #F4F5F7; --paper: #fff; --ink: #20242C; --muted: #69707D; --rule: #DDE0E5; --wash: #F6F7F9; --sel: #E6F0FA;
+    --me: #0B5CAD; --ref: #8B929E; --other: #CDD2D9; --strong: #20242C;
+    --font: "IBM Plex Sans", "Noto Sans SC", "Microsoft YaHei", sans-serif; --size: 14.5px;
+  }
+  body[data-style=C] {
+    --desk: #fff; --paper: #fff; --ink: #000; --muted: #5E5E5E; --rule: #CFCFCF; --wash: #F4F4F4; --sel: #EBEBEB;
+    --me: #000; --ref: #8C8C8C; --other: #D2D2D2; --strong: #000;
+    --font: "IBM Plex Sans Condensed", "Noto Sans SC", "Microsoft YaHei", sans-serif; --size: 15px;
+  }
+
+  /* ================= 共用 ================= */
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--desk); color: var(--ink); font: 15.5px/1.7 var(--serif); }
+  body { margin: 0; background: var(--desk); color: var(--ink); font: var(--size)/1.7 var(--font); }
   button, select, input { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--me); outline-offset: 2px; }
   a { color: var(--me); text-decoration: none; cursor: pointer; }
   a:hover { text-decoration: underline; }
   .num { font-variant-numeric: tabular-nums lining-nums; }
   .muted { color: var(--muted); }
-
-  /* 原型控制栏（不属于页面设计） */
-  .proto { background: #2A2F38; color: #D8DCE2; font: 12.5px/1.4 "Microsoft YaHei", sans-serif; padding: 6px 20px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .proto button { background: transparent; color: #D8DCE2; border: 1px solid #4A515C; border-radius: 3px; padding: 1px 9px; cursor: pointer; }
-  .proto button[aria-pressed=true] { background: #D8DCE2; color: #2A2F38; }
-  .proto .sp { flex: 1; }
-  .proto pre { flex-basis: 100%; margin: 6px 0 2px; white-space: pre-wrap; font: 12px/1.5 Consolas, monospace; color: #C4C9D1; }
-
-  /* 纸面 */
-  .page { background: var(--paper); max-width: 1160px; margin: 28px auto 80px; padding: 44px 64px 56px; border: 1px solid var(--rule); }
   .back { font-size: 14px; color: var(--muted); }
   h1 { font-size: 30px; line-height: 1.3; font-weight: 600; margin: 12px 0 18px; }
   h1 .id { margin-right: .6em; }
-  h2.first { border-top: 0; margin-top: 26px; padding-top: 0; }
-  h2 { font-size: 18px; font-weight: 600; margin: 40px 0 12px; padding-top: 12px; border-top: 1px solid var(--rule); }
+  h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+  .sec { margin-top: 40px; padding-top: 12px; border-top: 1px solid var(--rule); }
+  .sec .n { display: none; }
 
-  /* 页头元数据 */
-  .meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 32px; margin: 0; padding: 12px 0; border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--rule); font-size: 14.5px; }
+  .meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 32px; margin: 0; padding: 12px 0; border-top: 1.5px solid var(--strong); border-bottom: 1px solid var(--rule); font-size: 14.5px; }
   .meta div { display: flex; gap: 12px; min-width: 0; }
   .meta dt { color: var(--muted); flex: 0 0 4.5em; }
   .meta dd { margin: 0; overflow-wrap: anywhere; }
 
-  /* 比较设置 */
   .cmp { display: flex; flex-wrap: wrap; gap: 14px 30px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: 14.5px; }
-  .cmp label { color: var(--muted); margin-right: 8px; }
-  .cmp select { border: 1px solid var(--rule); border-radius: 2px; background: var(--paper); padding: 3px 8px; font-size: 14.5px; max-width: 340px; }
-  .cmp select.me { border-color: var(--me); color: var(--me); }
+  .cmp label, .lbl { color: var(--muted); margin-right: 8px; }
+  select { border: 1px solid var(--rule); border-radius: 2px; background: var(--paper); padding: 3px 8px; font-size: 14.5px; max-width: 340px; }
+  select.me { border-color: var(--me); color: var(--me); }
   .radio { display: inline-flex; border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; vertical-align: middle; }
-  .radio button { border: 0; background: var(--paper); padding: 2px 14px; cursor: pointer; font-size: 14px; }
+  .radio button { border: 0; background: var(--paper); padding: 2px 12px; cursor: pointer; font-size: 14px; }
   .radio button + button { border-left: 1px solid var(--rule); }
-  .radio button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
+  .radio button[aria-pressed=true] { background: var(--strong); color: var(--paper); }
   .radio button:disabled { color: var(--other); cursor: not-allowed; }
   .key { display: inline-block; width: 22px; vertical-align: middle; margin-right: 6px; border-top: 2.5px solid var(--me); }
   .key.ref { border-top: 2px dashed var(--ref); }
 
-  /* 表：三线表 */
-  .caption { font-size: 14px; line-height: 1.6; margin: 26px 0 8px; }
+  .caption { font-size: 14px; line-height: 1.6; margin: 22px 0 8px; }
   .caption b { font-weight: 600; margin-right: .6em; }
   .figcap { margin: 8px 0 0; }
-  table.tab { width: 100%; border-collapse: collapse; border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); font-size: 14.5px; }
-  table.tab th { font-weight: 600; text-align: right; padding: 6px 7px; border-bottom: 1px solid var(--ink); white-space: nowrap; }
+  table.tab { width: 100%; border-collapse: collapse; border-top: 1.5px solid var(--strong); border-bottom: 1.5px solid var(--strong); font-size: 14.5px; }
+  table.tab th { font-weight: 600; text-align: right; padding: 6px 7px; border-bottom: 1px solid var(--strong); white-space: nowrap; }
   table.tab td { text-align: right; padding: 4px 7px; white-space: nowrap; }
   table.tab th:first-child, table.tab td:first-child { text-align: left; padding-left: 2px; }
   table.tab .ci { color: var(--muted); font-size: 12.5px; margin-left: 4px; }
   table.tab tr.pick { cursor: pointer; }
   table.tab tr.pick:hover td { background: var(--wash); }
-  table.tab tr.on td { background: #E8ECF6; }
+  table.tab tr.on td { background: var(--sel); }
   table.tab tr.on td:first-child { box-shadow: inset 3px 0 0 var(--me); }
   table.tab td.me { color: var(--me); }
   table.tab td.ref { color: var(--muted); }
   .scroll { overflow-x: auto; }
 
-  /* 图 */
   .figs { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 36px; align-items: start; }
-  figure { margin: 26px 0 0; }
+  figure { margin: 22px 0 0; }
   figure svg { display: block; width: 100%; height: auto; }
   .legend { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13px; color: var(--muted); margin-top: 4px; }
   .oc-row { display: grid; grid-template-columns: minmax(90px, 38%) 1fr; gap: 10px; align-items: center; font-size: 13px; margin: 3px 0; }
@@ -88,48 +90,115 @@
   .oc-bar i { display: block; min-width: 0; }
   .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; }
 
-  /* 逐对查看 */
-  .pv { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 22px; font-size: 14px; }
-  .pv .cats button { display: flex; justify-content: space-between; width: 100%; border: 0; border-top: 1px solid var(--rule); background: transparent; padding: 7px 4px; cursor: pointer; text-align: left; }
-  .pv .cats button:last-of-type { border-bottom: 1px solid var(--rule); }
-  .pv .cats button[aria-pressed=true] { background: #E8ECF6; }
-  .pv .cats button:disabled { color: var(--other); cursor: default; }
-  .pv .find { margin-top: 12px; display: flex; gap: 6px; align-items: center; }
-  .pv .find input { width: 90px; border: 1px solid var(--rule); padding: 2px 6px; }
-  .pv .views { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 8px; color: var(--muted); }
-  .pv .views span[aria-current] { color: var(--ink); border-bottom: 1.5px solid var(--ink); }
-  .pv .stage { height: 360px; background: repeating-conic-gradient(#E3E6EA 0 25%, #F2F3F5 0 50%) 0 0 / 44px 44px; }
+  /* 可视化结果 */
+  .vr-top { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 32px; align-items: start; }
+  .vr-top.noref { grid-template-columns: 1fr; }
+  .vr-ctl { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; font-size: 14px; margin-bottom: 12px; }
+  .chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .chips button { border: 1px solid var(--rule); background: var(--paper); border-radius: 2px; padding: 1px 10px; cursor: pointer; font-size: 13.5px; }
+  .chips button[aria-pressed=true] { border-color: var(--strong); background: var(--strong); color: var(--paper); }
+  .grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+  .vr-top:not(.noref) .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .th { border: 0; padding: 0; background: none; cursor: pointer; text-align: left; font-size: 12.5px; line-height: 1.4; }
+  .th .im { aspect-ratio: 1; background: var(--wash); display: flex; align-items: center; justify-content: center; color: var(--muted); overflow: hidden; outline: 1px solid var(--rule); }
+  .th .im img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .th[aria-current=true] .im { outline: 3px solid var(--me); }
+  .th .cap { margin-top: 4px; display: flex; justify-content: space-between; gap: 4px; }
+  .more { margin-top: 10px; font-size: 13.5px; display: flex; gap: 16px; align-items: center; }
+  .more button { border: 1px solid var(--rule); background: var(--paper); padding: 1px 12px; cursor: pointer; }
+  .detail { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--rule); }
+  .dhead { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline; font-size: 14.5px; }
+  .dhead .pn { font-size: 17px; font-weight: 600; }
+  .dhead .sp { flex: 1; }
+  .dhead button { border: 1px solid var(--rule); background: var(--paper); padding: 1px 12px; cursor: pointer; }
+  .views { display: flex; gap: 4px 18px; margin: 12px 0 10px; font-size: 14px; }
+  .views button { border: 0; background: none; padding: 0 0 2px; cursor: pointer; color: var(--muted); }
+  .views button[aria-pressed=true] { color: var(--ink); border-bottom: 1.5px solid var(--strong); }
+  .panes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .pane .ttl { font-size: 13.5px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .pane .box { position: relative; aspect-ratio: 1; background: var(--wash); outline: 1px solid var(--rule); overflow: hidden; }
+  .pane .box img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .pane .box .msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; text-align: center; padding: 20px; }
+  .pane .box .cut { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px solid #fff; box-shadow: 0 0 0 .5px #000; pointer-events: none; }
+  .swipe { width: 100%; margin-top: 10px; }
 
-  /* 训练图表 */
   .tb { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 28px; }
   .tb .tag { font-size: 13.5px; margin-bottom: 2px; }
   .tbhead { display: flex; justify-content: space-between; align-items: baseline; }
   .tbhead a { font-size: 14px; }
 
-  /* Notes */
-  .notes { min-height: 9em; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 2px; white-space: pre-wrap; outline: none; line-height: 1.85; }
+  .notes { min-height: 9em; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 2px; white-space: pre-wrap; outline: none; line-height: 1.85; background: var(--paper); }
   .notes:focus { border-color: var(--me); box-shadow: 0 0 0 1px var(--me); }
   .notes:empty::before { content: "（空）"; color: var(--other); }
   .notes-foot { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .toc { display: none; }
 
-  @media (max-width: 860px) {
-    .page { margin: 0; padding: 22px 18px; border: 0; }
+  /* ================= A 纸面 ================= */
+  body[data-style=A] .page { background: var(--paper); max-width: 1160px; margin: 28px auto 90px; padding: 44px 64px 56px; border: 1px solid var(--rule); }
+
+  /* ================= B 报告：左侧目录 + 章节编号 ================= */
+  body[data-style=B] .wrap { display: grid; grid-template-columns: 200px minmax(0, 1fr); max-width: 1400px; margin: 0 auto; }
+  body[data-style=B] .toc { display: block; position: sticky; top: 0; align-self: start; height: 100vh; padding: 40px 20px 0 28px; font-size: 14px; border-right: 1px solid var(--rule); }
+  body[data-style=B] .toc .tid { font-weight: 600; font-size: 20px; margin-bottom: 14px; }
+  body[data-style=B] .toc a { display: block; color: var(--muted); padding: 3px 0; }
+  body[data-style=B] .toc a:hover { color: var(--ink); text-decoration: none; }
+  body[data-style=B] .page { padding: 34px 48px 90px; min-width: 0; }
+  body[data-style=B] h1 { font-size: 26px; font-weight: 600; }
+  body[data-style=B] .sec { border-top: 0; margin-top: 34px; padding-top: 0; }
+  body[data-style=B] .sec h2 { font-size: 17px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+  body[data-style=B] .sec .n { display: inline; color: var(--muted); margin-right: .7em; font-weight: 500; }
+  body[data-style=B] .meta { border-top: 1px solid var(--rule); background: var(--paper); padding: 12px 16px; }
+  body[data-style=B] .cmp { background: var(--paper); padding: 10px 16px; border: 1px solid var(--rule); border-top: 0; }
+  body[data-style=B] table.tab { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: var(--paper); }
+  body[data-style=B] table.tab th { border-bottom: 1px solid var(--rule); background: var(--wash); font-weight: 500; }
+  body[data-style=B] table.tab td { border-top: 1px solid var(--wash); }
+
+  /* ================= C 手册：左侧标签栏 + 内容栏，黑白 ================= */
+  body[data-style=C] .page { max-width: 1240px; margin: 0 auto; padding: 36px 48px 90px; }
+  body[data-style=C] .head { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 0 32px; border-top: 6px solid #000; padding-top: 14px; }
+  body[data-style=C] h1 { margin: 0 0 16px; font-weight: 600; font-size: 28px; }
+  body[data-style=C] h1 .id { display: block; font-size: 64px; line-height: 1; margin: 0 0 10px; }
+  body[data-style=C] .head .back { grid-column: 1; }
+  body[data-style=C] .head .hmain { grid-column: 2; }
+  body[data-style=C] .meta { border-top: 1px solid #000; }
+  body[data-style=C] .sec { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 0 32px; border-top: 2px solid #000; margin-top: 44px; padding-top: 10px; }
+  body[data-style=C] .sec > h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  body[data-style=C] .sec > .body { min-width: 0; }
+  body[data-style=C] .sec > .body > :first-child { margin-top: 0; }
+  body[data-style=C] .radio button[aria-pressed=true], body[data-style=C] .chips button[aria-pressed=true] { background: #000; }
+
+  /* 原型控制（不属于页面） */
+  .proto { position: fixed; left: 14px; bottom: 14px; z-index: 50; background: #2A2F38; color: #D8DCE2; font: 12.5px/1.5 "Microsoft YaHei", sans-serif; padding: 8px 12px 10px; border-radius: 4px; max-width: 360px; box-shadow: 0 4px 16px rgba(0, 0, 0, .25); }
+  .proto .t { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 4px; }
+  .proto .t button { border: 0; background: none; color: #9AA1AC; cursor: pointer; padding: 0; }
+  .proto .row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-top: 5px; }
+  .proto .row > span { width: 30px; color: #9AA1AC; }
+  .proto .row button { background: transparent; color: #D8DCE2; border: 1px solid #4A515C; border-radius: 3px; padding: 0 8px; cursor: pointer; }
+  .proto .row button[aria-pressed=true] { background: #D8DCE2; color: #2A2F38; }
+  .proto p { margin: 6px 0 0; color: #AEB4BD; }
+
+  @media (max-width: 900px) {
+    body[data-style] .page { margin: 0; padding: 22px 16px 120px; border: 0; }
     .meta { grid-template-columns: 1fr; }
-    .figs, .pv { grid-template-columns: 1fr; }
-    .tb { grid-template-columns: 1fr; }
+    .figs, .vr-top, .panes, .tb { grid-template-columns: 1fr; }
+    .grid, .vr-top:not(.noref) .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    body[data-style=B] .wrap { grid-template-columns: 1fr; } body[data-style=B] .toc { display: none; }
+    body[data-style=C] .sec, body[data-style=C] .head { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
-<div class="proto" id="proto"></div>
-<main class="page" id="app"></main>
+<div class="wrap"><nav class="toc" id="toc" aria-label="目录"></nav><main class="page" id="app"></main></div>
+<aside class="proto" id="proto" aria-label="原型控制"></aside>
 <script>
 /* ======================= 数据 ======================= */
 const D = window.DATA, R = D.runs, P = D.protocol, MAIN = P.main, MAINU = MAIN.toUpperCase();
+const PX = window.PAIRS || null;
 const IDENT = 'B0/identity', NONE = '';
 const q = new URLSearchParams(location.search);
-const S = { exp: R[q.get('exp')] ? q.get('exp') : 'E1', method: {}, ref: {}, split: 'val', cat: 'better', wb: false };
-const NOTES = {};   // 将写回 runs/<id>/notes.md
+const S = { exp: R[q.get('exp')] ? q.get('exp') : 'E1', style: ['A', 'B', 'C'].includes(q.get('style')) ? q.get('style') : 'A',
+  method: {}, ref: {}, split: 'val', vf: 'all', vs: 'gain', vn: 12, sel: null, vv: 'chk', swipe: 50, protoOpen: true };
+const NOTES = {};
 
 const keyOf = (rid, m) => `${rid}/${m}`;
 const ev = (k, s) => { if (!k) return null; const [rid, m] = k.split('/'); return R[rid]?.metrics?.[m]?.[s]; };
@@ -141,7 +210,6 @@ const best = r => ranked(r)[0];
 const label = k => !k ? '无' : k === IDENT ? '未配准（恒等变换）' : k.endsWith('/main') ? k.slice(0, -5) : k.replace('/', ' / ');
 const kids = r => Object.values(R).filter(x => x.meta.parent === r.id);
 const curM = r => S.method[r.id] && r.metrics[S.method[r.id]] ? S.method[r.id] : best(r);
-/* 默认参考：有 init 用 init；父实验里有同名基础方法（<方法>__<变体>）就用它；否则父实验 Val 主指标最好的方法；基线无参考 */
 function defaultRef(r, m) {
   if (r.meta.init) return r.meta.init;
   const p = R[r.meta.parent];
@@ -157,34 +225,26 @@ const pct = x => x == null ? '—' : (x * 100).toFixed(1);
 const pxf = x => x == null ? '—' : x.toFixed(2);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const sgn = (d, f) => { if (d == null || isNaN(d)) return '—'; const t = f(Math.abs(d)); return Number(t) === 0 ? t : (d > 0 ? '+' : '−') + t; };
+const errTxt = e => e == null ? '失败' : e.toFixed(1);
 const SPLIT = () => S.split === 'val' ? 'Val' : 'Test';
 const METRICS = () => [...P.auc_thresholds.map(t => [`AUC@${t}`, `auc@${t}`, 'pct']), ...P.sr_thresholds.map(t => [`SR@${t}`, `sr@${t}`, 'pct']),
   ['失败率', 'fail_rate', 'pct'], [`错配率（>${P.t_coarse} px）`, 'mis_rate', 'pct'], ['成功 pair 误差均值（px）', 'succ_mean', 'px'], ['成功 pair 误差中位数（px）', 'succ_median', 'px']];
+let TAB = 0, FIG = 0, SEC = 0;
+const sec = (id, title, body) => `<section class="sec" id="sec-${id}"><h2><span class="n">${++SEC}</span>${title}</h2><div class="body">${body}</div></section>`;
 
-/* ======================= 图表编号 ======================= */
-let TAB = 0, FIG = 0;
-const tabNo = () => ++TAB, figNo = () => ++FIG;
-
-/* ======================= 页头 ======================= */
+/* ======================= 页头与比较设置 ======================= */
 function header(r) {
   const p = R[r.meta.parent], k = kids(r);
-  const rows = [
-    ['父实验', p ? `<a onclick="go('${p.id}')">${p.id}</a>` : '无'],
-    ['起点方法', r.meta.init ? esc(r.meta.init) : '无'],
+  const rows = [['父实验', p ? `<a onclick="go('${p.id}')">${p.id}</a>` : '无'], ['起点方法', r.meta.init ? esc(r.meta.init) : '无'],
     ['子实验', k.length ? k.map(c => `<a onclick="go('${c.id}')">${c.id}</a>`).join('，') : '无'],
-    ['状态', (r.lit ? '已点亮' : '未点亮') + (r.meta.baseline ? '，基线' : '')],
-    ['日期', esc(r.meta.date || '—')],
-    ['commit', r.meta.commit ? `<span class="num">${esc(r.meta.commit)}</span>` : '—'],
-  ];
+    ['状态', (r.lit ? '已点亮' : '未点亮') + (r.meta.baseline ? '，基线' : '')], ['日期', esc(r.meta.date || '—')],
+    ['commit', r.meta.commit ? `<span class="num">${esc(r.meta.commit)}</span>` : '—']];
   if (multi(r)) rows.splice(3, 0, ['方法数', `<span class="num">${methods(r).length}</span>`]);
-  return `<a class="back" href="#" onclick="return false">← 画布</a><h1><span class="id">${r.id}</span>${esc(r.meta.title)}</h1>
-    <dl class="meta">${rows.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>`;
+  return `<div class="head"><a class="back" href="#" onclick="return false">← 画布</a><div class="hmain"><h1><span class="id">${r.id}</span>${esc(r.meta.title)}</h1>
+    <dl class="meta">${rows.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>${r.lit ? compare(r) : ''}</div></div>`;
 }
-
-/* ======================= 比较设置 ======================= */
 function refOptions(r) {
-  const m = curM(r), def = defaultRef(r, m), cur = curRef(r), groups = [];
-  const p = R[r.meta.parent];
+  const m = curM(r), def = defaultRef(r, m), cur = curRef(r), groups = [], p = R[r.meta.parent];
   if (p?.lit) groups.push([`父实验 ${p.id}`, ranked(p).map(x => keyOf(p.id, x))]);
   if (multi(r)) groups.push([`本实验 ${r.id}`, ranked(r).filter(x => x !== m).map(x => keyOf(r.id, x))]);
   Object.values(R).filter(x => x.lit && x.id !== r.id && x.id !== p?.id).forEach(x => groups.push([`实验 ${x.id}`, ranked(x).map(y => keyOf(x.id, y)).filter(k => k !== IDENT)]));
@@ -195,135 +255,210 @@ function refOptions(r) {
 function compare(r) {
   const m = curM(r);
   return `<div class="cmp">
-    ${multi(r) ? `<span><label for="selM"><span class="key"></span>方法</label><select id="selM" class="me" onchange="S.method['${r.id}']=this.value;delete S.ref['${r.id}'];render()">${ranked(r).map(x => `<option value="${x}" ${x === m ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></span>`
-      : `<span><span class="key"></span><span class="muted">方法</span>　${esc(label(keyOf(r.id, m)))}</span>`}
-    <span><label for="selR"><span class="key ref"></span>参考方法</label><select id="selR" onchange="S.ref['${r.id}']=this.value;render()">${refOptions(r)}</select></span>
-    <span><span class="muted" style="margin-right:8px">数据集</span><span class="radio" role="group" aria-label="数据集">
-      <button aria-pressed="${S.split === 'val'}" onclick="S.split='val';render()">Val</button><button aria-pressed="${S.split === 'test'}" ${splitOk(r, 'test') ? '' : 'disabled title="无 Test 结果"'} onclick="S.split='test';render()">Test</button></span></span>
+    ${multi(r) ? `<span><label for="selM"><span class="key"></span>方法</label><select id="selM" class="me" onchange="S.method['${r.id}']=this.value;delete S.ref['${r.id}'];resetV();render()">${ranked(r).map(x => `<option value="${x}" ${x === m ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></span>`
+      : `<span><span class="key"></span><span class="lbl">方法</span>${esc(label(keyOf(r.id, m)))}</span>`}
+    <span><label for="selR"><span class="key ref"></span>参考方法</label><select id="selR" onchange="S.ref['${r.id}']=this.value;resetV();render()">${refOptions(r)}</select></span>
+    <span><span class="lbl">数据集</span><span class="radio" role="group" aria-label="数据集"><button aria-pressed="${S.split === 'val'}" onclick="S.split='val';render()">Val</button><button aria-pressed="${S.split === 'test'}" ${splitOk(r, 'test') ? '' : 'disabled title="无 Test 结果"'} onclick="S.split='test';render()">Test</button></span></span>
   </div>`;
 }
 
 /* ======================= 表 ======================= */
 function methodsTable(r) {
-  const s = S.split, cm = curM(r), p = R[r.meta.parent];
+  const s = S.split, cm = curM(r), p = R[r.meta.parent], withBase = p?.lit;
   const cols = [...P.auc_thresholds.map(t => [`AUC@${t}`, `auc@${t}`, pct]), ['SR@5', 'sr@5', pct], ['失败率', 'fail_rate', pct], ['错配率', 'mis_rate', pct], ['误差中位数（px）', 'succ_median', pxf]];
-  const withBase = p?.lit;
-  const n = tabNo();
-  return `<p class="caption"><b>表 ${n}</b>${r.id} 各方法在 ${SPLIT()} 上的指标，按 ${MAINU} 降序。AUC、SR、失败率、错配率单位为 %；${MAINU} 后为 bootstrap 95% 置信区间；误差中位数只统计成功 pair。${withBase ? `末列为相对父实验 ${p.id} 中同名基础方法的 ${MAINU} 差值。` : ''}点击一行设为当前方法。</p>
+  return `<p class="caption"><b>表 ${++TAB}</b>${r.id} 各方法在 ${SPLIT()} 上的指标，按 ${MAINU} 降序。AUC、SR、失败率、错配率单位为 %；${MAINU} 后为 bootstrap 95% 置信区间；误差中位数只统计成功 pair。${withBase ? `末列为相对父实验 ${p.id} 中同名基础方法的 ${MAINU} 差值。` : ''}点击一行设为当前方法。</p>
     <div class="scroll"><table class="tab num"><tr><th>方法</th>${cols.map(c => `<th>${c[0]}</th>`).join('')}${withBase ? `<th>Δ${MAINU}</th>` : ''}</tr>
     ${ranked(r).map(x => { const k = keyOf(r.id, x), v = sm(k, s) || {}, ci = v[MAIN + '_ci'];
-      return `<tr class="pick ${x === cm ? 'on' : ''}" onclick="S.method['${r.id}']='${x}';delete S.ref['${r.id}'];render()"><td>${esc(x)}</td>
+      return `<tr class="pick ${x === cm ? 'on' : ''}" onclick="S.method['${r.id}']='${x}';delete S.ref['${r.id}'];resetV();render()"><td>${esc(x)}</td>
         ${cols.map(([, kk, f]) => `<td>${f(v[kk])}${kk === MAIN && ci ? `<span class="ci">[${pct(ci[0])}, ${pct(ci[1])}]</span>` : ''}</td>`).join('')}
         ${withBase ? `<td>${sgn((v[MAIN] - sm(defaultRef(r, x), s)?.[MAIN]) * 100, a => a.toFixed(1))}</td>` : ''}</tr>`; }).join('')}</table></div>`;
 }
 function pairTable(r) {
   const s = S.split, k = keyOf(r.id, curM(r)), rf = curRef(r), a = sm(k, s) || {}, b = sm(rf, s) || {};
-  const n = tabNo();
-  return `<p class="caption"><b>表 ${n}</b>${esc(label(k))}${rf ? ` 与参考方法 ${esc(label(rf))}` : ''} 在 ${SPLIT()} 上的全部指标（n = <span class="num">${a.n ?? '—'}</span> 个有标注 pair）。AUC、SR、失败率、错配率单位为 %；方括号内为 bootstrap 95% 置信区间${rf ? '；差值 = 方法 − 参考方法' : ''}。</p>
+  return `<p class="caption"><b>表 ${++TAB}</b>${esc(label(k))}${rf ? ` 与参考方法 ${esc(label(rf))}` : ''} 在 ${SPLIT()} 上的全部指标（n = <span class="num">${a.n ?? '—'}</span> 个有标注 pair）。AUC、SR、失败率、错配率单位为 %；方括号内为 bootstrap 95% 置信区间${rf ? '；差值 = 方法 − 参考方法' : ''}。</p>
     <table class="tab num"><tr><th>指标</th><th>${esc(label(k))}</th>${rf ? `<th>${esc(label(rf))}</th><th>差值</th>` : ''}</tr>
-    ${METRICS().map(([nm, kk, u]) => { const f = u === 'px' ? pxf : pct, ci = kk.startsWith('auc') || kk.startsWith('sr') ? a[kk + '_ci'] : null, cr = b[kk + '_ci'] && ci ? b[kk + '_ci'] : null;
+    ${METRICS().map(([nm, kk, u]) => { const f = u === 'px' ? pxf : pct, ci = a[kk + '_ci'], cr = b[kk + '_ci'];
       return `<tr><td>${nm}</td><td class="me">${f(a[kk])}${ci ? `<span class="ci">[${pct(ci[0])}, ${pct(ci[1])}]</span>` : ''}</td>
         ${rf ? `<td class="ref">${f(b[kk])}${cr ? `<span class="ci">[${pct(cr[0])}, ${pct(cr[1])}]</span>` : ''}</td><td>${sgn(u === 'px' ? a[kk] - b[kk] : (a[kk] - b[kk]) * 100, x => x.toFixed(u === 'px' ? 2 : 1))}</td>` : ''}</tr>`; }).join('')}</table>`;
 }
 
 /* ======================= 图 ======================= */
+function axes(W, H, L, B, X, xt, yt, xl, yl, T = 12) {
+  const pw = W - L - 12, ph = H - B - T, xs = v => L + v / X * pw, ys = f => T + ph - f * ph;
+  let g = `<g font-size="12" style="fill:var(--muted)">`;
+  for (const t of xt) g += `<line x1="${xs(t)}" x2="${xs(t)}" y1="${T + ph}" y2="${T + ph + 4}" style="stroke:var(--ink)"/><text x="${xs(t)}" y="${T + ph + 18}" text-anchor="middle">${t}</text>`;
+  for (const [f, s] of yt) g += `<line x1="${L}" x2="${W - 12}" y1="${ys(f)}" y2="${ys(f)}" style="stroke:var(--wash)"/><line x1="${L - 4}" x2="${L}" y1="${ys(f)}" y2="${ys(f)}" style="stroke:var(--ink)"/><text x="${L - 8}" y="${ys(f) + 4}" text-anchor="end">${s}</text>`;
+  g += `<line x1="${L}" x2="${L}" y1="${T}" y2="${T + ph}" style="stroke:var(--ink)"/><line x1="${L}" x2="${W - 12}" y1="${T + ph}" y2="${T + ph}" style="stroke:var(--ink)"/>`;
+  g += `<text x="${L + pw / 2}" y="${H - 2}" text-anchor="middle">${xl}</text><text transform="translate(12 ${T + ph / 2}) rotate(-90)" text-anchor="middle">${yl}</text></g>`;
+  return { g, xs, ys };
+}
 function cdfFigure(r) {
-  const s = S.split, m = curM(r), k = keyOf(r.id, m), rf = curRef(r);
-  const W = 640, H = 330, L = 46, B = 40, X = 30, pw = W - L - 12, ph = H - B - 12;
-  const xs = v => L + v / X * pw, ys = f => 12 + ph - f * ph;
+  const s = S.split, m = curM(r), k = keyOf(r.id, m), rf = curRef(r), W = 640, H = 330, X = 30;
+  const { g: ax, xs, ys } = axes(W, H, 46, 40, X, [0, 5, 10, 15, 20, 25, 30], [0, .25, .5, .75, 1].map(f => [f, f * 100]), '误差阈值（px）', '累积占比（%）');
   const F = kk => { const e = ev(kk, s)?.errors; if (!e) return null; const v = e.filter(x => x != null).sort((a, b) => a - b), n = e.length;
     return x => { let lo = 0, hi = v.length; while (lo < hi) { const mm = (lo + hi) >> 1; v[mm] <= x ? lo = mm + 1 : hi = mm; } return lo / n; }; };
   const path = kk => { const f = F(kk); if (!f) return ''; let d = ''; for (let x = 0; x <= X + 1e-9; x += .1) d += `${d ? 'L' : 'M'}${xs(x).toFixed(1)},${ys(f(x)).toFixed(1)}`; return d; };
-  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="误差累积分布"><g font-size="12" fill="#676D78" font-family="Source Serif 4, serif">`;
-  for (const t of [0, 5, 10, 15, 20, 25, 30]) g += `<line x1="${xs(t)}" x2="${xs(t)}" y1="${12 + ph}" y2="${16 + ph}" stroke="#1D2230"/><text x="${xs(t)}" y="${ph + 30}" text-anchor="middle">${t}</text>`;
-  for (const f of [0, .25, .5, .75, 1]) g += `<line x1="${L - 4}" x2="${L}" y1="${ys(f)}" y2="${ys(f)}" stroke="#1D2230"/><line x1="${L}" x2="${W - 12}" y1="${ys(f)}" y2="${ys(f)}" stroke="#ECEEF1"/><text x="${L - 8}" y="${ys(f) + 4}" text-anchor="end">${f * 100}</text>`;
-  g += `<line x1="${L}" x2="${L}" y1="12" y2="${12 + ph}" stroke="#1D2230"/><line x1="${L}" x2="${W - 12}" y1="${12 + ph}" y2="${12 + ph}" stroke="#1D2230"/>`;
-  g += `<text x="${L + pw / 2}" y="${H - 2}" text-anchor="middle">误差阈值（px）</text><text transform="translate(12 ${12 + ph / 2}) rotate(-90)" text-anchor="middle">累积占比（%）</text></g>`;
-  let legend = '';
-  if (multi(r) && !rf) { for (const x of methods(r)) if (x !== m) g += `<path d="${path(keyOf(r.id, x))}" fill="none" stroke="#C9CDD4" stroke-width="1"/>`;
-    legend = `<span><span class="key"></span>${esc(m)}</span><span><span class="key" style="border-top:1px solid #C9CDD4"></span>${r.id} 的其他 ${methods(r).length - 1} 个方法</span>`; }
-  if (rf) { g += `<path d="${path(rf)}" fill="none" stroke="#8A8F99" stroke-width="1.6" stroke-dasharray="5 4"/>`; }
-  g += `<path d="${path(k)}" fill="none" stroke="#1F3A93" stroke-width="2.2"/></svg>`;
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="误差累积分布">${ax}`, legend = '';
+  if (multi(r) && !rf) { for (const x of methods(r)) if (x !== m) g += `<path d="${path(keyOf(r.id, x))}" fill="none" style="stroke:var(--other)" stroke-width="1"/>`;
+    legend = `<span><span class="key"></span>${esc(m)}</span><span><span class="key" style="border-top:1px solid var(--other)"></span>${r.id} 的其他 ${methods(r).length - 1} 个方法</span>`; }
+  if (rf) g += `<path d="${path(rf)}" fill="none" style="stroke:var(--ref)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+  g += `<path d="${path(k)}" fill="none" style="stroke:var(--me)" stroke-width="2.2"/></svg>`;
   if (!legend) legend = `<span><span class="key"></span>${esc(label(k))}</span>${rf ? `<span><span class="key ref"></span>${esc(label(rf))}</span>` : ''}`;
-  const n = figNo();
-  return `<figure>${g}<div class="legend">${legend}</div><p class="caption figcap"><b>图 ${n}</b>${SPLIT()} 上配准误差的累积分布：纵轴为误差不超过横轴阈值的 pair 占比。失败的 pair 计为误差无穷大，不进入曲线。</p></figure>`;
+  return `<figure>${g}<div class="legend">${legend}</div><p class="caption figcap"><b>图 ${++FIG}</b>${SPLIT()} 上配准误差的累积分布：纵轴为误差不超过横轴阈值的 pair 占比。失败的 pair 计为误差无穷大，不进入曲线。</p></figure>`;
 }
 function outcomeFigure(r) {
   const s = S.split, m = curM(r), rf = curRef(r), T = P.t_coarse;
-  const C = [['≤5 px', '#1F3A93'], [`5–${T} px`, '#7F97C9'], [`>${T} px（错配）`, '#C7D1E6'], ['失败', '#A9ADB5']];
+  const C = S.style === 'C' ? [['≤5 px', '#000'], [`5–${T} px`, '#777'], [`>${T} px（错配）`, '#C4C4C4'], ['失败', '#E6E6E6']]
+    : [['≤5 px', 'var(--me)'], [`5–${T} px`, '#7F97C9'], [`>${T} px（错配）`, '#C7D1E6'], ['失败', '#A9ADB5']];
   const cls = e => e == null ? 3 : e <= 5 ? 0 : e <= T ? 1 : 2;
   const keys = rf ? [keyOf(r.id, m), rf] : multi(r) ? ranked(r).map(x => keyOf(r.id, x)) : [keyOf(r.id, m)];
   const rows = keys.filter(k => ev(k, s)).map(k => { const e = ev(k, s).errors, cnt = [0, 0, 0, 0]; e.forEach(v => cnt[cls(v)]++);
-    return `<div class="oc-row ${k === keyOf(r.id, m) ? 'on' : ''}"><span title="${esc(label(k))}">${esc(rf || !multi(r) ? label(k) : k.split('/')[1])}</span><span class="oc-bar">${cnt.map((c, j) => `<i style="flex:${c};background:${C[j][1]}" title="${C[j][0]}：${c} / ${e.length}"></i>`).join('')}</span></div>`; }).join('');
-  const n = figNo();
-  return `<figure>${rows}<div class="legend" style="margin-top:10px">${C.map(([t, c]) => `<span><span class="swatch" style="background:${c}"></span>${t}</span>`).join('')}</div>
-    <p class="caption figcap"><b>图 ${n}</b>${SPLIT()} 上各 pair 按配准误差分档的占比。</p></figure>`;
+    return `<div class="oc-row ${k === keyOf(r.id, m) ? 'on' : ''}"><span>${esc(rf || !multi(r) ? label(k) : k.split('/')[1])}</span><span class="oc-bar">${cnt.map((c, j) => `<i style="flex:${c};background:${C[j][1]}" title="${C[j][0]}：${c} / ${e.length}"></i>`).join('')}</span></div>`; }).join('');
+  return `<figure>${rows}<div class="legend" style="margin-top:10px">${C.map(([t, c]) => `<span><span class="swatch" style="background:${c};outline:1px solid var(--rule)"></span>${t}</span>`).join('')}</div>
+    <p class="caption figcap"><b>图 ${++FIG}</b>${SPLIT()} 上各 pair 按配准误差分档的占比。</p></figure>`;
 }
 
-/* ======================= 逐对查看 ======================= */
-function pairViewer(r) {
-  const s = S.split, k = keyOf(r.id, curM(r)), rf = curRef(r), e = ev(k, s)?.errors, f = ev(rf, s)?.errors;
-  let c = null;
-  if (e && f) { c = { better: 0, worse: 0, neither: 0, both: 0 }; e.forEach((v, i) => { const a = (v ?? 1e9) <= 5, b = (f[i] ?? 1e9) <= 5; c[a && !b ? 'better' : !a && b ? 'worse' : a ? 'both' : 'neither']++; }); }
-  const cats = [['better', '改善'], ['worse', '退化'], ['neither', '均未配准'], ['both', '均配准']];
-  if (!c && S.cat !== 'worst') S.cat = 'worst';
-  return `<h2>逐对查看</h2><div class="pv"><div class="cats">
-    <div class="muted" style="font-size:13px;margin-bottom:6px">${c ? `相对 ${esc(label(rf))}，以 5 px 为界` : '分类需要参考方法'}</div>
-    ${cats.map(([id, n]) => `<button aria-pressed="${S.cat === id}" ${c ? '' : 'disabled'} onclick="S.cat='${id}';render()"><span>${n}</span><span class="num">${c ? c[id] : '—'}</span></button>`).join('')}
-    <button aria-pressed="${S.cat === 'worst'}" onclick="S.cat='worst';render()"><span>误差最大的 20 个</span></button>
-    <div class="find"><label for="pno" class="muted">编号</label><input id="pno" placeholder="${SPLIT()} #0137"></div></div>
-    <div><div class="views"><span aria-current="true">棋盘格叠加</span><span>原图并排</span><span>卷帘</span><span>点对连线</span><span>残差点图</span><span>全方法缩略图</span></div><div class="stage"></div></div></div>`;
+/* ======================= 可视化结果 =======================
+   散点总览 → 筛选（分类）→ 排序 → 缩略图网格（每次 12 个）→ 详情（本方法与参考并排，← → 在当前列表中移动） */
+const CATS = [['all', '全部'], ['better', '改善'], ['worse', '退化'], ['neither', '均未配准'], ['both', '均配准']];
+const SORTS_REF = [['gain', '误差下降量，大在前'], ['loss', '误差上升量，大在前'], ['me', '方法误差，大在前'], ['no', '编号']];
+const SORTS_NOREF = [['me', '方法误差，大在前'], ['me_asc', '方法误差，小在前'], ['no', '编号']];
+function resetV() { S.vf = 'all'; S.vn = 12; S.sel = null; S.vs = 'gain'; }
+const imgKey = k => PX?.alias[k] || k;
+const tag = k => imgKey(k).replace('/', '__');
+const stem = p => p.replace('/', '__');
+function pairInfo(r) {
+  const k = keyOf(r.id, curM(r)), rf = curRef(r), eM = ev(k, 'val')?.errors, eR = rf ? ev(rf, 'val')?.errors : null;
+  const n = PX.labelled.length, c = v => v == null ? 1e3 : v;
+  const cat = i => { if (!eR) return null; const a = c(eM[i]) <= 5, b = c(eR[i]) <= 5; return a && !b ? 'better' : !a && b ? 'worse' : a ? 'both' : 'neither'; };
+  const idx = [...Array(n).keys()];
+  const count = Object.fromEntries(CATS.map(([id]) => [id, id === 'all' ? n : idx.filter(i => cat(i) === id).length]));
+  let list = idx.filter(i => S.vf === 'all' || cat(i) === S.vf);
+  const cap = v => Math.min(c(v), 50), key = { gain: i => cap(eM[i]) - cap(eR[i]), loss: i => cap(eR[i]) - cap(eM[i]), me: i => -cap(eM[i]), me_asc: i => cap(eM[i]), no: i => PX.no[i] }[S.vs];
+  list.sort((a, b) => key(a) - key(b) || PX.no[a] - PX.no[b]);
+  return { k, rf, eM, eR, cat, count, list };
+}
+function thumb(i, I) {
+  const p = PX.labelled[i], ok = PX.rendered[p]?.methods[imgKey(I.k)];
+  const im = ok?.ok ? `<img src="img/${stem(p)}__${tag(I.k)}__chk.jpg" alt="" loading="lazy">` : ok?.fail ? '失败' : '未渲染';
+  return `<button class="th" aria-current="${S.sel === p}" onclick="S.sel='${p}';render();document.getElementById('detail').scrollIntoView({block:'nearest'})">
+    <div class="im">${im}</div><div class="cap num"><span>#${String(PX.no[i]).padStart(4, '0')}</span><span>${errTxt(I.eM[i])}${I.eR ? ` / ${errTxt(I.eR[i])}` : ''}</span></div></button>`;
+}
+function scatter(I) {
+  const W = 300, H = 300, X = 34, over = 30;
+  const { g: ax, xs, ys } = axes(W, H, 44, 38, X, [0, 10, 20, 30], [0, 10, 20, 30].map(v => [v / X, v]), '参考方法误差（px）', '方法误差（px）', 8);
+  const cl = v => v == null || v > over ? 32 : v;
+  const inList = new Set(I.list);
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="逐 pair 误差散点">${ax}`;
+  g += `<rect x="${xs(over)}" y="${ys(X / X)}" width="${xs(X) - xs(over)}" height="${ys(0) - ys(1)}" style="fill:var(--wash)"/><rect x="${xs(0)}" y="${ys(1)}" width="${xs(X) - xs(0)}" height="${ys(over / X) - ys(1)}" style="fill:var(--wash)"/>`;
+  g += `<line x1="${xs(0)}" y1="${ys(0)}" x2="${xs(over)}" y2="${ys(over / X)}" style="stroke:var(--muted)" stroke-dasharray="3 3"/>`;
+  g += `<line x1="${xs(5)}" x2="${xs(5)}" y1="${ys(1)}" y2="${ys(0)}" style="stroke:var(--rule)"/><line x1="${xs(0)}" x2="${xs(X)}" y1="${ys(5 / X)}" y2="${ys(5 / X)}" style="stroke:var(--rule)"/>`;
+  PX.labelled.forEach((p, i) => { const on = inList.has(i);
+    g += `<circle cx="${xs(cl(I.eR[i])).toFixed(1)}" cy="${ys(cl(I.eM[i]) / X).toFixed(1)}" r="${on ? 2.6 : 2}" style="fill:${on ? 'var(--ink)' : 'var(--other)'};cursor:pointer" onclick="S.sel='${p}';render()"><title>#${PX.no[i]}  ${errTxt(I.eM[i])} / ${errTxt(I.eR[i])} px</title></circle>`; });
+  if (S.sel) { const i = PX.labelled.indexOf(S.sel); if (i >= 0) g += `<circle cx="${xs(cl(I.eR[i]))}" cy="${ys(cl(I.eM[i]) / X)}" r="6.5" fill="none" style="stroke:var(--me)" stroke-width="2"/>`; }
+  return g + '</svg>';
+}
+function pane(title, err, p, k, kind) {
+  const info = PX.rendered[p]?.methods[imgKey(k)];
+  let inner;
+  if (kind === 'opt' || kind === 'sar') inner = PX.rendered[p] ? `<img src="img/${stem(p)}__${kind}.jpg" alt="">` : '<div class="msg">未渲染</div>';
+  else if (!info) inner = '<div class="msg">原型只渲染了一部分 pair；这个 pair 没有图像</div>';
+  else if (info.fail) inner = `<div class="msg">估计失败（${esc(info.fail)}）</div>`;
+  else if (kind === 'chk') inner = `<img src="img/${stem(p)}__${tag(k)}__chk.jpg" alt="">`;
+  else inner = `<img src="img/${stem(p)}__opt.jpg" alt=""><img src="img/${stem(p)}__${tag(k)}__warp.jpg" alt="" class="w" style="clip-path:inset(0 0 0 ${S.swipe}%)"><div class="cut" style="left:${S.swipe}%"></div>`;
+  return `<div class="pane"><div class="ttl"><span>${title}</span><span class="num">${err}</span></div><div class="box">${inner}</div></div>`;
+}
+function detail(r, I) {
+  const pos = I.list.indexOf(PX.labelled.indexOf(S.sel)), i = PX.labelled.indexOf(S.sel), p = S.sel;
+  const views = [['chk', '棋盘格'], ['swipe', '卷帘'], ['raw', '原图']];
+  let panes;
+  if (S.vv === 'raw') panes = pane('光学', '', p, null, 'opt') + pane('SAR', '', p, null, 'sar');
+  else panes = pane(esc(label(I.k)), `误差 ${errTxt(I.eM[i])} px`, p, I.k, S.vv) + (I.rf ? pane(esc(label(I.rf)), `误差 ${errTxt(I.eR[i])} px`, p, I.rf, S.vv) : '');
+  const cap = { chk: `棋盘格边长 ${PX.cell} px，光学与按估计仿射变换到光学坐标系的 SAR 交替排列。黄圈为光学图上的检查点，红色箭头指向该检查点的 SAR 真值经估计仿射变回光学坐标后的位置（原尺寸）。`,
+    swipe: '左侧为光学，右侧为按估计仿射变换到光学坐标系的 SAR；拖动下方滑杆改变分界位置。', raw: '光学与 SAR 原图，未做变换。' }[S.vv];
+  return `<div class="detail" id="detail"><div class="dhead"><span class="pn num">Val #${String(PX.no[i]).padStart(4, '0')}</span><span class="muted">${esc(p)}</span>
+      <span class="sp"></span>${pos >= 0 ? `<span class="muted num">当前列表第 ${pos + 1} / ${I.list.length} 个</span>` : ''}<button onclick="step(-1)">← 上一个</button><button onclick="step(1)">下一个 →</button></div>
+    <div class="views" role="group" aria-label="视图">${views.map(([v, n]) => `<button aria-pressed="${S.vv === v}" onclick="S.vv='${v}';render()">${n}</button>`).join('')}</div>
+    <div class="panes" ${I.rf || S.vv === 'raw' ? '' : 'style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"'}>${panes}</div>
+    ${S.vv === 'swipe' ? `<input class="swipe" type="range" min="0" max="100" value="${S.swipe}" aria-label="卷帘分界位置" oninput="swipe(+this.value)">` : ''}
+    <p class="caption figcap"><b>图 ${++FIG}</b>${cap}</p></div>`;
+}
+function swipe(v) { S.swipe = v; document.querySelectorAll('.box .w').forEach(x => x.style.clipPath = `inset(0 0 0 ${v}%)`); document.querySelectorAll('.box .cut').forEach(x => x.style.left = v + '%'); }
+function step(d) { if (!PX || !R[S.exp].lit || S.split !== 'val') return; const I = pairInfo(R[S.exp]); if (!I.list.length) return; let pos = I.list.indexOf(PX.labelled.indexOf(S.sel)); pos = pos < 0 ? 0 : Math.max(0, Math.min(I.list.length - 1, pos + d));
+  S.sel = PX.labelled[I.list[pos]]; if (pos >= S.vn) S.vn = Math.ceil((pos + 1) / 12) * 12; render(); }
+function visual(r) {
+  if (!PX) return '<p class="muted">没有找到 pairs.js：先运行 render_pairs.py 生成图像。</p>';
+  if (S.split !== 'val') return '<p class="muted">原型只为 Val 渲染了图像。</p>';
+  const sorts = curRef(r) && ev(curRef(r), 'val') ? SORTS_REF : SORTS_NOREF;
+  if (!sorts.some(([v]) => v === S.vs)) S.vs = sorts[0][0];
+  const I = pairInfo(r);
+  if (!S.sel || !I.list.includes(PX.labelled.indexOf(S.sel))) S.sel = I.list.length ? PX.labelled[I.list[0]] : null;
+  const shown = I.list.slice(0, S.vn);
+  const ctl = `<div class="vr-ctl">${I.eR ? `<span><span class="lbl">筛选</span><span class="chips" role="group" aria-label="筛选">${CATS.map(([id, n]) => `<button aria-pressed="${S.vf === id}" onclick="S.vf='${id}';S.vn=12;S.sel=null;S.vs=${id === 'worse' ? "'loss'" : id === 'neither' ? "'me'" : id === 'both' ? "'no'" : "'gain'"};render()">${n} <span class="num">${I.count[id]}</span></button>`).join('')}</span></span>` : ''}
+    <span><label for="vsort">排序</label><select id="vsort" onchange="S.vs=this.value;S.vn=12;S.sel=null;render()">${sorts.map(([v, n]) => `<option value="${v}" ${S.vs === v ? 'selected' : ''}>${n}</option>`).join('')}</select></span></div>`;
+  const grid = `<div class="grid">${shown.map(i => thumb(i, I)).join('')}</div>
+    <div class="more"><span class="muted num">显示第 1–${shown.length} 个，共 ${I.list.length} 个</span>${I.list.length > S.vn ? `<button onclick="S.vn+=12;render()">再显示 12 个</button>` : ''}</div>`;
+  const top = I.eR ? `<div class="vr-top"><figure style="margin:0">${scatter(I)}<p class="caption figcap"><b>图 ${++FIG}</b>每个点为一个有标注 pair；虚线为 y = x，细线为 5 px。灰底区域内的点误差大于 30 px 或估计失败。点击点查看该 pair。</p></figure><div>${ctl}${grid}</div></div>`
+    : `<div class="vr-top noref"><div>${ctl}${grid}</div></div>`;
+  const cap = `<p class="caption" style="margin-top:0">${I.eR ? `缩略图为 ${esc(label(I.k))} 的棋盘格；数字为方法误差 / 参考方法误差（px）。改善、退化以 5 px 为界。` : `缩略图为 ${esc(label(I.k))} 的棋盘格；数字为方法误差（px）。`}</p>`;
+  return cap + top + (S.sel ? detail(r, I) : '');
 }
 
-/* ======================= 训练图表（读 TensorBoard 日志） ======================= */
+/* ======================= 训练图表 ======================= */
 function tbFigure(r) {
-  if (!r.tb) return '';
-  const { step, scalars, logdir } = r.tb, W = 300, H = 170, L = 50, B = 26, pw = W - L - 8, ph = H - B - 10, sx = step[step.length - 1];
+  const { step: st, scalars } = r.tb, W = 300, H = 170, L = 50, B = 26, pw = W - L - 8, ph = H - B - 10, sx = st[st.length - 1];
   const fmt = v => Math.abs(v) < 1e-3 && v !== 0 ? v.toExponential(1) : Math.abs(v) >= 100 ? v.toFixed(0) : v.toPrecision(3);
-  const charts = Object.entries(scalars).map(([tag, v]) => {
+  const charts = Object.entries(scalars).map(([t, v]) => {
     const lo = Math.min(...v), hi = Math.max(...v), ys = y => 10 + ph - (y - lo) / (hi - lo || 1) * ph, xs = x => L + x / sx * pw;
-    let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(tag)}"><g font-size="10.5" fill="#676D78" font-family="Source Serif 4, serif">`;
-    for (const t of [lo, (lo + hi) / 2, hi]) g += `<line x1="${L}" x2="${W - 8}" y1="${ys(t)}" y2="${ys(t)}" stroke="#ECEEF1"/><text x="${L - 5}" y="${ys(t) + 3.5}" text-anchor="end">${fmt(t)}</text>`;
-    for (const t of [0, sx / 2, sx]) g += `<text x="${xs(t)}" y="${H - 8}" text-anchor="middle">${t >= 1000 ? t / 1000 + 'k' : t}</text>`;
-    g += `<line x1="${L}" x2="${L}" y1="10" y2="${10 + ph}" stroke="#1D2230"/><line x1="${L}" x2="${W - 8}" y1="${10 + ph}" y2="${10 + ph}" stroke="#1D2230"/></g>`;
-    g += `<path fill="none" stroke="#1F3A93" stroke-width="1.5" d="${v.map((y, i) => `${i ? 'L' : 'M'}${xs(step[i]).toFixed(1)},${ys(y).toFixed(1)}`).join('')}"/></svg>`;
-    return `<div><div class="tag">${esc(tag)}</div>${g}</div>`; }).join('');
-  const n = figNo();
-  return `<div class="tbhead"><h2 style="flex:1">训练图表</h2><a href="#" onclick="return false" title="启动 tensorboard --logdir ${esc(logdir)} 并打开">在 TensorBoard 中打开</a></div>
-    <figure style="margin-top:6px"><div class="tb">${charts}</div><p class="caption figcap"><b>图 ${n}</b>训练过程中记录的标量，横轴为 step。数据读自 ${esc(logdir)}/ 下的 TensorBoard 日志。</p></figure>`;
-}
-
-/* ======================= Notes ======================= */
-function notes(r) {
-  return `<h2>Notes</h2><div class="notes" contenteditable="true" spellcheck="false" data-rid="${r.id}" oninput="NOTES[this.dataset.rid]=this.innerText;proto()">${esc(notesOf(r))}</div>
-    <div class="notes-foot">保存在 runs/${r.id}/notes.md</div>`;
+    let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t)}"><g font-size="10.5" style="fill:var(--muted)">`;
+    for (const y of [lo, (lo + hi) / 2, hi]) g += `<line x1="${L}" x2="${W - 8}" y1="${ys(y)}" y2="${ys(y)}" style="stroke:var(--wash)"/><text x="${L - 5}" y="${ys(y) + 3.5}" text-anchor="end">${fmt(y)}</text>`;
+    for (const x of [0, sx / 2, sx]) g += `<text x="${xs(x)}" y="${H - 8}" text-anchor="middle">${x >= 1000 ? x / 1000 + 'k' : x}</text>`;
+    g += `<line x1="${L}" x2="${L}" y1="10" y2="${10 + ph}" style="stroke:var(--ink)"/><line x1="${L}" x2="${W - 8}" y1="${10 + ph}" y2="${10 + ph}" style="stroke:var(--ink)"/></g>`;
+    g += `<path fill="none" style="stroke:var(--me)" stroke-width="1.5" d="${v.map((y, i) => `${i ? 'L' : 'M'}${xs(st[i]).toFixed(1)},${ys(y).toFixed(1)}`).join('')}"/></svg>`;
+    return `<div><div class="tag">${esc(t)}</div>${g}</div>`; }).join('');
+  return `<div class="tbhead"><span></span><a href="#" onclick="return false" title="启动 tensorboard --logdir ${esc(r.tb.logdir)} 并打开">在 TensorBoard 中打开</a></div>
+    <figure style="margin-top:4px"><div class="tb">${charts}</div><p class="caption figcap"><b>图 ${++FIG}</b>训练过程中记录的标量，横轴为 step。数据读自 ${esc(r.tb.logdir)}/ 下的 TensorBoard 日志。</p></figure>`;
 }
 
 /* ======================= 页面 ======================= */
+function notes(r) {
+  return `<div class="notes" contenteditable="true" spellcheck="false" data-rid="${r.id}" oninput="NOTES[this.dataset.rid]=this.innerText">${esc(notesOf(r))}</div><div class="notes-foot">保存在 runs/${r.id}/notes.md</div>`;
+}
 function page(r) {
-  TAB = 0; FIG = 0;
-  if (!r.lit) return header(r) + `<p style="margin:22px 0 0">尚无结果。</p>` + notes(r);
-  let h = header(r) + compare(r) + '<h2 class="first">结果</h2>';
-  if (multi(r)) h += methodsTable(r);
-  if (!multi(r) || curRef(r)) h += pairTable(r);
-  h += `<div class="figs">${cdfFigure(r)}${outcomeFigure(r)}</div>`;
-  return h + pairViewer(r) + tbFigure(r) + notes(r);
+  TAB = 0; FIG = 0; SEC = 0;
+  const secs = [];
+  if (!r.lit) secs.push(['results', '结果', '<p style="margin:0">尚无结果。</p>']);
+  else {
+    let res = '';
+    if (multi(r)) res += methodsTable(r);
+    if (!multi(r) || curRef(r)) res += pairTable(r);
+    res += `<div class="figs">${cdfFigure(r)}${outcomeFigure(r)}</div>`;
+    secs.push(['results', '结果', res], ['visual', '可视化结果', visual(r)]);
+    if (r.tb) secs.push(['train', '训练图表', tbFigure(r)]);
+  }
+  secs.push(['notes', 'Notes', notes(r)]);
+  document.getElementById('toc').innerHTML = `<div class="tid">${r.id}</div>${secs.map(([id, t], i) => `<a href="#sec-${id}">${i + 1}　${t}</a>`).join('')}`;
+  return header(r) + secs.map(([id, t, b]) => sec(id, t, b)).join('');
 }
 function proto() {
-  const changed = Object.entries(NOTES).filter(([id, t]) => t.trim() !== (R[id].meta.notes ?? '').trim());
-  document.getElementById('proto').innerHTML = `<b>原型</b><span>实验</span>${Object.keys(R).map(id => `<button aria-pressed="${id === S.exp}" onclick="go('${id}')">${id}</button>`).join('')}
-    <span class="sp"></span><span>E1、E2 为模拟数据；逐对查看器为占位；Notes 修改只存在内存里</span>
-    <button aria-pressed="${S.wb}" onclick="S.wb=!S.wb;proto()">将写回的文件（${changed.length}）</button>
-    ${S.wb ? `<pre>${changed.length ? changed.map(([id, t]) => `# runs/${id}/notes.md\n${esc(t)}`).join('\n\n') : '无改动'}</pre>` : ''}`;
+  const el = document.getElementById('proto');
+  if (!S.protoOpen) { el.innerHTML = `<div class="t" style="margin:0"><span>原型控制</span><button onclick="S.protoOpen=true;proto()">展开</button></div>`; return; }
+  el.innerHTML = `<div class="t"><span>原型控制（不属于页面）</span><button onclick="S.protoOpen=false;proto()">收起</button></div>
+    <div class="row"><span>实验</span>${Object.keys(R).map(id => `<button aria-pressed="${id === S.exp}" onclick="go('${id}')">${id}</button>`).join('')}</div>
+    <div class="row"><span>风格</span>${[['A', '纸面'], ['B', '报告'], ['C', '手册']].map(([s, n]) => `<button aria-pressed="${S.style === s}" onclick="S.style='${s}';render()">${s} ${n}</button>`).join('')}</div>
+    <p>E1、E2 是模拟实验。E1 的指标和图像借用 B0m / anymatch_roma__minmax 的真实结果。图像只渲染了 ${PX ? Object.keys(PX.rendered).length : 0} 个 Val pair。</p>`;
 }
-function go(id) { if (R[id]) { S.exp = id; S.cat = 'better'; render(); scrollTo(0, 0); } }
+function go(id) { if (R[id]) { S.exp = id; resetV(); render(); scrollTo(0, 0); } }
 function render() {
   const r = R[S.exp];
   if (r.lit && !splitOk(r, S.split)) S.split = 'val';
-  const u = new URL(location); u.searchParams.set('exp', S.exp); history.replaceState(null, '', u);
+  document.body.dataset.style = S.style;
+  const u = new URL(location); u.searchParams.set('exp', S.exp); u.searchParams.set('style', S.style); history.replaceState(null, '', u);
   document.getElementById('app').innerHTML = page(r);
   proto();
 }
+addEventListener('keydown', e => { if (e.target.closest('input,select,textarea,[contenteditable]')) return;
+  if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); });
 render();
 </script>
 </body>

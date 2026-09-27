@@ -71,11 +71,11 @@ noise = np.random.default_rng(1)
 tb = {   # 模拟 runs/E1/tb/ 里 TensorBoard 日志的 scalar
     "train/loss": [round(1.2 * math.exp(-s / 6000) + 0.15 + 0.03 * float(noise.normal()), 4) for s in steps],
     "train/lr": [round(1e-5 * (0.5 + 0.5 * math.cos(math.pi * s / 20000)), 9) for s in steps],
-    "val/auc@10": [round(0.506 + 0.062 * (1 - math.exp(-s / 5000)) + 0.004 * float(noise.normal()), 4) for s in steps],
+    "val/auc@10": [round(0.506 + 0.035 * (1 - math.exp(-s / 5000)) + 0.004 * float(noise.normal()), 4) for s in steps],
 }
 runs["E1"] = {
     "id": "E1", "lit": True, "mock": True, "tb": {"logdir": "runs/E1/tb", "step": steps, "scalars": tb},
-    "metrics": {"main": e1},
+    "metrics": {"main": {"val": runs["B0m"]["metrics"]["anymatch_roma__minmax"]["val"]}},   # 借用真实结果，图像同源
     "meta": {"id": "E1", "title": f"{best} 伪标签自训练", "parent": "B0", "init": f"B0/{best}",
              "date": "2026-10-03", "commit": "a1b2c3d",
              "notes": f"假设：用 {best} 在无标注训练集上的高置信匹配当伪标签微调，能修掉一部分失败 pair。\n"

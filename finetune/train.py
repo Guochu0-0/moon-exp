@@ -61,6 +61,8 @@ def main(argv=None):
     ap.add_argument("--sig-g", type=float, default=0.25, help="共享整体平移的采样标准差（归一化窗口坐标，1 = 窗口半宽）")
     ap.add_argument("--sig-i", type=float, default=0.1, help="逐匹配独立噪声的标准差（同上）")
     ap.add_argument("--w-l2sp", type=float, default=0.0, help="参数空间锚定（L2-SP）权重")
+    ap.add_argument("--train-modules", default="all", choices=("all", "fine"),
+                    help="fine：只训细级模块，粗匹配保持起点不变")
     ap.add_argument("--limit", type=int, default=0, help="只用 Train 前 N 对（过拟合测试：RL 能否在固定小集合上推高 reward）")
     ap.add_argument("--save-every", type=int, default=1000)
     ap.add_argument("--workers", type=int, default=4)
@@ -86,6 +88,10 @@ def main(argv=None):
     g = torch.Generator().manual_seed(args.seed)
     dl = torch.utils.data.DataLoader(ds, batch_size=args.batch, shuffle=True, generator=g,
                                      num_workers=args.workers, drop_last=True, persistent_workers=args.workers > 0)
+    if args.train_modules != "all":   # fine = 只训细级（fine_preprocess + loftr_fine），backbone 与粗级冻结
+        keep = ("fine_preprocess", "loftr_fine")
+        for name, p in base.model.named_parameters():
+            p.requires_grad_(name.startswith(keep))
     params = [p for p in base.model.parameters() if p.requires_grad]
     params0 = [p.detach().clone() for p in params] if args.w_l2sp > 0 else None   # L2-SP 锚点 = 起点权重
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=args.wd)

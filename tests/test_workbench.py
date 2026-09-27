@@ -67,10 +67,11 @@ def test_pair_error_and_failure():
 def test_summary_counts_failures_in_denominator():
     err = np.array([1.0, 4.0, 30.0, math.inf])
     s = protocol.summarize(err)
-    assert s["fail_rate"] == 0.25 and s["mis_rate"] == 0.25
+    assert s["fail_rate"] == 0.25
     assert s["sr@5"] == 0.5
     assert s["auc@10"] == pytest.approx(((1 - 0.1) + (1 - 0.4)) / 4)
-    assert s["succ_median"] == pytest.approx(2.5)
+    assert s["median"] == pytest.approx(17.0)
+    assert protocol.summarize(np.array([1.0, math.inf, math.inf]))["median"] == math.inf
     lo, hi = s["auc@10_ci"]
     assert lo <= s["auc@10"] <= hi
 

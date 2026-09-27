@@ -18,8 +18,13 @@ AdamW lr 1e-5，batch 1，8000 步，模块保持 eval。每 1000 步存 ckpt，
 verdict = """
 Val AUC@5 0.220 → 0.272（CI 0.255–0.290），Test 0.188 → 0.233；SR@10 Val 0.85 → 0.94，Test 0.73 → 0.89。
 增益在 1000 步内出现，之后平台期（extra/val_by_step.json）。从 step 6000 继续训练（S1c）或 lr 3e-5（S1lr3）均停在 0.26–0.27。
+换种子复现（同配置 8000 步，按 Val 选模）：seed1 Val 0.273 / Test 0.233（step 4000），seed2 Val 0.270 / Test 0.229（step 5000）。
 """
 next = "作为 RL 实验的起点与对照。"
 
 [methods.main]
 name = "SCENES 式离线伪标签（step 6000）"
+[methods.seed1]
+name = "换种子 1（S1s1 step 4000）"
+[methods.seed2]
+name = "换种子 2（S1s2 step 5000）"

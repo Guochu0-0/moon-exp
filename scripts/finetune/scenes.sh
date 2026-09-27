@@ -17,7 +17,7 @@ PY=/opt/envs/loftr/bin/python WB=/opt/envs/wb/bin/python
 run() { CUDA_VISIBLE_DEVICES=$GPU nice -n 10 ionice -c3 "$@"; }
 mkdir -p $R
 
-if [ ! -f $L ]; then
+if [[ " $* " == *" --labels "* ]] && [ ! -f $L ]; then
   echo "$(date +%T) LABEL"
   run $PY -m finetune.label $CFG --out $L.tmp > $R/label.log 2>&1 && mv $L.tmp $L
 fi

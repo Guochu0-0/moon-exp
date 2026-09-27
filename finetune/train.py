@@ -47,7 +47,7 @@ def main(argv=None):
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--wd", type=float, default=0.0)
     ap.add_argument("--ransac", type=float, default=3.0, help="伪仿射的 RANSAC 阈值（原网格 px），与评测同口径")
-    ap.add_argument("--min-inliers", type=int, default=30, help="伪仿射内点少于此数的对不监督")
+    ap.add_argument("--min-inliers", type=int, default=20, help="在线模式：伪仿射内点少于此数的对不监督（同 SCENES 的筛选）")
     ap.add_argument("--w-coarse", type=float, default=1.0)
     ap.add_argument("--w-fine", type=float, default=1.0)
     ap.add_argument("--save-every", type=int, default=1000)

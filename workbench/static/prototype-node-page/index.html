@@ -1,0 +1,443 @@
+<!doctype html>
+<!-- PROTOTYPE（一次性）：「节点页内容：自动生成与可编辑的边界」#20。
+     三个结构不同的节点页变体（?variant=A|B|C），四种实验状态（?exp=B0|B0m|E1|E2）。
+     数据是 data.js 快照（gen_data.py 生成）；E1 / E2 是模拟实验。编辑只存在内存里，右下角面板显示「将写回的内容」。
+     视觉刻意朴素：视觉方向是下一张票的事，这里只比较「放什么、怎么组织、能改到什么程度」。 -->
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>PROTOTYPE · 节点页</title>
+<script src="data.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.55 system-ui, "Microsoft YaHei", sans-serif; color: #1f2328; background: #f6f7f9; }
+  a { color: #0969da; cursor: pointer; text-decoration: none; }
+  .muted { color: #6e7781; }
+  .small { font-size: 12px; }
+  code { font-size: 12px; background: #eef0f3; padding: 1px 4px; border-radius: 3px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: right; padding: 4px 8px; border-bottom: 1px solid #e6e8eb; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-weight: 600; color: #57606a; font-size: 12.5px; }
+  tr.click { cursor: pointer; } tr.click:hover { background: #f3f6fa; } tr.on { background: #ddf4ff; }
+  .pos { color: #1a7f37; } .neg { color: #cf222e; }
+  .pill { display: inline-block; font-size: 11.5px; padding: 0 7px; border-radius: 10px; border: 1px solid #d0d7de; color: #57606a; vertical-align: 2px; margin-left: 6px; font-weight: 500; }
+  .pill.lit { background: #fff8c5; border-color: #d4a72c; color: #7d4e00; }
+  .pill.dark { background: #eef0f3; }
+  .pill.base { background: #ddf4ff; border-color: #54aeff; color: #0550ae; }
+  .pill.mock { background: #ffebe9; border-color: #ff8182; color: #a40e26; }
+  textarea { width: 100%; font: inherit; border: 1px solid #54aeff; border-radius: 4px; padding: 6px; min-height: 60px; }
+  .prose { white-space: pre-wrap; margin: 0; }
+  .ph { color: #8c959f; font-style: italic; cursor: text; }
+  .ph:hover { color: #0969da; }
+
+  /* 顶部实验切换（原型控件，不属于设计） */
+  #proto-top { position: sticky; top: 0; z-index: 20; background: #24292f; color: #fff; padding: 6px 14px; font-size: 12.5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #proto-top button { background: #3b434b; color: #fff; border: 0; border-radius: 12px; padding: 3px 10px; cursor: pointer; font-size: 12.5px; }
+  #proto-top button.on { background: #f6c343; color: #24292f; font-weight: 600; }
+  /* 底部变体切换 */
+  #proto-bar { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 30; background: #111; color: #fff; border-radius: 22px; padding: 6px 8px; display: flex; gap: 6px; align-items: center; box-shadow: 0 4px 18px rgba(0,0,0,.35); font-size: 13px; }
+  #proto-bar button { background: #333; color: #fff; border: 0; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 15px; }
+  #proto-bar span { padding: 0 10px; min-width: 230px; text-align: center; }
+  /* 右下角：将写回的内容 */
+  #proto-state { position: fixed; right: 12px; bottom: 12px; z-index: 25; width: 330px; max-height: 45vh; overflow: auto; background: #fffbe6; border: 1px solid #d4a72c; border-radius: 6px; font: 11.5px/1.45 ui-monospace, Consolas, monospace; padding: 8px 10px; white-space: pre-wrap; }
+  #proto-state b { font-family: system-ui, sans-serif; }
+  #proto-state.min { width: auto; max-height: none; }
+
+  /* ---------- 共用小部件 ---------- */
+  .pairviewer { border: 1px dashed #8c959f; border-radius: 6px; background: #fbfbfc; padding: 10px; }
+  .pairviewer .row { display: flex; gap: 10px; }
+  .pairviewer .canvas { flex: 1; height: 260px; background: repeating-conic-gradient(#d8dde3 0 25%, #eceff2 0 50%) 0 0/40px 40px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #57606a; font-size: 12.5px; text-align: center; }
+  .pairviewer .list { width: 230px; font-size: 12px; }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid #d0d7de; margin-bottom: 8px; flex-wrap: wrap; }
+  .tabs a { padding: 5px 12px; color: #57606a; border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1f2328; border-bottom-color: #fd8c73; font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: #57606a; }
+  .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: 3px; margin-right: 4px; }
+
+  /* ---------- A：块式文档 ---------- */
+  .A-page { max-width: 980px; margin: 0 auto; padding: 22px 24px 140px; }
+  .A-head h1 { font-size: 24px; margin: 4px 0 2px; }
+  .A-block { position: relative; background: #fff; border: 1px solid #e1e4e8; border-radius: 8px; padding: 12px 16px 14px; margin: 12px 0; }
+  .A-block > h3 { margin: 0 0 8px; font-size: 14px; color: #57606a; font-weight: 600; }
+  .A-block .auto { font-size: 11px; color: #8c959f; font-weight: 400; margin-left: 6px; }
+  .A-tools { position: absolute; top: 8px; right: 10px; display: none; gap: 2px; }
+  .A-block:hover .A-tools { display: flex; }
+  .A-tools button { border: 1px solid #d0d7de; background: #fff; border-radius: 4px; cursor: pointer; font-size: 12px; padding: 1px 6px; color: #57606a; }
+  .A-hidden { border: 1px dashed #d0d7de; border-radius: 8px; padding: 8px 14px; color: #6e7781; font-size: 12.5px; }
+  .A-hidden button { border: 1px solid #d0d7de; background: #fff; border-radius: 12px; padding: 1px 9px; margin: 3px 4px 0 0; cursor: pointer; font-size: 12px; }
+
+  /* ---------- B：仪表盘 + 标签页 ---------- */
+  .B-head { background: #fff; border-bottom: 1px solid #d0d7de; padding: 14px 28px 0; }
+  .B-head h1 { font-size: 21px; margin: 2px 0 10px; }
+  .B-nums { display: flex; gap: 0; margin-bottom: 12px; }
+  .B-num { padding: 4px 22px 4px 0; margin-right: 22px; border-right: 1px solid #e6e8eb; }
+  .B-num:last-child { border-right: 0; }
+  .B-num .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .B-num .k { font-size: 11.5px; color: #6e7781; }
+  .B-body { display: grid; grid-template-columns: 290px 1fr; gap: 20px; padding: 16px 28px 140px; }
+  .B-side { position: sticky; top: 44px; align-self: start; }
+  .B-side section { background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
+  .B-side h4 { margin: 0 0 4px; font-size: 12px; color: #6e7781; font-weight: 600; }
+  .B-main { background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; padding: 8px 16px 16px; min-width: 0; }
+  .B-tabcfg { font-size: 11.5px; margin-left: auto; align-self: center; }
+
+  /* ---------- C：问答式故事线 ---------- */
+  .C-page { max-width: 860px; margin: 0 auto; padding: 26px 24px 140px; }
+  .C-page h1 { font-size: 26px; margin: 0 0 4px; }
+  .C-q { margin: 28px 0 0; }
+  .C-q > h2 { font-size: 13px; letter-spacing: .06em; color: #8c959f; margin: 0 0 6px; font-weight: 600; }
+  .C-answer { font-size: 17px; line-height: 1.65; }
+  .C-answer .n { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .C-edit { font-size: 11.5px; margin-left: 8px; }
+  .C-evid { margin-top: 10px; border-left: 3px solid #d0d7de; padding: 4px 0 4px 14px; }
+  .C-evid summary { cursor: pointer; color: #57606a; font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div id="proto-top"></div>
+<div id="app"></div>
+<div id="proto-state"></div>
+<div id="proto-bar"><button id="prev">←</button><span id="vlabel"></span><button id="next">→</button></div>
+<script>
+/* ======================= 数据 ======================= */
+const D = window.DATA, R = D.runs, P = D.protocol, MAIN = P.main, MAINU = MAIN.toUpperCase();
+const IDENT = 'B0/identity';
+const VARIANTS = { A: '块式文档', B: '仪表盘 + 标签页', C: '问答式故事线' };
+const EXPS = {
+  B0: '基线 · 多方法（18）· 已点亮 · 真实',
+  B0m: '基线 · 多方法消融（只有 Val）· 已点亮 · 真实',
+  E1: '普通 · 单方法 · 已点亮 · 模拟',
+  E2: '普通 · 未点亮（想法）· 模拟',
+};
+const q = new URLSearchParams(location.search);
+const S = { v: q.get('variant') || 'A', exp: q.get('exp') || 'E1', method: null, split: 'val', tab: null, editing: null };
+
+const keyOf = (rid, m) => `${rid}/${m}`;
+const ev = (key, split) => { const [rid, m] = key.split('/'); return R[rid]?.metrics?.[m]?.[split]; };
+const sm = (key, split) => ev(key, split)?.summary;
+const mainOf = (key, split = 'val') => sm(key, split)?.[MAIN];
+const methods = r => Object.keys(r.metrics);
+const multi = r => methods(r).length > 1;
+const ranked = r => methods(r).slice().sort((a, b) => (mainOf(keyOf(r.id, b)) ?? -1) - (mainOf(keyOf(r.id, a)) ?? -1));
+const best = r => ranked(r)[0];
+const label = k => k === IDENT ? '未配准' : k.endsWith('/main') ? k.slice(0, -5) : k;
+const kids = r => Object.values(R).filter(x => x.meta.parent === r.id);
+const hasTest = (r, m) => !!r.metrics[m]?.test;
+/* 比较基准：有 init 用 init；多方法消融按「同名基础方法」对到父实验；否则父实验最好方法；没父用未配准 */
+function refFor(r, m) {
+  if (r.meta.init) return r.meta.init;
+  const p = R[r.meta.parent];
+  if (p && p.lit) { const base = m?.split('__')[0]; return p.metrics[base] ? keyOf(p.id, base) : keyOf(p.id, best(p)); }
+  return IDENT;
+}
+const curMethod = r => S.method && r.metrics[S.method] ? S.method : best(r);
+
+/* ======================= 编辑状态（将写回） ======================= */
+/* page：每个实验一份，存隐藏 / 顺序 / 自动句子的覆盖；text：写回 exp.toml 的文字字段 */
+const EDIT = {};
+const ed = rid => EDIT[rid] ??= { hidden: [], order: null, override: {}, defaultTab: null };
+const TEXT = {};
+const txt = (r, f) => (TEXT[r.id]?.[f] ?? r.meta[f] ?? '').trim();
+function setTxt(r, f, v) { (TEXT[r.id] ??= {})[f] = v; }
+
+/* ======================= 格式化 ======================= */
+const pct = x => x == null ? '—' : (x * 100).toFixed(1);
+const pxf = x => x == null ? '—' : x.toFixed(1);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function dl(a, b, low = false, scale = 100, unit = ' pt') {
+  if (a == null || b == null) return '<span class="muted">—</span>';
+  const d = (a - b) * scale; if (Math.abs(d) < 0.05) return '<span class="muted">±0</span>';
+  const good = low ? d < 0 : d > 0;
+  return `<span class="${good ? 'pos' : 'neg'}">${d > 0 ? '+' : ''}${d.toFixed(1)}${unit}</span>`;
+}
+function statusPills(r) {
+  const m = r.meta;
+  return (r.lit ? '<span class="pill lit">已点亮</span>' : '<span class="pill dark">未点亮</span>')
+    + (m.baseline ? '<span class="pill base">基线</span>' : '')
+    + (m.verdict_tag ? `<span class="pill">${m.verdict_tag}</span>` : r.lit && !m.baseline ? '<span class="pill">未判定</span>' : '')
+    + (r.mock ? '<span class="pill mock">模拟数据</span>' : '');
+}
+function lineage(r) {
+  const m = r.meta, p = R[m.parent];
+  return [p ? `派生自 <a onclick="go('${p.id}')">${p.id}</a>` : '根节点', m.init ? `起点 <code>${esc(m.init)}</code>` : '',
+    m.date ? esc(m.date) : '', m.commit ? `commit <code>${esc(m.commit)}</code>` : ''].filter(Boolean).join(' · ');
+}
+
+/* ======================= 共用小部件 ======================= */
+const PAL = ['#0969da', '#bf3989', '#1a7f37', '#bc4c00', '#8250df', '#0a7b83', '#9a6700'];
+function cdf(items, split, w = 640, h = 200) {
+  const X = 30, L = 34, B = 22, pw = w - L - 8, ph = h - B - 8;
+  const xs = v => L + v / X * pw, ys = f => 8 + ph - f * ph;
+  let g = `<svg width="${w}" height="${h}" style="max-width:100%"><g font-size="10" fill="#6e7781">`;
+  for (const t of [0, 5, 10, 15, 20, 25, 30]) g += `<line x1="${xs(t)}" x2="${xs(t)}" y1="8" y2="${8 + ph}" stroke="#eef0f3"/><text x="${xs(t)}" y="${h - 6}" text-anchor="middle">${t}</text>`;
+  for (const f of [0, .25, .5, .75, 1]) g += `<text x="${L - 4}" y="${ys(f) + 3}" text-anchor="end">${f * 100}%</text>`;
+  g += `<text x="${w - 8}" y="${h - 6}" text-anchor="end">px</text></g>`;
+  items.forEach((it, i) => {
+    const e = ev(it.key, split)?.errors; if (!e) return;
+    const s = e.filter(v => v != null).sort((a, b) => a - b), n = e.length;
+    let d = `M${xs(0)},${ys(0)}`; s.forEach((v, j) => { if (v <= X) d += `L${xs(v)},${ys(j / n)}L${xs(v)},${ys((j + 1) / n)}`; });
+    const last = s.filter(v => v <= X).length; d += `L${xs(X)},${ys(last / n)}`;
+    g += `<path d="${d}" fill="none" stroke="${it.color || PAL[i % PAL.length]}" stroke-width="${it.width || 1.6}" ${it.dash ? `stroke-dasharray="${it.dash}"` : ''}/>`;
+  });
+  return g + '</svg>' + `<div class="legend">${items.map((it, i) => `<span><i style="background:${it.color || PAL[i % PAL.length]}"></i>${esc(label(it.key))}</span>`).join('')}</div>`;
+}
+function outcome(items, split, w = 640) {
+  const C = [['≤5 px', '#1a7f37', e => e != null && e <= 5], ['5–20 px', '#9be9a8', e => e != null && e > 5 && e <= P.t_coarse],
+    [`错配 >${P.t_coarse}`, '#d4a72c', e => e != null && e > P.t_coarse], ['失败', '#cf222e', e => e == null]];
+  const rows = items.filter(it => ev(it.key, split));
+  let h = `<svg width="${w}" height="${rows.length * 22 + 20}" style="max-width:100%"><g font-size="11">`;
+  rows.forEach((it, i) => {
+    const e = ev(it.key, split).errors, n = e.length; let x = 170;
+    h += `<text x="164" y="${i * 22 + 14}" text-anchor="end" fill="#57606a">${esc(label(it.key))}</text>`;
+    C.forEach(([, col, f]) => { const c = e.filter(f).length, ww = c / n * (w - 180); h += `<rect x="${x}" y="${i * 22 + 3}" width="${ww}" height="15" fill="${col}"><title>${c}/${n}</title></rect>`; x += ww; });
+  });
+  h += `</g><g font-size="10.5" fill="#57606a">${C.map(([n, col], i) => `<rect x="${170 + i * 90}" y="${rows.length * 22 + 6}" width="10" height="10" fill="${col}"/><text x="${184 + i * 90}" y="${rows.length * 22 + 15}">${n}</text>`).join('')}</g></svg>`;
+  return h;
+}
+function methodTable(r, compact = false) {
+  const splitCols = [[`Val ${MAINU}`, 'val', MAIN, pct], ['Val 失败率', 'val', 'fail_rate', pct], ['Val 错配率', 'val', 'mis_rate', pct], ['Val 成功中位误差', 'val', 'succ_median', pxf]];
+  const anyTest = methods(r).some(m => hasTest(r, m));
+  if (anyTest) splitCols.splice(1, 0, [`Test ${MAINU}`, 'test', MAIN, pct]);
+  const showRef = !!r.meta.parent;   // 消融：对到父实验同名方法
+  const cols = compact ? splitCols.slice(0, 2) : splitCols;
+  const cm = curMethod(r);
+  return `<table><tr><th>方法（按 Val ${MAINU}）</th>${cols.map(c => `<th>${c[0]}</th>`).join('')}${showRef ? `<th>Δ Val vs 父实验同名</th>` : ''}</tr>
+    ${ranked(r).map(m => { const k = keyOf(r.id, m), rf = refFor(r, m);
+      return `<tr class="click ${m === cm ? 'on' : ''}" onclick="S.method='${m}';render()"><td>${esc(r.meta.methods?.[m]?.name || m)}</td>${cols.map(([, s, kk, f]) => `<td>${f(sm(k, s)?.[kk])}</td>`).join('')}${showRef ? `<td>${dl(mainOf(k), mainOf(rf))} <span class="muted small">${esc(label(rf).split('/')[1] || '')}</span></td>` : ''}</tr>`; }).join('')}
+    ${r.id !== 'B0' ? `<tr class="muted"><td>未配准</td>${cols.map(([, s, kk, f]) => `<td>${f(sm(IDENT, s)?.[kk])}</td>`).join('')}${showRef ? '<td></td>' : ''}</tr>` : ''}</table>`;
+}
+function metricTable(r, withDelta) {
+  const k = keyOf(r.id, curMethod(r)), rf = refFor(r, curMethod(r));
+  const rows = [...P.auc_thresholds.map(t => [`AUC@${t}`, `auc@${t}`, false, 'pt']), ...P.sr_thresholds.map(t => [`SR@${t}`, `sr@${t}`, false, 'pt']),
+    ['失败率', 'fail_rate', true, 'pt'], [`错配率`, 'mis_rate', true, 'pt'], ['成功子集误差均值', 'succ_mean', true, 'px'], ['成功子集误差中位数', 'succ_median', true, 'px']];
+  const splits = ['val', 'test'].filter(s => ev(k, s));
+  const cell = (s, kk, u) => { const x = sm(k, s)?.[kk]; if (x == null) return '—'; const ci = sm(k, s)?.[kk + '_ci'];
+    return (u === 'px' ? pxf(x) : pct(x)) + (kk === MAIN && ci ? ` <span class="muted small">[${pct(ci[0])}, ${pct(ci[1])}]</span>` : ''); };
+  return `<table><tr><th>指标 · ${esc(label(k))}</th>${splits.map(s => `<th>${s === 'val' ? 'Val' : 'Test'}</th>`).join('')}${withDelta ? splits.map(s => `<th>Δ ${s === 'val' ? 'Val' : 'Test'} vs ${esc(label(rf))}</th>`).join('') : ''}</tr>
+    ${rows.map(([n, kk, low, u]) => `<tr ${kk === MAIN ? 'style="font-weight:700"' : ''}><td>${n}</td>${splits.map(s => `<td>${cell(s, kk, u)}</td>`).join('')}${withDelta ? splits.map(s => `<td>${u === 'px' ? dl(sm(k, s)?.[kk], sm(rf, s)?.[kk], true, 1, ' px') : dl(sm(k, s)?.[kk], sm(rf, s)?.[kk], low)}</td>`).join('') : ''}</tr>`).join('')}</table>
+    <div class="muted small">AUC、SR、率均为 %；主指标附 bootstrap 95% CI。</div>`;
+}
+function pairViewer(r, height) {
+  const m = curMethod(r), rf = refFor(r, m);
+  return `<div class="pairviewer">
+    <div class="tabs" style="margin-bottom:6px"><a class="on">Val</a><a>Test</a><span class="muted small" style="margin-left:auto">本方法 <b>${esc(label(keyOf(r.id, m)))}</b> vs 参考 <b>${esc(label(rf))}</b> ▾ · 两栏 | 全方法缩略图</span></div>
+    <div class="row"><div class="list"><b>挑 pair</b><br>散点（本方法误差 vs 参考误差）<br>
+      <span class="pos">修好了</span> · <span class="neg">变坏了</span> · 一直没对上 · 一直对<br>按本方法误差排序：最差 20 个<br>按编号查：<code>Val #0137</code>
+      <div class="muted" style="margin-top:8px">（占位：查看器内部已由「逐对可视化」票定下，这里只看它在页面里的位置和默认状态）</div></div>
+    <div class="canvas" style="${height ? `height:${height}px` : ''}">棋盘格 + 检查点误差箭头（默认）<br>原图并排 · 卷帘 · 点对连线 · 残差点图 · 中间结果图层</div></div></div>`;
+}
+function extras(r) {
+  if (!r.extras.length) return '';
+  return r.extras.map(x => {
+    const w = 600, h = 160, xs = x.x, keys = Object.keys(x.series);
+    let g = `<div class="small muted">extra/${esc(x.name)}</div><svg width="${w}" height="${h}" style="max-width:100%">`;
+    keys.forEach((k, i) => { const v = x.series[k], lo = Math.min(...v), hi = Math.max(...v);
+      g += `<path fill="none" stroke="${PAL[i]}" stroke-width="1.6" d="${v.map((y, j) => `${j ? 'L' : 'M'}${10 + j / (v.length - 1) * (w - 20)},${h - 14 - (y - lo) / (hi - lo || 1) * (h - 28)}`).join('')}"/>`; });
+    return g + `</svg><div class="legend">${keys.map((k, i) => `<span><i style="background:${PAL[i]}"></i>${esc(k)}（各自归一化）</span>`).join('')}</div>`;
+  }).join('');
+}
+function cdfItems(r) {
+  if (multi(r)) {
+    const cm = curMethod(r), top = ranked(r).slice(0, 5); if (!top.includes(cm)) top.push(cm);
+    return [...top.map((m, i) => ({ key: keyOf(r.id, m), width: m === cm ? 2.8 : 1.4 })), ...(r.id !== 'B0' ? [{ key: IDENT, color: '#8c959f', dash: '4 3' }] : [])];
+  }
+  const m = curMethod(r); return [{ key: keyOf(r.id, m), width: 2.6 }, { key: refFor(r, m), color: '#8c959f', dash: '4 3' }];
+}
+/* 文字：点一下就地编辑，空的显示占位 */
+function textField(r, f, ph) {
+  const id = `${r.id}.${f}`, v = txt(r, f);
+  if (S.editing === id) return `<textarea id="ta" onblur="setTxt(R['${r.id}'],'${f}',this.value);S.editing=null;render()">${esc(v)}</textarea>`;
+  return v ? `<p class="prose" ondblclick="S.editing='${id}';render()" title="双击编辑">${esc(v)}</p>` : `<span class="ph" onclick="S.editing='${id}';render()">${ph}</span>`;
+}
+function childrenList(r) {
+  const k = kids(r);
+  return k.length ? k.map(c => `<div><a onclick="go('${c.id}')">${c.id}</a> ${esc(c.meta.title)} ${c.lit ? '<span class="pill lit">已点亮</span>' : '<span class="pill dark">未点亮</span>'}</div>`).join('') : '<span class="muted">（暂无）</span>';
+}
+/* 未点亮时：要超过谁（父实验的关键数字）+ 怎么点亮 */
+function toBeat(r) {
+  const p = R[r.meta.parent]; if (!p) return '<span class="muted">无父实验，比较基准为未配准。</span>';
+  const k = keyOf(p.id, best(p)), s = sm(k, 'val') || {};
+  return `参考 <b>${esc(label(k))}</b>：Val ${MAINU} <b>${pct(s[MAIN])}</b>，失败率 ${pct(s.fail_rate)}，错配率 ${pct(s.mis_rate)}，成功中位误差 ${pxf(s.succ_median)} px`;
+}
+const howToLight = r => `把结果写进 <code>runs/${r.id}/preds/&lt;方法&gt;/val.jsonl</code> 后跑 <code>python -m workbench eval ${r.id}</code>，节点自动点亮。`;
+
+/* ======================= 变体 A：块式文档 =======================
+   整页一列「块」。每块悬停出现 ↑ ↓ 隐藏；隐藏的块收进底部「已隐藏」抽屉，点一下放回来。
+   默认模板按状态决定：哪些块有、默认顺序、空文字块默认隐藏。 */
+const A_BLOCKS = {
+  why: ['为什么做', r => textField(r, 'hypothesis', '+ 写一句假设（可选）'), r => !!txt(r, 'hypothesis') || !r.lit],
+  change: ['改了什么', r => textField(r, 'change', '+ 写一句改动（可选）') + (r.meta.commit ? `<div class="muted small" style="margin-top:6px">diffstat 相对父实验 commit（自动）：workbench/… 3 files changed</div>` : ''), r => !!txt(r, 'change') || !!r.meta.commit],
+  methods: ['方法', r => methodTable(r), r => multi(r), true],
+  metrics: ['指标', r => metricTable(r, !r.meta.baseline), r => r.lit, true],
+  cdf: ['误差累积分布', r => cdf(cdfItems(r), 'val'), r => r.lit, true],
+  outcome: ['结果分解', r => outcome(cdfItems(r), 'val'), r => r.lit, true],
+  pairs: ['逐对查看', r => pairViewer(r), r => r.lit, true],
+  extras: ['实验产物', r => extras(r), r => r.extras.length > 0, true],
+  verdict: ['结论', r => textField(r, 'verdict', '+ 写结论（可选；判定用上面的标签点选）'), r => r.lit && !r.meta.baseline && !!txt(r, 'verdict')],
+  tobeat: ['要超过谁', r => toBeat(r), r => !r.lit, true],
+  light: ['怎么点亮', r => howToLight(r), r => !r.lit, true],
+  kids: ['由此派生', r => childrenList(r) + (txt(r, 'next') ? '' : ''), r => true, true],
+  next: ['下一步', r => textField(r, 'next', '+ 写下一步（可选）'), r => !!txt(r, 'next')],
+};
+function A_template(r) {
+  if (!r.lit) return ['why', 'tobeat', 'light', 'change', 'kids'];
+  if (r.meta.baseline) return ['methods', 'cdf', 'outcome', 'pairs', 'why', 'change', 'metrics', 'kids', 'next'];
+  return ['metrics', 'why', 'change', 'cdf', 'outcome', 'pairs', 'extras', 'verdict', 'kids', 'next'];
+}
+function A_order(r) {
+  const e = ed(r.id), base = e.order || A_template(r);
+  const avail = base.filter(b => A_BLOCKS[b]);
+  const shown = avail.filter(b => !e.hidden.includes(b) && (e.order ? true : A_BLOCKS[b][2](r)));
+  const hidden = A_template(r).filter(b => !shown.includes(b));
+  return { shown, hidden };
+}
+function A_move(rid, b, d) { const r = R[rid], e = ed(rid); const { shown } = A_order(r); const o = shown.slice(); const i = o.indexOf(b), j = i + d; if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]]; e.order = o; render(); }
+function A_hide(rid, b) { const e = ed(rid), r = R[rid]; const { shown } = A_order(r); e.order = shown.filter(x => x !== b); e.hidden = [...new Set([...e.hidden, b])]; render(); }
+function A_show(rid, b) { const e = ed(rid), r = R[rid]; const { shown } = A_order(r); e.hidden = e.hidden.filter(x => x !== b); e.order = [...shown, b]; render(); }
+function variantA(r) {
+  const { shown, hidden } = A_order(r);
+  let h = `<div class="A-page"><div class="A-head"><div class="muted small">${lineage(r)}</div><h1>${r.id} · ${esc(r.meta.title)}</h1>${statusPills(r)}
+    ${r.lit && !r.meta.baseline ? ` <span class="small muted" style="margin-left:10px">判定：<a>保留</a> · <a>放弃</a></span>` : ''}
+    ${multi(r) ? `<div class="small muted" style="margin-top:6px">当前方法 <b>${esc(curMethod(r))}</b>（点方法表的行切换；指标 / 曲线 / 逐对都跟着它）</div>` : ''}</div>`;
+  for (const b of shown) {
+    const [title, fn] = A_BLOCKS[b];
+    h += `<div class="A-block"><div class="A-tools"><button onclick="A_move('${r.id}','${b}',-1)">↑</button><button onclick="A_move('${r.id}','${b}',1)">↓</button><button onclick="A_hide('${r.id}','${b}')">隐藏</button></div>
+      <h3>${title}${A_BLOCKS[b][3] ? '<span class="auto">自动</span>' : ''}</h3>${fn(r)}</div>`;
+  }
+  if (hidden.length) h += `<div class="A-hidden">已隐藏 / 可添加：${hidden.map(b => `<button onclick="A_show('${r.id}','${b}')">+ ${A_BLOCKS[b][0]}</button>`).join('')}</div>`;
+  return h + '</div>';
+}
+
+/* ======================= 变体 B：仪表盘 + 标签页 =======================
+   顶部一排关键数字；左侧窄栏放文字和谱系（短、常驻）；右侧大区是标签页，一次只看一种视图。
+   可编辑的只有：左栏文字、隐藏某个标签、默认打开哪个标签。 */
+function B_tabs(r) {
+  if (!r.lit) return [['tobeat', '要超过谁']];
+  return [['overview', '概览'], ...(multi(r) ? [['methods', `方法（${methods(r).length}）`]] : []), ['pairs', '逐对查看'], ['metrics', '全部指标'], ...(r.extras.length ? [['extras', '实验产物']] : [])];
+}
+function B_tabBody(r, t) {
+  if (t === 'overview') return `<h4 style="margin:6px 0">误差累积分布 · Val</h4>${cdf(cdfItems(r), 'val')}<h4 style="margin:14px 0 6px">结果分解 · Val</h4>${outcome(cdfItems(r), 'val')}`;
+  if (t === 'methods') return methodTable(r);
+  if (t === 'pairs') return pairViewer(r, 380);
+  if (t === 'metrics') return metricTable(r, !r.meta.baseline);
+  if (t === 'extras') return extras(r);
+  if (t === 'tobeat') return `<p>${toBeat(r)}</p><p>${howToLight(r)}</p>`;
+}
+function variantB(r) {
+  const e = ed(r.id), tabs = B_tabs(r).filter(([t]) => !e.hidden.includes(t));
+  const tab = tabs.find(([t]) => t === S.tab)?.[0] || e.defaultTab && tabs.find(([t]) => t === e.defaultTab)?.[0] || tabs[0]?.[0];
+  let nums = '';
+  if (r.lit) {
+    const m = curMethod(r), k = keyOf(r.id, m), rf = refFor(r, m), s = sm(k, 'val'), ci = s[MAIN + '_ci'];
+    const N = (v, kk, extra = '') => `<div class="B-num"><div class="v">${v}</div><div class="k">${kk}${extra}</div></div>`;
+    nums = `<div class="B-nums">${N(pct(s[MAIN]), `Val ${MAINU} %`, ci ? ` · CI ${pct(ci[0])}–${pct(ci[1])}` : '')}
+      ${r.meta.baseline ? '' : N(dl(s[MAIN], mainOf(rf)), `vs ${esc(label(rf))}`)}
+      ${hasTest(r, m) ? N(pct(sm(k, 'test')?.[MAIN]), `Test ${MAINU} %`) : ''}
+      ${N(pct(s.fail_rate), '失败率 %')}${N(pct(s.mis_rate), '错配率 %')}${N(pxf(s.succ_median), '成功中位误差 px')}
+      ${multi(r) ? N(esc(m), `当前方法 · 共 ${methods(r).length} 个`) : ''}</div>`;
+  }
+  const side = `<section><h4>谱系</h4><div class="small">${lineage(r)}</div><div class="small" style="margin-top:6px"><b>由此派生</b><br>${childrenList(r)}</div></section>
+    <section><h4>为什么做</h4>${textField(r, 'hypothesis', '+ 假设')}</section>
+    <section><h4>改了什么</h4>${textField(r, 'change', '+ 改动')}${r.meta.commit ? '<div class="muted small">+ diffstat（自动）</div>' : ''}</section>
+    ${r.lit && !r.meta.baseline ? `<section><h4>判定</h4><a>保留</a> · <a>放弃</a><div style="margin-top:6px">${textField(r, 'verdict', '+ 一句结论')}</div></section>` : ''}
+    <section><h4>下一步</h4>${textField(r, 'next', '+ 下一步')}</section>`;
+  const hiddenTabs = B_tabs(r).filter(([t]) => e.hidden.includes(t));
+  return `<div class="B-head"><div class="muted small">${lineage(r)}</div><h1>${r.id} · ${esc(r.meta.title)} ${statusPills(r)}</h1>${nums}</div>
+    <div class="B-body"><div class="B-side">${side}</div>
+    <div class="B-main"><div class="tabs">${tabs.map(([t, n]) => `<a class="${t === tab ? 'on' : ''}" onclick="S.tab='${t}';render()">${n}</a>`).join('')}
+      <span class="B-tabcfg muted">${tab ? `<a onclick="ed('${r.id}').defaultTab='${tab}';render()">设为默认</a> · <a onclick="ed('${r.id}').hidden.push('${tab}');S.tab=null;render()">隐藏此标签</a>` : ''}
+      ${hiddenTabs.map(([t, n]) => ` · <a onclick="ed('${r.id}').hidden=ed('${r.id}').hidden.filter(x=>x!=='${t}');render()">+${n}</a>`).join('')}</span></div>
+    ${tab ? B_tabBody(r, tab) : ''}</div></div>`;
+}
+
+/* ======================= 变体 C：问答式故事线 =======================
+   页面按固定的几个问题展开，每个问题的答案先是一句自动生成的话，证据（图表）折叠在下面。
+   可编辑：把自动句子换成自己的话（可恢复自动）、隐藏某个问题。顺序固定。 */
+function autoResult(r) {
+  if (multi(r)) {
+    const rk = ranked(r), b = rk[0], s = sm(keyOf(r.id, b), 'val');
+    const dead = rk.filter(m => (sm(keyOf(r.id, m), 'val')?.fail_rate ?? 0) > 0.9);
+    let t = `${rk.length} 个方法里 Val ${MAINU} 最好的是 <span class="n">${esc(b)}</span>（<span class="n">${pct(s[MAIN])}%</span>，失败率 ${pct(s.fail_rate)}%）；`;
+    t += dead.length ? `<span class="n">${dead.length}</span> 个方法几乎不出匹配（失败率 > 90%）：${dead.map(esc).join('、')}。` : '没有方法完全失效。';
+    if (r.meta.parent) {
+      const ups = rk.filter(m => { const rf = refFor(r, m); return rf.startsWith(r.meta.parent + '/') && mainOf(keyOf(r.id, m)) - mainOf(rf) > 0.01; });
+      t += ` 相对 ${r.meta.parent} 同名方法，<span class="n">${ups.length}</span> 个方法 Val ${MAINU} 提升超过 1 pt。`;
+    }
+    return t;
+  }
+  const m = curMethod(r), k = keyOf(r.id, m), rf = refFor(r, m), s = sm(k, 'val'), p = sm(rf, 'val'), ci = s[MAIN + '_ci'];
+  return `Val ${MAINU} <span class="n">${pct(s[MAIN])}%</span>（CI ${pct(ci[0])}–${pct(ci[1])}），比 ${esc(label(rf))} ${dl(s[MAIN], p[MAIN])}；`
+    + `失败率 ${pct(p.fail_rate)}% → <span class="n">${pct(s.fail_rate)}%</span>，错配率 ${pct(p.mis_rate)}% → ${pct(s.mis_rate)}%。`;
+}
+function autoWhere(r) {
+  if (multi(r)) return `下面按方法看误差分布；逐对查看默认打开当前方法（${esc(curMethod(r))}）最差的 20 个 pair。`;
+  const m = curMethod(r), e = ev(keyOf(r.id, m), 'val').errors, f = ev(refFor(r, m), 'val').errors;
+  let fixed = 0, broke = 0; e.forEach((v, i) => { const a = v ?? 1e3, b = f[i] ?? 1e3; if (a <= 5 && b > 5) fixed++; if (a > 5 && b <= 5) broke++; });
+  return `相对参考，<span class="n pos">${fixed}</span> 个 pair 修好了（≤5 px），<span class="n neg">${broke}</span> 个变坏了。逐对查看默认打开「修好了」。`;
+}
+function C_q(r, id, title, auto, evid, opts = {}) {
+  const e = ed(r.id); if (e.hidden.includes(id)) return '';
+  const ov = e.override[id], editing = S.editing === `C.${r.id}.${id}`;
+  let ans = editing ? `<textarea id="ta" onblur="ed('${r.id}').override['${id}']=this.value||undefined;S.editing=null;render()">${esc(ov ?? '')}</textarea>`
+    : ov ? `<span class="prose">${esc(ov)}</span> <a class="C-edit" onclick="delete ed('${r.id}').override['${id}'];render()">恢复自动</a>` : auto;
+  if (!editing && opts.editable !== false) ans += ` <a class="C-edit" onclick="S.editing='C.${r.id}.${id}';render()">${ov ? '改' : '换成自己的话'}</a>`;
+  return `<div class="C-q"><h2>${title} <a class="C-edit" style="font-weight:400" onclick="ed('${r.id}').hidden.push('${id}');render()">隐藏</a></h2><div class="C-answer">${ans}</div>
+    ${evid ? `<div class="C-evid">${opts.open ? evid : `<details><summary>证据</summary>${evid}</details>`}</div>` : ''}</div>`;
+}
+function variantC(r) {
+  const e = ed(r.id);
+  let h = `<div class="C-page"><div class="muted small">${lineage(r)}</div><h1>${r.id} · ${esc(r.meta.title)}</h1>${statusPills(r)}`;
+  h += `<div class="C-q"><h2>想验证什么</h2><div class="C-answer">${textField(r, 'hypothesis', '（没写假设——可以不写）')}</div>${txt(r, 'change') || S.editing === r.id + '.change' ? `<div class="small muted" style="margin-top:6px">改动：${textField(r, 'change', '')}</div>` : `<div class="small"><span class="ph" onclick="S.editing='${r.id}.change';render()">+ 改动</span></div>`}</div>`;
+  if (!r.lit) {
+    h += C_q(r, 'tobeat', '要超过谁', toBeat(r), '', { editable: false });
+    h += C_q(r, 'light', '怎么点亮', howToLight(r), '', { editable: false });
+  } else {
+    h += C_q(r, 'result', '结果怎样', autoResult(r), (multi(r) ? methodTable(r) : '') + metricTable(r, !r.meta.baseline), { open: multi(r) });
+    h += C_q(r, 'where', '好在哪、坏在哪', autoWhere(r), cdf(cdfItems(r), 'val') + outcome(cdfItems(r), 'val') + '<div style="height:10px"></div>' + pairViewer(r), { open: true });
+    if (r.extras.length) h += C_q(r, 'extras', '训练过程', '（实验自己产出的图，原样显示）', extras(r), { editable: false, open: true });
+    if (!r.meta.baseline) h += `<div class="C-q"><h2>判定</h2><div class="C-answer"><a>保留</a> · <a>放弃</a> <span class="muted small">（依据 Val）</span></div><div>${textField(r, 'verdict', '+ 一句结论（可选）')}</div></div>`;
+  }
+  h += `<div class="C-q"><h2>接下来</h2><div class="C-answer" style="font-size:15px">${childrenList(r)}</div><div style="margin-top:4px">${textField(r, 'next', '+ 下一步（可选）')}</div></div>`;
+  if (e.hidden.length) h += `<div class="muted small" style="margin-top:24px">已隐藏：${e.hidden.map(x => `<a onclick="ed('${r.id}').hidden=ed('${r.id}').hidden.filter(y=>y!=='${x}');render()">${x}</a>`).join(' · ')}</div>`;
+  return h + '</div>';
+}
+
+/* ======================= 外壳 ======================= */
+function go(id) { if (R[id]) { S.exp = id; S.method = null; S.tab = null; render(); } }
+function stateText() {
+  const lines = [`<b>将写回的内容</b> <a onclick="document.getElementById('proto-state').classList.toggle('min')">折叠</a>`];
+  const pg = Object.entries(EDIT).filter(([, e]) => e.hidden.length || e.order || Object.keys(e.override).length || e.defaultTab);
+  lines.push('', '# 页面配置（每个实验一份，变体 ' + S.v + '）');
+  if (!pg.length) lines.push('（无改动：全部用默认模板）');
+  for (const [rid, e] of pg) {
+    lines.push(`[${rid}]`);
+    if (e.order) lines.push(`order = ${JSON.stringify(e.order)}`);
+    if (e.hidden.length) lines.push(`hidden = ${JSON.stringify(e.hidden)}`);
+    if (e.defaultTab) lines.push(`default_tab = "${e.defaultTab}"`);
+    for (const [k, v] of Object.entries(e.override)) if (v) lines.push(`override.${k} = ${JSON.stringify(v)}`);
+  }
+  lines.push('', '# exp.toml 文字字段');
+  const t = Object.entries(TEXT); if (!t.length) lines.push('（无改动）');
+  for (const [rid, f] of t) for (const [k, v] of Object.entries(f)) lines.push(`runs/${rid}/exp.toml  ${k} = ${JSON.stringify(v)}`);
+  return lines.join('\n');
+}
+function render() {
+  const r = R[S.exp];
+  const u = new URL(location); u.searchParams.set('variant', S.v); u.searchParams.set('exp', S.exp); history.replaceState(null, '', u);
+  document.getElementById('proto-top').innerHTML = `<b style="margin-right:6px">PROTOTYPE · 节点页</b> 实验：${Object.entries(EXPS).map(([id, d]) => `<button class="${id === S.exp ? 'on' : ''}" onclick="go('${id}')" title="${d}">${id}</button>`).join('')}
+    <span style="opacity:.75;margin-left:6px">${EXPS[S.exp]}</span>`;
+  document.getElementById('app').innerHTML = S.v === 'A' ? variantA(r) : S.v === 'B' ? variantB(r) : variantC(r);
+  document.getElementById('vlabel').textContent = `${S.v}（${VARIANTS[S.v]}）`;
+  document.getElementById('proto-state').innerHTML = stateText();
+  const ta = document.getElementById('ta'); if (ta) ta.focus();
+}
+const VK = Object.keys(VARIANTS);
+const cycle = d => { S.v = VK[(VK.indexOf(S.v) + d + VK.length) % VK.length]; S.tab = null; S.editing = null; render(); };
+document.getElementById('prev').onclick = () => cycle(-1);
+document.getElementById('next').onclick = () => cycle(1);
+addEventListener('keydown', e => { if (e.target.closest('input,textarea,[contenteditable]')) return; if (e.key === 'ArrowLeft') cycle(-1); if (e.key === 'ArrowRight') cycle(1); });
+render();
+</script>
+</body>
+</html>

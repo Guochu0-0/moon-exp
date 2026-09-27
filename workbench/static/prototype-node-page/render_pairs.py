@@ -23,7 +23,7 @@ from workbench.dataset import Dataset, to_display  # noqa: E402
 from workbench.records import load_runs  # noqa: E402
 
 ME, REF = ("B0m", "anymatch_roma__minmax"), ("B0", "anymatch_roma")
-SPLIT, N, CELL, ARROW = "val", 12, 64, 1.0
+SPLIT, N, ARROW = "val", 12, 1.0
 OUT = HERE / "img"
 OUT.mkdir(exist_ok=True)
 
@@ -55,13 +55,6 @@ def warp(sar_img, A, size):
     # 输出光学坐标 (x, y) 处取 SAR 在 A·[x, y, 1] 的值；PIL AFFINE 正是这个映射
     a = np.asarray(A, dtype=np.float64)
     return sar_img.transform(size, Image.AFFINE, tuple(a.reshape(-1)), resample=Image.BILINEAR)
-
-
-def checker(opt, wsar):
-    o, w = np.asarray(opt), np.asarray(wsar)
-    yy, xx = np.mgrid[:o.shape[0], :o.shape[1]]
-    m = ((yy // CELL + xx // CELL) % 2).astype(bool)
-    return Image.fromarray(np.where(m, w, o)).convert("RGB")
 
 
 def arrows(img, A, opt_pts, sar_pts):
@@ -102,11 +95,11 @@ for i in chosen:
             continue
         w = warp(sar, pr.A, opt.size)
         save(w, f"{stem}__{tag}__warp.jpg")
-        save(arrows(checker(opt, w), pr.A, op, sp), f"{stem}__{tag}__chk.jpg")
+        save(arrows(opt.convert("RGB"), pr.A, op, sp), f"{stem}__{tag}__arr.jpg")
         got[k] = {"ok": True}
     info[pair] = {"no": allp.index(pair), "methods": got}
 
 data = {"split": SPLIT, "labelled": labelled, "no": [allp.index(p) for p in labelled], "rendered": info,
-        "alias": {"E1/main": kme}, "arrow": ARROW, "cell": CELL}
+        "alias": {"E1/main": kme}, "arrow": ARROW}
 (HERE / "pairs.js").write_text("window.PAIRS = " + json.dumps(data, ensure_ascii=False) + ";\n", encoding="utf-8")
 print("wrote pairs.js; images:", len(list(OUT.glob("*.jpg"))))

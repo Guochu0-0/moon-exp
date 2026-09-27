@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- PROTOTYPE（一次性）：「节点页内容：自动生成与可编辑的边界」#20，第四版。
      结构固定：页头元数据 → 比较设置 → 结果（表、图）→ 可视化结果 → 训练图表（TensorBoard 日志）→ Notes。
-     ?exp=B0|B0m|E1|E2 切实验，?style=A|B|C 切风格。
+     ?exp=B0|B0m|E1|E2 切实验。
      data.js 由 gen_data.py 生成；img/ 与 pairs.js 由 render_pairs.py 从本地数据集生成（不进 git）。 -->
 <html lang="zh">
 <head>
@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PROTOTYPE · 节点页</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Noto+Serif+SC:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
 <script src="data.js"></script>
 <script src="pairs.js"></script>
 <style>
@@ -18,16 +18,6 @@
     --desk: #ECEEF1; --paper: #fff; --ink: #1D2230; --muted: #676D78; --rule: #D5D8DD; --wash: #F3F5F8; --sel: #E8ECF6;
     --me: #1F3A93; --ref: #8A8F99; --other: #C9CDD4; --strong: #1D2230;
     --font: "Source Serif 4", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif; --size: 15.5px;
-  }
-  body[data-style=B] {
-    --desk: #F4F5F7; --paper: #fff; --ink: #20242C; --muted: #69707D; --rule: #DDE0E5; --wash: #F6F7F9; --sel: #E6F0FA;
-    --me: #0B5CAD; --ref: #8B929E; --other: #CDD2D9; --strong: #20242C;
-    --font: "IBM Plex Sans", "Noto Sans SC", "Microsoft YaHei", sans-serif; --size: 14.5px;
-  }
-  body[data-style=C] {
-    --desk: #fff; --paper: #fff; --ink: #000; --muted: #5E5E5E; --rule: #CFCFCF; --wash: #F4F4F4; --sel: #EBEBEB;
-    --me: #000; --ref: #8C8C8C; --other: #D2D2D2; --strong: #000;
-    --font: "IBM Plex Sans Condensed", "Noto Sans SC", "Microsoft YaHei", sans-serif; --size: 15px;
   }
 
   /* ================= 共用 ================= */
@@ -91,7 +81,7 @@
   .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; }
 
   /* 可视化结果 */
-  .vr-top { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 32px; align-items: start; }
+  .vr-top { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 32px; align-items: start; }
   .vr-top.noref { grid-template-columns: 1fr; }
   .vr-ctl { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; font-size: 14px; margin-bottom: 12px; }
   .chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
@@ -121,6 +111,10 @@
   .pane .box .msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; text-align: center; padding: 20px; }
   .pane .box .cut { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px solid #fff; box-shadow: 0 0 0 .5px #000; pointer-events: none; }
   .swipe { width: 100%; margin-top: 10px; }
+  .sc svg { cursor: zoom-in; }
+  .sc.zoomed svg { cursor: crosshair; }
+  .sc .zbar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 13px; margin-top: 6px; min-height: 26px; }
+  .sc .zbar button { border: 1px solid var(--rule); background: var(--paper); padding: 0 10px; cursor: pointer; font-size: 13px; }
 
   .tb { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 28px; }
   .tb .tag { font-size: 13.5px; margin-bottom: 2px; }
@@ -131,41 +125,17 @@
   .notes:focus { border-color: var(--me); box-shadow: 0 0 0 1px var(--me); }
   .notes:empty::before { content: "（空）"; color: var(--other); }
   .notes-foot { font-size: 13px; color: var(--muted); margin-top: 6px; }
-  .toc { display: none; }
 
   /* ================= A 纸面 ================= */
-  body[data-style=A] .page { background: var(--paper); max-width: 1160px; margin: 28px auto 90px; padding: 44px 64px 56px; border: 1px solid var(--rule); }
+  body[data-style=A] .page { background: var(--paper); max-width: 1240px; margin: 28px auto 90px; padding: 44px 56px 56px; border: 1px solid var(--rule); }
+  /* 左栏章节名 + 右栏内容 */
+  .head { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 0 36px; }
+  .head .back { padding-top: 16px; }
+  .sec { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 0 36px; }
+  .sec > h2 { font-size: 16.5px; margin: 0; position: sticky; top: 16px; align-self: start; }
+  .sec > .body { min-width: 0; }
+  .sec > .body > :first-child { margin-top: 0; }
 
-  /* ================= B 报告：左侧目录 + 章节编号 ================= */
-  body[data-style=B] .wrap { display: grid; grid-template-columns: 200px minmax(0, 1fr); max-width: 1400px; margin: 0 auto; }
-  body[data-style=B] .toc { display: block; position: sticky; top: 0; align-self: start; height: 100vh; padding: 40px 20px 0 28px; font-size: 14px; border-right: 1px solid var(--rule); }
-  body[data-style=B] .toc .tid { font-weight: 600; font-size: 20px; margin-bottom: 14px; }
-  body[data-style=B] .toc a { display: block; color: var(--muted); padding: 3px 0; }
-  body[data-style=B] .toc a:hover { color: var(--ink); text-decoration: none; }
-  body[data-style=B] .page { padding: 34px 48px 90px; min-width: 0; }
-  body[data-style=B] h1 { font-size: 26px; font-weight: 600; }
-  body[data-style=B] .sec { border-top: 0; margin-top: 34px; padding-top: 0; }
-  body[data-style=B] .sec h2 { font-size: 17px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
-  body[data-style=B] .sec .n { display: inline; color: var(--muted); margin-right: .7em; font-weight: 500; }
-  body[data-style=B] .meta { border-top: 1px solid var(--rule); background: var(--paper); padding: 12px 16px; }
-  body[data-style=B] .cmp { background: var(--paper); padding: 10px 16px; border: 1px solid var(--rule); border-top: 0; }
-  body[data-style=B] table.tab { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: var(--paper); }
-  body[data-style=B] table.tab th { border-bottom: 1px solid var(--rule); background: var(--wash); font-weight: 500; }
-  body[data-style=B] table.tab td { border-top: 1px solid var(--wash); }
-
-  /* ================= C 手册：左侧标签栏 + 内容栏，黑白 ================= */
-  body[data-style=C] .page { max-width: 1240px; margin: 0 auto; padding: 36px 48px 90px; }
-  body[data-style=C] .head { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 0 32px; border-top: 6px solid #000; padding-top: 14px; }
-  body[data-style=C] h1 { margin: 0 0 16px; font-weight: 600; font-size: 28px; }
-  body[data-style=C] h1 .id { display: block; font-size: 64px; line-height: 1; margin: 0 0 10px; }
-  body[data-style=C] .head .back { grid-column: 1; }
-  body[data-style=C] .head .hmain { grid-column: 2; }
-  body[data-style=C] .meta { border-top: 1px solid #000; }
-  body[data-style=C] .sec { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 0 32px; border-top: 2px solid #000; margin-top: 44px; padding-top: 10px; }
-  body[data-style=C] .sec > h2 { font-size: 15px; font-weight: 600; margin: 0; }
-  body[data-style=C] .sec > .body { min-width: 0; }
-  body[data-style=C] .sec > .body > :first-child { margin-top: 0; }
-  body[data-style=C] .radio button[aria-pressed=true], body[data-style=C] .chips button[aria-pressed=true] { background: #000; }
 
   /* 原型控制（不属于页面） */
   .proto { position: fixed; left: 14px; bottom: 14px; z-index: 50; background: #2A2F38; color: #D8DCE2; font: 12.5px/1.5 "Microsoft YaHei", sans-serif; padding: 8px 12px 10px; border-radius: 4px; max-width: 360px; box-shadow: 0 4px 16px rgba(0, 0, 0, .25); }
@@ -182,13 +152,12 @@
     .meta { grid-template-columns: 1fr; }
     .figs, .vr-top, .panes, .tb { grid-template-columns: 1fr; }
     .grid, .vr-top:not(.noref) .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    body[data-style=B] .wrap { grid-template-columns: 1fr; } body[data-style=B] .toc { display: none; }
-    body[data-style=C] .sec, body[data-style=C] .head { grid-template-columns: 1fr; }
+    .sec, .head { grid-template-columns: 1fr; } .sec > h2 { position: static; margin-bottom: 10px; }
   }
 </style>
 </head>
 <body>
-<div class="wrap"><nav class="toc" id="toc" aria-label="目录"></nav><main class="page" id="app"></main></div>
+<main class="page" id="app"></main>
 <aside class="proto" id="proto" aria-label="原型控制"></aside>
 <script>
 /* ======================= 数据 ======================= */
@@ -196,8 +165,10 @@ const D = window.DATA, R = D.runs, P = D.protocol, MAIN = P.main, MAINU = MAIN.t
 const PX = window.PAIRS || null;
 const IDENT = 'B0/identity', NONE = '';
 const q = new URLSearchParams(location.search);
-const S = { exp: R[q.get('exp')] ? q.get('exp') : 'E1', style: ['A', 'B', 'C'].includes(q.get('style')) ? q.get('style') : 'A',
-  method: {}, ref: {}, split: 'val', vf: 'all', vs: 'gain', vn: 12, sel: null, vv: 'chk', swipe: 50, protoOpen: true };
+const S = { exp: R[q.get('exp')] ? q.get('exp') : 'E1', style: 'A',
+  method: {}, ref: {}, split: 'val', vf: 'all', vs: 'gain', vn: 12, sel: null, vv: 'swipe', swipe: 50, zstack: [],
+  zoom: q.get('zoom') ? Object.fromEntries(['x0', 'x1', 'y0', 'y1'].map((k, i) => [k, +q.get('zoom').split(',')[i]])) : null,   // 调试：直接进入放大状态
+  protoOpen: true };
 const NOTES = {};
 
 const keyOf = (rid, m) => `${rid}/${m}`;
@@ -308,8 +279,7 @@ function cdfFigure(r) {
 }
 function outcomeFigure(r) {
   const s = S.split, m = curM(r), rf = curRef(r), T = P.t_coarse;
-  const C = S.style === 'C' ? [['≤5 px', '#000'], [`5–${T} px`, '#777'], [`>${T} px（错配）`, '#C4C4C4'], ['失败', '#E6E6E6']]
-    : [['≤5 px', 'var(--me)'], [`5–${T} px`, '#7F97C9'], [`>${T} px（错配）`, '#C7D1E6'], ['失败', '#A9ADB5']];
+  const C = [['≤5 px', 'var(--me)'], [`5–${T} px`, '#7F97C9'], [`>${T} px（错配）`, '#C7D1E6'], ['失败', '#A9ADB5']];
   const cls = e => e == null ? 3 : e <= 5 ? 0 : e <= T ? 1 : 2;
   const keys = rf ? [keyOf(r.id, m), rf] : multi(r) ? ranked(r).map(x => keyOf(r.id, x)) : [keyOf(r.id, m)];
   const rows = keys.filter(k => ev(k, s)).map(k => { const e = ev(k, s).errors, cnt = [0, 0, 0, 0]; e.forEach(v => cnt[cls(v)]++);
@@ -323,7 +293,7 @@ function outcomeFigure(r) {
 const CATS = [['all', '全部'], ['better', '改善'], ['worse', '退化'], ['neither', '均未配准'], ['both', '均配准']];
 const SORTS_REF = [['gain', '误差下降量，大在前'], ['loss', '误差上升量，大在前'], ['me', '方法误差，大在前'], ['no', '编号']];
 const SORTS_NOREF = [['me', '方法误差，大在前'], ['me_asc', '方法误差，小在前'], ['no', '编号']];
-function resetV() { S.vf = 'all'; S.vn = 12; S.sel = null; S.vs = 'gain'; }
+function resetV() { S.vf = 'all'; S.vn = 12; S.sel = null; S.vs = 'gain'; S.zoom = null; S.zstack = []; }
 const imgKey = k => PX?.alias[k] || k;
 const tag = k => imgKey(k).replace('/', '__');
 const stem = p => p.replace('/', '__');
@@ -340,23 +310,54 @@ function pairInfo(r) {
 }
 function thumb(i, I) {
   const p = PX.labelled[i], ok = PX.rendered[p]?.methods[imgKey(I.k)];
-  const im = ok?.ok ? `<img src="img/${stem(p)}__${tag(I.k)}__chk.jpg" alt="" loading="lazy">` : ok?.fail ? '失败' : '未渲染';
+  const im = ok?.ok ? `<img src="img/${stem(p)}__${tag(I.k)}__arr.jpg" alt="" loading="lazy">` : ok?.fail ? '失败' : '未渲染';
   return `<button class="th" aria-current="${S.sel === p}" onclick="S.sel='${p}';render();document.getElementById('detail').scrollIntoView({block:'nearest'})">
     <div class="im">${im}</div><div class="cap num"><span>#${String(PX.no[i]).padStart(4, '0')}</span><span>${errTxt(I.eM[i])}${I.eR ? ` / ${errTxt(I.eR[i])}` : ''}</span></div></button>`;
 }
+/* 散点：全图点击 = 以该处为中心放大 5 倍；放大后点点 = 选中，点空白 = 再放大 3 倍。
+   失败或 >30 px 的坐标画在 30.6–33.8 的边缘带里，按编号错开，只为能点到，带内位置不代表数值。 */
+const FULL = { x0: 0, x1: 34, y0: 0, y1: 34 }, SC = { W: 340, H: 340, L: 46, B: 40, T: 8 };
+SC.pw = SC.W - SC.L - 10; SC.ph = SC.H - SC.B - SC.T;
+function sPos(i, I) {
+  const f = (v, g) => v == null || v > 30 ? 30.6 + ((PX.no[i] * g) % 1) * 3.2 : v;
+  return [f(I.eR[i], 0.618034), f(I.eM[i], 0.381966)];
+}
+function niceStep(span) { for (const s of [0.1, 0.2, 0.5, 1, 2, 5, 10]) if (span / s <= 7) return s; return 10; }
 function scatter(I) {
-  const W = 300, H = 300, X = 34, over = 30;
-  const { g: ax, xs, ys } = axes(W, H, 44, 38, X, [0, 10, 20, 30], [0, 10, 20, 30].map(v => [v / X, v]), '参考方法误差（px）', '方法误差（px）', 8);
-  const cl = v => v == null || v > over ? 32 : v;
-  const inList = new Set(I.list);
-  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="逐 pair 误差散点">${ax}`;
-  g += `<rect x="${xs(over)}" y="${ys(X / X)}" width="${xs(X) - xs(over)}" height="${ys(0) - ys(1)}" style="fill:var(--wash)"/><rect x="${xs(0)}" y="${ys(1)}" width="${xs(X) - xs(0)}" height="${ys(over / X) - ys(1)}" style="fill:var(--wash)"/>`;
-  g += `<line x1="${xs(0)}" y1="${ys(0)}" x2="${xs(over)}" y2="${ys(over / X)}" style="stroke:var(--muted)" stroke-dasharray="3 3"/>`;
-  g += `<line x1="${xs(5)}" x2="${xs(5)}" y1="${ys(1)}" y2="${ys(0)}" style="stroke:var(--rule)"/><line x1="${xs(0)}" x2="${xs(X)}" y1="${ys(5 / X)}" y2="${ys(5 / X)}" style="stroke:var(--rule)"/>`;
-  PX.labelled.forEach((p, i) => { const on = inList.has(i);
-    g += `<circle cx="${xs(cl(I.eR[i])).toFixed(1)}" cy="${ys(cl(I.eM[i]) / X).toFixed(1)}" r="${on ? 2.6 : 2}" style="fill:${on ? 'var(--ink)' : 'var(--other)'};cursor:pointer" onclick="S.sel='${p}';render()"><title>#${PX.no[i]}  ${errTxt(I.eM[i])} / ${errTxt(I.eR[i])} px</title></circle>`; });
-  if (S.sel) { const i = PX.labelled.indexOf(S.sel); if (i >= 0) g += `<circle cx="${xs(cl(I.eR[i]))}" cy="${ys(cl(I.eM[i]) / X)}" r="6.5" fill="none" style="stroke:var(--me)" stroke-width="2"/>`; }
-  return g + '</svg>';
+  const z = S.zoom || FULL, { W, H, L, T, pw, ph } = SC;
+  const xs = v => L + (v - z.x0) / (z.x1 - z.x0) * pw, ys = v => T + ph - (v - z.y0) / (z.y1 - z.y0) * ph;
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="逐 pair 误差散点" onclick="scClick(evt)"><defs><clipPath id="plot"><rect x="${L}" y="${T}" width="${pw}" height="${ph}"/></clipPath></defs>`;
+  g += `<g font-size="11.5" style="fill:var(--muted)">`;
+  const st = niceStep(z.x1 - z.x0), sty = niceStep(z.y1 - z.y0);
+  for (let t = Math.ceil(z.x0 / st) * st; t <= Math.min(z.x1, 30) + 1e-9; t += st) g += `<line x1="${xs(t)}" x2="${xs(t)}" y1="${T + ph}" y2="${T + ph + 4}" style="stroke:var(--ink)"/><text x="${xs(t)}" y="${T + ph + 17}" text-anchor="middle">${+t.toFixed(1)}</text>`;
+  for (let t = Math.ceil(z.y0 / sty) * sty; t <= Math.min(z.y1, 30) + 1e-9; t += sty) g += `<line x1="${L - 4}" x2="${L}" y1="${ys(t)}" y2="${ys(t)}" style="stroke:var(--ink)"/><text x="${L - 7}" y="${ys(t) + 4}" text-anchor="end">${+t.toFixed(1)}</text>`;
+  if (z.x1 > 31) g += `<text x="${xs(32.2)}" y="${T + ph + 17}" text-anchor="middle">&gt;30</text>`;
+  if (z.y1 > 31) g += `<text x="${L - 7}" y="${ys(32.2) + 4}" text-anchor="end">&gt;30</text>`;
+  g += `<text x="${L + pw / 2}" y="${H - 3}" text-anchor="middle">参考方法误差（px）</text><text transform="translate(12 ${T + ph / 2}) rotate(-90)" text-anchor="middle">方法误差（px）</text></g>`;
+  g += `<g clip-path="url(#plot)">`;
+  g += `<rect x="${xs(30.3)}" y="${T}" width="${pw}" height="${ph}" style="fill:var(--wash)"/><rect x="${L}" y="${ys(34)}" width="${pw}" height="${ys(30.3) - ys(34)}" style="fill:var(--wash)"/>`;
+  g += `<line x1="${xs(0)}" y1="${ys(0)}" x2="${xs(30)}" y2="${ys(30)}" style="stroke:var(--muted)" stroke-dasharray="3 3"/>`;
+  g += `<line x1="${xs(5)}" x2="${xs(5)}" y1="${T}" y2="${T + ph}" style="stroke:var(--rule)"/><line x1="${L}" x2="${L + pw}" y1="${ys(5)}" y2="${ys(5)}" style="stroke:var(--rule)"/>`;
+  const inList = new Set(I.list), r0 = S.zoom ? 3 : 2.1;
+  PX.labelled.forEach((p, i) => { const [x, y] = sPos(i, I); if (x < z.x0 - 1 || x > z.x1 + 1 || y < z.y0 - 1 || y > z.y1 + 1) return; const on = inList.has(i);
+    g += `<circle cx="${xs(x).toFixed(1)}" cy="${ys(y).toFixed(1)}" r="${on ? r0 : r0 * .75}" style="fill:${on ? 'var(--ink)' : 'var(--other)'}${S.zoom ? ';cursor:pointer' : ''}" ${S.zoom ? `onclick="event.stopPropagation();S.sel='${p}';render()"` : ''}><title>#${PX.no[i]}  方法 ${errTxt(I.eM[i])} / 参考 ${errTxt(I.eR[i])} px</title></circle>`; });
+  if (S.sel) { const i = PX.labelled.indexOf(S.sel); if (i >= 0) { const [x, y] = sPos(i, I); g += `<circle cx="${xs(x)}" cy="${ys(y)}" r="${r0 + 4}" fill="none" style="stroke:var(--me)" stroke-width="2"/>`; } }
+  g += `</g><rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="none" style="stroke:var(--ink)" stroke-width=".8"/></svg>`;
+  const f1 = v => v > 30 ? '>30' : v.toFixed(1);
+  const bar = S.zoom ? `<span class="muted num">放大区域：参考 ${f1(z.x0)}–${f1(z.x1)} px，方法 ${f1(z.y0)}–${f1(z.y1)} px</span><button onclick="S.zoom=S.zstack.pop()||null;render()">缩小一级</button><button onclick="S.zoom=null;S.zstack=[];render()">返回全图</button>`
+    : `<span class="muted">点击图中任意位置，放大该区域后再点选</span>`;
+  return `<div class="sc ${S.zoom ? 'zoomed' : ''}">${g}<div class="zbar">${bar}</div></div>`;
+}
+function scClick(e) {
+  const svg = e.currentTarget, pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+  const v = pt.matrixTransform(svg.getScreenCTM().inverse()), z = S.zoom || FULL, { L, T, pw, ph } = SC;
+  if (v.x < L || v.x > L + pw || v.y < T || v.y > T + ph) return;
+  const cx = z.x0 + (v.x - L) / pw * (z.x1 - z.x0), cy = z.y0 + (T + ph - v.y) / ph * (z.y1 - z.y0);
+  const w = Math.max((z.x1 - z.x0) / (S.zoom ? 3 : 5), 0.4), h = Math.max((z.y1 - z.y0) / (S.zoom ? 3 : 5), 0.4);
+  const clamp = (c, s) => Math.min(Math.max(c - s / 2, 0), 34 - s);
+  if (S.zoom) S.zstack.push(S.zoom);
+  S.zoom = { x0: clamp(cx, w), x1: clamp(cx, w) + w, y0: clamp(cy, h), y1: clamp(cy, h) + h };
+  render();
 }
 function pane(title, err, p, k, kind) {
   const info = PX.rendered[p]?.methods[imgKey(k)];
@@ -364,17 +365,17 @@ function pane(title, err, p, k, kind) {
   if (kind === 'opt' || kind === 'sar') inner = PX.rendered[p] ? `<img src="img/${stem(p)}__${kind}.jpg" alt="">` : '<div class="msg">未渲染</div>';
   else if (!info) inner = '<div class="msg">原型只渲染了一部分 pair；这个 pair 没有图像</div>';
   else if (info.fail) inner = `<div class="msg">估计失败（${esc(info.fail)}）</div>`;
-  else if (kind === 'chk') inner = `<img src="img/${stem(p)}__${tag(k)}__chk.jpg" alt="">`;
+  else if (kind === 'arr') inner = `<img src="img/${stem(p)}__${tag(k)}__arr.jpg" alt="">`;
   else inner = `<img src="img/${stem(p)}__opt.jpg" alt=""><img src="img/${stem(p)}__${tag(k)}__warp.jpg" alt="" class="w" style="clip-path:inset(0 0 0 ${S.swipe}%)"><div class="cut" style="left:${S.swipe}%"></div>`;
   return `<div class="pane"><div class="ttl"><span>${title}</span><span class="num">${err}</span></div><div class="box">${inner}</div></div>`;
 }
 function detail(r, I) {
   const pos = I.list.indexOf(PX.labelled.indexOf(S.sel)), i = PX.labelled.indexOf(S.sel), p = S.sel;
-  const views = [['chk', '棋盘格'], ['swipe', '卷帘'], ['raw', '原图']];
+  const views = [['swipe', '卷帘'], ['arr', '残差'], ['raw', '原图']];
   let panes;
   if (S.vv === 'raw') panes = pane('光学', '', p, null, 'opt') + pane('SAR', '', p, null, 'sar');
   else panes = pane(esc(label(I.k)), `误差 ${errTxt(I.eM[i])} px`, p, I.k, S.vv) + (I.rf ? pane(esc(label(I.rf)), `误差 ${errTxt(I.eR[i])} px`, p, I.rf, S.vv) : '');
-  const cap = { chk: `棋盘格边长 ${PX.cell} px，光学与按估计仿射变换到光学坐标系的 SAR 交替排列。黄圈为光学图上的检查点，红色箭头指向该检查点的 SAR 真值经估计仿射变回光学坐标后的位置（原尺寸）。`,
+  const cap = { arr: '光学原图上标出检查点（黄圈）与残差：红色箭头从检查点指向其 SAR 真值经估计仿射变回光学坐标后的位置，按原尺寸绘制。',
     swipe: '左侧为光学，右侧为按估计仿射变换到光学坐标系的 SAR；拖动下方滑杆改变分界位置。', raw: '光学与 SAR 原图，未做变换。' }[S.vv];
   return `<div class="detail" id="detail"><div class="dhead"><span class="pn num">Val #${String(PX.no[i]).padStart(4, '0')}</span><span class="muted">${esc(p)}</span>
       <span class="sp"></span>${pos >= 0 ? `<span class="muted num">当前列表第 ${pos + 1} / ${I.list.length} 个</span>` : ''}<button onclick="step(-1)">← 上一个</button><button onclick="step(1)">下一个 →</button></div>
@@ -398,9 +399,9 @@ function visual(r) {
     <span><label for="vsort">排序</label><select id="vsort" onchange="S.vs=this.value;S.vn=12;S.sel=null;render()">${sorts.map(([v, n]) => `<option value="${v}" ${S.vs === v ? 'selected' : ''}>${n}</option>`).join('')}</select></span></div>`;
   const grid = `<div class="grid">${shown.map(i => thumb(i, I)).join('')}</div>
     <div class="more"><span class="muted num">显示第 1–${shown.length} 个，共 ${I.list.length} 个</span>${I.list.length > S.vn ? `<button onclick="S.vn+=12;render()">再显示 12 个</button>` : ''}</div>`;
-  const top = I.eR ? `<div class="vr-top"><figure style="margin:0">${scatter(I)}<p class="caption figcap"><b>图 ${++FIG}</b>每个点为一个有标注 pair；虚线为 y = x，细线为 5 px。灰底区域内的点误差大于 30 px 或估计失败。点击点查看该 pair。</p></figure><div>${ctl}${grid}</div></div>`
+  const top = I.eR ? `<div class="vr-top"><figure style="margin:0">${scatter(I)}<p class="caption figcap"><b>图 ${++FIG}</b>每个点为一个有标注 pair；虚线为 y = x，细线为 5 px。灰色边缘带内的点误差大于 30 px 或估计失败，带内位置只为错开显示，不代表数值。</p></figure><div>${ctl}${grid}</div></div>`
     : `<div class="vr-top noref"><div>${ctl}${grid}</div></div>`;
-  const cap = `<p class="caption" style="margin-top:0">${I.eR ? `缩略图为 ${esc(label(I.k))} 的棋盘格；数字为方法误差 / 参考方法误差（px）。改善、退化以 5 px 为界。` : `缩略图为 ${esc(label(I.k))} 的棋盘格；数字为方法误差（px）。`}</p>`;
+  const cap = `<p class="caption" style="margin-top:0">${I.eR ? `缩略图为 ${esc(label(I.k))} 的残差图（光学原图上的检查点与残差箭头）；数字为方法误差 / 参考方法误差（px）。改善、退化以 5 px 为界。` : `缩略图为 ${esc(label(I.k))} 的残差图（光学原图上的检查点与残差箭头）；数字为方法误差（px）。`}</p>`;
   return cap + top + (S.sel ? detail(r, I) : '');
 }
 
@@ -437,7 +438,6 @@ function page(r) {
     if (r.tb) secs.push(['train', '训练图表', tbFigure(r)]);
   }
   secs.push(['notes', 'Notes', notes(r)]);
-  document.getElementById('toc').innerHTML = `<div class="tid">${r.id}</div>${secs.map(([id, t], i) => `<a href="#sec-${id}">${i + 1}　${t}</a>`).join('')}`;
   return header(r) + secs.map(([id, t, b]) => sec(id, t, b)).join('');
 }
 function proto() {
@@ -445,7 +445,6 @@ function proto() {
   if (!S.protoOpen) { el.innerHTML = `<div class="t" style="margin:0"><span>原型控制</span><button onclick="S.protoOpen=true;proto()">展开</button></div>`; return; }
   el.innerHTML = `<div class="t"><span>原型控制（不属于页面）</span><button onclick="S.protoOpen=false;proto()">收起</button></div>
     <div class="row"><span>实验</span>${Object.keys(R).map(id => `<button aria-pressed="${id === S.exp}" onclick="go('${id}')">${id}</button>`).join('')}</div>
-    <div class="row"><span>风格</span>${[['A', '纸面'], ['B', '报告'], ['C', '手册']].map(([s, n]) => `<button aria-pressed="${S.style === s}" onclick="S.style='${s}';render()">${s} ${n}</button>`).join('')}</div>
     <p>E1、E2 是模拟实验。E1 的指标和图像借用 B0m / anymatch_roma__minmax 的真实结果。图像只渲染了 ${PX ? Object.keys(PX.rendered).length : 0} 个 Val pair。</p>`;
 }
 function go(id) { if (R[id]) { S.exp = id; resetV(); render(); scrollTo(0, 0); } }
@@ -453,7 +452,7 @@ function render() {
   const r = R[S.exp];
   if (r.lit && !splitOk(r, S.split)) S.split = 'val';
   document.body.dataset.style = S.style;
-  const u = new URL(location); u.searchParams.set('exp', S.exp); u.searchParams.set('style', S.style); history.replaceState(null, '', u);
+  const u = new URL(location); u.searchParams.set('exp', S.exp); history.replaceState(null, '', u);
   document.getElementById('app').innerHTML = page(r);
   proto();
 }

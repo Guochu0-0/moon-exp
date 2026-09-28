@@ -1,8 +1,8 @@
 # 「【类 RIPE】粗级闭式期望从 zero-shot 单独训练：是否塌缩」#49。用 scripts/finetune/ripe49.py 跑。
-# 全部从 zero-shot 出发，只加粗级闭式期望（不加细级、不加伪标签），lr 1e-5 恒定、bs 1（同 S2），3000 步，每 250 步存 ckpt。
+# 全部从 zero-shot 出发，只加粗级闭式期望（不加细级、不加伪标签），lr 1e-5 恒定、bs 1（同 S2），3000 步，每 500 步存 ckpt，早期另存 10/25/50/100/250 步（冒烟测试里匹配数十步内就掉到 0）。
 # ① 无约束 / 随机 reward 对照
-C1  --w-pseudo 0 --w-cexp 1 --steps 3000 --save-every 250
-C1p --w-pseudo 0 --w-cexp 1 --cexp-placebo --steps 3000 --save-every 250
+C1  --w-pseudo 0 --w-cexp 1 --steps 3000 --save-every 500 --save-at 10,25,50,100,250
+C1p --w-pseudo 0 --w-cexp 1 --cexp-placebo --steps 3000 --save-every 500 --save-at 10,25,50,100,250
 # ② 加负样本对（其他 ROI 的 SAR，内点给 −1）/ 随机 reward 对照
-C2  --w-pseudo 0 --w-cexp 1 --neg --steps 3000 --save-every 250
-C2p --w-pseudo 0 --w-cexp 1 --neg --cexp-placebo --steps 3000 --save-every 250
+C2  --w-pseudo 0 --w-cexp 1 --neg --steps 3000 --save-every 500 --save-at 10,25,50,100,250
+C2p --w-pseudo 0 --w-cexp 1 --neg --cexp-placebo --steps 3000 --save-every 500 --save-at 10,25,50,100,250

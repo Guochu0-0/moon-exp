@@ -94,6 +94,7 @@ def main(argv=None):
                     help="fine：只训细级模块，粗匹配保持起点不变")
     ap.add_argument("--limit", type=int, default=0, help="只用 Train 前 N 对（过拟合测试：RL 能否在固定小集合上推高 reward）")
     ap.add_argument("--save-every", type=int, default=1000)
+    ap.add_argument("--save-at", default="", help="额外存 ckpt 的步数，逗号分隔（看早期动态，#49）")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cuda")
@@ -133,6 +134,7 @@ def main(argv=None):
         torch.save(base.state_dict(), out / "ckpt_0.pt")
 
     np_rng = np.random.default_rng(args.seed)   # placebo 打乱用
+    save_at = {int(x) for x in args.save_at.split(",") if x}
     step, t_start = 0, time.time()
     with open(out / "log.jsonl", "a", encoding="utf-8") as log:
         while step < args.steps:
@@ -193,7 +195,7 @@ def main(argv=None):
                             "diag", "neg_n_inl", "neg_n_ident")
                     print(f"step {step}: loss={float(loss):.4f} " + " ".join(f"{k}={st[k]}" for k in keys if k in st)
                           + f" elapsed={(time.time() - t_start) / 60:.1f}min", flush=True)
-                if args.save_every and step % args.save_every == 0:
+                if (args.save_every and step % args.save_every == 0) or step in save_at:
                     torch.save(base.state_dict(), out / f"ckpt_{step}.pt")
                 if step >= args.steps:
                     break

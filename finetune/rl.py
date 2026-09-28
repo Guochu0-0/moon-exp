@@ -102,8 +102,10 @@ def pair_scores(F0, F1, As, s, kind="cfog"):
 
 
 def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.0, feats=None, kind="cfog",
-            placebo=False):
-    """一个 batch 的 RL 代理损失。feats = (F0, F1)：batch 的 CFOG（只有 w_pair > 0 时需要）。返回 (loss, 统计)。"""
+            placebo=False, n_pos=None):
+    """一个 batch 的 RL 代理损失。feats = (F0, F1)：batch 的 CFOG（只有 w_pair > 0 时需要）。
+    placebo：整对 reward 换成随机数，逐匹配 reward 在匹配之间随机打乱（#51）。n_pos：只用前 n_pos 对（其后是负样本对）。
+    返回 (loss, 统计)。"""
     mu_all = data["expec_f"][:, :2]
     dev = mu_all.device
     b_ids = data["b_ids"].cpu().numpy()
@@ -111,7 +113,7 @@ def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.
     k0_all = data["mkpts0_c"].cpu().numpy().astype(np.float64)
     k1c_all = data["mkpts1_c"].cpu().numpy().astype(np.float64)
     losses, st = [], {"r_pair": [], "r_pair_std": [], "ransac_fail": 0, "r_match": []}
-    for b in range(int(data["conf_matrix"].shape[0])):
+    for b in range(int(data["conf_matrix"].shape[0]) if n_pos is None else n_pos):
         sel = np.nonzero(b_ids == b)[0]
         M = len(sel)
         if M < 8:
@@ -156,6 +158,9 @@ def rl_loss(data, s, K=4, sig_g=0.25, sig_i=0.1, w_pair=1.0, w_match=0.0, thr=3.
                 loss_b = loss_b - w_pair * (adv * logp).mean()
         if w_match > 0 and ok.any():
             rm = np.where(resid < TAU, np.exp(-resid ** 2 / (2 * DELTA ** 2)), OUT_R)[ok]
+            if placebo:   # 随机 reward 对照：每组内把 reward 在匹配之间打乱，与该匹配的动作无关
+                rng = np.random.default_rng()
+                rm = np.stack([rng.permutation(x) for x in rm])
             advm = torch.tensor(rm - rm.mean(0, keepdims=True), dtype=torch.float32, device=dev)
             logpm = -(v[torch.from_numpy(ok).to(dev)] ** 2).sum(-1) / (2 * (sig_i ** 2 + sig_g ** 2))
             loss_b = loss_b - w_match * (advm * logpm).mean()

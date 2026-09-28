@@ -29,6 +29,7 @@ import torch
 from baselines.match import env_info, git_head, seed_all
 
 from .data import PairSet
+from .augment import compose
 from .label import load_labels
 from .coarse import coarse_expect_loss
 from .model import Base
@@ -58,6 +59,11 @@ def main(argv=None):
     ap.add_argument("--init", help="起点 ckpt，默认配置里的底座权重")
     ap.add_argument("--out", required=True)
     ap.add_argument("--labels", help="finetune.label 的离线伪仿射（SCENES 做法）；不给则每步在线估计")
+    ap.add_argument("--label-top", type=float, default=1.0, help="只用内点数最多的前这一比例的标签（课程式子集，#53）")
+    ap.add_argument("--aug", default="", help="学生侧扰动，逗号分隔：geo（SAR 已知随机仿射，标签按 T∘A 变换）、photo（#53）")
+    ap.add_argument("--aug-shift", type=float, default=12.0, help="geo 的最大平移，原网格 px")
+    ap.add_argument("--aug-rot", type=float, default=3.0, help="geo 的最大旋转，度")
+    ap.add_argument("--aug-scale", type=float, default=0.03, help="geo 的最大缩放幅度")
     ap.add_argument("--steps", type=int, default=8000)
     ap.add_argument("--batch", type=int, default=1)
     ap.add_argument("--lr", type=float, default=1e-5)
@@ -78,6 +84,7 @@ def main(argv=None):
     ap.add_argument("--w-cexp", type=float, default=0.0,
                     help="粗级闭式期望 −Σ P·r 的权重（r = 当前模型 RANSAC 内点 +1 / 外点 −1，finetune/coarse.py，#49）")
     ap.add_argument("--cexp-placebo", action="store_true", help="随机 reward 对照：r 在同一对的匹配之间随机打乱")
+    ap.add_argument("--cexp-out", type=float, default=-1.0, help="粗级闭式期望里外点的分值（RIPE++ 为 −1，#51）")
     ap.add_argument("--neg", action="store_true",
                     help="每对再配一个负样本对（SAR 取自其他 ROI），并入同一次前向；负样本对上的内点给 −1（#49）")
     ap.add_argument("--w-l2sp", type=float, default=0.0, help="参数空间锚定（L2-SP）权重")
@@ -108,12 +115,16 @@ def main(argv=None):
     base = Base(REPO / cfg["repo"], weights, device=args.device, **cfg.get("params", {}))
     s = HW / base.long_side  # 原网格 / 输入网格（正方形 patch）
 
-    if args.neg and (args.w_pseudo > 0 or args.rl_pair > 0 or args.rl_match > 0):
-        ap.error("--neg 只配合粗级闭式期望使用（--w-pseudo 0，不开 RL 项）")
-    ds = PairSet(args.data, "train", base.resize, **cfg["input"], neg=args.neg, seed=args.seed)
+    if args.neg and args.labels:
+        ap.error("--neg 只用于在线信号（粗级闭式期望、在线细级项、RL 项），不配合离线伪标签")
+    aug = tuple(x for x in args.aug.split(",") if x)
+    if "geo" in aug and args.w_pseudo > 0 and not args.labels:
+        ap.error("--aug geo 目前只配合离线伪标签（标签按 T∘A 变换）")
+    ds = PairSet(args.data, "train", base.resize, **cfg["input"], neg=args.neg, seed=args.seed, aug=aug,
+                 aug_shift=args.aug_shift, aug_rot=args.aug_rot, aug_scale=args.aug_scale)
     labels = None
     if args.labels:
-        labels = load_labels(args.labels)
+        labels = load_labels(args.labels, args.label_top)
         ds.pairs = [p for p in ds.pairs if labels.get(p) is not None]
     if args.limit:
         ds.pairs = ds.pairs[:: max(1, len(ds.pairs) // args.limit)][: args.limit]   # 均匀取样，覆盖各 ROI
@@ -148,24 +159,27 @@ def main(argv=None):
                     i0, i1 = torch.cat([i0, i0]), torch.cat([i1, batch["image1_neg"].to(args.device)])
                 data = base.forward(i0, i1)
                 loss, st, active = torch.zeros((), device=args.device), {}, False
+                B = len(batch["pair"])
+                n_pos = B if args.neg else None
                 if args.w_pseudo > 0:
                     affines = None if labels is None else [np.asarray(labels[p]) for p in batch["pair"]]
+                    if affines is not None and "T" in batch:   # SAR 被已知 T warp 过：标签精确变为 T∘A
+                        affines = [compose(T.numpy(), A) for T, A in zip(batch["T"], affines)]
                     l_ps, st = pseudo_loss(data, s, affines, args.ransac, args.min_inliers, args.w_coarse,
-                                           args.w_fine, args.coarse_set)
+                                           args.w_fine, args.coarse_set, n_pos)
                     loss = args.w_pseudo * l_ps
                     active = st["pairs_used"] > 0
                 if args.w_cexp > 0:
-                    B = len(batch["pair"])
                     l_ce, st_ce = coarse_expect_loss(data, s, [False] * B + [True] * B if args.neg else None,
-                                                     args.ransac, args.cexp_placebo, np_rng)
+                                                     args.ransac, args.cexp_placebo, np_rng, args.cexp_out)
                     loss = loss + args.w_cexp * l_ce
-                    st.update(st_ce)
+                    st.update({k: v for k, v in st_ce.items() if k not in st or k == "cexp"})
                     active = active or l_ce.requires_grad
                 if args.rl_pair > 0 or args.rl_match > 0:
                     ff = FEATS[args.reward]
                     feats = (ff(data["image0"]), ff(data["image1"])) if args.rl_pair > 0 else None
                     l_rl, st_rl = rl_loss(data, s, args.K, args.sig_g, args.sig_i, args.rl_pair, args.rl_match,
-                                          args.ransac, feats, args.reward, args.placebo)
+                                          args.ransac, feats, args.reward, args.placebo, n_pos)
                     loss = loss + l_rl
                     st.update(st_rl, rl=round(float(l_rl), 6))
                     active = active or l_rl.requires_grad

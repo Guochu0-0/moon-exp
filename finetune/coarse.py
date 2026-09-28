@@ -54,8 +54,9 @@ def diag_mean(conf):
     return conf.detach()[:, idx, idx].mean(1).cpu().numpy()
 
 
-def coarse_expect_loss(data, s, neg=None, thr=3.0, placebo=False, rng=None):
-    """一个 batch 的粗级闭式期望损失。neg: 长度 B 的 bool，True 为负样本对。返回 (loss, 统计 dict)。"""
+def coarse_expect_loss(data, s, neg=None, thr=3.0, placebo=False, rng=None, r_out=-1.0):
+    """一个 batch 的粗级闭式期望损失。neg: 长度 B 的 bool，True 为负样本对。r_out：正样本对上外点的分值
+    （RIPE++ 为 −1；#49 起步塌到「无匹配」的备选解法之一是取绝对值更小的负分，#51）。返回 (loss, 统计 dict)。"""
     conf = data["conf_matrix"]
     B, L = conf.shape[0], conf.shape[1]
     neg = np.zeros(B, bool) if neg is None else np.asarray(neg, bool)
@@ -74,7 +75,7 @@ def coarse_expect_loss(data, s, neg=None, thr=3.0, placebo=False, rng=None):
         if neg[b]:
             rb = np.zeros(len(sel), np.float32) if inl is None else -inl.astype(np.float32)
         else:
-            rb = -np.ones(len(sel), np.float32) if inl is None else np.where(inl, 1.0, -1.0).astype(np.float32)
+            rb = np.full(len(sel), r_out, np.float32) if inl is None else np.where(inl, 1.0, r_out).astype(np.float32)
             if placebo:
                 rb = rng.permutation(rb)
         r[sel] = rb

@@ -8,7 +8,8 @@
 set -e
 cd "${REPO:-/remote-home/xufang/YGC/moon-exp-ft26}"
 export MOON_DATA=/remote-home/xufang/YGC/dataset/Moon MOON_WEIGHTS=/remote-home/xufang/YGC/weights \
-       MOON_RESULTS=/remote-home/xufang/YGC/results TORCH_HOME=/opt/torch_home
+       MOON_RESULTS=/remote-home/xufang/YGC/results TORCH_HOME=/opt/torch_home \
+       CUDA_DEVICE_ORDER=PCI_BUS_ID   # GPU 编号与 nvidia-smi 一致（A6000 上默认顺序不同，见 docs/agents/servers.md）
 name=$1; shift
 R=$MOON_RESULTS/finetune/$name
 L=$MOON_RESULTS/finetune/labels_b0.jsonl

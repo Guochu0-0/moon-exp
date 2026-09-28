@@ -6,7 +6,8 @@
 
 - 154 / 160 / 126 挂同一份 gpfs 存储。用户目录是 `/remote-home/xufang/YGC/`。
 - **150 现在没有 YGC**：容器在 2026-09-26 00:18 重启，之后 `/remote-home/xufang` 变成本地 ext4 盘，没挂上 gpfs。之前是挂着的。用之前先 `df` 核实。
-- **A6000 是独立文件系统，没有 YGC**。155 不使用。
+  2026-09-28 复查：ssh 能连，但仍未挂 gpfs。`/remote-home` 是本地 sdb1（15 T，已用 92%），没有 YGC 和 `/opt/envs`，8 张 3090 全部被占。目前不用。
+- **A6000 是独立文件系统**，不挂 gpfs。2026-09-28 起纳入使用，见下面「A6000」一节。155 不使用。
 - 容器重启后挂载可能变化。凡是涉及路径的事，每台机器单独核实（`df`、`hostname`），不要凭以前的印象。
 - 每台都是课题组统一管理的 Docker 容器，用户是 root。
 
@@ -58,6 +59,22 @@
 - 停用隧道：在工位机上执行 `Unregister-ScheduledTask ygc-tunnel`。
 
 服务器能直连的站点：GitHub（仅 154、126）、pypi、hf-mirror、dl.fbaipublicfiles.com。
+
+## A6000（2026-09-28 起）
+
+- 8 卡：0 号、7 号是 RTX 5880 Ada（46 GB），1–6 号是 RTX A6000（48 GB）。别人用得多，常常只有一两张空卡。
+- **GPU 编号**：CUDA 默认顺序和 nvidia-smi 不一致，`CUDA_VISIBLE_DEVICES=7` 会拿到别的卡。必须同时设 `CUDA_DEVICE_ORDER=PCI_BUS_ID`（`scripts/finetune/scenes.sh` 已设）。
+- 这个容器别人也在用：`/root` 下的文件、`/root/anaconda3` 的环境、`/workspace/xufang/moon` 都不是我们的，不碰。
+- 存储：`/workspace/xufang` 是组里的 NFS（与 gpfs 是两套），我们的目录是 `/workspace/xufang/YGC`（dataset / weights / results / 代码）。容器里建了软链 `/remote-home/xufang/YGC → /workspace/xufang/YGC`，脚本里的路径不用改。
+- 根分区（overlay）很满，只剩约 80 GB，只放环境。
+- 环境：`/opt/envs/loftr`（py3.10，torch 2.1.2+cu118）与 `/opt/envs/wb`（py3.11），包版本与 154 一致，从 pypi / download.pytorch.org 装。
+- 网络：GitHub、pypi、hf-mirror、download.pytorch.org 能直连；能经内网到 154（`10.254.1.154:20020`）。
+- **经内网从 154 拉文件**：A6000 上有 key `/root/.ssh/ygc_154`（公钥已加到 154 的 `authorized_keys`，注释 `ygc-a6000-to-154`）。
+  用法：`ssh -i /root/.ssh/ygc_154 -p 20020 root@10.254.1.154 "tar cf - -C <目录> <内容>" | tar xf - -C <目标>`（154 没有 rsync）。
+- 已就位（2026-09-28）：数据 `YGC/dataset/Moon`（38 GB，Train 7907 / Val 825 / Test 1130 对）、`YGC/weights/anymatch/LoFTR_AnyMatch.ckpt`、`YGC/results/finetune/labels_b0.jsonl`。
+- 代码：`YGC/moon-exp` 从 154 的仓库克隆（remote = `ssh://root@10.254.1.154:20020/remote-home/xufang/YGC/moon-exp`，`GIT_SSH_COMMAND` 带上面的 key），新提交先在 154 上从 GitHub fetch 再拉过来；LoFTR 子模块直接从 GitHub 拉。
+- 速度：S1 式训练每步约 0.16 s（154 的 TITAN RTX 约 0.3 s）。
+- 与 154/126 不共享存储，`queue.sh` 的 `_claims` 占位跨不过去：给 A6000 单独的任务清单，结果再拷回 gpfs。
 
 ## MATLAB（目前只在 154）
 

@@ -1,0 +1,7 @@
+# 「把 S1 调好」#50 的任务清单，给 scripts/finetune/queue.sh 用。对照 = S1 / S1s1 / S1s2（lr 1e-5 恒定、bs 1、不裁剪，8000 步）。
+# 第一轮：每项只改一个因素（lr 1e-5、seed 0、8000 步不变），外加上游式全组合。
+S1clip  --labels /remote-home/xufang/YGC/results/finetune/labels_b0.jsonl --steps 8000 --save-every 1000 --lr 1e-5 --clip 0.5
+S1wc    --labels /remote-home/xufang/YGC/results/finetune/labels_b0.jsonl --steps 8000 --save-every 1000 --lr 1e-5 --warmup 500 --sched cosine
+S1acc8  --labels /remote-home/xufang/YGC/results/finetune/labels_b0.jsonl --steps 8000 --save-every 1000 --lr 1e-5 --accum 8
+S1all   --labels /remote-home/xufang/YGC/results/finetune/labels_b0.jsonl --steps 8000 --save-every 1000 --lr 1e-5 --clip 0.5 --warmup 500 --sched cosine --accum 8
+# 只跑了这一轮。结论见 #50 的解答与 runs/S1/notes.md；lr 网格按用户决定未跑。

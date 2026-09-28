@@ -1,7 +1,8 @@
 """SCENES 式伪标签微调（「复现 SCENES 式伪标签微调 baseline」#26）。损失见 finetune/pseudo.py。
 
     python -m finetune.train configs/baselines/anymatch_loftr.json --out $MOON_RESULTS/finetune/scenes \
-        [--steps 8000] [--lr 1e-5] [--min-inliers 30] [--save-every 1000]
+        [--steps 8000] [--lr 1e-5] [--min-inliers 30] [--save-every 1000] \
+        [--warmup 500 --sched cosine --clip 0.5 --accum 8]      # 优化配方（「把 S1 调好」#50）
 
 每一步：前向（模块 eval、开梯度）→ 取伪仿射 → 粗、细两级损失 → 反向。
 伪仿射两种来源：--labels 给离线文件（SCENES 做法，只在 keep 的对上训练）；不给则每步用本步匹配在线估计，
@@ -16,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import time
 from pathlib import Path
@@ -33,6 +35,17 @@ from .rl import FEATS, rl_loss
 
 REPO = Path(__file__).resolve().parents[1]
 HW = 512  # patch 原尺寸
+
+
+def lr_at(step, total, lr, warmup=0, warmup_start=0.1, sched="const", lr_min=0.0):
+    """第 step 个前向步（1 起）之后那次更新用的 lr。warmup 从 warmup_start·lr 线性升到 lr（同上游 LoFTR 的 linear
+    warmup）；之后 const 恒定，cosine 在 [warmup, total] 上从 lr 降到 lr_min·lr。步数按前向步计，与 --accum 无关。"""
+    if step < warmup:
+        return lr * (warmup_start + (1 - warmup_start) * step / warmup)
+    if sched == "const":
+        return lr
+    t = min(1.0, (step - warmup) / max(1, total - warmup))
+    return lr * (lr_min + (1 - lr_min) * 0.5 * (1 + math.cos(math.pi * t)))
 
 
 def main(argv=None):
@@ -65,6 +78,11 @@ def main(argv=None):
     ap.add_argument("--inject-shift", type=int, default=0,
                     help="健全性测试：SAR 输入水平平移的像素数（输入网格），只配合 --w-pseudo 0 使用")
     ap.add_argument("--accum", type=int, default=1, help="梯度累积：每 accum 步（对）更新一次；步数、存 ckpt 仍按前向步计")
+    ap.add_argument("--warmup", type=int, default=0, help="线性 warmup 的前向步数；0 = 不用")
+    ap.add_argument("--warmup-start", type=float, default=0.1, help="warmup 起点 lr 占 --lr 的比例（上游 LoFTR 为 0.1）")
+    ap.add_argument("--sched", default="const", choices=("const", "cosine"), help="warmup 之后的 lr 调度")
+    ap.add_argument("--lr-min", type=float, default=0.0, help="cosine 终点 lr 占 --lr 的比例")
+    ap.add_argument("--clip", type=float, default=0.0, help="梯度范数裁剪阈值（上游 LoFTR 为 0.5）；0 = 不裁")
     ap.add_argument("--train-modules", default="all", choices=("all", "fine"),
                     help="fine：只训细级模块，粗匹配保持起点不变")
     ap.add_argument("--limit", type=int, default=0, help="只用 Train 前 N 对（过拟合测试：RL 能否在固定小集合上推高 reward）")
@@ -134,11 +152,17 @@ def main(argv=None):
                 if active:
                     (loss / args.accum).backward()
                 step += 1
+                upd = {}
                 if step % args.accum == 0:   # 梯度累积：攒 accum 对再更新一次（RL 梯度信噪比低）
                     if any(p.grad is not None for p in params):
+                        lr = lr_at(step, args.steps, args.lr, args.warmup, args.warmup_start, args.sched, args.lr_min)
+                        for gr in opt.param_groups:
+                            gr["lr"] = lr
+                        gn = torch.nn.utils.clip_grad_norm_(params, args.clip if args.clip > 0 else float("inf"))
                         opt.step()
+                        upd = {"lr": float(f"{lr:.4g}"), "gnorm": round(float(gn), 4)}   # gnorm 为裁剪前
                     opt.zero_grad(set_to_none=True)
-                rec = {"step": step, "pairs": batch["pair"], "loss": round(float(loss), 5), **st,
+                rec = {"step": step, "pairs": batch["pair"], "loss": round(float(loss), 5), **st, **upd,
                        "sec": round(time.time() - t0, 3)}
                 log.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 if step % 50 == 0:

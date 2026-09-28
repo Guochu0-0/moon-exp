@@ -51,6 +51,9 @@ def sha256(path, bufsize=1 << 22) -> str:
 
 
 def git_head(path) -> str | None:
+    stamp = Path(path) / "COMMIT"   # 没有 .git 的部署副本（git archive 解包，见 #49）在这里记 commit
+    if stamp.exists():
+        return stamp.read_text().strip()
     try:
         out = subprocess.run(["git", "-C", str(path), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
         # --no-optional-locks：不刷新索引、不拿 index.lock。gpfs 上 status 很慢，被超时杀掉时会留下残锁

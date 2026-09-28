@@ -3,6 +3,7 @@
     python -m finetune.train configs/baselines/anymatch_loftr.json --out $MOON_RESULTS/finetune/scenes \
         [--steps 8000] [--lr 1e-5] [--min-inliers 30] [--save-every 1000] \
         [--warmup 500 --sched cosine --clip 0.5 --accum 8]      # 优化配方（「把 S1 调好」#50）
+        [--w-pseudo 0 --w-cexp 1 [--neg] [--cexp-placebo]]      # 粗级闭式期望（#49，finetune/coarse.py）
 
 每一步：前向（模块 eval、开梯度）→ 取伪仿射 → 粗、细两级损失 → 反向。
 伪仿射两种来源：--labels 给离线文件（SCENES 做法，只在 keep 的对上训练）；不给则每步用本步匹配在线估计，
@@ -29,6 +30,7 @@ from baselines.match import env_info, git_head, seed_all
 
 from .data import PairSet
 from .label import load_labels
+from .coarse import coarse_expect_loss
 from .model import Base
 from .pseudo import pseudo_loss
 from .rl import FEATS, rl_loss
@@ -73,6 +75,11 @@ def main(argv=None):
     ap.add_argument("--K", type=int, default=4, help="每对采样组数（组内 baseline）")
     ap.add_argument("--sig-g", type=float, default=0.25, help="共享整体平移的采样标准差（归一化窗口坐标，1 = 窗口半宽）")
     ap.add_argument("--sig-i", type=float, default=0.1, help="逐匹配独立噪声的标准差（同上）")
+    ap.add_argument("--w-cexp", type=float, default=0.0,
+                    help="粗级闭式期望 −Σ P·r 的权重（r = 当前模型 RANSAC 内点 +1 / 外点 −1，finetune/coarse.py，#49）")
+    ap.add_argument("--cexp-placebo", action="store_true", help="随机 reward 对照：r 在同一对的匹配之间随机打乱")
+    ap.add_argument("--neg", action="store_true",
+                    help="每对再配一个负样本对（SAR 取自其他 ROI），并入同一次前向；负样本对上的内点给 −1（#49）")
     ap.add_argument("--w-l2sp", type=float, default=0.0, help="参数空间锚定（L2-SP）权重")
     ap.add_argument("--placebo", action="store_true", help="安慰剂对照：整对 reward 换成随机数")
     ap.add_argument("--inject-shift", type=int, default=0,
@@ -100,7 +107,9 @@ def main(argv=None):
     base = Base(REPO / cfg["repo"], weights, device=args.device, **cfg.get("params", {}))
     s = HW / base.long_side  # 原网格 / 输入网格（正方形 patch）
 
-    ds = PairSet(args.data, "train", base.resize, **cfg["input"])
+    if args.neg and (args.w_pseudo > 0 or args.rl_pair > 0 or args.rl_match > 0):
+        ap.error("--neg 只配合粗级闭式期望使用（--w-pseudo 0，不开 RL 项）")
+    ds = PairSet(args.data, "train", base.resize, **cfg["input"], neg=args.neg, seed=args.seed)
     labels = None
     if args.labels:
         labels = load_labels(args.labels)
@@ -123,6 +132,7 @@ def main(argv=None):
     if args.save_every and not args.init:   # 从已有 ckpt 出发时，step 0 就是它，已评过
         torch.save(base.state_dict(), out / "ckpt_0.pt")
 
+    np_rng = np.random.default_rng(args.seed)   # placebo 打乱用
     step, t_start = 0, time.time()
     with open(out / "log.jsonl", "a", encoding="utf-8") as log:
         while step < args.steps:
@@ -131,12 +141,24 @@ def main(argv=None):
                 i1 = batch["image1"].to(args.device)
                 if args.inject_shift:   # 健全性测试：SAR 内容右移，reward 的最优点明确偏离当前位置
                     i1 = torch.roll(i1, args.inject_shift, dims=-1)
-                data = base.forward(batch["image0"].to(args.device), i1)
-                affines = None if labels is None else [np.asarray(labels[p]) for p in batch["pair"]]
-                loss, st = pseudo_loss(data, s, affines, args.ransac, args.min_inliers, args.w_coarse, args.w_fine,
-                                       args.coarse_set)
-                loss = args.w_pseudo * loss
-                active = st["pairs_used"] > 0 and args.w_pseudo > 0
+                i0 = batch["image0"].to(args.device)
+                if args.neg:   # 负样本对并入同一次前向：前 B 个是正样本对，后 B 个是负样本对
+                    i0, i1 = torch.cat([i0, i0]), torch.cat([i1, batch["image1_neg"].to(args.device)])
+                data = base.forward(i0, i1)
+                loss, st, active = torch.zeros((), device=args.device), {}, False
+                if args.w_pseudo > 0:
+                    affines = None if labels is None else [np.asarray(labels[p]) for p in batch["pair"]]
+                    l_ps, st = pseudo_loss(data, s, affines, args.ransac, args.min_inliers, args.w_coarse,
+                                           args.w_fine, args.coarse_set)
+                    loss = args.w_pseudo * l_ps
+                    active = st["pairs_used"] > 0
+                if args.w_cexp > 0:
+                    B = len(batch["pair"])
+                    l_ce, st_ce = coarse_expect_loss(data, s, [False] * B + [True] * B if args.neg else None,
+                                                     args.ransac, args.cexp_placebo, np_rng)
+                    loss = loss + args.w_cexp * l_ce
+                    st.update(st_ce)
+                    active = active or l_ce.requires_grad
                 if args.rl_pair > 0 or args.rl_match > 0:
                     ff = FEATS[args.reward]
                     feats = (ff(data["image0"]), ff(data["image1"])) if args.rl_pair > 0 else None
@@ -167,9 +189,10 @@ def main(argv=None):
                 log.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 if step % 50 == 0:
                     log.flush()
-                    print(f"step {step}: loss={float(loss):.4f} c={st['coarse']:.4f} f={st['fine']:.4f} "
-                          f"inl={st['n_inliers']} used={st['pairs_used']} "
-                          f"elapsed={(time.time() - t_start) / 60:.1f}min", flush=True)
+                    keys = ("coarse", "fine", "n_inliers", "pairs_used", "cexp", "n_match", "n_inl", "dist_I",
+                            "diag", "neg_n_inl", "neg_n_ident")
+                    print(f"step {step}: loss={float(loss):.4f} " + " ".join(f"{k}={st[k]}" for k in keys if k in st)
+                          + f" elapsed={(time.time() - t_start) / 60:.1f}min", flush=True)
                 if args.save_every and step % args.save_every == 0:
                     torch.save(base.state_dict(), out / f"ckpt_{step}.pt")
                 if step >= args.steps:

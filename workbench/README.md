@@ -6,39 +6,50 @@
 export MOON_DATA=G:/Lunar_Optical_SAR_Registration_Dataset   # 或 --data；服务器上指向 YGC/dataset/Moon
 python -m workbench serve            # http://127.0.0.1:8765/  （服务器上跑的话，用 ssh -L 转发端口）
 python -m workbench eval [id ...]    # 算指标，写 runs/<id>/metrics.json
-python -m workbench check            # 检查记录的一致性
-python -m workbench new E3 --parent E2 --title "…"   # 新建实验目录，自动填入当前 commit
+python -m workbench check            # 按 v2 规则检查记录（旧字段只警告）
+python -m workbench new E3 --parent E2 --title "…"   # 按 v2 模板新建实验目录
+python -m workbench sync B0 B0m [--extra certainty] [--tb all]   # 从服务器拉回点对等不进 git 的文件
 ```
 
 依赖：numpy、tifffile、Pillow，Python ≥ 3.11（用到 tomllib）。不需要 cv2。
 
-## 记录格式
+## 记录格式（v2）
 
-一个实验对应 `runs/<id>/` 一个目录，整个目录进 git。影像不存，页面现读本地数据集。
+一个实验对应 `runs/<id>/` 一个目录，全部产物都放在里面。小文件进 git；大文件（点对、中间结果数据、TB 日志、ckpt）由 `.gitignore` 排除，服务器上的相对路径和本地完全一样。影像不存，页面现读本地数据集。术语见仓库根目录的 `CONTEXT.md`。
 
 ```
 runs/<id>/
-  exp.toml                             元数据（手写）
-  preds/<method>/{val,test}.jsonl      每个 pair 一行，存估计的仿射
-  preds/<method>/{val,test}_matches.npz  可选：点对
-  extra/                               灵活区产物
+  exp.toml                             元数据（手写，或由 new 生成）
+  notes.md                             Notes，可以没有
   metrics.json                         派生物，由 eval 生成，不要手改
+  preds/<method>/<split>.jsonl         每个 pair 一行，存估计的仿射
+  preds/<method>/<split>.meta.json     写入时的 commit 与 dirty
+  preds/<method>/<split>_matches.npz   点对，不进 git
+  extra/                               附件
 ```
+
+**点亮**是派生状态：任一方法有任一 split 的 `preds/<method>/<split>.jsonl` 就算点亮，不需要手填。方法列表按 `preds/<method>/` 自动发现。
 
 ### exp.toml
 
 | 字段 | 含义 |
 |---|---|
-| `id` | 与目录名一致 |
-| `title` | 一句话标题 |
-| `parent` | 父实验 id；根节点留空 |
-| `init` | 可选，写成 `B0/roma`，表示从父实验的哪个方法起步。比较基准的取法：有 `init` 时用它；否则用父实验里 Val 主指标最好的方法；没有父实验时用「未配准」 |
-| `date`、`commit` | 跑实验时的日期和 commit。页面据此显示 commit 标题，以及相对父实验 commit 的 diffstat |
-| `status` | `baseline` / `running` / `kept` / `dropped`。只依据 Val 判定 |
-| `hypothesis`、`change`、`verdict`、`next` | 假设、改动、结论（依据 Val）、下一步计划。多行字符串 |
-| `[methods.<m>] name = "…"` | 可选，方法的显示名 |
+| `id` | 必填，与目录名一致 |
+| `title` | 必填，一句话标题 |
+| `parent` | 父实验 id；根节点整行省略 |
+| `init` | 可选，写成 `<实验>/<方法>`（如 `B0/roma`），表示从父实验的哪个方法起步 |
+| `baseline` | 可选，默认 `false`。基线实验（不训练、作比较起点）写 `true` |
+| `date` | 创建时写入，之后不改 |
+| `[methods.<m>]` | 可选，`name` 为显示名，`caveat` 为读数时要注意的事（如「点数是采样出来的」） |
 
-一个实验可以有多个方法，比如 baseline 节点下挂 10 个 zero-shot 方法。普通实验只有一个方法，惯例命名为 `main`。
+- v1 的 `status`、`commit`、`hypothesis`、`change`、`verdict`、`next` 已删除。读到这些旧字段或未知字段时，`check` 给警告，不报错。
+- commit 不手填，由读取端从各方法的 `<split>.meta.json` 汇总：全部相同时是单值，不同时是「多个」（可展开看各方法），没有 meta 时是「未知」。
+- 变体方法 `x__v` 没写 `[methods.x__v]` 时，显示名和 caveat 沿父链回退到基础方法 `x`，显示名后面加「· v」。例如 B0m 的 `loftr__minmax` 显示为「LoFTR outdoor_ds · minmax」。
+- 一个实验可以有多个方法，比如基线 B0 下挂十几个 zero-shot 方法。普通实验只有一个方法，惯例命名为 `main`。
+
+### notes.md
+
+实验唯一的自由文本：假设、改动、看完结果后的分析都写在这里。Markdown，不加 front matter，UTF-8，LF 换行。文件不存在就当作空。引用附件用相对路径，例如 `![](extra/offset/offset_val.png)`。
 
 ### preds/&lt;method&gt;/&lt;split&gt;.jsonl
 
@@ -53,21 +64,27 @@ runs/<id>/
 - 其余字段随意，页面会原样带出。
 - 匹配类方法的仿射由估计器（`cv2.estimateAffine2D`，RANSAC 3 px）在跑实验时算好再写进来。工作台只消费仿射，自己不估计。
 
-### 点对（可选）
+### preds/&lt;method&gt;/&lt;split&gt;.meta.json
 
-`<split>_matches.npz` 以 pair 为 key（`/` 换成 `__`），每个 value 是 N×4 的 `(x_opt, y_opt, x_sar, y_sar)`。页面的「点对连线」视图用它。
+```json
+{"commit": "<git rev-parse HEAD>", "dirty": false}
+```
+
+`PredWriter` 在 close 时写出。`dirty` 只看已跟踪的代码：未跟踪文件和 `runs/` 下的产物不算。迁移来的记录另有 `migrated_from`。
+
+### 点对
+
+`<split>_matches.npz` 以 pair 为 key（`/` 换成 `__`），每个 value 是 N×5 float32 的 `(x_opt, y_opt, x_sar, y_sar, conf)`：
+
+- 内容是 RANSAC 前的全部点，坐标按 +0.5 约定，与 `A` 和标注一致。不存内点标记，内点 / 外点由估计的仿射重新判定。
+- 任何方法超过 2000 个点，都按 conf 取前 2000。没有 conf 时这一列填 NaN。
+- 0 个点的 pair 写 0×5；出错的 pair 不写 key。
+
+点对不进 git（`runs/*/preds/*/*_matches.npz`），在服务器上生成，需要时拉回本地。
 
 ### extra/
 
-实验自己想刻画的东西都放这里，工作台只负责展示：
-- `png` / `jpg` / `svg`：显示为图片
-- `html`：用 iframe 嵌入
-- `md` / `txt` / `csv`：显示为文本
-- 简易图表 JSON：
-  - 折线：`{"type": "line", "x": [...], "series": {"reward": [...]}, "xlabel": "step"}`
-  - 柱状：`{"type": "bar", "labels": [...], "values": [...]}`
-
-训练曲线也放这里。
+附件，例如诊断图表和它们的数据。页面不单独展示附件，只有 Notes 引用它们时才显示出来。
 
 ### 写记录的代码
 
@@ -76,9 +93,22 @@ from workbench.records import PredWriter
 
 with PredWriter("runs/B0", "roma", "test") as w:
     for pair in pairs:                      # Dataset(root).pairs("test")
-        w.write(pair, A, n_inliers=k, matches=M)                # A: 2×3；M: N×4，可省
-        # 失败时：w.write(pair, None, fail="few_inliers")
+        w.write(pair, A, n_inliers=k, matches=M)   # A: 2×3；M: RANSAC 前的全部点，N×5，或 N×4 另给 conf=
+        # 失败时：w.write(pair, None, fail="few_inliers", matches=M)
 ```
+
+`matches` 取 matcher 的坐标约定（整数 = 像素中心）。+0.5、按 conf 截断到 2000、写 npz 和 meta.json 都由写入端负责。
+
+### 同步
+
+`python -m workbench sync <id>...` 按实验从服务器 `runs/<id>/` 拉回不进 git 的文件：
+
+- 点对：默认拉。
+- 中间结果：只拉 `--extra <name>` 点名的，可重复。
+- TB 日志：默认只拉 `tb/<m>/scalars/` 和上游格式的 `version_N/` 目录；`--tb all` 拉整个 `tb/`。`checkpoints/` 都排除。
+- ckpt：永远不拉。
+
+主机取 `--host`、环境变量 `MOON_SYNC_HOST`，默认 `xufang154外网`；远端根目录取 `--remote-root`、`MOON_SYNC_ROOT`，默认 `/remote-home/xufang/YGC/moon-exp`。传输只用 ssh 与 tar（Windows 11 自带），不需要 rsync。本地已有且大小、mtime 都没变的文件跳过，所以重复执行很便宜。
 
 ## 评价
 

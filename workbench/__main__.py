@@ -1,10 +1,10 @@
-"""python -m workbench {serve,eval,check,new} …"""
+"""python -m workbench {serve,eval,check,new,sync} …"""
 from __future__ import annotations
 
 import argparse
 import datetime
+import json
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -12,27 +12,11 @@ REPO = Path(__file__).resolve().parent.parent
 DEFAULT_RUNS = REPO / "runs"
 DATA_ENV = "MOON_DATA"  # 数据集根目录，例如 G:/Lunar_Optical_SAR_Registration_Dataset
 
-EXP_TEMPLATE = '''id = "{id}"
-title = "{title}"
-parent = {parent}
-# init = "B0/roma"      # 可选：从父实验的哪个方法起步；父实验有多个方法时用来定比较基准
+EXP_TEMPLATE = """id = {id}
+title = {title}
+{parent}# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
 date = "{date}"
-commit = "{commit}"
-status = "running"      # baseline / running / kept / dropped
-
-hypothesis = """
 """
-
-change = """
-"""
-
-# 结论只依据 Val
-verdict = """
-"""
-
-next = """
-"""
-'''
 
 
 def _data_root(args) -> Path:
@@ -69,7 +53,9 @@ def cmd_eval(args):
 def cmd_check(args):
     from .records import check_runs, load_runs
 
-    problems = check_runs(load_runs(Path(args.runs)))
+    problems, warnings = check_runs(load_runs(Path(args.runs)))
+    for w in warnings:
+        print(f"警告 {w}")
     for p in problems:
         print(p)
     print("记录无问题" if not problems else f"{len(problems)} 个问题")
@@ -80,16 +66,27 @@ def cmd_new(args):
     d = Path(args.runs) / args.id
     if d.exists():
         sys.exit(f"{d} 已存在")
-    commit = subprocess.run(["git", "-C", str(REPO), "rev-parse", "--short", "HEAD"],
-                            capture_output=True, text=True).stdout.strip()
-    (d / "extra").mkdir(parents=True)
+    d.mkdir(parents=True)
+    q = lambda v: json.dumps(v, ensure_ascii=False)   # JSON 字符串即合法的 TOML 基本字符串
     (d / "exp.toml").write_text(EXP_TEMPLATE.format(
-        id=args.id, title=args.title, parent=f'"{args.parent}"' if args.parent else '""',
-        date=datetime.date.today().isoformat(), commit=commit), encoding="utf-8")
-    print(f"已建 {d}/exp.toml（commit {commit}）")
+        id=q(args.id), title=q(args.title), parent=f"parent = {q(args.parent)}\n" if args.parent else "",
+        date=datetime.date.today().isoformat()), encoding="utf-8", newline="\n")
+    print(f"已建 {d}/exp.toml")
 
 
-def main():
+def cmd_sync(args):
+    from . import sync
+
+    r = sync.sync(args.ids, Path(args.runs), host=args.host, remote_root=args.remote_root,
+                  extras=args.extra, tb_all=args.tb == "all")
+    for rid in r.missing:
+        print(f"远端没有 runs/{rid}/")
+    print(f"拉取 {len(r.fetched)} 个文件（{r.fetched_bytes / 2**20:.1f} MB），跳过 {len(r.skipped)} 个已有且未变的文件")
+    if r.missing:
+        sys.exit(1)
+
+
+def main(argv=None):
     ap = argparse.ArgumentParser(prog="python -m workbench")
     ap.add_argument("--runs", default=str(DEFAULT_RUNS), help="实验记录目录（默认 runs/）")
     ap.add_argument("--data", help=f"数据集根目录（默认读环境变量 {DATA_ENV}）")
@@ -113,7 +110,15 @@ def main():
     p.add_argument("--title", default="")
     p.set_defaults(fn=cmd_new)
 
-    args = ap.parse_args()
+    p = sub.add_parser("sync", help="从服务器按实验拉回点对、中间结果、TB 日志（ckpt 永不拉）")
+    p.add_argument("ids", nargs="+")
+    p.add_argument("--extra", action="append", default=[], metavar="NAME", help="要拉的中间结果名，可重复")
+    p.add_argument("--tb", choices=("all",), help="默认只拉 TB scalars；all 拉整个 tb/")
+    p.add_argument("--host", help="ssh 主机别名（默认读环境变量 MOON_SYNC_HOST，再默认 xufang154外网）")
+    p.add_argument("--remote-root", help="远端仓库根目录（默认读 MOON_SYNC_ROOT，再默认服务器上的 YGC/moon-exp）")
+    p.set_defaults(fn=cmd_sync)
+
+    args = ap.parse_args(argv)
     args.fn(args)
 
 

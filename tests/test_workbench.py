@@ -212,12 +212,17 @@ def test_lit_and_field_warnings(tmp_path):
     assert e1.warnings == []
 
 
-def test_method_display_name_falls_back_along_parent_chain(tmp_path):
+def test_method_display_name_falls_back_along_parent_chain(dataset, tmp_path):
     runs = tmp_path / "runs"
     write_exp(runs, "B0", 'baseline = true\n[methods.loftr]\nname = "LoFTR outdoor"\ncaveat = "点数是采样的"\n')
     write_exp(runs, "B0m", 'parent = "B0"\nbaseline = true\n[methods.roma__minmax]\nname = "RoMa 自定"\n')
     write_exp(runs, "E1", 'parent = "B0m"\n')
+    for rid, m in (("B0", "loftr"), ("B0m", "loftr__minmax"), ("B0m", "roma__minmax"), ("B0m", "spsg__minmax")):
+        with PredWriter(runs / rid, m, "val", repo=tmp_path) as w:
+            for p in dataset.pairs("val"):
+                w.write(p, A_TRUE)
     loaded = load_runs(runs)
+    assert loaded["B0m"].methods == ["loftr__minmax", "roma__minmax", "spsg__minmax"]
     b0m, e1 = loaded["B0m"], loaded["E1"]
     assert loaded["B0"].method_info("loftr") == {"name": "LoFTR outdoor", "caveat": "点数是采样的"}
     assert b0m.method_info("loftr__minmax") == {"name": "LoFTR outdoor · minmax", "caveat": "点数是采样的"}

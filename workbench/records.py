@@ -27,7 +27,7 @@ MAIN_METHOD = "main"
 FIELDS = ("id", "title", "parent", "init", "baseline", "date", "methods")
 METHOD_FIELDS = ("name", "caveat")
 LEGACY_FIELDS = ("status", "commit", "hypothesis", "change", "verdict", "next")
-MATCHES_CAP = 2000   # 每个 pair 最多存多少个点对（按 conf 取前若干）
+MATCHES_CAP = 2000   # 每个 pair 的点对最多存多少个点（按 conf 取前若干）
 REPO = Path(__file__).resolve().parent.parent
 
 

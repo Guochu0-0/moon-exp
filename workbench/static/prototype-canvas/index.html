@@ -1,0 +1,426 @@
+<!doctype html>
+<!-- PROTOTYPE（一次性）：「视觉方向」#21。实验画布的三个视觉方向，?variant=A|B|C，底部切换条或 ← → 切换。
+     双击打开即可（不用 server）。B0 / B0m 的方法数、最好方法、误差分布来自 ../prototype-node-page/data.js（真实结果）；
+     E1–E5 为模拟实验（E1、E3 借用 B0m 的真实结果）。拖动、新建只在内存里，刷新即丢。别合进 main。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>实验画布（原型）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+<script src="../prototype-node-page/data.js"></script>
+<style>
+  :root {
+    /* 与节点页相同的 token */
+    --desk: #ECEEF1; --paper: #fff; --ink: #1D2230; --muted: #676D78; --rule: #D5D8DD; --wash: #F3F5F8; --sel: #E8ECF6;
+    --me: #1F3A93; --ref: #8A8F99; --other: #C9CDD4; --strong: #1D2230; --dash: #A3A9B3;
+    --font: "Source Serif 4", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; overflow: hidden; background: var(--desk); color: var(--ink); font: 14.5px/1.55 var(--font); }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--me); outline-offset: 2px; }
+  .num { font-variant-numeric: tabular-nums lining-nums; }
+  .muted { color: var(--muted); }
+
+  #viewport { position: fixed; inset: 0; overflow: hidden; cursor: grab; touch-action: none; }
+  #viewport.panning { cursor: grabbing; }
+  #world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #edges { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+  #layer > * { position: absolute; }
+  .node { cursor: pointer; user-select: none; }
+  .grp-t { cursor: move; user-select: none; }
+
+  /* 工具按钮（三个方向共用的最小样式） */
+  .tbtn { border: 1px solid var(--rule); background: var(--paper); border-radius: 2px; padding: 1px 12px; cursor: pointer; font-size: 13.5px; }
+  .tbtn:hover { border-color: var(--strong); }
+  .zoom { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+  .zoom .tbtn { padding: 0 8px; }
+  .zoom .pc { min-width: 3.2em; text-align: center; }
+
+  /* ================= A 记录卡 ================= */
+  body[data-v=A] #viewport { top: 52px; background-image: radial-gradient(#C4C9D1 1px, transparent 1.2px); }
+  .A-bar { position: fixed; left: 0; right: 0; top: 0; height: 52px; background: var(--paper); border-bottom: 1px solid var(--rule); display: flex; align-items: center; gap: 22px; padding: 0 22px; z-index: 5; }
+  .A-bar h1 { font-size: 17px; font-weight: 600; margin: 0; }
+  .A-bar .cnt { font-size: 13.5px; color: var(--muted); }
+  .A-bar .sp { flex: 1; }
+  .A-bar .tools { display: flex; gap: 8px; }
+  .nA { width: 244px; background: var(--paper); border-top: 1.5px solid var(--strong); border-bottom: 1px solid var(--strong); box-shadow: 0 0 0 1px var(--rule); padding: 8px 12px 9px; }
+  .nA .hd { display: flex; align-items: baseline; gap: 10px; }
+  .nA .id { font-size: 19px; font-weight: 600; line-height: 1.2; }
+  .nA .tag { font-size: 12.5px; color: var(--muted); border: 1px solid var(--rule); padding: 0 6px; line-height: 1.5; }
+  .nA .tt { font-size: 14px; line-height: 1.45; margin: 3px 0 7px; }
+  .nA .ft { font-size: 13px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 5px; line-height: 1.5; }
+  .nA .ft b { color: var(--ink); font-weight: 600; }
+  .nA.off { background: transparent; border: 1px dashed var(--dash); box-shadow: none; }
+  .nA.off .id, .nA.off .tt { color: var(--muted); }
+  .nA.off .ft { border-top-style: dashed; border-top-color: var(--dash); }
+  .nA:hover { box-shadow: 0 0 0 1px var(--strong); }
+  .nA.off:hover { border-color: var(--strong); box-shadow: none; }
+  .nA.sel { box-shadow: 0 0 0 2px var(--me); }
+  .gA { border: 1px solid #AEB4BD; }
+  .gA .grp-t { position: absolute; left: 12px; top: -11px; background: var(--desk); padding: 0 8px; font-size: 14px; font-weight: 600; line-height: 20px; }
+  .noteA { width: 210px; background: var(--wash); border-left: 2px solid var(--muted); padding: 7px 11px; font-size: 13.5px; line-height: 1.6; box-shadow: 0 0 0 1px var(--rule); }
+  .eA { fill: none; stroke: var(--strong); stroke-width: 1.1; }
+  .eA.off { stroke: var(--dash); stroke-dasharray: 4 3; }
+  .lblA { font: 12px var(--font); fill: var(--muted); }
+
+  /* ================= B 谱系 ================= */
+  body[data-v=B] { background: var(--paper); }
+  body[data-v=B] #viewport { left: 256px; }
+  .B-rail { position: fixed; left: 0; top: 0; bottom: 0; width: 256px; background: var(--paper); border-right: 1px solid var(--rule); padding: 22px 20px; overflow: auto; z-index: 5; display: flex; flex-direction: column; }
+  .B-rail h1 { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
+  .B-rail .cnt { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .B-rail ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); font-size: 14px; }
+  .B-rail li button { display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left; border: 0; background: none; padding: 4px 0 4px 12px; margin-left: -1px; border-left: 2px solid transparent; cursor: pointer; color: var(--ink); }
+  .B-rail li button.off { color: var(--muted); }
+  .B-rail li button:hover { border-left-color: var(--rule); }
+  .B-rail li button[aria-current=true] { border-left-color: var(--strong); font-weight: 600; }
+  .B-rail li .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; font-weight: 400; color: var(--muted); font-size: 13px; }
+  .B-rail .foot { margin-top: auto; padding-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .B-rail .tools { display: flex; flex-wrap: wrap; gap: 6px; }
+  .nB { width: max-content; max-width: 262px; padding: 2px 4px 2px 22px; }
+  .nB .mk { position: absolute; left: 3px; top: 8px; width: 11px; height: 11px; border-radius: 50%; background: var(--strong); }
+  .nB.off .mk { background: var(--paper); border: 1.5px solid var(--dash); }
+  .nB .l1 { font-size: 14.5px; line-height: 1.45; }
+  .nB .id { font-weight: 600; margin-right: 8px; }
+  .nB .base { font-size: 12.5px; color: var(--muted); margin-left: 6px; }
+  .nB .l2 { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .nB .l2 b { color: var(--ink); font-weight: 600; }
+  .nB.off .l1 { color: var(--muted); }
+  .nB:hover .id { text-decoration: underline; text-underline-offset: 3px; }
+  .nB.sel .id { color: var(--me); }
+  .nB.sel .mk { box-shadow: 0 0 0 3px var(--paper), 0 0 0 4.5px var(--me); }
+  .gB { background: var(--wash); }
+  .gB .grp-t { position: absolute; left: 12px; top: 8px; font-size: 13px; color: var(--muted); }
+  .noteB { width: 200px; font-size: 13px; line-height: 1.65; color: var(--muted); padding-left: 12px; border-left: 1px solid var(--other); }
+  .eB { fill: none; stroke: var(--strong); stroke-width: 1; }
+  .eB.off { stroke: var(--dash); stroke-dasharray: 3 3; }
+  .lblB { font: 11.5px var(--font); fill: var(--muted); }
+
+  /* ================= C 图版 ================= */
+  .C-tools { position: fixed; left: 18px; top: 16px; z-index: 5; display: flex; align-items: center; gap: 18px; background: var(--paper); border: 1px solid var(--rule); padding: 7px 14px; }
+  .C-tools h1 { font-size: 16px; font-weight: 600; margin: 0; }
+  .C-tools .tools { display: flex; gap: 6px; }
+  .C-mini { position: fixed; right: 18px; bottom: 18px; z-index: 5; background: var(--paper); border: 1px solid var(--rule); padding: 6px; }
+  .C-mini svg { display: block; cursor: pointer; }
+  .C-mini .zoom { margin-top: 5px; display: flex; justify-content: space-between; }
+  .nC { width: 236px; margin: 0; }
+  .nC .plate { height: 96px; background: var(--paper); outline: 1px solid var(--rule); position: relative; }
+  .nC .plate svg { display: block; }
+  .nC.off .plate { background: transparent; outline: 1px dashed var(--dash); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
+  .nC figcaption { font-size: 13.5px; line-height: 1.45; margin-top: 6px; }
+  .nC figcaption b { font-weight: 600; margin-right: .5em; }
+  .nC .meta { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .nC.off figcaption { color: var(--muted); }
+  .nC:hover .plate { outline-color: var(--strong); }
+  .nC.sel .plate { outline: 2px solid var(--me); }
+  .nC .ax { font: 9.5px var(--font); fill: var(--muted); }
+  body[data-v=C] .dim { opacity: .28; }
+  body[data-v=C] .anc .plate { outline: 1.5px solid var(--me); }
+  body[data-v=C] .anc figcaption b { color: var(--me); }
+  .gC { border: 1px dashed #9AA0AA; }
+  .gC .grp-t { position: absolute; left: 10px; top: 6px; font-size: 13.5px; font-weight: 600; }
+  .noteC { width: 200px; background: var(--paper); border: 1px solid var(--rule); padding: 8px 11px; font-size: 13px; line-height: 1.6; }
+  .eC { fill: none; stroke: #6B7280; stroke-width: 1; }
+  .eC.off { stroke: var(--dash); stroke-dasharray: 4 3; }
+  .eC.hl { stroke: var(--me); stroke-width: 1.8; }
+  .lblC { font: 11.5px var(--font); fill: var(--muted); }
+  .lblC.hl { fill: var(--me); }
+
+  /* ================= 原型控件（不属于设计） ================= */
+  .sw { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 50; background: #2A2F38; color: #E4E7EC; font: 12.5px/1.5 "Microsoft YaHei", sans-serif; border-radius: 999px; padding: 5px 8px; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(0, 0, 0, .28); }
+  .sw button { border: 0; background: #3A414D; color: #E4E7EC; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px; }
+  .sw .lab { min-width: 150px; text-align: center; }
+  .sw .lab small { display: block; color: #9AA1AC; font-size: 11px; }
+  .toast { position: fixed; left: 50%; bottom: 70px; transform: translateX(-50%); z-index: 50; background: #2A2F38; color: #E4E7EC; font: 12.5px/1.5 "Microsoft YaHei", sans-serif; padding: 6px 14px; border-radius: 4px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<div id="chrome"></div>
+<div id="viewport"><div id="world"><svg id="edges"></svg><div id="layer"></div></div></div>
+<div class="sw" role="group" aria-label="原型：切换视觉方向（不属于设计）">
+  <button id="prev" aria-label="上一个方向">‹</button><div class="lab" id="swlab"></div><button id="next" aria-label="下一个方向">›</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- 数据：B0 / B0m 真实；E1–E5 模拟 ----------
+const R = (window.DATA || { runs: {} }).runs;
+const MAIN = 'auc@10';
+const bestOf = ms => Object.entries(ms).filter(([, s]) => s.val).sort((a, b) => (b[1].val.summary[MAIN] ?? -1) - (a[1].val.summary[MAIN] ?? -1))[0];
+function fromRun(id, extra) {
+  const r = R[id]; const ms = r.metrics; const [m, s] = bestOf(ms);
+  return { id, title: r.meta.title, parent: r.meta.parent || '', init: (r.meta.init || '').split('/')[1] || '', lit: true,
+           baseline: !!r.meta.baseline, n: Object.keys(ms).length, best: m, auc: s.val.summary[MAIN], errs: s.val.errors, page: true, ...extra };
+}
+const borrow = (run, m) => R[run]?.metrics[m]?.val;
+const e3 = borrow('B0m', 'anymatch_loftr__zscore_2p5');
+const EXPS = [
+  fromRun('B0'),
+  fromRun('B0m'),
+  { ...fromRun('E1'), n: 1, best: '' },
+  { id: 'E2', title: R.E2?.meta.title || 'SAR 先去斑再匹配', parent: 'E1', lit: false, page: true },
+  { id: 'E3', title: 'AnyMatch-LoFTR 微调：逐匹配 reward', parent: 'B0', init: 'anymatch_loftr', lit: true, n: 1, best: '',
+    auc: e3?.summary[MAIN], errs: e3?.errors, page: false },
+  { id: 'E4', title: '加整对 reward：warp 后跨模态结构相似度', parent: 'E3', lit: false, page: false },
+  { id: 'E5', title: 'minmax 输入映射下重做自训练', parent: 'B0m', init: 'anymatch_roma__minmax', lit: false, page: false },
+];
+const byId = Object.fromEntries(EXPS.map(e => [e.id, e]));
+// runs/canvas.json 的内容：坐标、便签、分组框
+const S = {
+  pos: { B0: [60, 40], B0m: [480, 40], E5: [900, 40], E1: [480, 330], E2: [900, 330], E3: [480, 590], E4: [900, 590] },
+  notes: [
+    { id: 'n1', x: 60, y: 300, text: 'Test 只在定稿时跑，平时只看 Val。' },
+    { id: 'n2', x: 1230, y: 600, text: '先看 3 px 下的失败是整体偏移还是随机噪声，再决定 E4 要不要做。' },
+  ],
+  groups: [
+    { id: 'g1', x: 30, y: 10, w: 740, h: 250, title: '零样本基线' },
+    { id: 'g2', x: 450, y: 560, w: 740, h: 240, title: 'AnyMatch-LoFTR 微调' },
+  ],
+  tx: 0, ty: 0, k: 1, sel: null, hover: null, v: 'A',
+};
+
+const pct = x => x == null ? '—' : (x * 100).toFixed(1);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const depth = e => e.parent && byId[e.parent] ? 1 + depth(byId[e.parent]) : 0;
+const ancestors = id => { const out = []; let e = byId[id]; while (e) { out.push(e.id); e = byId[e.parent]; } return out; };
+const litCount = () => EXPS.filter(e => e.lit).length;
+function orderTree() {   // 深度优先，给 B 的目录用
+  const out = [];
+  const walk = p => EXPS.filter(e => (e.parent || '') === p).forEach(e => { out.push(e); walk(e.id); });
+  walk(''); EXPS.forEach(e => out.includes(e) || out.push(e)); return out;
+}
+
+// ---------- 三个方向：节点、便签、分组框、连线、外框 ----------
+const V = {
+  A: {
+    name: '记录卡',
+    node: e => `<div class="node nA${e.lit ? '' : ' off'}" data-id="${e.id}" tabindex="0">
+        <div class="hd"><span class="id">${e.id}</span>${e.baseline ? '<span class="tag">基线</span>' : ''}</div>
+        <div class="tt">${esc(e.title)}</div>
+        <div class="ft num">${!e.lit ? '未点亮' : e.n > 1 ? `${e.n} 个方法，Val 最好 ${e.best}<br>AUC@10 <b>${pct(e.auc)}</b>` : `AUC@10 <b>${pct(e.auc)}</b>`}</div></div>`,
+    note: n => `<div class="noteA" data-note="${n.id}">${esc(n.text)}</div>`,
+    group: g => `<div class="gA" data-grp="${g.id}"><span class="grp-t">${esc(g.title)}</span></div>`,
+    edge(p, c, e) {   // 直角折线：父右中 → 子左中
+      const x1 = p.x + p.w, y1 = p.y + 22, x2 = c.x, y2 = c.y + 22, mx = x1 + 26;
+      const d = `M${x1},${y1} H${mx} V${y2} H${x2 - 7}`;
+      return `<path class="eA${e.lit ? '' : ' off'}" d="${d}"/><path d="M${x2 - 7},${y2 - 4} L${x2},${y2} L${x2 - 7},${y2 + 4}" class="eA${e.lit ? '' : ' off'}"/>`
+        + (e.init ? `<text class="lblA" x="${x2 - 12}" y="${y2 - 6}" text-anchor="end">from ${e.init}</text>` : '');
+    },
+    chrome: () => `<header class="A-bar"><h1>实验画布</h1><span class="cnt num">${EXPS.length} 个实验，${litCount()} 个已点亮</span><span class="sp"></span>
+        <div class="tools">${toolBtns()}</div>${zoomCtl()}</header>`,
+  },
+  B: {
+    name: '谱系',
+    node: e => `<div class="node nB${e.lit ? '' : ' off'}" data-id="${e.id}" tabindex="0"><span class="mk"></span>
+        <div class="l1"><span class="id">${e.id}</span>${esc(e.title)}${e.baseline ? '<span class="base">基线</span>' : ''}</div>
+        <div class="l2 num">${!e.lit ? '未点亮' : `AUC@10 <b>${pct(e.auc)}</b>${e.n > 1 ? `　${e.best}，共 ${e.n} 个方法` : ''}`}</div></div>`,
+    note: n => `<div class="noteB" data-note="${n.id}">${esc(n.text)}</div>`,
+    group: g => `<div class="gB" data-grp="${g.id}"><span class="grp-t">${esc(g.title)}</span></div>`,
+    edge(p, c, e) {   // 父的第一行末尾 → 子的圆点，平滑曲线
+      const x1 = p.x + p.w + 8, y1 = p.y + 13;
+      const x2 = c.x + 2, y2 = c.y + 13, dx = Math.max(40, (x2 - x1) / 2);
+      return `<path class="eB${e.lit ? '' : ' off'}" d="M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}"/>`
+        + (e.init ? `<text class="lblB" x="${x2 - 8}" y="${y2 - 8}" text-anchor="end">from ${e.init}</text>` : '');
+    },
+    chrome: () => `<aside class="B-rail"><h1>实验画布</h1><div class="cnt num">${EXPS.length} 个实验，${litCount()} 个已点亮</div>
+        <ol>${orderTree().map(e => `<li><button class="${e.lit ? '' : 'off'}" data-goto="${e.id}" style="padding-left:${12 + depth(e) * 14}px"
+          ${S.sel === e.id ? 'aria-current="true"' : ''}><span>${e.id}</span><span class="t">${esc(e.title)}</span></button></li>`).join('')}</ol>
+        <div class="foot"><div class="tools">${toolBtns()}</div>${zoomCtl()}</div></aside>`,
+  },
+  C: {
+    name: '图版',
+    node: e => `<figure class="node nC${e.lit ? '' : ' off'}" data-id="${e.id}" tabindex="0">
+        <div class="plate">${e.lit ? cdf(e.errs) : '尚无结果'}</div>
+        <figcaption><b>${e.id}</b>${esc(e.title)}${e.baseline ? '<span class="muted">（基线）</span>' : ''}</figcaption>
+        ${e.lit ? `<div class="meta num">AUC@10 ${pct(e.auc)}${e.n > 1 ? `，${e.best}，共 ${e.n} 个方法` : ''}</div>` : ''}</figure>`,
+    note: n => `<div class="noteC" data-note="${n.id}">${esc(n.text)}</div>`,
+    group: g => `<div class="gC" data-grp="${g.id}"><span class="grp-t">${esc(g.title)}</span></div>`,
+    edge(p, c, e) {   // 直线，图版右中 → 左中
+      const x1 = p.x + p.w, y1 = p.y + 48, x2 = c.x, y2 = c.y + 48;
+      const hl = S.hover && ancestors(S.hover).includes(c.id) ? ' hl' : '';
+      const ang = Math.atan2(y2 - y1, x2 - x1), a = 7;
+      const ax = x2 - a * Math.cos(ang - .4), ay = y2 - a * Math.sin(ang - .4), bx = x2 - a * Math.cos(ang + .4), by = y2 - a * Math.sin(ang + .4);
+      return `<path class="eC${e.lit ? '' : ' off'}${hl}" d="M${x1},${y1} L${x2},${y2}"/><path class="eC${e.lit ? '' : ' off'}${hl}" d="M${ax},${ay} L${x2},${y2} L${bx},${by}"/>`
+        + (e.init ? `<text class="lblC${hl}" x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 6}" text-anchor="middle">from ${e.init}</text>` : '');
+    },
+    chrome: () => `<div class="C-tools"><h1>实验画布</h1><div class="tools">${toolBtns()}</div></div>
+        <div class="C-mini"><svg id="mini" width="200" height="120" aria-label="小地图"></svg>${zoomCtl()}</div>`,
+  },
+};
+const toolBtns = () => `<button class="tbtn" data-tool="exp">新建实验</button><button class="tbtn" data-tool="note">便签</button><button class="tbtn" data-tool="group">分组框</button>`;
+const zoomCtl = () => `<span class="zoom"><button class="tbtn" data-zoom="-1" aria-label="缩小">−</button><span class="pc num" id="pc">${Math.round(S.k * 100)}%</span><button class="tbtn" data-zoom="1" aria-label="放大">+</button><button class="tbtn" data-zoom="fit">适应窗口</button></span>`;
+
+// 误差累积分布小图：横轴 0–20 px，纵轴占比；10 px 竖线为主指标阈值
+function cdf(errs) {
+  if (!errs) return '';
+  const W = 236, H = 96, L = 24, B = 16, T = 8, Rr = 8, xm = 20;
+  const ok = errs.filter(v => v != null).sort((a, b) => a - b), n = errs.length;
+  const X = v => L + (W - L - Rr) * v / xm, Y = f => H - B - (H - B - T) * f;
+  let d = `M${X(0)},${Y(0)}`, c = 0;
+  for (const v of ok) { if (v > xm) break; c++; d += ` H${X(v).toFixed(1)} V${Y(c / n).toFixed(1)}`; }
+  d += ` H${X(xm)}`;
+  return `<svg width="${W}" height="${H}" aria-hidden="true">
+    <line x1="${L}" y1="${Y(0)}" x2="${X(xm)}" y2="${Y(0)}" stroke="#9AA0AA"/><line x1="${L}" y1="${Y(0)}" x2="${L}" y2="${T}" stroke="#9AA0AA"/>
+    <line x1="${X(10)}" y1="${Y(0)}" x2="${X(10)}" y2="${T}" stroke="#D5D8DD" stroke-dasharray="2 2"/>
+    ${[0, 5, 10, 20].map(t => `<text class="ax" x="${X(t)}" y="${H - 4}" text-anchor="middle">${t}</text>`).join('')}
+    <text class="ax" x="${L - 4}" y="${Y(1) + 3}" text-anchor="end">1</text><text class="ax" x="${L - 4}" y="${Y(0) + 3}" text-anchor="end">0</text>
+    <text class="ax" x="${X(xm)}" y="${T + 2}" text-anchor="end">px</text>
+    <path d="${d}" fill="none" stroke="#1F3A93" stroke-width="1.4"/></svg>`;
+}
+
+// ---------- 渲染 ----------
+const $ = s => document.querySelector(s);
+const layer = $('#layer'), edges = $('#edges'), world = $('#world'), vp = $('#viewport');
+let boxes = {};
+function render() {
+  const v = V[S.v]; document.body.dataset.v = S.v;
+  $('#chrome').innerHTML = v.chrome();
+  const inGroup = S.hover ? ancestors(S.hover) : null;
+  layer.innerHTML = S.groups.map(v.group).join('') + S.notes.map(v.note).join('') + EXPS.map(v.node).join('');
+  S.groups.forEach(g => Object.assign(layer.querySelector(`[data-grp="${g.id}"]`).style, { left: g.x + 'px', top: g.y + 'px', width: g.w + 'px', height: g.h + 'px' }));
+  S.notes.forEach(n => Object.assign(layer.querySelector(`[data-note="${n.id}"]`).style, { left: n.x + 'px', top: n.y + 'px' }));
+  boxes = {};
+  EXPS.forEach(e => {
+    const el = layer.querySelector(`[data-id="${e.id}"]`), [x, y] = S.pos[e.id];
+    Object.assign(el.style, { left: x + 'px', top: y + 'px' });
+    if (S.sel === e.id) el.classList.add('sel');
+    if (inGroup && S.v === 'C') el.classList.add(inGroup.includes(e.id) ? 'anc' : 'dim');
+    boxes[e.id] = { id: e.id, x, y, w: el.offsetWidth, h: el.offsetHeight };
+  });
+  drawEdges(); applyView(); swLabel();
+}
+function drawEdges() {
+  edges.innerHTML = EXPS.filter(e => e.parent && byId[e.parent]).map(e => V[S.v].edge(boxes[e.parent], boxes[e.id], e)).join('');
+  if (S.v === 'C') drawMini();
+}
+function applyView() {
+  world.style.transform = `translate(${S.tx}px,${S.ty}px) scale(${S.k})`;
+  const g = 24 * S.k; vp.style.backgroundSize = `${g}px ${g}px`; vp.style.backgroundPosition = `${S.tx}px ${S.ty}px`;   // 点阵只在 A 的 CSS 里有
+  const pc = $('#pc'); if (pc) pc.textContent = Math.round(S.k * 100) + '%';
+  if (S.v === 'C') drawMini();
+}
+function bounds() {
+  const rs = [...Object.values(boxes), ...S.groups.map(g => ({ x: g.x, y: g.y, w: g.w, h: g.h })),
+    ...S.notes.map(n => ({ x: n.x, y: n.y, w: 210, h: 60 }))];
+  const x0 = Math.min(...rs.map(r => r.x)), y0 = Math.min(...rs.map(r => r.y));
+  return { x0, y0, x1: Math.max(...rs.map(r => r.x + r.w)), y1: Math.max(...rs.map(r => r.y + r.h)) };
+}
+function fit() {
+  const b = bounds(), r = vp.getBoundingClientRect(), pad = 60;
+  S.k = Math.min(1.2, Math.max(.35, Math.min((r.width - 2 * pad) / (b.x1 - b.x0), (r.height - 2 * pad - 60) / (b.y1 - b.y0))));
+  S.tx = (r.width - (b.x1 - b.x0) * S.k) / 2 - b.x0 * S.k; S.ty = (r.height - 60 - (b.y1 - b.y0) * S.k) / 2 - b.y0 * S.k;
+  applyView();
+}
+function centerOn(id) {
+  const b = boxes[id], r = vp.getBoundingClientRect(); S.k = 1;
+  S.tx = r.width / 2 - (b.x + b.w / 2); S.ty = r.height / 2 - (b.y + b.h / 2); applyView();
+}
+function drawMini() {
+  const svg = $('#mini'); if (!svg) return;
+  const b = bounds(), W = 200, H = 120, s = Math.min(W / (b.x1 - b.x0 + 80), H / (b.y1 - b.y0 + 80));
+  const X = x => (x - b.x0 + 40) * s, Y = y => (y - b.y0 + 40) * s, r = vp.getBoundingClientRect();
+  svg.innerHTML = S.groups.map(g => `<rect x="${X(g.x)}" y="${Y(g.y)}" width="${g.w * s}" height="${g.h * s}" fill="none" stroke="#9AA0AA" stroke-dasharray="2 2"/>`).join('')
+    + Object.values(boxes).map(o => `<rect x="${X(o.x)}" y="${Y(o.y)}" width="${o.w * s}" height="${o.h * s}" fill="${byId[o.id].lit ? '#1D2230' : 'none'}" stroke="${byId[o.id].lit ? 'none' : '#A3A9B3'}"/>`).join('')
+    + `<rect x="${X(-S.tx / S.k)}" y="${Y(-S.ty / S.k)}" width="${r.width / S.k * s}" height="${r.height / S.k * s}" fill="rgba(31,58,147,.06)" stroke="#1F3A93"/>`;
+  svg.onclick = ev => { const p = svg.getBoundingClientRect(); const wx = (ev.clientX - p.left) / s + b.x0 - 40, wy = (ev.clientY - p.top) / s + b.y0 - 40;
+    S.tx = r.width / 2 - wx * S.k; S.ty = r.height / 2 - wy * S.k; applyView(); };
+}
+
+// ---------- 交互：平移、缩放、拖动节点 / 分组框 / 便签、单击进入节点页 ----------
+let drag = null;
+const toWorld = (cx, cy) => { const r = vp.getBoundingClientRect(); return [(cx - r.left - S.tx) / S.k, (cy - r.top - S.ty) / S.k]; };
+vp.addEventListener('pointerdown', ev => {
+  const n = ev.target.closest('[data-id]'), g = ev.target.closest('.grp-t') || (S.v === 'B' && ev.target.closest('.gB')), nt = ev.target.closest('[data-note]');
+  const [wx, wy] = toWorld(ev.clientX, ev.clientY);
+  if (n) drag = { kind: 'node', id: n.dataset.id, ox: wx - S.pos[n.dataset.id][0], oy: wy - S.pos[n.dataset.id][1], moved: 0, sx: ev.clientX, sy: ev.clientY };
+  else if (nt) { const o = S.notes.find(x => x.id === nt.dataset.note); drag = { kind: 'note', o, ox: wx - o.x, oy: wy - o.y }; }
+  else if (g) {   // 分组框：按几何包含带上框内的实验和便签
+    const o = S.groups.find(x => x.id === g.closest('[data-grp]').dataset.grp);
+    const inside = (x, y, w, h) => x >= o.x && y >= o.y && x + w <= o.x + o.w && y + h <= o.y + o.h;
+    drag = { kind: 'group', o, ox: wx - o.x, oy: wy - o.y,
+      members: EXPS.filter(e => { const b = boxes[e.id]; return inside(b.x, b.y, b.w, b.h); }).map(e => [e.id, S.pos[e.id][0] - o.x, S.pos[e.id][1] - o.y]),
+      notes: S.notes.filter(n2 => inside(n2.x, n2.y, 200, 40)).map(n2 => [n2, n2.x - o.x, n2.y - o.y]) };
+  } else { drag = { kind: 'pan', sx: ev.clientX - S.tx, sy: ev.clientY - S.ty }; vp.classList.add('panning'); }
+});
+window.addEventListener('pointermove', ev => {
+  if (!drag) {   // C：悬停高亮祖先链
+    if (S.v === 'C') { const n = ev.target.closest && ev.target.closest('[data-id]'); const h = n ? n.dataset.id : null; if (h !== S.hover) { S.hover = h; render(); } }
+    return;
+  }
+  const [wx, wy] = toWorld(ev.clientX, ev.clientY);
+  if (drag.kind === 'pan') { S.tx = ev.clientX - drag.sx; S.ty = ev.clientY - drag.sy; applyView(); return; }
+  if (drag.kind === 'node') {
+    drag.moved = Math.max(drag.moved, Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy)); if (drag.moved < 4) return;
+    S.pos[drag.id] = [Math.round(wx - drag.ox), Math.round(wy - drag.oy)];
+  } else if (drag.kind === 'note') { drag.o.x = Math.round(wx - drag.ox); drag.o.y = Math.round(wy - drag.oy); }
+  else if (drag.kind === 'group') {
+    const o = drag.o; o.x = Math.round(wx - drag.ox); o.y = Math.round(wy - drag.oy);
+    drag.members.forEach(([id, dx, dy]) => S.pos[id] = [o.x + dx, o.y + dy]); drag.notes.forEach(([n2, dx, dy]) => { n2.x = o.x + dx; n2.y = o.y + dy; });
+  }
+  S.hover = null; render();
+});
+window.addEventListener('pointerup', () => {
+  if (drag && drag.kind === 'node' && drag.moved < 4) open(drag.id);
+  drag = null; vp.classList.remove('panning');
+});
+vp.addEventListener('wheel', ev => {
+  ev.preventDefault(); const r = vp.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top;
+  const k = Math.min(2, Math.max(.35, S.k * Math.exp(-ev.deltaY * .0015)));
+  S.tx = mx - (mx - S.tx) * k / S.k; S.ty = my - (my - S.ty) * k / S.k; S.k = k; applyView();
+}, { passive: false });
+vp.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.dataset.id) open(ev.target.dataset.id); });
+
+function open(id) {
+  S.sel = id;
+  if (byId[id].page && R[id]) { location.href = `../prototype-node-page/index.html?exp=${id}&canvas=${S.v}`; return; }
+  render(); toast(`原型：${id} 是模拟实验，没有节点页数据。有节点页的是 B0、B0m、E1、E2。`);
+}
+$('#chrome').addEventListener('click', ev => {
+  const z = ev.target.closest('[data-zoom]'), t = ev.target.closest('[data-tool]'), gt = ev.target.closest('[data-goto]');
+  if (z) { const d = z.dataset.zoom; if (d === 'fit') fit(); else { const r = vp.getBoundingClientRect(), k = Math.min(2, Math.max(.35, S.k * (d > 0 ? 1.2 : 1 / 1.2)));
+    S.tx = r.width / 2 - (r.width / 2 - S.tx) * k / S.k; S.ty = r.height / 2 - (r.height / 2 - S.ty) * k / S.k; S.k = k; applyView(); } }
+  if (gt) { S.sel = gt.dataset.goto; render(); centerOn(S.sel); }
+  if (t) {
+    const r = vp.getBoundingClientRect(), [cx, cy] = toWorld(r.left + r.width / 2, r.top + r.height / 2);
+    if (t.dataset.tool === 'exp') {
+      const id = 'E' + (1 + Math.max(...EXPS.map(e => +e.id.slice(1) || 0)));
+      const e = { id, title: '（未命名）', parent: '', lit: false, page: false }; EXPS.push(e); byId[id] = e; S.pos[id] = [Math.round(cx - 120), Math.round(cy - 40)];
+      toast(`原型：已在内存里建出 ${id}。实际会写出 runs/${id}/exp.toml。`);
+    } else if (t.dataset.tool === 'note') { S.notes.push({ id: 'n' + Date.now(), x: Math.round(cx - 100), y: Math.round(cy - 20), text: '新便签' }); }
+    else { S.groups.push({ id: 'g' + Date.now(), x: Math.round(cx - 200), y: Math.round(cy - 120), w: 400, h: 240, title: '新分组' }); }
+    render();
+  }
+});
+let tt; function toast(s) { const t = $('#toast'); t.textContent = s; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 3200); }
+
+// ---------- 原型切换条 ----------
+const KEYS = ['A', 'B', 'C'];
+function swLabel() { $('#swlab').innerHTML = `${S.v}　${V[S.v].name}<small>单击实验进入节点页；拖动实验、分组框、便签或空白处</small>`; }
+function go(d) {
+  S.v = KEYS[(KEYS.indexOf(S.v) + d + KEYS.length) % KEYS.length]; S.hover = null;
+  const u = new URL(location); u.searchParams.set('variant', S.v); u.searchParams.delete('focus'); history.replaceState(null, '', u);
+  render();
+}
+$('#prev').onclick = () => go(-1); $('#next').onclick = () => go(1);
+window.addEventListener('keydown', ev => {
+  if (ev.target.closest('input, textarea, [contenteditable]')) return;
+  if (ev.key === 'ArrowLeft') go(-1); if (ev.key === 'ArrowRight') go(1);
+});
+
+// ---------- 启动：?variant=，从节点页返回时 ?focus=<id> 居中并选中 ----------
+const q = new URLSearchParams(location.search);
+S.v = KEYS.includes(q.get('variant')) ? q.get('variant') : 'A';
+const focus = byId[q.get('focus')] ? q.get('focus') : null;
+if (focus) S.sel = focus;
+render();
+if (focus) centerOn(focus); else fit();
+window.addEventListener('resize', () => applyView());
+</script>
+</body>
+</html>

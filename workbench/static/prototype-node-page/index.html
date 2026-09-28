@@ -446,7 +446,7 @@ function page(r) {
   }
   secs.push(['notes', 'Notes', notes(r)]);
   const nav = [['info', '实验信息'], ...secs.map(([id, t]) => [id, t])];
-  return `<div class="layout"><nav class="nav" aria-label="章节"><a class="back" href="#" onclick="return false">← 画布</a>
+  return `<div class="layout"><nav class="nav" aria-label="章节"><a class="back" href="${q.get('canvas') ? `../prototype-canvas/index.html?variant=${q.get('canvas')}&focus=${S.exp}` : '#'}">← 画布</a>
       <ol>${nav.map(([id, t]) => `<li><a href="#sec-${id}" data-sec="${id}">${t}</a></li>`).join('')}</ol></nav>
     <div class="content">${header(r)}${secs.map(([id, t, b]) => sec(id, t, b)).join('')}</div></div>`;
 }

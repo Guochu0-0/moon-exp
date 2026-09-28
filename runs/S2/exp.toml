@@ -1,0 +1,8 @@
+id = "S2"
+title = "在线伪标签微调（每步用当前模型重估伪仿射）"
+parent = "S1"
+init = "B0/anymatch_loftr"
+date = "2026-09-27"
+
+[methods.main]
+name = "在线伪标签（step 1000）"

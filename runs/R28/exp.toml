@@ -1,0 +1,26 @@
+id = "R28"
+title = "离线伪标签项 + 细级 RL（只探索共享平移），全部模块"
+parent = "R26"
+init = "S1/main"
+date = "2026-09-28"
+
+[methods.main]
+name = "伪标签 + 整对 RL ×4，累积 16（R28 step 4000）"
+
+[methods.placebo]
+name = "安慰剂：随机 reward（R28p）"
+
+[methods.noaccum]
+name = "整对 ×1，不累积（R29）"
+
+[methods.noaccum_sigg05]
+name = "不累积，σ_g 0.5（R31）"
+
+[methods.noaccum_K8]
+name = "不累积，K 8（R32）"
+
+[methods.noaccum_cfog]
+name = "不累积，CFOG（R33）"
+
+[methods.single_stage]
+name = "单阶段：从 zero-shot 同时训（R43）"

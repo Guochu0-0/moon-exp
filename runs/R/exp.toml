@@ -1,0 +1,47 @@
+id = "R"
+title = "首轮细级 RL：独立噪声 + 共享平移的高斯策略（修正前）"
+parent = "S1"
+init = "S1/main"
+date = "2026-09-28"
+
+[methods.pair]
+name = "整对 RL（R1）"
+
+[methods.pair_match]
+name = "整对 + 逐匹配（R2）"
+
+[methods.match]
+name = "只逐匹配（R3）"
+
+[methods.pair_x4]
+name = "整对 ×4（R4）"
+
+[methods.sigg05]
+name = "σ_g 0.5（R5）"
+
+[methods.cfog]
+name = "CFOG reward（R6）"
+
+[methods.l2sp_pure]
+name = "纯 RL + L2-SP（R7）"
+
+[methods.K8]
+name = "K 8（R8）"
+
+[methods.l2sp]
+name = "整对 + L2-SP（R9）"
+
+[methods.from_b0]
+name = "从 zero-shot 出发（R10）"
+
+[methods.small_sigma]
+name = "σ_g 0.1 / σ_i 0.05（R11）"
+
+[methods.fine_only]
+name = "纯 RL 只训细级（R19）"
+
+[methods.fine_accum]
+name = "纯 RL 只训细级 + 累积 16（R20）"
+
+[methods.pair_x4_accum]
+name = "伪标签 + 整对 ×4 + 累积 16（R21）"

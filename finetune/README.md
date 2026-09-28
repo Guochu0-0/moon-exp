@@ -16,9 +16,25 @@
 |---|---|
 | `model.py` `Base` | 按 `configs/baselines/anymatch_loftr.json` 构造底座；`forward` 返回带梯度的 `conf_matrix`、`expec_f`；`state_dict()` 存成适配器能读的格式 |
 | `data.py` `PairSet` | 一个 split 的全部 patch 对（Train 无标注，7907 对），输入映射同 baseline 主表 |
+| `pseudo.py` | 伪标签损失：RANSAC 仿射当几何伪真值，按上游 LoFTR 原始监督形式出粗级正样本（sparse focal）与细级窗口内偏移（l2_with_std）（#26） |
+| `label.py` | SCENES 式离线伪标签：起点模型在 Train 上估一次伪仿射，筛掉匹配 < 100 或内点 < 20 的对 |
+| `rl.py` | 细级 RL：以 soft-argmax 为均值的高斯策略（逐匹配噪声 + 共享整体平移），整对 reward（梯度 NCC / CFOG）与逐匹配残差 reward，组内 baseline |
+| `train.py` | 训练循环：伪标签项（`--labels` 离线；不给则在线重估，会塌缩，见 `runs/S2`）+ RL 项（`--rl-pair`、`--rl-match`）+ L2-SP |
 
 实测（显存、吞吐、RANSAC 耗时）与「lr=0 走训练循环后推理与 zero-shot 逐点一致」的验证记在 #25 的解答里；
 当时用的一次性脚本不在库中。
+
+## 训练（154 / 126，loftr 环境）
+
+一键跑（打标 → 训练 → 逐 ckpt 在 Val 上评测）：`GPU=<空卡> scripts/finetune/scenes.sh <name> [train 参数]`，见脚本头注释。例：
+
+```bash
+# SCENES 式离线伪标签（S1）
+GPU=0 scripts/finetune/scenes.sh S1 --labels $MOON_RESULTS/finetune/labels_b0.jsonl --steps 8000 --save-every 1000
+# 从 S1 出发，伪标签项 + 整对 RL
+GPU=0 scripts/finetune/scenes.sh R1 --init $MOON_RESULTS/finetune/S1/ckpt_6000.pt \
+    --labels $MOON_RESULTS/finetune/labels_b0.jsonl --steps 4000 --save-every 1000 --rl-pair 1
+```
 
 ## 评测微调后的权重（154 / 126，loftr 环境）
 

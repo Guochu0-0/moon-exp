@@ -1,0 +1,44 @@
+id = "R27"
+title = "细级 RL（只探索共享平移），全量 Train，从 S1 出发（探索性）"
+parent = "R26"
+init = "S1/main"
+date = "2026-09-28"
+
+[methods.main]
+name = "共享平移 RL（R27 step 2000）"
+
+[methods.seed1]
+name = "换种子 1（R27s1）"
+
+[methods.seed2]
+name = "换种子 2（R27s2）"
+
+[methods.placebo]
+name = "安慰剂：随机 reward（R27p）"
+
+[methods."lr1e-4"]
+name = "lr 1e-4（R37）"
+
+[methods.steps8000]
+name = "8000 步（R38）"
+
+[methods.K8]
+name = "K 8（R39）"
+
+[methods.sigg05]
+name = "σ_g 0.5（R40）"
+
+[methods.cfog]
+name = "CFOG reward（R41）"
+
+[methods.match]
+name = "再加逐匹配 reward（R44）"
+
+[methods.from_b0]
+name = "从 zero-shot 出发（R42）"
+
+[methods.on_S1s1]
+name = "起点 S1/seed1（R27b1）"
+
+[methods.on_S1s2]
+name = "起点 S1/seed2（R27b2）"

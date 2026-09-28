@@ -1,0 +1,17 @@
+id = "R26"
+title = "细级 RL（只探索共享平移），64 对训练"
+parent = "R"
+init = "S1/main"
+date = "2026-09-28"
+
+[methods.main]
+name = "共享平移 RL，64 对（R26 step 1000）"
+
+[methods.seed1]
+name = "换种子（R35）"
+
+[methods.pairs256]
+name = "256 对（R36）"
+
+[methods.placebo]
+name = "安慰剂：随机 reward（R34）"

@@ -15,7 +15,7 @@ python -m baselines.match <cfg> --split …  →  python -m baselines.fit <raw>/
 
 - **输入**（`inputs.py`）：主表对所有方法用同一套 float32 [0,1] 映射，光学 `div255`、SAR `p2p98`（S1 = b1+b2 → dB → 下限 −25 → 逐 patch p2–p98 拉伸）。消融映射也在这里登记。
 - **适配器**（`adapters/`）：从张量层接入官方 pipeline，跳过官方的 uint8 loader，在模块 docstring 里写明对照的官方代码行；不得不量化的地方写进 `notes`（会进 meta）。分辨率用各方法官方默认。
-- **坐标**：适配器输出原 512 网格、0-based、整数 = 像素中心。resize 回映统一用 `(x+0.5)·s−0.5`。`fit` 再整体 +0.5，与标注（ArcGIS 角点原点）对齐。
+- **坐标**：适配器输出原 512 网格、0-based、整数 = 像素中心。resize 回映统一用 `(x+0.5)·s−0.5`。`fit` 估计仿射前整体 +0.5，与标注（ArcGIS 角点原点）对齐；点对（RANSAC 前的全部点）原样交给 `PredWriter`，由写入端 +0.5。
 - **失败**：匹配报错/超时 → `error: …`；点对 < 3 → `few_matches`；RANSAC 内点 < 3 → `few_inliers`；没跑到 → `not_run`。均按 ∞ 计。
 - **复现**：配置里固定 seed，每个 pair 前重置；meta 记录配置、权重 sha256、本仓库与方法仓库的 commit、环境版本、机器、GPU、耗时。
 

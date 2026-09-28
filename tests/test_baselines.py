@@ -127,7 +127,14 @@ def test_identity_pipeline_equals_unregistered(tmp_path, monkeypatch):
     assert meta["n_pairs"] == 2 and meta["n_errors_this_session"] == 0
 
     ds = Dataset(tmp_path)
-    got = evaluate_run(ds, load_runs(tmp_path / "runs")["B0"])["methods"]["identity"]
+    b0 = load_runs(tmp_path / "runs")["B0"]
+    pair = ds.labelled("val")[0]
+    with np.load(out / "identity" / "val.npz") as z:
+        raw_m = z[pair.replace("/", "__")]
+    got_m = b0.matches("identity", "val", pair)          # RANSAC 前的全部点，坐标 +0.5
+    np.testing.assert_allclose(got_m[:, :4], raw_m[:, :4] + 0.5)
+    assert got_m.shape == raw_m.shape == (len(raw_m), 5)
+    got = evaluate_run(ds, b0)["methods"]["identity"]
     ref = evaluate_identity(ds)
     for s in ("val", "test"):
         assert got[s]["coverage"]["missing"] == 0

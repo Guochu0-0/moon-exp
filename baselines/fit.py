@@ -6,7 +6,8 @@
 点对少于 3 或内点少于 3 记失败。有标注但没跑到（或匹配阶段报错）的 pair 也写一行失败。
 
 坐标：matcher 输出「整数 = 像素中心」，而标注（workbench 的检查点）是 ArcGIS 角点原点，像素中心在 c + 0.5，
-所以两侧都 +0.5 再估计，得到的 A 直接和检查点同一约定。点对视图存的也是 +0.5 之后的坐标。
+所以两侧都 +0.5 再估计，得到的 A 直接和检查点同一约定。点对原样交给 PredWriter（RANSAC 前的全部点和 conf），
++0.5 与截断由写入端负责。
 """
 from __future__ import annotations
 
@@ -21,8 +22,6 @@ from workbench.dataset import Dataset
 from workbench.records import PredWriter
 
 from .ransac import fit_affine
-
-MATCHES_CAP = 100   # 每个 pair 在记录里最多存多少对内点（按置信度），只供页面画连线
 
 
 def main(argv=None):
@@ -58,12 +57,7 @@ def main(argv=None):
                 extra = {"n_matches": len(M), "sec": rec.get("sec")}
                 if inl is not None:
                     extra["n_inliers"] = int(inl.sum())
-            matches = None
-            if inl is not None:
-                I = M[inl]
-                I = I[np.argsort(-I[:, 4], kind="stable")[:MATCHES_CAP]]
-                matches = I[:, :4].astype(np.float64) + 0.5
-            w.write(pair, A, fail=fail, matches=matches, **extra)
+            w.write(pair, A, fail=fail, matches=M, **extra)
             reason = fail.split(":")[0] if fail else "ok"
             counts[reason] = counts.get(reason, 0) + 1
     print(f"[{name}/{args.split}] ransac={args.ransac}", counts)

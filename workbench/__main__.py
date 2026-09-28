@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import json
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -12,27 +12,11 @@ REPO = Path(__file__).resolve().parent.parent
 DEFAULT_RUNS = REPO / "runs"
 DATA_ENV = "MOON_DATA"  # 数据集根目录，例如 G:/Lunar_Optical_SAR_Registration_Dataset
 
-EXP_TEMPLATE = '''id = "{id}"
-title = "{title}"
-parent = {parent}
-# init = "B0/roma"      # 可选：从父实验的哪个方法起步；父实验有多个方法时用来定比较基准
+EXP_TEMPLATE = """id = {id}
+title = {title}
+{parent}# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
 date = "{date}"
-commit = "{commit}"
-status = "running"      # baseline / running / kept / dropped
-
-hypothesis = """
 """
-
-change = """
-"""
-
-# 结论只依据 Val
-verdict = """
-"""
-
-next = """
-"""
-'''
 
 
 def _data_root(args) -> Path:
@@ -69,7 +53,9 @@ def cmd_eval(args):
 def cmd_check(args):
     from .records import check_runs, load_runs
 
-    problems = check_runs(load_runs(Path(args.runs)))
+    problems, warnings = check_runs(load_runs(Path(args.runs)))
+    for w in warnings:
+        print(f"警告 {w}")
     for p in problems:
         print(p)
     print("记录无问题" if not problems else f"{len(problems)} 个问题")
@@ -80,16 +66,15 @@ def cmd_new(args):
     d = Path(args.runs) / args.id
     if d.exists():
         sys.exit(f"{d} 已存在")
-    commit = subprocess.run(["git", "-C", str(REPO), "rev-parse", "--short", "HEAD"],
-                            capture_output=True, text=True).stdout.strip()
-    (d / "extra").mkdir(parents=True)
+    d.mkdir(parents=True)
+    q = lambda v: json.dumps(v, ensure_ascii=False)   # JSON 字符串即合法的 TOML 基本字符串
     (d / "exp.toml").write_text(EXP_TEMPLATE.format(
-        id=args.id, title=args.title, parent=f'"{args.parent}"' if args.parent else '""',
-        date=datetime.date.today().isoformat(), commit=commit), encoding="utf-8")
-    print(f"已建 {d}/exp.toml（commit {commit}）")
+        id=q(args.id), title=q(args.title), parent=f"parent = {q(args.parent)}\n" if args.parent else "",
+        date=datetime.date.today().isoformat()), encoding="utf-8", newline="\n")
+    print(f"已建 {d}/exp.toml")
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser(prog="python -m workbench")
     ap.add_argument("--runs", default=str(DEFAULT_RUNS), help="实验记录目录（默认 runs/）")
     ap.add_argument("--data", help=f"数据集根目录（默认读环境变量 {DATA_ENV}）")
@@ -113,7 +98,7 @@ def main():
     p.add_argument("--title", default="")
     p.set_defaults(fn=cmd_new)
 
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
     args.fn(args)
 
 

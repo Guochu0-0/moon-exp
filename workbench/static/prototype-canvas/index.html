@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- PROTOTYPE（一次性）：「视觉方向」#21，第三版。用户选定 ComfyUI 式（第二版的 A），本版只迭代它：
+<!-- PROTOTYPE（一次性）：「视觉方向」#21，第三版（含单击选中 / 双击进入节点页）。用户选定 ComfyUI 式（第二版的 A），本版只迭代它：
      去掉左侧图标栏和标签栏；右键菜单、快捷键、从端口拖线改父 / 派生；分组框可调大小；双击改分组标题和便签。
      第二版的 B（Krea 式）、C（n8n 式）在上一个 commit 里。双击打开即可。B0 / B0m 为真实结果（../prototype-node-page/data.js），
      E1–E5 为模拟实验。所有改动只在内存里，刷新即丢。别合进 main。 -->
@@ -99,6 +99,8 @@
   .noteA .body { padding: 8px 12px 10px; color: #E9E1C9; font-size: 13px; min-height: 2.4em; white-space: pre-wrap; }
   .noteA .body[contenteditable=true] { cursor: text; outline: 1px solid #8C7A48; user-select: text; }
 
+  .noteA.sel { box-shadow: 0 0 0 2px #fff; }
+  .boxsel { position: fixed; z-index: 30; border: 1px solid #64A8F5; background: rgba(100,168,245,.12); pointer-events: none; }
   .eA { fill: none; stroke-width: 2.6; }
   .eA.fam-roma { stroke: #64A8F5; } .eA.fam-loftr { stroke: #F0B541; } .eA.fam-other { stroke: #B79EE0; } .eA.fam-none { stroke: #9A9CA3; }
   .eA.off { opacity: .5; }
@@ -135,13 +137,20 @@
   <dt><kbd>G</kbd></dt><dd>在鼠标处新建分组框</dd>
   <dt><kbd>.</kbd></dt><dd>适应窗口</dd>
   <dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>放大 / 缩小（滚轮也可以）</dd>
-  <dt><kbd>Del</kbd></dt><dd>删除鼠标下的未点亮实验、便签或分组框</dd>
-  <dt><kbd>Esc</kbd></dt><dd>关闭菜单 / 取消拖线</dd>
+  <dt><kbd>Ctrl</kbd> <kbd>A</kbd></dt><dd>全选实验和便签</dd>
+  <dt><kbd>Ctrl</kbd> <kbd>G</kbd></dt><dd>把选中的对象打成一组</dd>
+  <dt><kbd>Del</kbd></dt><dd>删除选中的对象（已点亮实验跳过）；没有选中时删除鼠标下的对象</dd>
+  <dt><kbd>Enter</kbd></dt><dd>打开选中的实验的节点页</dd>
+  <dt><kbd>Esc</kbd></dt><dd>关闭菜单 / 取消拖线 / 取消选择</dd>
   <dt>拖空白</dt><dd>平移画布</dd>
   <dt>从端口拖线</dt><dd>拖到实验上：改它的父实验；拖到空白：派生新实验</dd>
   <dt>分组右下角</dt><dd>拖动调整大小；拖标题栏移动整组</dd>
   <dt>双击标题 / 便签</dt><dd>重命名分组、编辑便签</dd>
-  <dt>单击实验</dt><dd>进入节点页</dd>
+  <dt>单击</dt><dd>选中实验或便签；单击空白取消选择</dd>
+  <dt>Ctrl / Shift 单击</dt><dd>加选 / 减选</dd>
+  <dt>Ctrl 拖空白</dt><dd>框选</dd>
+  <dt>拖选中的对象</dt><dd>一起移动</dd>
+  <dt>双击实验</dt><dd>进入节点页</dd>
 </dl></div>
 <div class="toast" id="toast"></div>
 <script>
@@ -167,7 +176,7 @@ const C = {
   groups: [{ id: 'g1', c: 'c1', x: 30, y: -10, w: 780, h: 290, title: '零样本基线' }, { id: 'g2', c: 'c2', x: 450, y: 580, w: 780, h: 200, title: 'AnyMatch-LoFTR 微调' }],
   notes: [{ id: 'n1', x: 60, y: 350, text: 'Test 只在定稿时跑，平时只看 Val。' }, { id: 'n2', x: 1270, y: 640, text: '先看 3 px 下的失败是整体偏移还是随机噪声，再决定 E4 要不要做。' }],
 };
-const S = { tx: 0, ty: 0, k: 1, sel: null, mouse: [0, 0], link: null, fresh: null };
+const S = { tx: 0, ty: 0, k: 1, sel: new Set(), mouse: [0, 0], link: null, fresh: null };
 
 const pct = x => x == null ? '—' : (x * 100).toFixed(1);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -186,7 +195,7 @@ function nodeHTML(e) {
         <span class="port out fam-${fam(x.m)}" data-port="out:${e.id}:${x.m}" title="从 ${x.m} 拖出：派生或改父"></span></div>`).join('')
       + (e.n > show.length ? `<div class="more">▸ 另外 ${e.n - show.length} 个方法</div>` : '');
   }
-  return `<div class="nA${e.lit ? '' : ' off'}${S.sel === e.id ? ' sel' : ''}${S.fresh === e.id ? ' new' : ''}" data-id="${e.id}" tabindex="0">
+  return `<div class="nA${e.lit ? '' : ' off'}${S.sel.has(e.id) ? ' sel' : ''}${S.fresh === e.id ? ' new' : ''}" data-id="${e.id}" tabindex="0">
     <div class="hdr"><span class="nid">${e.id}</span><span class="ttl" title="${esc(e.title)}">${esc(e.title)}</span>${e.baseline ? '<span class="chip">基线</span>' : ''}<span class="st" title="${e.lit ? '已点亮' : '未点亮'}"></span></div>
     <div class="io"><span class="port in" data-port="in:${e.id}"></span><span>父实验</span><span>${e.lit ? 'AUC@10（Val）' : ''}</span><span>子实验</span><span class="port out fam-none" data-port="out:${e.id}:_" title="拖出：派生或改父"></span></div>
     ${e.lit ? rows : '<div class="empty">尚无结果</div>'}</div>`;
@@ -195,7 +204,7 @@ const $ = s => document.querySelector(s);
 const vp = $('#viewport'), world = $('#world'), layer = $('#layer'), edges = $('#edges');
 function render() {
   layer.innerHTML = C.groups.map(g => `<div class="gA ${g.c}" data-grp="${g.id}" style="left:${g.x}px;top:${g.y}px;width:${g.w}px;height:${g.h}px"><div class="gt">${esc(g.title)}</div><span class="rz" title="拖动调整大小"></span></div>`).join('')
-    + C.notes.map(n => `<div class="noteA" data-note="${n.id}" style="left:${n.x}px;top:${n.y}px"><div class="hdr">便签</div><div class="body">${esc(n.text)}</div></div>`).join('')
+    + C.notes.map(n => `<div class="noteA${S.sel.has(n.id) ? ' sel' : ''}" data-note="${n.id}" style="left:${n.x}px;top:${n.y}px"><div class="hdr">便签</div><div class="body">${esc(n.text)}</div></div>`).join('')
     + EXPS.map(nodeHTML).join('');
   EXPS.forEach(e => { const el = layer.querySelector(`[data-id="${e.id}"]`), [x, y] = C.pos[e.id]; el.style.left = x + 'px'; el.style.top = y + 'px'; });
   S.fresh = null;
@@ -277,10 +286,28 @@ function delExp(id) {
   kids(id).forEach(c => { c.parent = ''; c.init = ''; });
   EXPS = EXPS.filter(x => x.id !== id); delete C.pos[id]; render(); toast(`已删除 ${id}（实际会删掉 runs/${id}/）。它的子实验不再有父实验。`);
 }
+function groupSel() {   // Ctrl+G：按选中对象的外接框建分组，并进入重命名
+  const rs = rects().filter(r => S.sel.has(r.el.dataset.id || r.el.dataset.note));
+  if (!rs.length) { toast('先选中实验或便签。'); return; }
+  const x0 = Math.min(...rs.map(r => r.x)), y0 = Math.min(...rs.map(r => r.y)), x1 = Math.max(...rs.map(r => r.x + r.w)), y1 = Math.max(...rs.map(r => r.y + r.h));
+  const g = { id: 'g' + Date.now(), c: ['c1', 'c2', 'c3', 'c4'][C.groups.length % 4], x: Math.round(x0 - 30), y: Math.round(y0 - 60), w: Math.round(x1 - x0 + 60), h: Math.round(y1 - y0 + 90), title: '新分组' };
+  C.groups.push(g); render();
+  editText(layer.querySelector(`[data-grp="${g.id}"] .gt`), t => { g.title = t || g.title; render(); });
+}
+function deleteSel() {
+  let skipped = 0, n = 0;
+  [...S.sel].forEach(id => {
+    const e = byId(id);
+    if (e) { if (e.lit) { skipped++; return; } kids(id).forEach(c => { c.parent = ''; c.init = ''; }); EXPS = EXPS.filter(x => x.id !== id); delete C.pos[id]; n++; }
+    else if (C.notes.some(x => x.id === id)) { C.notes = C.notes.filter(x => x.id !== id); n++; }
+  });
+  S.sel = new Set(); render();
+  toast(`已删除 ${n} 个对象${skipped ? `；${skipped} 个已点亮的实验不能删除，已跳过` : ''}。`);
+}
 function delNote(id) { C.notes = C.notes.filter(n => n.id !== id); render(); }
 function delGroup(id) { C.groups = C.groups.filter(g => g.id !== id); render(); toast('已删除分组框，框内的实验和便签不动。'); }
 function open(id) {
-  S.sel = id;
+  S.sel = new Set([id]);
   if (byId(id).page && R[id]) { location.href = `../prototype-node-page/index.html?exp=${id}&canvas=A`; return; }
   render(); toast(`原型：${id} 是模拟实验，没有节点页数据。有节点页的是 B0、B0m、E1、E2。`);
 }
@@ -307,7 +334,9 @@ vp.addEventListener('contextmenu', ev => {
   const n = ev.target.closest('[data-id]'), row = ev.target.closest('[data-method]'), nt = ev.target.closest('[data-note]'), g = ev.target.closest('[data-grp]');
   if (n) {
     const e = byId(n.dataset.id), [x, y] = C.pos[e.id], m = row && row.dataset.method;
-    const items = [{ t: '打开节点页', k: '单击', f: () => open(e.id) }, '-'];
+    if (!S.sel.has(e.id)) { S.sel = new Set([e.id]); render(); }
+    const items = [{ t: '打开节点页', k: '双击', f: () => open(e.id) }, '-'];
+    if (S.sel.size > 1) items.push({ t: `把选中的 ${S.sel.size} 个打成一组`, k: 'Ctrl G', f: groupSel });
     if (m) items.push({ t: `从 ${m} 派生新实验`, f: () => newExp(x + 420, y, e.id, m, true) });
     items.push({ t: `从 ${e.id} 派生新实验`, f: () => newExp(x + 420, y, e.id, '', true) });
     if (e.parent) items.push({ t: '断开父实验', f: () => { e.parent = ''; e.init = ''; render(); } });
@@ -328,7 +357,8 @@ vp.addEventListener('contextmenu', ev => {
     showMenu(ev.clientX, ev.clientY, null, [
       { t: '新建实验', k: 'E', f: () => newExp(wx - 150, wy - 40) },
       { t: '新建便签', k: 'N', f: () => newNote(wx, wy) },
-      { t: '新建分组框', k: 'G', f: () => newGroup(wx, wy) }, '-',
+      { t: '新建分组框', k: 'G', f: () => newGroup(wx, wy) },
+      { t: S.sel.size ? `把选中的 ${S.sel.size} 个打成一组` : '把选中的对象打成一组', k: 'Ctrl G', off: !S.sel.size, why: '先选中实验或便签', f: groupSel }, '-',
       { t: '适应窗口', k: '.', f: fit }]);
   }
 });
@@ -350,21 +380,43 @@ vp.addEventListener('pointerdown', ev => {
   const n = ev.target.closest('[data-id]'), nt = ev.target.closest('[data-note]'), g = ev.target.closest('[data-grp]');
   if (port) { const [, id, m] = port.dataset.port.split(':'); S.link = { from: id, m, a: portXY(port.dataset.port), b: [wx, wy] }; drag = { kind: 'link' }; return; }
   if (rz) { const o = C.groups.find(x => x.id === g.dataset.grp); drag = { kind: 'resize', o, sx: wx, sy: wy, w: o.w, h: o.h }; return; }
-  if (n) { const p = C.pos[n.dataset.id]; drag = { kind: 'node', id: n.dataset.id, ox: wx - p[0], oy: wy - p[1], moved: 0, sx: ev.clientX, sy: ev.clientY }; }
-  else if (nt) { const o = C.notes.find(x => x.id === nt.dataset.note); drag = { kind: 'note', o, ox: wx - o.x, oy: wy - o.y }; }
+  if (n || nt) {
+    const id = n ? n.dataset.id : nt.dataset.note;
+    if (ev.ctrlKey || ev.shiftKey || ev.metaKey) { S.sel.has(id) ? S.sel.delete(id) : S.sel.add(id); render(); return; }
+    if (!S.sel.has(id)) { S.sel = new Set([id]); render(); }
+    drag = { kind: 'multi', id, moved: 0, sx: ev.clientX, sy: ev.clientY, w0: [wx, wy],
+      items: [...S.sel].map(k => C.pos[k] ? ['e', k, [...C.pos[k]]] : (o => o && ['t', o, [o.x, o.y]])(C.notes.find(x => x.id === k))).filter(Boolean) };
+  }
   else if (g && ev.target.closest('.gt')) {   // 拖标题栏：几何包含的实验和便签一起移动
     const o = C.groups.find(x => x.id === g.dataset.grp), rs = rects();
     const inside = r => r.x >= o.x && r.y >= o.y && r.x + r.w <= o.x + o.w && r.y + r.h <= o.y + o.h;
     drag = { kind: 'group', o, ox: wx - o.x, oy: wy - o.y,
       mem: rs.filter(r => r.el.dataset.id && inside(r)).map(r => [r.el.dataset.id, C.pos[r.el.dataset.id][0] - o.x, C.pos[r.el.dataset.id][1] - o.y]),
       nts: rs.filter(r => r.el.dataset.note && inside(r)).map(r => { const nn = C.notes.find(x => x.id === r.el.dataset.note); return [nn, nn.x - o.x, nn.y - o.y]; }) };
-  } else { drag = { kind: 'pan', sx: ev.clientX - S.tx, sy: ev.clientY - S.ty }; vp.classList.add('panning'); }
+  } else if (ev.ctrlKey || ev.metaKey) {
+    const box = document.createElement('div'); box.className = 'boxsel'; document.body.appendChild(box);
+    drag = { kind: 'box', sx: ev.clientX, sy: ev.clientY, box, add: new Set(S.sel) };
+  } else { drag = { kind: 'pan', sx: ev.clientX - S.tx, sy: ev.clientY - S.ty, px: ev.clientX, py: ev.clientY, moved: 0 }; vp.classList.add('panning'); }
 });
 window.addEventListener('pointermove', ev => {
   S.mouse = [ev.clientX, ev.clientY];
   if (!drag) return;
   const [wx, wy] = toWorld(ev.clientX, ev.clientY);
-  if (drag.kind === 'pan') { S.tx = ev.clientX - drag.sx; S.ty = ev.clientY - drag.sy; applyView(); return; }
+  if (drag.kind === 'pan') { drag.moved = Math.max(drag.moved, Math.hypot(ev.clientX - drag.px, ev.clientY - drag.py)); S.tx = ev.clientX - drag.sx; S.ty = ev.clientY - drag.sy; applyView(); return; }
+  if (drag.kind === 'box') {
+    const x0 = Math.min(drag.sx, ev.clientX), y0 = Math.min(drag.sy, ev.clientY), x1 = Math.max(drag.sx, ev.clientX), y1 = Math.max(drag.sy, ev.clientY);
+    Object.assign(drag.box.style, { left: x0 + 'px', top: y0 + 'px', width: x1 - x0 + 'px', height: y1 - y0 + 'px' });
+    S.sel = new Set(drag.add);
+    layer.querySelectorAll('[data-id], [data-note]').forEach(el => { const r = el.getBoundingClientRect(); if (r.left < x1 && r.right > x0 && r.top < y1 && r.bottom > y0) S.sel.add(el.dataset.id || el.dataset.note); });
+    layer.querySelectorAll('[data-id], [data-note]').forEach(el => el.classList.toggle('sel', S.sel.has(el.dataset.id || el.dataset.note)));
+    return;
+  }
+  if (drag.kind === 'multi') {
+    drag.moved = Math.max(drag.moved, Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy)); if (drag.moved < 4) return;
+    const dx = wx - drag.w0[0], dy = wy - drag.w0[1];
+    drag.items.forEach(([k, o, p0]) => { const x = Math.round(p0[0] + dx), y = Math.round(p0[1] + dy); if (k === 'e') C.pos[o] = [x, y]; else { o.x = x; o.y = y; } });
+    render(); return;
+  }
   if (drag.kind === 'link') {
     S.link.b = [wx, wy]; drawEdges();
     layer.querySelectorAll('.drop').forEach(x => x.classList.remove('drop'));
@@ -385,14 +437,16 @@ window.addEventListener('pointerup', ev => {
     else if (!t) { const [wx, wy] = toWorld(ev.clientX, ev.clientY); newExp(wx + 6, wy - 50, L.from, L.m === '_' ? '' : L.m); }
     else drawEdges();
   }
-  if (drag && drag.kind === 'node' && drag.moved < 4) open(drag.id);
+  if (drag && drag.kind === 'box') drag.box.remove();
+  if (drag && drag.kind === 'multi' && drag.moved < 4 && S.sel.size > 1) { S.sel = new Set([drag.id]); render(); }   // 在多选里单击（没拖动）：只留这一个
+  if (drag && drag.kind === 'pan' && drag.moved < 4 && S.sel.size) { S.sel = new Set(); render(); }
   drag = null; vp.classList.remove('panning');
 });
 vp.addEventListener('dblclick', ev => {
   const g = ev.target.closest('[data-grp]'), nt = ev.target.closest('[data-note]');
   if (ev.target.closest('.gt')) { const o = C.groups.find(x => x.id === g.dataset.grp); editText(ev.target.closest('.gt'), t => { o.title = t || o.title; render(); }); return; }
   if (nt) { editText(nt.querySelector('.body'), t => { C.notes.find(x => x.id === nt.dataset.note).text = t || '（空）'; render(); }); return; }
-  if (ev.target.closest('[data-id]')) return;
+  const nd = ev.target.closest('[data-id]'); if (nd) { open(nd.dataset.id); return; }
   const [wx, wy] = toWorld(ev.clientX, ev.clientY); newExp(wx - 150, wy - 40);
 });
 vp.addEventListener('wheel', ev => { ev.preventDefault(); const r = vp.getBoundingClientRect(); zoomAt(S.k * Math.exp(-ev.deltaY * .0015), ev.clientX - r.left, ev.clientY - r.top); }, { passive: false });
@@ -402,6 +456,11 @@ window.addEventListener('keydown', ev => {
   if (ev.target.closest && ev.target.closest('[contenteditable=true], input, textarea')) return;
   const [wx, wy] = toWorld(...S.mouse), r = vp.getBoundingClientRect();
   const under = document.elementFromPoint(...S.mouse);
+  if (ev.ctrlKey || ev.metaKey) {
+    if (ev.key === 'a' || ev.key === 'A') { S.sel = new Set([...EXPS.map(e => e.id), ...C.notes.map(n => n.id)]); render(); ev.preventDefault(); }
+    else if (ev.key === 'g' || ev.key === 'G') { groupSel(); ev.preventDefault(); }
+    return;
+  }
   switch (ev.key) {
     case 'e': case 'E': newExp(wx - 150, wy - 40); break;
     case 'n': case 'N': newNote(wx, wy); break;
@@ -410,12 +469,13 @@ window.addEventListener('keydown', ev => {
     case '+': case '=': zoomAt(S.k * 1.2, r.width / 2, r.height / 2); break;
     case '-': case '_': zoomAt(S.k / 1.2, r.width / 2, r.height / 2); break;
     case '?': $('#keys').classList.toggle('on'); break;
-    case 'Escape': hideMenu(); $('#keys').classList.remove('on'); if (S.link) { S.link = null; drag = null; drawEdges(); } break;
+    case 'Escape': hideMenu(); $('#keys').classList.remove('on'); if (S.link) { S.link = null; drag = null; drawEdges(); } else if (S.sel.size) { S.sel = new Set(); render(); } break;
     case 'Delete': case 'Backspace': {
+      if (S.sel.size) { deleteSel(); break; }
       const n = under?.closest('[data-id]'), nt = under?.closest('[data-note]'), g = under?.closest('[data-grp]');
       if (n) delExp(n.dataset.id); else if (nt) delNote(nt.dataset.note); else if (g) delGroup(g.dataset.grp);
       break; }
-    case 'Enter': if (ev.target.dataset && ev.target.dataset.id) open(ev.target.dataset.id); break;
+    case 'Enter': { const one = S.sel.size === 1 && byId([...S.sel][0]) ? [...S.sel][0] : ev.target.dataset && ev.target.dataset.id; if (one) open(one); break; }
     default: return;
   }
   ev.preventDefault();
@@ -432,7 +492,7 @@ let tt; function toast(s) { const t = $('#toast'); t.textContent = s; t.classLis
 
 // ---------------- 启动：从节点页返回时 ?focus=<id> 居中并选中 ----------------
 const focus = byId(new URLSearchParams(location.search).get('focus')) ? new URLSearchParams(location.search).get('focus') : null;
-if (focus) S.sel = focus;
+if (focus) S.sel = new Set([focus]);
 function settle() { render(); if (focus) centerOn(focus); else fit(); drawEdges(); }
 settle();
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(settle);

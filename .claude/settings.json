@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read", "Glob", "Grep",
+      "Edit", "Write",
+
+      "Bash(ssh:*)",
+      "Bash(timeout:*)",
+
+      "Bash(ssh xufang154外网:*)",
+      "Bash(ssh xufang126外网:*)",
+      "Bash(ssh xufangA6000外网:*)",
+
+      "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git show:*)",
+      "Bash(git add:*)", "Bash(git commit:*)", "Bash(git fetch:*)",
+      "Bash(git checkout:*)", "Bash(git switch:*)", "Bash(git branch:*)",
+      "Bash(git archive:*)", "Bash(git rev-parse:*)", "Bash(git worktree list:*)",
+      "Bash(git push:*)",
+
+      "Bash(gh issue view:*)", "Bash(gh issue list:*)", "Bash(gh issue comment:*)",
+      "Bash(gh issue edit:*)", "Bash(gh issue create:*)", "Bash(gh issue close:*)",
+      "Bash(gh pr view:*)", "Bash(gh pr list:*)", "Bash(gh pr create:*)", "Bash(gh pr diff:*)",
+      "Bash(gh api:*)",
+
+      "Bash(cd:*)", "Bash(ls:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)",
+      "Bash(grep:*)", "Bash(sed:*)", "Bash(awk:*)", "Bash(wc:*)", "Bash(sort:*)",
+      "Bash(find:*)", "Bash(mkdir:*)", "Bash(echo:*)", "Bash(printf:*)",
+      "Bash(sleep:*)", "Bash(until:*)", "Bash(date:*)",
+
+      "Bash(/c/Users/yougu/anaconda3/python.exe:*)",
+      "Bash(C:/Users/yougu/anaconda3/python.exe:*)",
+
+      "WebFetch", "WebSearch"
+    ],
+    "deny": [
+      "Bash(git push --force:*)", "Bash(git push -f:*)",
+      "Bash(git push origin main:*)", "Bash(git push origin master:*)",
+      "Bash(git reset --hard:*)", "Bash(git clean:*)",
+      "Bash(git stash:*)",
+      "Bash(rm -rf:*)",
+      "Bash(gh pr merge:*)", "Bash(gh repo delete:*)"
+    ]
+  }
+}

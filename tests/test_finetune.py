@@ -101,3 +101,14 @@ def test_pseudo_loss_offline_and_online():
     assert st["pairs_used"] == 1 and st["n_inliers"] == [100]
     loss, st = pseudo_loss(data, s, affines=[None])
     assert st["pairs_used"] == 0 and float(loss) == 0
+
+
+def test_lr_schedule():
+    from finetune.train import lr_at
+
+    assert lr_at(123, 8000, 1e-5) == 1e-5                              # 默认恒定（S1 的配方）
+    assert abs(lr_at(0, 8000, 1e-5, warmup=500) - 1e-6) < 1e-12        # warmup 起点 0.1·lr
+    assert abs(lr_at(250, 8000, 1e-5, warmup=500) - 5.5e-6) < 1e-12
+    assert lr_at(500, 8000, 1e-5, 500, sched="cosine") == 1e-5         # warmup 结束即峰值
+    assert abs(lr_at(4250, 8000, 1e-5, 500, sched="cosine") - 5e-6) < 1e-12
+    assert abs(lr_at(8000, 8000, 1e-5, 500, sched="cosine", lr_min=0.1) - 1e-6) < 1e-12

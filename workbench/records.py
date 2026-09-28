@@ -13,8 +13,11 @@
 """
 from __future__ import annotations
 
+import datetime
 import json
 import math
+import re
+import shutil
 import subprocess
 import tomllib
 from dataclasses import dataclass, field
@@ -215,6 +218,174 @@ def check_runs(runs: dict[str, Run]) -> tuple[list[str], list[str]]:
             seen.add(cur)
             cur = runs[cur].parent if cur in runs else None
     return problems, warnings
+
+
+# ---------------- 实验编辑：CLI 与服务端共用 ----------------
+#
+# 都是对 exp.toml 的读-改-写：按行改顶层字段，注释、[methods] 和其余字段原样保留。
+# 多个写入方各自读-改-写，以后写的为准，不加锁。
+
+ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
+
+EXP_TEMPLATE = """id = {id}
+title = {title}
+{links}date = "{date}"
+"""
+
+
+class EditError(ValueError):
+    """编辑被拒绝（成环、已点亮、编号冲突等）。消息直接给用户看。"""
+
+
+class NotFound(EditError):
+    pass
+
+
+def _q(v: str) -> str:
+    return json.dumps(v, ensure_ascii=False)   # JSON 字符串即合法的 TOML 基本字符串
+
+
+def _get(root: Path, rid: str) -> Run:
+    r = load_runs(root).get(rid)
+    if r is None:
+        raise NotFound(f"实验 {rid} 不存在")
+    return r
+
+
+def next_id(root: Path) -> str:
+    """下一个 E<n>：现有 E<数字> 中最大的加一。"""
+    root = Path(root)
+    ns = [int(m.group(1)) for d in root.iterdir() if (m := re.fullmatch(r"E(\d+)", d.name))] if root.is_dir() else []
+    return f"E{max(ns, default=0) + 1}"
+
+
+def create_experiment(root: Path, rid: str, title: str = "", parent: str | None = None,
+                      init: str | None = None) -> Path:
+    """新建未点亮实验：只写 runs/<id>/exp.toml。"""
+    root = Path(root)
+    if not ID_RE.fullmatch(rid or ""):
+        raise EditError(f"编号 {rid!r} 不合法：只能用字母、数字、_ . -，且以字母或数字开头")
+    d = root / rid
+    if d.exists():
+        raise EditError(f"{rid} 已存在")
+    if parent or init:
+        _check_link(load_runs(root), rid, parent, init)
+    links = (f"parent = {_q(parent)}\n" if parent else "") + \
+        (f"init = {_q(init)}\n" if init else '# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步\n')
+    d.mkdir(parents=True)
+    (d / "exp.toml").write_text(EXP_TEMPLATE.format(id=_q(rid), title=_q(title), links=links,
+                                                    date=datetime.date.today().isoformat()),
+                                encoding="utf-8", newline="\n")
+    return d
+
+
+def _check_link(runs: dict[str, Run], rid: str, parent: str | None, init: str | None):
+    if init and not parent:
+        raise EditError("有 init 就必须有父实验")
+    if not parent:
+        return
+    if parent not in runs:
+        raise EditError(f"父实验 {parent} 不存在")
+    seen, cur = set(), parent
+    while cur and cur not in seen:
+        if cur == rid:
+            raise EditError(f"不能把 {rid} 接到{'它自己' if parent == rid else f'它的后代 {parent}'}下面：会成环")
+        seen.add(cur)
+        cur = runs[cur].parent if cur in runs else None
+    if init:
+        iid, _, im = init.partition("/")
+        if iid != parent or not im:
+            raise EditError(f"init 应写成 {parent}/<方法>，现为 {init!r}")
+        if runs[parent].lit and im not in runs[parent].methods:
+            raise EditError(f"{parent} 没有方法 {im}")
+
+
+def set_parent(root: Path, rid: str, parent: str | None, init: str | None = None):
+    """改父 / init；parent 为空即断开父实验。会成环时拒绝，文件不动。"""
+    runs = load_runs(root)
+    if rid not in runs:
+        raise NotFound(f"实验 {rid} 不存在")
+    _check_link(runs, rid, parent or None, init or None)
+    _edit_toml(runs[rid].dir / "exp.toml", parent=parent or None, init=init or None)
+
+
+def set_title(root: Path, rid: str, title: str):
+    _edit_toml(_get(root, rid).dir / "exp.toml", title=title)
+
+
+def rename_experiment(root: Path, old: str, new: str):
+    """改编号：只在未点亮时允许。目录改名，并改掉其他实验里指向它的 parent 与 init 前缀。"""
+    runs = load_runs(root)
+    if old not in runs:
+        raise NotFound(f"实验 {old} 不存在")
+    if runs[old].lit:
+        raise EditError(f"{old} 已点亮，不能改编号")
+    if new == old:
+        return
+    if not ID_RE.fullmatch(new or ""):
+        raise EditError(f"编号 {new!r} 不合法：只能用字母、数字、_ . -，且以字母或数字开头")
+    if (Path(root) / new).exists():
+        raise EditError(f"{new} 已存在")
+    d = runs[old].dir.rename(Path(root) / new)   # 先改目录：失败时什么都还没动
+    _edit_toml(d / "exp.toml", id=new)
+    for r in runs.values():
+        if r.id == old:
+            continue
+        ch = {}
+        if r.parent == old:
+            ch["parent"] = new
+        if r.init and r.init.partition("/")[0] == old:
+            ch["init"] = f"{new}/{r.init.partition('/')[2]}"
+        if ch:
+            _edit_toml(r.dir / "exp.toml", **ch)
+
+
+def delete_experiment(root: Path, rid: str):
+    """删除：只允许未点亮的实验（删目录）。它的子实验断开父实验，成为根；别处指向它的 init 一并删掉。"""
+    runs = load_runs(root)
+    if rid not in runs:
+        raise NotFound(f"实验 {rid} 不存在")
+    if runs[rid].lit:
+        raise EditError(f"{rid} 已点亮，不能删除")
+    for r in runs.values():
+        if r.id == rid:
+            continue
+        if r.parent == rid:
+            _edit_toml(r.dir / "exp.toml", parent=None, init=None)
+        elif (r.init or "").partition("/")[0] == rid:
+            _edit_toml(r.dir / "exp.toml", init=None)
+    shutil.rmtree(runs[rid].dir)
+
+
+def _edit_toml(path: Path, **fields):
+    """按行改 exp.toml 的顶层字符串字段；值为 None 即删掉该行。改完解析核对，不符就报错，不写文件。"""
+    text = path.read_text(encoding="utf-8")
+    before = tomllib.loads(text)
+    lines = text.splitlines()
+    top = next((i for i, l in enumerate(lines) if re.match(r"\s*\[", l)), len(lines))
+    for key, value in fields.items():
+        at = [i for i in range(top) if re.match(rf"\s*{key}\s*=", lines[i])]
+        for i in reversed(at[1:] if value is not None else at):
+            del lines[i]
+            top -= 1
+        if value is None:
+            continue
+        line = f"{key} = {_q(value)}"
+        hint = [i for i in range(top) if re.match(rf"#\s*{key}\s*=", lines[i])]   # 模板里注释掉的占位行
+        if at or hint:
+            lines[(at or hint)[0]] = line
+            continue
+        rank = FIELDS.index(key)
+        pos = [i for i in range(top) for k in FIELDS[:rank] if re.match(rf"\s*{k}\s*=", lines[i])]
+        lines.insert(max(pos) + 1 if pos else 0, line)
+        top += 1
+    new_text = "\n".join(lines) + "\n"
+    after = tomllib.loads(new_text)
+    expect = {k: v for k, v in before.items() if k not in fields}
+    expect.update({k: v for k, v in fields.items() if v is not None})
+    if after != expect:
+        raise EditError(f"{path} 的写法无法按行安全修改，请手改")
+    path.write_text(new_text, encoding="utf-8", newline="\n")
 
 
 def git_state(repo: Path) -> dict:

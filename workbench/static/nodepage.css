@@ -1,0 +1,7 @@
+/* 节点页：纸面、衬线。目前只有占位内容。 */
+.np { min-height: 100%; background: #FBFAF7; color: #1F1F1F; padding: 28px 48px; font-family: Georgia, "Noto Serif SC", "Songti SC", "SimSun", serif; }
+.np .back { font: 13px var(--sans); color: #3B5B8A; text-decoration: none; }
+.np .back:hover { text-decoration: underline; }
+.np h1 { font-weight: 500; font-size: 24px; margin: 18px 0 8px; }
+.np h1 .nid { font-family: var(--mono); font-weight: 600; }
+.np .wip { color: #6B6B6B; }

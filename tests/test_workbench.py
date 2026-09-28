@@ -320,3 +320,14 @@ def test_cli_check_exit_codes(tmp_path, capsys):
     with pytest.raises(SystemExit) as e:
         cli.main(["--runs", str(runs), "check"])
     assert e.value.code == 1
+
+
+def test_cli_new_with_init_and_rejects_bad_parent(tmp_path, capsys):
+    runs = tmp_path / "runs"
+    write_exp(runs, "B0", "baseline = true\n")
+    cli.main(["--runs", str(runs), "new", "E1", "--parent", "B0", "--init", "B0/roma"])
+    text = (runs / "E1" / "exp.toml").read_text(encoding="utf-8")
+    assert tomllib.loads(text)["init"] == "B0/roma" and "# init" not in text
+    with pytest.raises(SystemExit) as e:
+        cli.main(["--runs", str(runs), "new", "E2", "--parent", "Y"])
+    assert "Y" in str(e.value.code) and not (runs / "E2").exists()

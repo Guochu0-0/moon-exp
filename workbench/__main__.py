@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import datetime
-import json
 import os
 import sys
 from pathlib import Path
@@ -11,12 +9,6 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 DEFAULT_RUNS = REPO / "runs"
 DATA_ENV = "MOON_DATA"  # 数据集根目录，例如 G:/Lunar_Optical_SAR_Registration_Dataset
-
-EXP_TEMPLATE = """id = {id}
-title = {title}
-{parent}# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
-date = "{date}"
-"""
 
 
 def _data_root(args) -> Path:
@@ -63,14 +55,12 @@ def cmd_check(args):
 
 
 def cmd_new(args):
-    d = Path(args.runs) / args.id
-    if d.exists():
-        sys.exit(f"{d} 已存在")
-    d.mkdir(parents=True)
-    q = lambda v: json.dumps(v, ensure_ascii=False)   # JSON 字符串即合法的 TOML 基本字符串
-    (d / "exp.toml").write_text(EXP_TEMPLATE.format(
-        id=q(args.id), title=q(args.title), parent=f"parent = {q(args.parent)}\n" if args.parent else "",
-        date=datetime.date.today().isoformat()), encoding="utf-8", newline="\n")
+    from .records import EditError, create_experiment
+
+    try:
+        d = create_experiment(Path(args.runs), args.id, args.title, args.parent, args.init)
+    except EditError as e:
+        sys.exit(str(e))
     print(f"已建 {d}/exp.toml")
 
 
@@ -107,6 +97,7 @@ def main(argv=None):
     p = sub.add_parser("new", help="新建一个实验目录")
     p.add_argument("id")
     p.add_argument("--parent")
+    p.add_argument("--init", help="<父实验>/<方法>")
     p.add_argument("--title", default="")
     p.set_defaults(fn=cmd_new)
 

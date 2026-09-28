@@ -1,17 +1,50 @@
-# 实验工作台 v1
+# 实验工作台
 
-思路树 + 节点详情。每个实验是树上的一个节点，边表示「从哪个实验改出来的」。形态由「实验工作台原型」(#4) 定下，评价口径由「定义评价协议与指标」(#2) 定下。
+画布 + 节点页。每个**实验**是画布上的一个节点，连线表示「派生自」：子实验是从父实验改出来的。术语见仓库根目录的 `CONTEXT.md`，规格见 #37。
 
 ```bash
 export MOON_DATA=G:/Lunar_Optical_SAR_Registration_Dataset   # 或 --data；服务器上指向 YGC/dataset/Moon
 python -m workbench serve            # http://127.0.0.1:8765/  （服务器上跑的话，用 ssh -L 转发端口）
 python -m workbench eval [id ...]    # 算指标，写 runs/<id>/metrics.json
 python -m workbench check            # 按 v2 规则检查记录（旧字段只警告）
-python -m workbench new E3 --parent E2 --title "…"   # 按 v2 模板新建实验目录
+python -m workbench new E3 --parent E2 [--init E2/main] --title "…"   # 按 v2 模板新建实验目录
 python -m workbench sync B0 B0m [--extra certainty] [--tb all]   # 从服务器拉回点对等不进 git 的文件
 ```
 
-依赖：numpy、tifffile、Pillow，Python ≥ 3.11（用到 tomllib）。不需要 cv2。
+依赖：numpy、tifffile、Pillow，Python ≥ 3.11（用到 tomllib）。不需要 cv2。页面零构建：Python 标准库 HTTP 服务 + 静态页（`static/`），字体自托管，不访问外网。
+
+## 画布
+
+打开 `/` 就是画布。页面每隔几秒、以及窗口重新获得焦点时重拉数据，所以在终端或由 agent 改了 `runs/`（新写的 exp.toml、刚点亮的实验），几秒内就会出现在画布上，不用重启服务。
+
+- **卡片**：标题栏是编号、标题、「基线」标签和状态点（实心绿 = 已**点亮**，空心 = 未点亮）。已点亮的实验每个方法一行，带 AUC@10（Val）数值条（0–1 满刻度）和输出端口，端口按方法名着色：含 `roma` 蓝、含 `loftr` 琥珀、其余淡紫。默认显示前 4 个方法，被子实验用作 init 的方法总是显示，其余折叠（点「另外 n 个方法」展开）。单方法实验只有一行「本实验」。未点亮的是虚线框，写「尚无结果」。
+- **连线**：从父实验的 init 方法端口接出（没有 init 时从「子实验」通用端口接出）；接向未点亮实验的连线更淡。
+- **浏览**：滚轮缩放，拖空白平移，`.` 适应窗口，`+` `−` 缩放。视口存在浏览器 localStorage，不进 git。
+- **新建**：双击空白、按 `E`、点右上角「新建实验」或空白处右键。编号自动取下一个 `E<n>`，随即编辑标题（Enter 确认，Esc 放弃）。创建时就写出 `runs/<id>/exp.toml`。
+- **派生**：从输出端口拖到空白处；或在方法行 / 卡片上右键「从 … 派生新实验」。从方法端口派生的自动写 `init = "<父实验>/<方法>"`。
+- **改父**：从端口拖到另一个实验上，改写那个实验的 parent / init，已点亮的也可以。会成环时拒绝并提示。右键「断开父实验」让它成为根。
+- **改编号 / 改标题**：右键菜单。改编号只在未点亮时允许，子实验的 parent / init 和画布坐标一起改。
+- **删除**：右键或选中后按 `Del`（没有选中时删鼠标下的实验）。只能删未点亮的实验（删掉 `runs/<id>/` 整个目录），它的子实验断开父实验；已点亮实验的删除项置灰。
+- **进入节点页**：双击实验或选中后按 Enter，地址是 `#/exp/<id>`；「← 画布」返回，该实验居中并选中。
+- 拖动卡片松手后保存坐标。`Esc` 取消拖线 / 关闭菜单 / 取消选择。
+
+所有语义改动都写回各实验的 `exp.toml`（按行改，注释和其余字段保留），布局写回 `runs/canvas.json`；两者都进 git。多个写入方各自读-改-写，以后写的为准，不加锁。
+
+### runs/canvas.json
+
+```json
+{
+  "experiments": {"B0": {"x": 120, "y": 80}},
+  "groups": [],
+  "stickies": []
+}
+```
+
+坐标是世界坐标（px），原点在左上；实验卡片宽度固定，只存 x、y。写入时丢掉目录已不存在的实验，key 排序，缩进 2 格。没有坐标的实验（比如终端或 agent 新建的）由服务端算默认位置：父实验右侧，兄弟实验往下排，避开已有实验；读数据时不写文件，第一次在画布上做改动时才把它们当前的位置存下来。agent 只写 exp.toml（和 notes.md），不用碰 canvas.json。
+
+### API
+
+见 `server.py` 顶部。前端冒烟：`python scripts/smoke_canvas.py`（需要 Chrome / Edge 和 websocket-client；在临时目录里复制 B0 / B0m，不动仓库的 `runs/`）。
 
 ## 记录格式（v2）
 
@@ -117,13 +150,3 @@ with PredWriter("runs/B0", "roma", "test") as w:
 - split 内全部有标注 pair 等权。
 - 主指标附 bootstrap 95% CI。
 - 档位已按「锁定评价阈值档位」(#9) 锁定：主表 AUC@3/5/10 + SR@3/5/10，选模用 Val AUC@5，不设 T_粗；其余档位照算，供附表。改档位只改 `protocol.py` 顶部，再重跑 `eval`。
-
-## 页面口径
-
-- 节点同时列出 Val 和 Test。边上的数字是 Val 主指标相对比较基准的变化。
-- 逐对可视化在 Test 上，可以和父节点、「未配准」或任意方法对比。
-- 按编号检索支持两种写法：
-  - split 内编号，例如 `10` / `#0010`。编号规则：ROI 升序、patch 序号按数值升序，从 0 起，包含无标注 pair。
-  - `ROI_037/1` 这样的写法。
-- URL hash 可以直接分享，例如 `#E1&pair=ROI_037/patch_1&layer=match`。
-- 影像按分位数拉伸显示，SAR 取第 2 波段。这只影响显示，与网络输入的归一化无关。

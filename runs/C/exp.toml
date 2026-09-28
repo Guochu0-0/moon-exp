@@ -1,0 +1,11 @@
+id = "C"
+title = "粗级闭式期望从 zero-shot 单独训练（类 RIPE，塌缩测试）"
+parent = "B0"
+init = "B0/anymatch_loftr"
+date = "2026-09-28"
+
+[methods.C1]
+name = "无约束（C1 step 1500）"
+
+[methods.C2]
+name = "加负样本对（C2 step 500）"

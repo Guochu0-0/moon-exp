@@ -6,7 +6,7 @@
 
 - 伪仿射：细级匹配（推理同款）→ 原网格 → baselines.ransac.fit_affine（与评测同口径，3 px）。
   SCENES 的做法是**离线**：用预训练模型估一次，训练中不重估，并筛掉匹配 < 100 或内点 < 20 的对
-  （finetune/label.py）。另可选**在线**：每步用当前模型自己的匹配重估（RL 方案里的伪标签监督项）。
+  （finetune/label.py）。另可选**在线**：每步用当前模型自己的匹配重估（实测会塌缩，见 runs/S2）。
 - 粗级：光学侧每个粗格中心经伪仿射落到 SAR 侧，取最近的粗格 j，(i, j) 为正样本；落在图外的 i 不监督。
   损失同上游 dual-softmax + sparse_spvs：只对正样本做 focal loss（loftr_loss.py compute_coarse_loss）。
 - 细级：对推理同款的每个粗匹配，SAR 侧目标 = 伪仿射(mkpts0_c)，换成 5×5 窗口的归一化偏移；

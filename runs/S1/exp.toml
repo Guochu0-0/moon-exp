@@ -1,30 +1,14 @@
 id = "S1"
-title = "SCENES 式离线伪标签微调（非 RL baseline）"
+title = "SCENES 式离线伪标签微调"
 parent = "B0"
 init = "B0/anymatch_loftr"
 date = "2026-09-27"
-commit = "8f017c3"
-status = "kept"
-hypothesis = """
-用 zero-shot 匹配估出的仿射当几何伪真值，按 LoFTR 原始监督形式微调，能提高精度（SCENES，arXiv:2401.10886）。
-这是 RL 方法必须比过的非 RL baseline（「复现 SCENES 式伪标签微调 baseline」#26）。
-"""
-change = """
-底座 AnyMatch-LoFTR。离线伪标签：zero-shot 在 Train 上推理一次，仿射 RANSAC 3 px；匹配 < 100 或内点 < 20 的对不用（7907 对中保留 7880 对）。
-损失：粗级 = 光学格经伪仿射落到的 SAR 格为正样本，sparse focal；细级 = 窗口内归一化偏移，l2_with_std。
-AdamW lr 1e-5，batch 1，8000 步，模块保持 eval。每 1000 步存 ckpt，按 Val AUC@5 选 step 6000。
-代码：finetune/{pseudo,label,train}.py，scripts/finetune/scenes.sh。
-"""
-verdict = """
-Val AUC@5 0.220 → 0.272（CI 0.255–0.290），Test 0.188 → 0.233；SR@10 Val 0.85 → 0.94，Test 0.73 → 0.89。
-增益在 1000 步内出现，之后平台期（extra/val_by_step.json）。从 step 6000 继续训练（S1c）或 lr 3e-5（S1lr3）均停在 0.26–0.27。
-换种子复现（同配置 8000 步，按 Val 选模）：seed1 Val 0.273 / Test 0.233（step 4000），seed2 Val 0.270 / Test 0.229（step 5000）。
-"""
-next = "作为 RL 实验的起点与对照。"
 
 [methods.main]
 name = "SCENES 式离线伪标签（step 6000）"
+
 [methods.seed1]
 name = "换种子 1（S1s1 step 4000）"
+
 [methods.seed2]
 name = "换种子 2（S1s2 step 5000）"

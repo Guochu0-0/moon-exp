@@ -68,6 +68,11 @@
 - 根分区（overlay）很满，只剩约 80 GB，只放环境。
 - 环境：`/opt/envs/loftr`（py3.10，torch 2.1.2+cu118）与 `/opt/envs/wb`（py3.11），包版本与 154 一致，从 pypi / download.pytorch.org 装。
 - 网络：GitHub、pypi、hf-mirror、download.pytorch.org 能直连；能经内网到 154（`10.254.1.154:20020`）。
+- **经内网从 154 拉文件**：A6000 上有 key `/root/.ssh/ygc_154`（公钥已加到 154 的 `authorized_keys`，注释 `ygc-a6000-to-154`）。
+  用法：`ssh -i /root/.ssh/ygc_154 -p 20020 root@10.254.1.154 "tar cf - -C <目录> <内容>" | tar xf - -C <目标>`（154 没有 rsync）。
+- 已就位（2026-09-28）：数据 `YGC/dataset/Moon`（38 GB，Train 7907 / Val 825 / Test 1130 对）、`YGC/weights/anymatch/LoFTR_AnyMatch.ckpt`、`YGC/results/finetune/labels_b0.jsonl`。
+- 代码：`YGC/moon-exp` 从 154 的仓库克隆（remote = `ssh://root@10.254.1.154:20020/remote-home/xufang/YGC/moon-exp`，`GIT_SSH_COMMAND` 带上面的 key），新提交先在 154 上从 GitHub fetch 再拉过来；LoFTR 子模块直接从 GitHub 拉。
+- 速度：S1 式训练每步约 0.16 s（154 的 TITAN RTX 约 0.3 s）。
 - 与 154/126 不共享存储，`queue.sh` 的 `_claims` 占位跨不过去：给 A6000 单独的任务清单，结果再拷回 gpfs。
 
 ## MATLAB（目前只在 154）

@@ -8,6 +8,7 @@ python -m workbench serve            # http://127.0.0.1:8765/  （服务器上�
 python -m workbench eval [id ...]    # 算指标，写 runs/<id>/metrics.json
 python -m workbench check            # 按 v2 规则检查记录（旧字段只警告）
 python -m workbench new E3 --parent E2 --title "…"   # 按 v2 模板新建实验目录
+python -m workbench sync B0 B0m [--extra certainty] [--tb all]   # 从服务器拉回点对等不进 git 的文件
 ```
 
 依赖：numpy、tifffile、Pillow，Python ≥ 3.11（用到 tomllib）。不需要 cv2。
@@ -97,6 +98,17 @@ with PredWriter("runs/B0", "roma", "test") as w:
 ```
 
 `matches` 取 matcher 的坐标约定（整数 = 像素中心）。+0.5、按 conf 截断到 2000、写 npz 和 meta.json 都由写入端负责。
+
+### 同步
+
+`python -m workbench sync <id>...` 按实验从服务器 `runs/<id>/` 拉回不进 git 的文件：
+
+- 点对：默认拉。
+- 中间结果：只拉 `--extra <name>` 点名的，可重复。
+- TB 日志：默认只拉 `tb/<m>/scalars/` 和上游格式的 `version_N/` 目录；`--tb all` 拉整个 `tb/`。`checkpoints/` 都排除。
+- ckpt：永远不拉。
+
+主机取 `--host`、环境变量 `MOON_SYNC_HOST`，默认 `xufang154外网`；远端根目录取 `--remote-root`、`MOON_SYNC_ROOT`，默认 `/remote-home/xufang/YGC/moon-exp`。传输只用 ssh 与 tar（Windows 11 自带），不需要 rsync。本地已有且大小、mtime 都没变的文件跳过，所以重复执行很便宜。
 
 ## 评价
 

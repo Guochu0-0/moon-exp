@@ -11,7 +11,8 @@
 
 传输：`ssh <host> "cd <root>/runs && find …"` 拿远端清单（大小、mtime），本地已有且大小与 mtime（秒）都相同的跳过；
 其余用 `ssh <host> "tar cf - -T -" | tar xf -` 流回来，tar 保留 mtime，所以下次就能跳过。只依赖 ssh 与 tar，
-不需要 rsync。远程命令都加 timeout（见 docs/agents/servers.md）。测试时把 shell=["ssh", host] 换成本地 shell。
+不需要 rsync。远程命令都加 timeout（见 docs/agents/servers.md）。测试时传 shell= 把 ["ssh", host] 换成本地 shell。
+主机取参数、环境变量 MOON_SYNC_HOST、DEFAULT_HOST；远端根目录取参数、MOON_SYNC_ROOT、DEFAULT_ROOT。
 """
 from __future__ import annotations
 
@@ -33,13 +34,13 @@ _VERSION = re.compile(r"version_\d+")
 
 @dataclass
 class Result:
-    fetched: list[str]   # 相对 runs/ 的路径
-    skipped: list[str]   # 本地已有且未变
-    missing: list[str]   # 远端没有这个实验目录
-    bytes: int           # 拉取的字节数
+    fetched: list[str]    # 相对 runs/ 的路径
+    skipped: list[str]    # 本地已有且未变
+    missing: list[str]    # 远端没有这个实验目录
+    fetched_bytes: int
 
 
-def wanted(rel: str, extras=(), tb_all: bool = False) -> bool:
+def should_pull(rel: str, extras=(), tb_all: bool = False) -> bool:
     """rel 是相对 runs/ 的路径，如 B0/preds/loftr/val_matches.npz。"""
     parts = rel.split("/")
     if len(parts) < 3:
@@ -53,21 +54,22 @@ def wanted(rel: str, extras=(), tb_all: bool = False) -> bool:
         sub = rest[1:]
         if not sub or "checkpoints" in sub or sub[-1].endswith(".ckpt"):
             return False
-        return tb_all or sub[0] == "scalars" or any(_VERSION.fullmatch(p) for p in sub[:-1])
+        if tb_all or sub[0] == "scalars":
+            return True
+        return sub[0] != "media" and any(_VERSION.fullmatch(p) for p in sub[:-1])   # 上游格式的 version_N/
     return False               # ckpt/ 与进 git 的文件
 
 
-def _remote(shell: list[str], cmd: str, **kw):
-    return subprocess.run([*shell, cmd], capture_output=True, **kw)
+def _cd_runs(remote_root: str) -> str:
+    return f"cd {shlex.quote(remote_root + '/runs')} && "
 
 
 def list_remote(ids, remote_root: str, shell: list[str]) -> tuple[dict[str, tuple[int, int]], list[str]]:
     """{相对 runs/ 的路径: (大小, mtime 秒)}，以及远端缺的实验。ckpt/ 和 checkpoints/ 不进清单。"""
-    q = shlex.quote
-    script = (f"cd {q(remote_root + '/runs')} && for d in {' '.join(q(i) for i in ids)}; do "
+    script = (_cd_runs(remote_root) + f"for d in {' '.join(shlex.quote(i) for i in ids)}; do "
               f"if [ -d \"$d\" ]; then timeout {LIST_TIMEOUT} find \"$d\" \\( -path \"$d/ckpt\" -o -name checkpoints \\) "
               f"-prune -o -type f -printf '%s\\t%T@\\t%p\\n'; else printf '?\\t%s\\n' \"$d\"; fi; done")
-    r = _remote(shell, script, timeout=LIST_TIMEOUT + 60)
+    r = subprocess.run([*shell, script], capture_output=True, timeout=LIST_TIMEOUT + 60)
     if r.returncode != 0:
         raise RuntimeError(f"列远端文件失败（{r.returncode}）：{r.stderr.decode('utf-8', 'replace').strip()}")
     files, missing = {}, []
@@ -83,7 +85,7 @@ def list_remote(ids, remote_root: str, shell: list[str]) -> tuple[dict[str, tupl
 def fetch(paths: list[str], runs: Path, remote_root: str, shell: list[str]):
     """把 paths（相对 runs/）从远端流进本地 runs/。"""
     runs.mkdir(parents=True, exist_ok=True)
-    cmd = f"cd {shlex.quote(remote_root + '/runs')} && timeout {FETCH_TIMEOUT} tar cf - -T -"
+    cmd = _cd_runs(remote_root) + f"timeout {FETCH_TIMEOUT} tar cf - -T -"
     src = subprocess.Popen([*shell, cmd], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # 不用 -C：Git 自带的 GNU tar 会把 D:\… 里的冒号当成远程主机
     dst = subprocess.Popen(["tar", "xf", "-"], cwd=runs, stdin=src.stdout, stderr=subprocess.PIPE)
@@ -98,13 +100,15 @@ def fetch(paths: list[str], runs: Path, remote_root: str, shell: list[str]):
         raise RuntimeError(f"传输失败（远端 {src.returncode}，本地 {dst.returncode}）：{err}")
 
 
-def sync(ids, runs, *, remote_root: str = DEFAULT_ROOT, shell=None, extras=(), tb_all: bool = False) -> Result:
+def sync(ids, runs, *, host: str | None = None, remote_root: str | None = None, extras=(), tb_all: bool = False,
+         shell: list[str] | None = None) -> Result:
     runs = Path(runs)
-    shell = shell or ["ssh", DEFAULT_HOST]
+    remote_root = remote_root or os.environ.get(ROOT_ENV) or DEFAULT_ROOT
+    shell = shell or ["ssh", host or os.environ.get(HOST_ENV) or DEFAULT_HOST]
     files, missing = list_remote(ids, remote_root, shell)
     fetched, skipped = [], []
     for rel, (size, mtime) in sorted(files.items()):
-        if not wanted(rel, extras, tb_all):
+        if not should_pull(rel, extras, tb_all):
             continue
         local = runs / rel
         if local.is_file() and (st := local.stat()).st_size == size and int(st.st_mtime) == mtime:
@@ -115,10 +119,3 @@ def sync(ids, runs, *, remote_root: str = DEFAULT_ROOT, shell=None, extras=(), t
         fetch(fetched, runs, remote_root, shell)
     return Result(fetched, skipped, missing, sum(files[p][0] for p in fetched))
 
-
-def host_default() -> str:
-    return os.environ.get(HOST_ENV) or DEFAULT_HOST
-
-
-def root_default() -> str:
-    return os.environ.get(ROOT_ENV) or DEFAULT_ROOT

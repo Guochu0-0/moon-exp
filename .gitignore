@@ -1,3 +1,7 @@
 __pycache__/
 .pytest_cache/
 runs/*/preds/*/*_matches.npz
+runs/*/inter/*/*/*
+!runs/*/inter/*/*/meta.json
+runs/*/tb/
+runs/*/ckpt/

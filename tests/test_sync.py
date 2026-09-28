@@ -119,7 +119,13 @@ def test_missing_experiment_is_reported(remote, tmp_path):
     assert r.missing == ["E9"] and len(r.fetched) == 3
 
 
-def test_cli_defaults(monkeypatch, tmp_path, capsys):
+def test_tb_version_rule_only_for_upstream_layout():
+    assert sync.should_pull("E1/tb/up/lightning_logs/version_3/events.x")
+    assert not sync.should_pull("E1/tb/main/media/version_0/events.x")
+    assert sync.should_pull("E1/tb/main/media/version_0/events.x", tb_all=True)
+
+
+def test_cli_passes_options_through(monkeypatch, tmp_path):
     seen = {}
 
     def fake(ids, runs, **kw):
@@ -127,13 +133,27 @@ def test_cli_defaults(monkeypatch, tmp_path, capsys):
         return sync.Result([], [], [], 0)
 
     monkeypatch.setattr(sync, "sync", fake)
-    monkeypatch.delenv(sync.HOST_ENV, raising=False)
-    cli.main(["--runs", str(tmp_path), "sync", "B0", "B0m", "--extra", "certainty"])
-    assert seen["ids"] == ["B0", "B0m"] and seen["extras"] == ["certainty"] and seen["tb_all"] is False
-    assert seen["shell"] == ["ssh", sync.DEFAULT_HOST] and seen["remote_root"] == sync.DEFAULT_ROOT
+    cli.main(["--runs", str(tmp_path), "sync", "B0", "B0m", "--extra", "certainty", "--extra", "warp"])
+    assert seen == {"ids": ["B0", "B0m"], "runs": tmp_path, "host": None, "remote_root": None,
+                    "extras": ["certainty", "warp"], "tb_all": False}
+    cli.main(["--runs", str(tmp_path), "sync", "E1", "--tb", "all", "--host", "h", "--remote-root", "/r"])
+    assert seen["tb_all"] is True and seen["host"] == "h" and seen["remote_root"] == "/r"
 
+    monkeypatch.setattr(sync, "sync", lambda *a, **kw: sync.Result([], [], ["E9"], 0))
+    with pytest.raises(SystemExit) as e:
+        cli.main(["--runs", str(tmp_path), "sync", "E9"])
+    assert e.value.code == 1
+
+
+def test_host_and_root_defaults(monkeypatch, tmp_path):
+    seen = []
+    monkeypatch.setattr(sync, "list_remote", lambda ids, root, shell: (seen.append((root, shell)), ({}, []))[1])
+    monkeypatch.delenv(sync.HOST_ENV, raising=False)
+    monkeypatch.delenv(sync.ROOT_ENV, raising=False)
+    sync.sync(["B0"], tmp_path)
     monkeypatch.setenv(sync.HOST_ENV, "xufang160外网")
-    cli.main(["--runs", str(tmp_path), "sync", "E1", "--tb", "all"])
-    assert seen["shell"] == ["ssh", "xufang160外网"] and seen["tb_all"] is True
-    cli.main(["--runs", str(tmp_path), "sync", "E1", "--host", "h"])
-    assert seen["shell"] == ["ssh", "h"]
+    monkeypatch.setenv(sync.ROOT_ENV, "/elsewhere")
+    sync.sync(["B0"], tmp_path)
+    sync.sync(["B0"], tmp_path, host="h", remote_root="/r")
+    assert seen == [(sync.DEFAULT_ROOT, ["ssh", sync.DEFAULT_HOST]), ("/elsewhere", ["ssh", "xufang160外网"]),
+                    ("/r", ["ssh", "h"])]

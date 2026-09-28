@@ -1,4 +1,4 @@
-"""python -m workbench {serve,eval,check,new} …"""
+"""python -m workbench {serve,eval,check,new,sync} …"""
 from __future__ import annotations
 
 import argparse
@@ -74,6 +74,18 @@ def cmd_new(args):
     print(f"已建 {d}/exp.toml")
 
 
+def cmd_sync(args):
+    from . import sync
+
+    r = sync.sync(args.ids, Path(args.runs), host=args.host, remote_root=args.remote_root,
+                  extras=args.extra, tb_all=args.tb == "all")
+    for rid in r.missing:
+        print(f"远端没有 runs/{rid}/")
+    print(f"拉取 {len(r.fetched)} 个文件（{r.fetched_bytes / 2**20:.1f} MB），跳过 {len(r.skipped)} 个已有且未变的文件")
+    if r.missing:
+        sys.exit(1)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="python -m workbench")
     ap.add_argument("--runs", default=str(DEFAULT_RUNS), help="实验记录目录（默认 runs/）")
@@ -97,6 +109,14 @@ def main(argv=None):
     p.add_argument("--parent")
     p.add_argument("--title", default="")
     p.set_defaults(fn=cmd_new)
+
+    p = sub.add_parser("sync", help="从服务器按实验拉回点对、中间结果、TB 日志（ckpt 永不拉）")
+    p.add_argument("ids", nargs="+")
+    p.add_argument("--extra", action="append", default=[], metavar="NAME", help="要拉的中间结果名，可重复")
+    p.add_argument("--tb", choices=("all",), help="默认只拉 TB scalars；all 拉整个 tb/")
+    p.add_argument("--host", help="ssh 主机别名（默认读环境变量 MOON_SYNC_HOST，再默认 xufang154外网）")
+    p.add_argument("--remote-root", help="远端仓库根目录（默认读 MOON_SYNC_ROOT，再默认服务器上的 YGC/moon-exp）")
+    p.set_defaults(fn=cmd_sync)
 
     args = ap.parse_args(argv)
     args.fn(args)

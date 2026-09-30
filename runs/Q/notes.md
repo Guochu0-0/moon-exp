@@ -131,9 +131,9 @@ Test 只评 Val 峰值 ckpt，同配方两种子 Test 可差 0.02，所以排序
 | Q8 / Q9 / Q10 | 外点分值 0 / −0.1 / −0.5 | 外点分值扫描；0 = 只奖励内点，盯恒等漂移 |
 | Q12 | + 整对梯度 NCC RL（共享平移，σ_g 0.25，K 4），`--rl-scope fine`：RL 梯度只进细级模块 | 按 5.1 一次训练，隔离细级 RL 对粗匹配的破坏 |
 | Q12p | Q12 的随机 reward 对照 | |
-| Q11 | 两段：从 Q4 step 1500 出发，只训细级，纯整对 RL，R27 配方（lr 5e-5、累积 16、4000 步） | R27 在 S1 上的增益能否在类 RIPE 底座上复现 |
+| Q11 | 两段（150 上跑）：从 Q4 step 1500 出发，只训细级，纯整对 RL，R27 配方（lr 5e-5、累积 16、4000 步） | R27 在 S1 上的增益能否在类 RIPE 底座上复现 |
 | Q11p | Q11 的随机 reward 对照 | |
 
 CPU 诊断（不占 GPU）：测试时把 Q4 / Q4s1 / Q7s1 的 Val 预测平移到梯度 NCC 峰，看 #27 的「整体偏移修正」增益在更好的底座上还剩多少（`_ncc_r2/`）。
 
-任务清单：`scripts/finetune/jobs/round2-a6000.txt`（A6000 GPU0 / GPU7）；服务器代码快照 `YGC/moon-exp-r2`。
+任务清单：`scripts/finetune/jobs/round2-a6000.txt`（A6000 GPU0 / GPU7；Q11 / Q11p 挪到 round2-126.txt，150 接入后在那边跑）；服务器代码快照 `YGC/moon-exp-r2`。

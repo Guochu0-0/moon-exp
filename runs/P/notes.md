@@ -107,4 +107,4 @@ Val 上逐对比较 LoFTR 系与 RoMa 系相对真值的平均偏移：两者 |d
 
 P15 的前提由 CPU 诊断核对：测试时把 P8 / P4s1 的 Val 预测平移到梯度 NCC 峰是否仍涨（`_ncc_r2/`）。
 
-任务清单：`scripts/finetune/jobs/round2-126.txt`（126 GPU3）；服务器代码快照 `YGC/moon-exp-r2`。
+任务清单：`scripts/finetune/jobs/round2-126.txt`（126 GPU3，150 经内网 10.254.1.150:20128 接入后同一清单、同一 `_claims`）；服务器代码快照 `YGC/moon-exp-r2`。

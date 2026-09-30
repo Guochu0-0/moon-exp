@@ -12,3 +12,5 @@ Q11p --init /remote-home/xufang/YGC/results/finetune/Q4/ckpt_1500.pt --w-pseudo 
 # P15：P8 配方，但标签先平移到梯度 NCC 峰（finetune/refine_labels.py → labels_p2n.jsonl），给学生带进老师没有的整体偏移信息
 P15  --labels /remote-home/xufang/YGC/results/finetune/labels_p2n.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
 P15s1 --labels /remote-home/xufang/YGC/results/finetune/labels_p2n.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --seed 1
+# 第三个种子（主表报三种子均值 ± std）：P16 = P8 配方 seed 2
+P16  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --seed 2

@@ -1,0 +1,9 @@
+{
+ "method": "anymatch_roma__minmax",
+ "adapter": "romatch",
+ "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+ "weights": "anymatch/RoMa_AnyMatch.pth",
+ "params": {"long_side": 640, "weights_key": "model"},
+ "input": {"optical": "div255", "sar": "minmax"},
+ "seed": 0
+}

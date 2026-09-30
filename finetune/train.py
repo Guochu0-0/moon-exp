@@ -99,6 +99,8 @@ def main(argv=None):
     ap.add_argument("--clip", type=float, default=0.0, help="梯度范数裁剪阈值（上游 LoFTR 为 0.5）；0 = 不裁")
     ap.add_argument("--train-modules", default="all", choices=("all", "fine"),
                     help="fine：只训细级模块，粗匹配保持起点不变")
+    ap.add_argument("--rl-scope", default="all", choices=("all", "fine"),
+                    help="fine：RL 项的梯度只进细级模块，其余项照常训全部模块（一次训练里隔离细级 RL 对粗匹配的破坏，#51）")
     ap.add_argument("--limit", type=int, default=0, help="只用 Train 前 N 对（过拟合测试：RL 能否在固定小集合上推高 reward）")
     ap.add_argument("--save-every", type=int, default=1000)
     ap.add_argument("--save-at", default="", help="额外存 ckpt 的步数，逗号分隔（看早期动态，#49）")
@@ -136,6 +138,8 @@ def main(argv=None):
         for name, p in base.model.named_parameters():
             p.requires_grad_(name.startswith(keep))
     params = [p for p in base.model.parameters() if p.requires_grad]
+    fine_params = [p for name, p in base.model.named_parameters()
+                   if p.requires_grad and name.startswith(("fine_preprocess", "loftr_fine"))]
     params0 = [p.detach().clone() for p in params] if args.w_l2sp > 0 else None   # L2-SP 锚点 = 起点权重
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=args.wd)
     (out / "args.json").write_text(json.dumps({"args": vars(args), "config": cfg, "weights": weights,
@@ -180,9 +184,16 @@ def main(argv=None):
                     feats = (ff(data["image0"]), ff(data["image1"])) if args.rl_pair > 0 else None
                     l_rl, st_rl = rl_loss(data, s, args.K, args.sig_g, args.sig_i, args.rl_pair, args.rl_match,
                                           args.ransac, feats, args.reward, args.placebo, n_pos)
-                    loss = loss + l_rl
+                    if args.rl_scope == "fine" and l_rl.requires_grad:   # 只对细级参数求导，先于主 backward
+                        rl_grads = torch.autograd.grad(l_rl / args.accum, fine_params, retain_graph=True,
+                                                       allow_unused=True)
+                        for p, gr in zip(fine_params, rl_grads):
+                            if gr is not None:
+                                p.grad = gr if p.grad is None else p.grad + gr
+                    else:
+                        loss = loss + l_rl
+                        active = active or l_rl.requires_grad
                     st.update(st_rl, rl=round(float(l_rl), 6))
-                    active = active or l_rl.requires_grad
                 if args.w_l2sp > 0:
                     l_sp = sum(((p - p0) ** 2).sum() for p, p0 in zip(params, params0))
                     loss = loss + args.w_l2sp * l_sp

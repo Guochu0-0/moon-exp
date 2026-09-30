@@ -1,0 +1,7 @@
+# 第二轮（126，gpfs 上有离线标签）。用 scripts/finetune/first_round.py 跑，按行序领取。
+# 用户出差期间授权助手自行继续两条路线（2026-09-30），设计理由见 runs/P/notes.md「第二轮」。
+# 伪标签路线：P8 配方 = labels_p2 前 50% + geo,photo 扰动，从 zero-shot 重训，lr 1e-5，warmup 500 + cosine，8000 步。
+P11  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --seed 1
+P12  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --init /remote-home/xufang/YGC/results/finetune/P2/ckpt_7000.pt
+P13  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --aug-shift 6 --aug-rot 1.5 --aug-scale 0.015
+P14  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --aug-shift 24 --aug-rot 5 --aug-scale 0.05

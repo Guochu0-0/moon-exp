@@ -1,10 +1,11 @@
 # 第二轮（A6000，独立存储，只放不依赖离线标签的类 RIPE 任务）。用 scripts/finetune/first_round.py 跑，按行序领取。
 # 用户出差期间授权助手自行继续两条路线（2026-09-30），设计理由见 runs/Q/notes.md「第二轮」。
 # 类 RIPE 底座 Q4 = 粗级 ±1 闭式期望（外点 −0.25）+ 负样本对 + warmup 500/cosine，4000 步，从 zero-shot 出发。
-Q8   --w-pseudo 0 --w-cexp 1 --neg --cexp-out 0 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
-Q9   --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.1 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
+# A6000 容器 /dev/shm 只有 64 MB：两个任务各 4 个 DataLoader worker 会 Bus error（Q8、Q9 首跑即死于此），这里的任务一律 --workers 2。
+Q8   --w-pseudo 0 --w-cexp 1 --neg --cexp-out 0 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --workers 2
+Q9   --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.1 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --workers 2
 Q10  --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.5 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
 # 细级只训细级模块（首轮三种细级信号训全部模块都有害）。整对 reward = 梯度幅值 NCC，共享平移策略（σ_i 0，σ_g 0.25），K 4。
 # Q12 一次训练：Q4 + 整对 RL，RL 梯度只进细级模块（--rl-scope fine）；Q12p 其随机 reward 对照
-Q12  --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --rl-scope fine
-Q12p --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --rl-scope fine --placebo
+Q12  --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --rl-scope fine --workers 2
+Q12p --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --rl-scope fine --placebo --workers 2

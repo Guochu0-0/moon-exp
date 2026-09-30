@@ -9,5 +9,3 @@ Q10  --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.5 --warmup 500 --sched cosine -
 # Q12 一次训练：Q4 + 整对 RL，RL 梯度只进细级模块（--rl-scope fine）；Q12p 其随机 reward 对照
 Q12  --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --rl-scope fine --workers 2
 Q12p --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --rl-scope fine --placebo --workers 2
-# 第三个种子：Q13 = Q4 配方 seed 2
-Q13  --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --seed 2 --workers 2

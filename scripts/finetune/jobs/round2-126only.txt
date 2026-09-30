@@ -1,0 +1,4 @@
+# 只在 126 V100（32 GB）上跑：带负样本对的类 RIPE 任务，150 的 3090（24 GB）放不下。
+# 由 126 GPU3 的 round2-126.txt 队列跑空后接着跑（A6000 外网断连，原计划放在 round2-a6000.txt）。
+# 第三个种子：Q13 = Q4 配方 seed 2
+Q13  --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --seed 2

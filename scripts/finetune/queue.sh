@@ -17,6 +17,6 @@ while true; do
   read -r name args <<< "$line"
   echo "$(hostname) gpu$GPU $(date +%T)" > $F/_claims/$name/host
   echo "$(date +%T) START $name $args"
-  REPO=$PWD GPU=$GPU bash scripts/finetune/scenes.sh $name $args > $F/$name.driver.log 2>&1 < /dev/null \
+  REPO=$PWD GPU=$GPU bash scripts/finetune/${DRIVER:-scenes.sh} $name $args > $F/$name.driver.log 2>&1 < /dev/null \
     && echo "$(date +%T) OK $name" || echo "$(date +%T) FAIL $name (see $F/$name.driver.log)"
 done

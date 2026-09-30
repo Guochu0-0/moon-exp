@@ -93,7 +93,7 @@ def key(pair: str) -> str:
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("config")
-    ap.add_argument("--split", required=True, choices=("val", "test"))
+    ap.add_argument("--split", required=True, choices=("train", "val", "test"))
     ap.add_argument("--data", default=os.environ.get("MOON_DATA"))
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
     ap.add_argument("--out", required=True)
@@ -126,7 +126,7 @@ def main(argv=None):
     seed = int(cfg.get("seed", 0))
 
     data = Data(args.data)
-    pairs = data.pairs(args.split)
+    pairs = data.pairs(args.split, labelled_only=args.split != "train")   # Train 无标注，全跑（RoMa 伪标签 #65）
     if args.limit:
         pairs = pairs[:args.limit]
 

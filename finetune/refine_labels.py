@@ -20,7 +20,7 @@ import numpy as np
 
 from baselines import inputs
 from baselines.diagnose_reward import FEATS, peak, surface, warp_feat
-from workbench.dataset import Dataset
+from baselines.data import Data
 
 
 def refine(A, opt, sar, feat="gradncc"):
@@ -37,7 +37,7 @@ def one(job):
     root, d, feat = job
     if not d["keep"] or d["A"] is None:
         return d
-    ds = Dataset(root)
+    ds = Data(root)
     opt = inputs.get("optical", "div255")(ds.optical("train", d["pair"]))
     sar = inputs.get("sar", "p2p98")(ds.sar("train", d["pair"]))
     A = np.asarray(d["A"], float)

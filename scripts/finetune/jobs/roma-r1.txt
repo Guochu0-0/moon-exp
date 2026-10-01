@@ -16,6 +16,9 @@ M9 --w-pseudo 0 --w-ripe 1 --neg --steps 4000 --lr 1e-6 --workers 4
 # 伪标签：M3 第二个种子；M10 不筛标签（前 100%）
 M3s1 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --lr 1e-5 --seed 1 --workers 4
 M10 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 1.0 --lr 1e-5 --workers 4
+# 第三批（伪标签第二轮，Noisy-Student）：M3（Val 峰值 ckpt_2000）给 Train 重新打标 → labels_rm1，从 zero-shot 重训；M11 带 geo+photo 扰动，M11n 不带
+M11 --labels C:/Program Files/Git/remote-home/xufang/YGC/results/finetune/labels_rm1.jsonl --label-top 0.5 --aug geo,photo --lr 1e-5 --workers 4
+M11n --labels C:/Program Files/Git/remote-home/xufang/YGC/results/finetune/labels_rm1.jsonl --label-top 0.5 --lr 1e-5 --workers 4
 # 第三批：M4 用 RoMa 自己 zero-shot 打的标签（对照 LoFTR 老师）；M12 类 RIPE 只给正分（外点 0、无负样本对），M12p 其随机对照
 M4 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --workers 4
 M12 --w-pseudo 0 --w-ripe 1 --r-out 0 --cert-out 0 --steps 4000 --lr 1e-5 --workers 4

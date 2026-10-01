@@ -7,3 +7,12 @@ M3 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top
 M5 --w-pseudo 0 --w-ripe 1 --neg --steps 4000 --lr 1e-5 --workers 4
 M5p --w-pseudo 0 --w-ripe 1 --neg --placebo --steps 4000 --lr 1e-5 --workers 4
 M6 --w-pseudo 0 --w-ripe 1 --neg --w-cert 0.1 --steps 4000 --lr 1e-5 --workers 4
+# 第二批（M5 / M5p / M6 在 450 步内塌到 certainty 全 0，随机 reward 对照同样塌：是优化动力学问题）
+# M7：只留粗级锚点项（不训 certainty，最接近 Q4）；M7p 其随机 reward 对照；M8：取舍项外点给 0（只奖励内点）；M9：M5 降 lr 到 1e-6
+M7 --w-pseudo 0 --w-ripe 1 --neg --w-cert 0 --steps 4000 --lr 1e-5 --workers 4
+M7p --w-pseudo 0 --w-ripe 1 --neg --w-cert 0 --placebo --steps 4000 --lr 1e-5 --workers 4
+M8 --w-pseudo 0 --w-ripe 1 --neg --cert-out 0 --steps 4000 --lr 1e-5 --workers 4
+M9 --w-pseudo 0 --w-ripe 1 --neg --steps 4000 --lr 1e-6 --workers 4
+# 伪标签：M3 第二个种子；M10 不筛标签（前 100%）
+M3s1 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --lr 1e-5 --seed 1 --workers 4
+M10 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 1.0 --lr 1e-5 --workers 4

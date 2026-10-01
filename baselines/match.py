@@ -99,6 +99,7 @@ def main(argv=None):
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--timeout", type=int, default=120, help="单个 pair 的超时秒数（0 不设）")
+    ap.add_argument("--shard", default="", help="k/n：只跑第 k 份（pairs[k::n]），Train 推理分卡用")
     ap.add_argument("--limit", type=int, default=0, help="只跑前 N 个 pair（调试用）")
     ap.add_argument("--resume", action="store_true", help="跳过 <split>.jsonl 里已有的 pair")
     ap.add_argument("--weights", help="覆盖配置里的权重路径（如微调产出的 ckpt）")
@@ -127,6 +128,9 @@ def main(argv=None):
 
     data = Data(args.data)
     pairs = data.pairs(args.split, labelled_only=args.split != "train")   # Train 无标注，全跑（RoMa 伪标签 #65）
+    if args.shard:
+        k, n = map(int, args.shard.split("/"))
+        pairs = pairs[k::n]
     if args.limit:
         pairs = pairs[:args.limit]
 

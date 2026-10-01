@@ -46,6 +46,7 @@ def main(argv=None):
     ap.add_argument("--w-ripe", type=float, default=0.0, help="类 RIPE 闭式期望（finetune/roma.py ripe_loss）")
     ap.add_argument("--r-out", type=float, default=-0.25, help="类 RIPE：正样本对外点的分值（Q4 为 −0.25）")
     ap.add_argument("--w-cert", type=float, default=1.0, help="类 RIPE：certainty 取舍项相对锚点项的权重")
+    ap.add_argument("--cert-out", type=float, default=None, help="类 RIPE：取舍项里外点的分值，默认同 --r-out")
     ap.add_argument("--num", type=int, default=5000, help="类 RIPE：每步抽点数")
     ap.add_argument("--neg", action="store_true", help="类 RIPE：负样本对并入同一次前向")
     ap.add_argument("--placebo", action="store_true", help="类 RIPE：reward 在像素间随机打乱（对照）")
@@ -128,7 +129,7 @@ def main(argv=None):
                         x0, x1 = torch.cat([i0, i0]), torch.cat([i1, batch["image1_neg"].to(args.device)])
                     corr = base.forward(x0, x1)
                     l_r, st_r = ripe_loss(corr, [False] * B + [True] * B if args.neg else None, r_out=args.r_out,
-                                          num=args.num, w_cert=args.w_cert, placebo=args.placebo, rng=rng)
+                                          num=args.num, w_cert=args.w_cert, placebo=args.placebo, rng=rng, cert_out=args.cert_out)
                     loss = loss + args.w_ripe * l_r
                     st.update(st_r)
                 scaler.scale(loss / args.accum).backward()

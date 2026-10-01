@@ -145,14 +145,16 @@ def sample_matches(flow, cert, num=5000, thresh=0.05, gen=None):
     return to_px(g[idx]), to_px(flow.reshape(2, -1).T[idx].float()), idx
 
 
-def ripe_loss(corresps, neg=None, thr=3.0, r_out=-0.25, num=5000, w_cert=1.0, placebo=False, rng=None):
-    """类 RIPE（Q4 对应物）。neg: 长度 B 的 bool。返回 (loss, 统计)。"""
+def ripe_loss(corresps, neg=None, thr=3.0, r_out=-0.25, num=5000, w_cert=1.0, placebo=False, rng=None, cert_out=None):
+    """类 RIPE（Q4 对应物）。neg: 长度 B 的 bool。cert_out：取舍项里正样本对外点的分值，None = 同 r_out
+    （r_out < 0 时「certainty 全 0」是吸收态，M5 实测 450 步内塌缩；取 0 则只奖励内点）。返回 (loss, 统计)。"""
     f1, c1 = corresps[1]["flow"], corresps[1]["certainty"]
     B, _, h, w = f1.shape
     neg = np.zeros(B, bool) if neg is None else np.asarray(neg, bool)
     rng = rng or np.random.default_rng()
     g = grid(h, w, f1.device)
     R = torch.zeros(B, h, w, device=f1.device)
+    Rc = torch.zeros(B, h, w, device=f1.device)
     per = []
     for b in range(B):
         with torch.no_grad():
@@ -171,6 +173,7 @@ def ripe_loss(corresps, neg=None, thr=3.0, r_out=-0.25, num=5000, w_cert=1.0, pl
                 if placebo:
                     r = r.reshape(-1)[torch.from_numpy(rng.permutation(h * w)).to(r.device)].reshape(h, w)
             R[b] = r
+            Rc[b] = r if (cert_out is None or neg[b]) else torch.where(r > 0, r, torch.full_like(r, cert_out))
             n_inl = 0 if inl is None else int(inl.sum())
             per.append({"neg": bool(neg[b]), "n_inl": n_inl, "inl_frac": round(float(inl_px.float().mean()), 4),
                         "dist_I": None if A is None else round(identity_dist(A), 3)})
@@ -180,10 +183,10 @@ def ripe_loss(corresps, neg=None, thr=3.0, r_out=-0.25, num=5000, w_cert=1.0, pl
     rbar = F.adaptive_avg_pool2d(R[:, None], P.shape[-2:])[:, 0]
     l_cls = -(P * rbar).mean()
     # 取舍：各尺度 σ(certainty) · reward（最近邻下采样）
-    l_cert = 0.0
-    for s, c in corresps.items():
+    l_cert = torch.zeros((), device=f1.device)
+    for s, c in (corresps.items() if w_cert > 0 else ()):
         cert = c["certainty"][:, 0].float()
-        rs = F.interpolate(R[:, None], size=cert.shape[-2:], mode="nearest-exact")[:, 0]
+        rs = F.interpolate(Rc[:, None], size=cert.shape[-2:], mode="nearest-exact")[:, 0]
         l_cert = l_cert - (cert.sigmoid() * rs).mean()
     loss = l_cls + w_cert * l_cert
     agg = lambda xs, k: round(float(np.mean([x[k] for x in xs if x[k] is not None])), 4) if any(

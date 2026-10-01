@@ -23,3 +23,7 @@ M11n --labels /remote-home/xufang/YGC/results/finetune/labels_rm1.jsonl --label-
 M4 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --workers 4
 M12 --w-pseudo 0 --w-ripe 1 --r-out 0 --cert-out 0 --steps 4000 --lr 1e-5 --workers 4
 M12p --w-pseudo 0 --w-ripe 1 --r-out 0 --cert-out 0 --placebo --steps 4000 --lr 1e-5 --workers 4
+# 第四批：伪标签在 RoMa 上与老师无关地停在 Val ≈ 0.305（M3 / M4 / M11n）；主候选 M4（RoMa 自训练）补种子，并试两个可能打破平台的因素
+M4s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --seed 1 --workers 4
+M13 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --train-vgg --workers 4
+M14 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --workers 4

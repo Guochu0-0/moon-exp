@@ -17,3 +17,7 @@ step 1000 的 Val AUC@5 为 0.013，之后各 ckpt 为 0.012，中位误差均�
 ## 下一步
 
 以当前模型 RANSAC 为参考的训练（含 RIPE++ 式粗级闭式期望）都有此风险，需单独验证。
+
+## 记录补记（#77，2026-10-02）
+
+训练产物从 `YGC/results/finetune/S2/` 迁入本目录的 `ckpt/main/`、`sweep/main/`；ckpt 只留 Val 峰值与最后一个，其余在 `YGC/_archive/2026-10/ckpt/S2/`。启动脚本见 `runs/S1/code/launch26.sh`。

@@ -1,7 +1,7 @@
 #!/bin/bash
 # on a gpfs host (126/160): unpack envs + scripts to local disk, set up torch hub cache
 set -e
-S=/remote-home/xufang/YGC/tmp/envpack
+S=/remote-home/xufang/YGC/envpack
 W=/remote-home/xufang/YGC/weights
 mkdir -p /opt /root/scripts /opt/torch_home/hub/checkpoints
 cd /opt && nice -n 19 ionice -c3 tar -xf $S/envs.tar

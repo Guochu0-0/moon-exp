@@ -56,3 +56,9 @@ S2 的塌缩是与内容无关的位置捷径（#48 的推断成立）；zero-sh
 ## 下一步
 
 交给「首轮实验设计」#51。L2-SP、已知几何增强 + 一致性（#48 建议 ③ ④）因为没有塌缩，未跑。
+
+## 记录补记（#77，2026-10-02）
+
+- 训练产物从 `YGC/results/finetune/<m>/` 迁入本目录的 `ckpt/`、`sweep/`；ckpt 只留峰值与最后一个，其余在 `YGC/_archive/2026-10/ckpt/C/`。
+- 补齐 C1p、C2p 的 `preds/`（Val 峰值 step 500 / 10，只有 Val）。
+- preds meta 的 commit 为事后重建：用 `moon-exp-ft49` 副本跑，代码与 ea09457 一致。

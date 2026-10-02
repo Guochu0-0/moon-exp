@@ -141,3 +141,10 @@ P15 的前提由 CPU 诊断核对：测试时把 P8 / P4s1 的 Val 预测平移�
 两条路线打平：Val 后段均值 0.289 vs 0.287，Test 三种子均值 0.264 vs 0.267，差异小于同配方种子间的 Test 波动（约 0.006）。
 都比 zero-shot（Test 0.188）和 S1（0.233）高得多。第二轮在两条路线上一共试了 9 个因素，没有一个过判据。
 而且 Val 已经高于留一法算出的真值上限（见 `runs/Q/notes.md`「第二轮 CPU 诊断」），在现有评测下继续调配方的信息量很低。
+
+## 记录补记（#77，2026-10-02）
+
+- 训练产物从 `YGC/results/finetune/<m>/` 迁入本目录的 `ckpt/`、`sweep/`；ckpt 只留峰值与最后一个，其余在 `YGC/_archive/2026-10/ckpt/P/`。
+- 补齐 P11–P16、P15s1 的 `preds/`（取 `sweep/<m>/peak.json` 的 step）。
+- preds meta 的 commit 为事后重建：P1–P10（含 P2s1、P4s1）用 `moon-exp-ft51` 副本跑，代码与 b21bc77 一致；P11 起用 `moon-exp-r2` 副本，与 840927b 一致。
+- `code/first-round-p.txt`：ft51 副本里就地改过的 154 任务清单（与 git 中的版本不同），原样提交；P1–P10 其余任务在 `runs/Q/code/first-round.txt`。

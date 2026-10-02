@@ -16,7 +16,7 @@
 | `YGC/wt/<分支>` | 本票的 worktree | 在这里改代码、提交、跑实验。结果先写在这里的 `runs/<id>/`。 |
 | A6000 的 `YGC/moon-exp`、`YGC/wt/` | A6000 自己的一套 | 同上；跑完把结果拷回 gpfs，见 `servers.md`「A6000」。 |
 
-`YGC/results/finetune/` 和 `YGC/moon-exp-*`（导出副本）是旧做法，停止写入，等「历史代码与结果整理」（#77）归档。
+`YGC/results/finetune/`（只剩离线伪标签 `labels_*`）和导出副本是旧做法，停止写入；旧产物已迁进 `runs/`，其余归档在 `YGC/_archive/2026-10/`（「历史代码与结果整理」，#77）。
 
 ## 流程
 

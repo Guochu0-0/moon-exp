@@ -1,0 +1,20 @@
+id = "S"
+title = "S1s1 ckpt sweep"
+parent = ""
+# init = "B0/roma"      # 可选：从父实验的哪个方法起步；父实验有多个方法时用来定比较基准
+date = "2026-09-28"
+commit = "ab3fce1"
+status = "running"      # baseline / running / kept / dropped
+
+hypothesis = """
+"""
+
+change = """
+"""
+
+# 结论只依据 Val
+verdict = """
+"""
+
+next = """
+"""

@@ -3,10 +3,11 @@
     {
       "experiments": {"B0": {"x": 120, "y": 80}},
       "groups":      [{"id": "g1", "x": -20, "y": -20, "w": 800, "h": 260, "title": "zero-shot", "color": "c1"}],
-      "stickies":    [{"id": "s1", "x": 0, "y": 300, "w": 220, "h": 120, "text": "..."}]
+      "stickies":    [{"id": "s1", "x": 0, "y": 300, "w": 230, "h": 80, "text": "..."}]
     }
 
 坐标是世界坐标（px），原点在左上。实验卡片宽度固定，只存 x、y。视口存在浏览器 localStorage，不在这里。
+分组框的 color 取 COLORS 之一。便签和分组框写入时只留上面这些字段，数值取整。
 """
 from __future__ import annotations
 
@@ -18,6 +19,8 @@ GAP_X = 120         # 父子之间的水平间距
 GAP_Y = 40          # 上下相邻卡片的最小间距
 STEP_Y = 30         # 找空位时每次往下挪多少
 SHOWN_METHODS = 4   # 卡片上默认显示的方法行数，与前端一致
+COLORS = ("c1", "c2", "c3", "c4")   # 分组框的 4 种颜色，与前端 .grp.c1–c4 一致
+BOX = ("x", "y", "w", "h")
 
 
 def path(runs_dir: Path) -> Path:
@@ -31,14 +34,53 @@ def load(runs_dir: Path) -> dict:
             "stickies": list(c.get("stickies", []))}
 
 
+def _items(items, kind: str, text_key: str) -> list[dict]:
+    if not isinstance(items, list):
+        raise ValueError(f"{kind} 应为数组")
+    out, seen = [], set()
+    for it in items:
+        if not isinstance(it, dict):
+            raise ValueError(f"{kind} 的每一项应为对象")
+        rid = it.get("id")
+        if not isinstance(rid, str) or not rid:
+            raise ValueError(f"{kind} 的 id 应为非空字符串")
+        if rid in seen:
+            raise ValueError(f"{kind} 的 id 重复：{rid}")
+        seen.add(rid)
+        if not all(isinstance(it.get(a), (int, float)) and not isinstance(it.get(a), bool) for a in BOX):
+            raise ValueError(f"{rid} 的 x、y、w、h 应为数值")
+        if not isinstance(it.get(text_key), str):
+            raise ValueError(f"{rid} 的 {text_key} 应为字符串")
+        o = {"id": rid, **{a: round(it[a]) for a in BOX}, text_key: it[text_key]}
+        if kind == "groups":
+            if it.get("color") not in COLORS:
+                raise ValueError(f"{rid} 的 color 应为 {'、'.join(COLORS)} 之一")
+            o["color"] = it["color"]
+        out.append(o)
+    return out
+
+
+def clean_groups(items) -> list[dict]:
+    """校验分组框列表并规整：只留 id、x、y、w、h、title、color，数值取整。不合法时抛 ValueError。"""
+    return _items(items, "groups", "title")
+
+
+def clean_stickies(items) -> list[dict]:
+    """校验便签列表并规整：只留 id、x、y、w、h、text，数值取整。不合法时抛 ValueError。"""
+    return _items(items, "stickies", "text")
+
+
 def save(runs_dir: Path, canvas: dict, ids) -> dict:
-    """写 canvas.json：丢掉目录已不存在的实验，key 排序，缩进 2 格。坐标取整。返回写入的内容。"""
+    """写 canvas.json：丢掉目录已不存在的实验，key 排序，缩进 2 格。坐标取整。返回写入的内容。
+
+    便签和分组框按 clean_groups / clean_stickies 规整，不合法时抛 ValueError、不写文件。
+    """
     ids = set(ids)
     out = {
         "experiments": {k: {"x": round(v["x"]), "y": round(v["y"])}
                         for k, v in canvas.get("experiments", {}).items() if k in ids},
-        "groups": list(canvas.get("groups", [])),
-        "stickies": list(canvas.get("stickies", [])),
+        "groups": clean_groups(canvas.get("groups", [])),
+        "stickies": clean_stickies(canvas.get("stickies", [])),
     }
     text = json.dumps(out, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     path(runs_dir).write_text(text, encoding="utf-8", newline="\n")

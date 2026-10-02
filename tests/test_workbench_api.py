@@ -263,6 +263,57 @@ def test_save_canvas_sorts_and_drops_missing(api, runs):
     assert d["canvas"]["stickies"] == note
 
 
+def test_groups_and_stickies_round_trip_in_stable_format(api, runs):
+    write_exp(runs, "B0")
+    groups = [{"id": "g2", "x": 10.6, "y": -20, "w": 460, "h": 300, "title": "待跑：等算力", "color": "c3"},
+              {"id": "g1", "x": 0, "y": 0, "w": 800, "h": 260, "title": "零样本基线", "color": "c1"}]
+    stickies = [{"id": "s1", "x": 0, "y": 300.4, "w": 230, "h": 80, "text": "Test 只在定稿时跑\n平时只看 Val"}]
+    assert api.put("/api/canvas", {"groups": groups, "stickies": stickies})[0] == 200
+    text = (runs / "canvas.json").read_text(encoding="utf-8")
+    c = json.loads(text)
+    assert c["groups"] == [{"color": "c3", "h": 300, "id": "g2", "title": "待跑：等算力", "w": 460, "x": 11, "y": -20},
+                           {"color": "c1", "h": 260, "id": "g1", "title": "零样本基线", "w": 800, "x": 0, "y": 0}]
+    assert c["stickies"] == [{"h": 80, "id": "s1", "text": "Test 只在定稿时跑\n平时只看 Val", "w": 230, "x": 0, "y": 300}]
+    assert text == json.dumps(c, ensure_ascii=False, indent=2, sort_keys=True) + "\n"   # key 排序、缩进 2 格
+    assert '    {\n      "color": "c3",\n      "h": 300,' in text
+    _, d = api.get("/api/data")
+    assert d["canvas"] == {"groups": c["groups"], "stickies": c["stickies"]}
+
+
+def test_group_drag_saves_members_and_frame_together(api, runs):
+    write_exp(runs, "B0")
+    write_exp(runs, "E1")
+    g = {"id": "g1", "x": 0, "y": 0, "w": 800, "h": 300, "title": "组", "color": "c2"}
+    s = {"id": "s1", "x": 20, "y": 60, "w": 230, "h": 80, "text": "注"}
+    api.put("/api/canvas", {"experiments": {"B0": {"x": 20, "y": 150}, "E1": {"x": 900, "y": 0}},
+                            "groups": [g], "stickies": [s]})
+    moved = {"experiments": {"B0": {"x": 120, "y": 200}}, "groups": [{**g, "x": 100, "y": 50}],
+             "stickies": [{**s, "x": 120, "y": 110}]}                      # 前端拖标题栏后一次 PUT
+    assert api.put("/api/canvas", moved)[0] == 200
+    c = canvas(runs)
+    assert c["experiments"] == {"B0": {"x": 120, "y": 200}, "E1": {"x": 900, "y": 0}}
+    assert (c["groups"][0]["x"], c["groups"][0]["y"]) == (100, 50)
+    assert (c["stickies"][0]["x"], c["stickies"][0]["y"]) == (120, 110)
+
+
+@pytest.mark.parametrize("body", [
+    {"groups": [{"id": "g1", "x": 0, "y": 0, "w": 9, "h": 9, "title": "t", "color": "red"}]},     # 不在 4 种颜色里
+    {"groups": [{"id": "g1", "x": 0, "y": 0, "w": 9, "h": 9, "title": "t"}]},                     # 缺 color
+    {"groups": [{"id": "g1", "x": "0", "y": 0, "w": 9, "h": 9, "title": "t", "color": "c1"}]},    # 坐标不是数值
+    {"groups": ["g1"]},
+    {"stickies": [{"id": "s1", "x": 0, "y": 0, "w": 9, "h": 9, "text": 3}]},                      # text 不是字符串
+    {"stickies": [{"id": "", "x": 0, "y": 0, "w": 9, "h": 9, "text": ""}]},                       # 空 id
+    {"stickies": [{"id": "s1", "x": 0, "y": 0, "w": 9, "h": 9, "text": ""}] * 2},                 # id 重复
+])
+def test_bad_groups_or_stickies_rejected_without_writing(api, runs, body):
+    write_exp(runs, "B0")
+    api.put("/api/canvas", {"experiments": {"B0": {"x": 1, "y": 2}}})
+    before = (runs / "canvas.json").read_bytes()
+    code, r = api.put("/api/canvas", body)
+    assert code == 400 and r["error"]
+    assert (runs / "canvas.json").read_bytes() == before
+
+
 def test_v1_endpoints_gone(api):
     assert api.get("/api/pair?split=val&pair=x")[0] == 404
     assert api.get("/api/reload")[0] == 404

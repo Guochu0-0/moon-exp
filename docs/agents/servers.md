@@ -78,7 +78,7 @@
 - baseline 代码以 git submodule 形式放在 `third_party/`，commit 钉死。
 - 软件和 conda 环境装在**各容器本地**，不装在 gpfs 上（gpfs 传输慢）。gpfs 只放代码、数据、权重和结果。
   - `/opt/envs/loftr`（py3.10，torch 2.1.2+cu118，训练与推理）、`/opt/envs/wb`（py3.11，工作台与评测）。
-  - 150 的环境从 `YGC/tmp/envpack/envs.tar` 解出，与 154 一致。
+  - 150 的环境从 `YGC/envpack/envs.tar`（2026-10-02 从 `tmp/` 挪出） 解出，与 154 一致。
 - 数据在 `YGC/dataset/Moon`（Train 7907 / Val 825 / Test 1130 对）。Val 的 ROI_060 已删除，Val 为 6 个 ROI。
 - 权重在 `YGC/weights/`（`anymatch/`、`minima/`、`matchanything/` 等）。RoMa 系要的 DINOv2 缓存在 `YGC/weights/torch_home`（设 `TORCH_HOME` 指向它，gpfs 上各机共用）。
 - 训练产物写进实验目录 `runs/<id>/`，结票后归到主 checkout 的 `runs/`。`YGC/results/finetune/<name>/` 是 10/02 以前的旧产物，停止写入；其中的离线伪标签 `labels_*.jsonl` 照常读取。

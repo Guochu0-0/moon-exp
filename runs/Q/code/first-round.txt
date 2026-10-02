@@ -1,0 +1,34 @@
+# 两条路线的首轮实验（#51 类 RIPE → Q*，#53 伪标签 → P*）。用 scripts/finetune/first_round.py 跑，按行序领取。
+# 用户授权助手在不 grilling 的情况下自行设计并开跑（2026-09-28 夜），设计理由见 runs/Q/notes.md、runs/P/notes.md。
+# 两条路线互不混合：Q 系不用离线标签、不从 S1 出发；P 系不用在线信号。全部从 zero-shot 出发，lr 1e-5，warmup 500（0.1× 起）+ cosine。
+#
+# 类 RIPE 底座 Q0 = 粗级 ±1 闭式期望 + 负样本对（#49 的 C2）+ warmup/cosine，4000 步；每组只在 Q0 上加一个因素。
+# 伪标签对照 = S1wc（labels_b0、同配方、8000 步，#50 已跑：Val 峰值 0.266、后段均值 0.263）。
+Q0   --w-pseudo 0 --w-cexp 1 --neg --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
+P2   --labels /remote-home/xufang/YGC/results/finetune/labels_s1.jsonl --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
+Q1   --w-pseudo 1 --w-coarse 0 --w-fine 1 --w-cexp 1 --neg --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
+P1   --labels /remote-home/xufang/YGC/results/finetune/labels_s1.jsonl --warmup 500 --sched cosine --steps 8000 --save-every 1000
+Q3   --w-pseudo 0 --w-cexp 1 --neg --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
+Q2   --w-pseudo 0 --w-cexp 1 --neg --rl-match 1 --sig-i 0.1 --sig-g 0 --K 4 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
+P3   --labels /remote-home/xufang/YGC/results/finetune/labels_b0.jsonl --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
+P6   --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
+Q3p  --w-pseudo 0 --w-cexp 1 --neg --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --placebo --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
+P4   --labels /remote-home/xufang/YGC/results/finetune/labels_s1.jsonl --aug geo,photo --label-top 0.5 --warmup 500 --sched cosine --steps 8000 --save-every 1000
+Q2p  --w-pseudo 0 --w-cexp 1 --neg --rl-match 1 --sig-i 0.1 --sig-g 0 --K 4 --placebo --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
+Q5   --w-pseudo 0 --w-cexp 1 --neg --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --aug geo,photo
+Q3w  --w-pseudo 0 --w-cexp 1 --neg --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --rl-pair 0.25 --sig-i 0 --sig-g 0.25 --K 4
+Q0s1 --w-pseudo 0 --w-cexp 1 --neg --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --seed 1
+P7   --labels /remote-home/xufang/YGC/results/finetune/labels_s1.jsonl --label-top 0.25 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
+P8   --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
+P9   --labels /remote-home/xufang/YGC/results/finetune/labels_p6.jsonl --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
+Q5s1 --w-pseudo 0 --w-cexp 1 --neg --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --aug geo,photo --seed 1
+P4s1 --labels /remote-home/xufang/YGC/results/finetune/labels_s1.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --seed 1
+P5   --labels /remote-home/xufang/YGC/results/finetune/labels_s1.jsonl --aug geo --warmup 500 --sched cosine --steps 8000 --save-every 1000
+Q4   --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750
+P10  --labels /remote-home/xufang/YGC/results/finetune/labels_p6.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
+Q6   --w-pseudo 0 --w-cexp 1 --neg --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --aug geo,photo --aug-shift 24 --aug-rot 5
+P2s1 --labels /remote-home/xufang/YGC/results/finetune/labels_s1.jsonl --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --seed 1
+# 晨间追加：Q7 = Q4 + 学生侧扰动（Q4 的恒等漂移最大，Q5 的扰动能压住）；Q4s1、Q7s1 种子复现
+Q4s1 --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --seed 1
+Q7   --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --aug geo,photo
+Q7s1 --w-pseudo 0 --w-cexp 1 --neg --cexp-out -0.25 --warmup 500 --sched cosine --steps 4000 --save-every 500 --save-at 250,750 --aug geo,photo --seed 1

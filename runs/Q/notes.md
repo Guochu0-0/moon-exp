@@ -230,3 +230,10 @@ NCC 峰本身离真值的中位距离是 1.32 px（只有 33% 在 1 px 内），
 - 限制上限的是 x 向非仿射错位场：全点拟合残差每自由度 x 19.8 px²、y 1.7 px²（中位 11.8 / 1.3），y 与 σ ≈ 1 的标注噪声一致；不是离群对拉高的。
 - 仿射方法的 AUC@5 上限约 0.37–0.38，Q4 / P8 在 Val 达到约 76%、Test 约 72%，还有约 0.09–0.10 的空间；AUC@3 上限只有约 0.16，现为 0.09。
 - σ 取 0.8–1.2 时上限变化约 ±0.01。模型假设：标注误差独立同分布高斯；错位场为平稳高斯过程、幅度逐对估计。
+
+## 记录补记（#77，2026-10-02）
+
+- 训练产物从 `YGC/results/finetune/<m>/`（Q8 Q9 Q10 Q12 Q12p 从 A6000 拷回）迁入本目录的 `ckpt/`、`sweep/`；ckpt 只留峰值与最后一个，其余在 `YGC/_archive/2026-10/ckpt/Q/`。
+- 补齐 Q8–Q13、Q11p、Q12p 的 `preds/`（取 `sweep/<m>/peak.json` 的 step）。
+- preds meta 的 commit 为事后重建：Q0–Q7 用 `moon-exp-ft51` 副本，代码与 b21bc77 一致；Q11、Q11p、Q13 用 gpfs 上的 `moon-exp-r2`，与 840927b 一致；Q8 Q9 Q10 Q12 Q12p 用 A6000 上的 `moon-exp-r2`，与 5a08a30 一致。
+- `code/`：`first-round.txt`（ft51 副本里就地改过的首轮任务清单，P1–P10 与 Q0–Q7），`chain126.sh`（126 上接着跑 round2-126only，产出 Q13），`resweep_q11.sh`（Q11、Q11p 重扫），`ncc_r2.sh`（`extra/diag_r2` 的 reward 诊断），`r2fix7_a6000.sh`（A6000 GPU7 上 round2 队列的重启）。

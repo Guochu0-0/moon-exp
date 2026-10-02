@@ -1,0 +1,148 @@
+{
+ "C1p": [
+  {
+   "step": 0,
+   "auc5": 0.21935596031979415,
+   "med": 4.215221465891643,
+   "n_match": 859.0,
+   "inl_ratio": 0.23810381848089504,
+   "dI": 25.31668224590092,
+   "idI": 0.029141104294478526,
+   "neg_inl": 34.0,
+   "neg_ident": 3.0,
+   "diag": 0.001
+  },
+  {
+   "step": 10,
+   "auc5": 0.03597057535683437,
+   "med": 43.10554855918677,
+   "n_match": 6.0,
+   "inl_ratio": 0.7253384912959382,
+   "dI": 38.62410369628487,
+   "idI": 0.04535637149028078,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0001
+  },
+  {
+   "step": 25,
+   "auc5": 0.0011372041542965824,
+   "med": null,
+   "n_match": 0.0,
+   "inl_ratio": 0.0,
+   "dI": 41.72973258627101,
+   "idI": 0.05555555555555555,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0001
+  },
+  {
+   "step": 50,
+   "auc5": 0.0,
+   "med": null,
+   "n_match": 0.0,
+   "inl_ratio": 0.0,
+   "dI": 51.3140377697203,
+   "idI": 0.0,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0
+  },
+  {
+   "step": 100,
+   "auc5": 0.0,
+   "med": null,
+   "n_match": 0.0,
+   "inl_ratio": 0.0,
+   "dI": 52.62998588793124,
+   "idI": 0.05,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0
+  },
+  {
+   "step": 250,
+   "auc5": 0.0002375789458789284,
+   "med": null,
+   "n_match": 0.0,
+   "inl_ratio": 0.0,
+   "dI": 44.96083678964117,
+   "idI": 0.08163265306122448,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0001
+  },
+  {
+   "step": 500,
+   "auc5": 0.22554997248750921,
+   "med": 4.149223471798894,
+   "n_match": 503.5,
+   "inl_ratio": 0.449907063197026,
+   "dI": 25.522199111526078,
+   "idI": 0.03374233128834356,
+   "neg_inl": 26.0,
+   "neg_ident": 1.0,
+   "diag": 0.001
+  },
+  {
+   "step": 1000,
+   "auc5": 0.0,
+   "med": null,
+   "n_match": 0.0,
+   "inl_ratio": 0.0,
+   "dI": null,
+   "idI": NaN,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0
+  },
+  {
+   "step": 1500,
+   "auc5": 0.0,
+   "med": null,
+   "n_match": 0.0,
+   "inl_ratio": 0.0,
+   "dI": null,
+   "idI": NaN,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0
+  },
+  {
+   "step": 2000,
+   "auc5": 0.0,
+   "med": null,
+   "n_match": 0.0,
+   "inl_ratio": 0.0,
+   "dI": null,
+   "idI": NaN,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0
+  },
+  {
+   "step": 2500,
+   "auc5": 0.0,
+   "med": null,
+   "n_match": 0.0,
+   "inl_ratio": 0.0,
+   "dI": null,
+   "idI": NaN,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0
+  },
+  {
+   "step": 3000,
+   "auc5": 0.0,
+   "med": null,
+   "n_match": 0.0,
+   "inl_ratio": 0.0,
+   "dI": null,
+   "idI": NaN,
+   "neg_inl": 0.0,
+   "neg_ident": 0.0,
+   "diag": 0.0
+  }
+ ]
+}

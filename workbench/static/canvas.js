@@ -85,7 +85,7 @@ export function mountCanvas(root, { onOpen }) {
     const r0 = rev;
     let d;
     try { d = await api.data(); } catch (err) { toast(`读取数据失败：${err.message}`, true); return; }
-    if (rev !== r0 && !force) return;
+    if ((rev !== r0 || busy()) && !force) return;   // 拖动途中才回来的结果会替换掉正被拖的对象，丢掉
     const text = JSON.stringify(d);
     if (text === lastText && !force) return;
     lastText = text;
@@ -454,8 +454,9 @@ export function mountCanvas(root, { onOpen }) {
       for (const it of d.stickies) { Object.assign(it.s, { x: it.p0[0] + dx, y: it.p0[1] + dy }); placeBox(stickyEl(it.s.id), it.s); }
       drawEdges();
     } else if (d.kind === 'resize') {
-      d.moved = 1;
-      d.g.w = Math.max(220, Math.round(d.w + wx - d.sx)); d.g.h = Math.max(120, Math.round(d.h + wy - d.sy));
+      const w = Math.max(220, Math.round(d.w + wx - d.sx)), h = Math.max(120, Math.round(d.h + wy - d.sy));
+      if (w === d.g.w && h === d.g.h) return;
+      d.moved = 1; d.g.w = w; d.g.h = h;
       d.el.style.width = d.g.w + 'px'; d.el.style.height = d.g.h + 'px'; drawMini();
     } else if (d.kind === 'box') {
       const x0 = Math.min(d.sx, ev.clientX), y0 = Math.min(d.sy, ev.clientY), x1 = Math.max(d.sx, ev.clientX), y1 = Math.max(d.sy, ev.clientY);

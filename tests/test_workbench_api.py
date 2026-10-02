@@ -314,6 +314,22 @@ def test_bad_groups_or_stickies_rejected_without_writing(api, runs, body):
     assert (runs / "canvas.json").read_bytes() == before
 
 
+def test_hand_edited_canvas_with_bad_items_does_not_block_writes(api, runs):
+    write_exp(runs, "B0")
+    (runs / "canvas.json").write_text(json.dumps({
+        "experiments": {"B0": {"x": 1, "y": 2}},
+        "groups": [{"id": "g1", "x": 0, "y": 0, "w": 800, "h": 260, "title": "手写的"},   # 漏了 color
+                   {"title": "没有 id"}],
+        "stickies": [{"id": "s1", "x": 5, "y": 6, "text": "没写 w、h"}]}), encoding="utf-8")
+    _, d = api.get("/api/data")
+    assert d["canvas"]["groups"] == [{"id": "g1", "x": 0, "y": 0, "w": 800, "h": 260, "title": "手写的", "color": "c1"}]
+    assert d["canvas"]["stickies"][0]["text"] == "没写 w、h"
+    assert api.put("/api/canvas", {"experiments": {"B0": {"x": 9, "y": 9}}})[0] == 200
+    c = canvas(runs)
+    assert c["experiments"]["B0"] == {"x": 9, "y": 9} and c["groups"][0]["color"] == "c1"
+    assert c["stickies"][0]["id"] == "s1"
+
+
 def test_v1_endpoints_gone(api):
     assert api.get("/api/pair?split=val&pair=x")[0] == 404
     assert api.get("/api/reload")[0] == 404

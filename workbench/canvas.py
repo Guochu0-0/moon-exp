@@ -20,7 +20,10 @@ GAP_Y = 40          # 上下相邻卡片的最小间距
 STEP_Y = 30         # 找空位时每次往下挪多少
 SHOWN_METHODS = 4   # 卡片上默认显示的方法行数，与前端一致
 COLORS = ("c1", "c2", "c3", "c4")   # 分组框的 4 种颜色，与前端 .grp.c1–c4 一致
-BOX = ("x", "y", "w", "h")
+RECT_KEYS = ("x", "y", "w", "h")
+# 便签和分组框各自的字段：文字字段名、默认尺寸（手改漏写时补上）
+STICKY = {"kind": "stickies", "text": "text", "w": 230, "h": 80}
+GROUP = {"kind": "groups", "text": "title", "w": 460, "h": 300}
 
 
 def path(runs_dir: Path) -> Path:
@@ -28,13 +31,34 @@ def path(runs_dir: Path) -> Path:
 
 
 def load(runs_dir: Path) -> dict:
+    """读 canvas.json。便签和分组框按 _lenient 容错规整，手改出的毛病不会挡住之后的写入。"""
     p = path(runs_dir)
     c = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
-    return {"experiments": dict(c.get("experiments", {})), "groups": list(c.get("groups", [])),
-            "stickies": list(c.get("stickies", []))}
+    return {"experiments": dict(c.get("experiments", {})), "groups": _lenient(c.get("groups"), GROUP),
+            "stickies": _lenient(c.get("stickies"), STICKY)}
 
 
-def _items(items, kind: str, text_key: str) -> list[dict]:
+def _num(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _lenient(items, spec: dict) -> list[dict]:
+    """丢掉没有 id 或 id 重复的项；数值缺了补 0 或默认尺寸，文字不是字符串就转成字符串，颜色不认识就用 c1。"""
+    out, seen = [], set()
+    for it in items if isinstance(items, list) else []:
+        if not (isinstance(it, dict) and isinstance(it.get("id"), str) and it["id"] and it["id"] not in seen):
+            continue
+        seen.add(it["id"])
+        o = {"id": it["id"], **{a: it[a] if _num(it.get(a)) else spec.get(a, 0) for a in RECT_KEYS},
+             spec["text"]: it.get(spec["text"]) if isinstance(it.get(spec["text"]), str) else str(it.get(spec["text"]) or "")}
+        if spec is GROUP:
+            o["color"] = it.get("color") if it.get("color") in COLORS else COLORS[0]
+        out.append(o)
+    return out
+
+
+def _strict(items, spec: dict) -> list[dict]:
+    kind, text = spec["kind"], spec["text"]
     if not isinstance(items, list):
         raise ValueError(f"{kind} 应为数组")
     out, seen = [], set()
@@ -47,12 +71,12 @@ def _items(items, kind: str, text_key: str) -> list[dict]:
         if rid in seen:
             raise ValueError(f"{kind} 的 id 重复：{rid}")
         seen.add(rid)
-        if not all(isinstance(it.get(a), (int, float)) and not isinstance(it.get(a), bool) for a in BOX):
+        if not all(_num(it.get(a)) for a in RECT_KEYS):
             raise ValueError(f"{rid} 的 x、y、w、h 应为数值")
-        if not isinstance(it.get(text_key), str):
-            raise ValueError(f"{rid} 的 {text_key} 应为字符串")
-        o = {"id": rid, **{a: round(it[a]) for a in BOX}, text_key: it[text_key]}
-        if kind == "groups":
+        if not isinstance(it.get(text), str):
+            raise ValueError(f"{rid} 的 {text} 应为字符串")
+        o = {"id": rid, **{a: round(it[a]) for a in RECT_KEYS}, text: it[text]}
+        if spec is GROUP:
             if it.get("color") not in COLORS:
                 raise ValueError(f"{rid} 的 color 应为 {'、'.join(COLORS)} 之一")
             o["color"] = it["color"]
@@ -62,12 +86,12 @@ def _items(items, kind: str, text_key: str) -> list[dict]:
 
 def clean_groups(items) -> list[dict]:
     """校验分组框列表并规整：只留 id、x、y、w、h、title、color，数值取整。不合法时抛 ValueError。"""
-    return _items(items, "groups", "title")
+    return _strict(items, GROUP)
 
 
 def clean_stickies(items) -> list[dict]:
     """校验便签列表并规整：只留 id、x、y、w、h、text，数值取整。不合法时抛 ValueError。"""
-    return _items(items, "stickies", "text")
+    return _strict(items, STICKY)
 
 
 def save(runs_dir: Path, canvas: dict, ids) -> dict:

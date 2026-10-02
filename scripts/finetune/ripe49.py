@@ -1,3 +1,4 @@
+# 已停用（#76）：产物写到 results/finetune/，不符合 docs/agents/experiments.md。新实验用 scripts/finetune/run.py；本文件留待「历史代码与结果整理」（#77）归位。
 """粗级闭式期望塌缩测试的任务队列（「【类 RIPE】粗级闭式期望从 zero-shot 单独训练：是否塌缩」#49）。
 
 与 queue.sh + scenes.sh 同一套产物布局，另加负样本对监控与塌缩汇总；写成 Python 是为了能从 worktree 会话里直接起远端任务。

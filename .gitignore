@@ -5,4 +5,8 @@ runs/*/inter/*/*/*
 !runs/*/inter/*/*/meta.json
 runs/*/tb/
 runs/*/ckpt/
+runs/*/.claims/
+runs/*/sweep/*/match/
+runs/*/sweep/*/neg/
+runs/*/sweep/*/S/preds/
 runs/canvas.json

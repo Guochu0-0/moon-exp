@@ -1,4 +1,5 @@
 #!/bin/bash
+# 已停用（#76）：产物写到 results/finetune/，不符合 docs/agents/experiments.md。新实验用 scripts/finetune/run.py；本文件留待「历史代码与结果整理」（#77）归位。
 # SCENES 式伪标签微调 + 逐 ckpt 在 Val 上评测（「复现 SCENES 式伪标签微调 baseline」#26）。
 # usage: GPU=<id> scenes.sh <name> [finetune.train 的参数...]
 #   离线伪标签（SCENES 做法）：scenes.sh S1 --labels /remote-home/xufang/YGC/results/finetune/labels_b0.jsonl

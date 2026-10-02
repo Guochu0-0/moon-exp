@@ -36,7 +36,7 @@ def dist_identity(A):
 
 def table(run, e_id):
     run = Path(run)
-    sw = run / "sweep/S"
+    sw = run / "S" if (run / "S").is_dir() else run / "sweep/S"   # 新布局 runs/<id>/sweep/<m>/S；旧布局 <name>/sweep/S
     metrics = json.loads((sw / "metrics.json").read_text(encoding="utf-8"))["methods"]
     neg = json.loads((run / "neg/summary.json").read_text()) if (run / "neg/summary.json").exists() else {}
     rows = []

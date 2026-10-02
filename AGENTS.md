@@ -21,3 +21,5 @@ Shared lab GPU servers: which hosts, usage rules, where code/envs/data live, how
 ### Experiments
 
 Running an experiment (writing anything under `runs/<id>/`: preds, intermediate results, TensorBoard logs, notes): first read `workbench/RECORDS.md` and follow it. Don't read `workbench/README.md` for this; it documents the workbench UI.
+
+Running anything on a server (code, branches, worktrees, launching, wrapping up a ticket): read `docs/agents/experiments.md`. Code must be committed before it runs; never run from `git archive` copies.

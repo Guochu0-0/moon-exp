@@ -86,7 +86,7 @@ python -m workbench sync B0 B0m [--extra certainty] [--tb all]   # 从服务器�
 - TB 日志：默认只拉 `tb/<m>/scalars/` 和上游格式的 `version_N/` 目录；`--tb all` 拉整个 `tb/`。`checkpoints/` 都排除。
 - ckpt：永远不拉。
 
-主机取 `--host`、环境变量 `MOON_SYNC_HOST`，默认 `xufang154外网`；远端根目录取 `--remote-root`、`MOON_SYNC_ROOT`，默认 `/remote-home/xufang/YGC/moon-exp`。传输只用 ssh 与 tar（Windows 11 自带），不需要 rsync。本地已有且大小、mtime 都没变的文件跳过，所以重复执行很便宜。
+主机取 `--host`、环境变量 `MOON_SYNC_HOST`，默认 `xufang126外网`（与 154 是同一份 gpfs）；远端根目录取 `--remote-root`、`MOON_SYNC_ROOT`，默认 `/remote-home/xufang/YGC/moon-exp`。传输只用 ssh 与 tar（Windows 11 自带），不需要 rsync。本地已有且大小、mtime 都没变的文件跳过，所以重复执行很便宜。
 
 ## 评价
 

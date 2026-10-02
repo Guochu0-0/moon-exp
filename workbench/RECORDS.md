@@ -1,14 +1,14 @@
 # 实验记录规范（v2）
 
-做实验的人和 agent 读这一份就够了：实验结果写成什么样、写到哪里、用什么写。工作台怎么展示这些记录见 `README.md`，做实验时不需要读。术语（实验、方法、点亮、Notes 等）见仓库根目录的 `CONTEXT.md`。
+做实验的人和 agent 读这一份就够了：实验结果写成什么样、写到哪里、用什么写。代码放哪、怎么在服务器上启动和收尾见 `docs/agents/experiments.md`。工作台怎么展示这些记录见 `README.md`，做实验时不需要读。术语（实验、方法、点亮、Notes 等）见仓库根目录的 `CONTEXT.md`。
 
 ## 流程
 
 1. 建目录：`python -m workbench new E3 --parent E2 [--init E2/main] --title "一句话标题"`。编号取下一个未用的 `E<n>`；用户已在画布上建好的直接用。
-2. 跑实验，用 `PredWriter` 写预测，需要时用 `InterWriter` 写中间结果、按下文约定写 TB 日志。产物全部放在 `runs/<id>/` 里，不要写到别处。
+2. 跑实验（先提交代码，见 `docs/agents/experiments.md`）。微调用 `scripts/finetune/run.py`，它按下文「训练产物」写好全部记录；自己写的用 `PredWriter` 写预测，需要时用 `InterWriter` 写中间结果、按下文约定写 TB 日志。产物全部放在 `runs/<id>/` 里，不要写到别处。
 3. 假设、改动、看完结果后的分析写进 `runs/<id>/notes.md`。
 4. 可选：`python -m workbench eval <id>` 生成 `metrics.json`；`python -m workbench check` 检查记录。
-5. 提交小文件（git 只在 154 上操作，见 `docs/agents/servers.md`）。大文件留在服务器上，由 `.gitignore` 排除，用户需要时在本地 `python -m workbench sync <id>` 拉回。
+5. 提交小文件。大文件由 `.gitignore` 排除，结票时由 `scripts/wt.sh close` 挪到 gpfs 主 checkout，用户需要时在本地 `python -m workbench sync <id>` 拉回。
 
 ## 目录
 
@@ -20,13 +20,16 @@ runs/<id>/
   notes.md                             Notes，可以没有
   metrics.json                         由 eval 生成，不要手改
   preds/<method>/<split>.jsonl         每个 pair 一行，存估计的仿射
-  preds/<method>/<split>.meta.json     写入时的 commit 与 dirty
+  preds/<method>/<split>.meta.json     写入时的 commit、dirty、主机、时间
   preds/<method>/<split>_matches.npz   点对，不进 git
   inter/<method>/<name>/meta.json      中间结果的种类、坐标系、说明、单位
   inter/<method>/<name>/<split>.npz    中间结果数据（scalar / points / flow），不进 git
   inter/<method>/<name>/<split>/*.png  中间结果数据（image），不进 git
   tb/<method>/                         TensorBoard 日志，不进 git
-  ckpt/                                权重，不进 git，也不同步
+  ckpt/<method>/                       权重与训练日志，不进 git，也不同步
+  launch/<method>.json                 每次启动的 commit、主机、GPU、命令、起止时间（自动写）
+  sweep/<method>/                      逐 ckpt 评测（见「训练产物」）
+  code/                                只服务本实验的代码：任务清单、驱动、诊断与画图脚本
   extra/                               附件
 ```
 
@@ -108,6 +111,30 @@ with InterWriter("runs/E3", "main", "certainty", "val", kind="scalar", frame="op
 - 不要用 `add_scalars`（会建子目录）。
 - 上游 Lightning 代码把 `save_dir` 指向 `runs/<id>/tb/<method>/`，日志落在 `tb/<method>/<name>/version_N/`；ckpt 放在 version 目录的 `checkpoints/` 下。
 - 续训接着写到同一个目录即可，重叠的 step 由读取端处理。
+- 服务器的训练环境没装 tensorboard，标量可用 `workbench.tbwriter.ScalarWriter`（纯标准库，读写格式与官方一致）；`finetune.train`、`finetune.train_roma` 的 `--tb` 就是用它写的。
+
+## 训练产物
+
+`scripts/finetune/run.py` 对一个方法 `<m>` 依次做：训练 → 每个 ckpt 在 Val 上评测 → 按 Val AUC@5 峰值（不含 step 0）选 ckpt，在 Test 上补评 → 把选中 step 的 Val、Test 预测复制成 `preds/<m>/`，即这个方法的正式结果。
+
+```
+runs/<id>/
+  ckpt/<m>/            ckpt_<step>.pt、log.jsonl、args.json、train.log、sweep.log（不进 git）
+  tb/<m>/scalars/      训练曲线（不进 git）
+  launch/<m>.json      启动记录（进 git）
+  sweep/<m>/S/         逐 ckpt 的工作台记录，方法名 step<N>；exp.toml、metrics.json 进 git，preds/ 不进
+  sweep/<m>/match/     逐 ckpt 的原始点对（不进 git）
+  sweep/<m>/peak.json  选中的 step 与 Val / Test 指标（进 git）
+  sweep/<m>/neg/、collapse.json   负样本对监控（LoFTR 的在线信号任务；neg/ 不进 git）
+  preds/<m>/           选中 step 的预测
+  .claims/<m>/         队列占位（不进 git）
+```
+
+sweep 里的每个 step 不是独立的方法：只有 `preds/<m>/` 出现在工作台上。想换选模规则，就在 Notes 里写明，再把对应 step 的预测复制过去。
+
+## code/
+
+只服务本实验的代码：任务清单、驱动、诊断与画图脚本。进 git，同样要先提交再跑。被第二个实验用到时，提升到 `scripts/` 或包里。产出的图放 `extra/`。
 
 ## extra/
 

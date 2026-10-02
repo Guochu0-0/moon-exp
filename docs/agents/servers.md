@@ -1,12 +1,13 @@
 # 服务器使用要点
 
-截至 2026-09-26 的积累。主机清单在用户本机的 `~/.ssh/config`（`xufang<编号>外网`）。
+截至 2026-10-02 的积累。主机清单在用户本机的 `~/.ssh/config`（`xufang<编号>外网`）。
 
 ## 机器
 
 - 154 / 160 / 126 挂同一份 gpfs 存储。用户目录是 `/remote-home/xufang/YGC/`。
 - **150**：2026-09-30 核实已重新挂上 gpfs（`/remote-home/xufang` = gpfsdata），8 张 3090（24 GB）。外网端口常连不上，走内网 `10.254.1.150:20128`，本机经 126 跳：`ssh -i D:\ssh_key\id_rsa -J xufang126外网 -p 20128 root@10.254.1.150`。环境已从 `YGC/tmp/envpack/envs.tar` 解到 `/opt/envs`。**白天同时最多用 2–3 张卡**，即使全空；夜里（如凌晨）没人用，可以多占（用户要求）。与 126 共用 gpfs 和 `_claims`。负样本对的类 RIPE 任务在 24 GB 卡上会 OOM，只放伪标签和不带负样本对的任务。
-  2026-09-28 复查：ssh 能连，但仍未挂 gpfs。`/remote-home` 是本地 sdb1（15 T，已用 92%），没有 YGC 和 `/opt/envs`，8 张 3090 全部被占。目前不用。
+  **容器时钟慢约 13 小时**（2026-10-02 核实）：150 上写的日志、`date`、文件 mtime 都受影响，对时间时以 126 为准。
+- **154**：2026-10-02 外网和内网 ssh 都在握手阶段被断开，原因未查。gpfs 上的东西从 126 读写即可。
 - **A6000 是独立文件系统**，不挂 gpfs。2026-09-28 起纳入使用，见下面「A6000」一节。155 不使用。
 - 容器重启后挂载可能变化。凡是涉及路径的事，每台机器单独核实（`df`、`hostname`），不要凭以前的印象。
 - 每台都是课题组统一管理的 Docker 容器，用户是 root。
@@ -25,9 +26,10 @@
 
 ## 代码、环境、数据放在哪
 
-- 本仓库克隆在 `YGC/moon-exp`。
-  - git 网络操作只在 154 上做（154、126 能连 GitHub）。
+- 本仓库克隆在 `YGC/moon-exp`（**主 checkout**：永远停在 main，只做 `git pull --ff-only`）。每张票的代码在 `YGC/wt/<分支>` 的 worktree 里跑，结果最终归到主 checkout 的 `runs/`。怎么跑实验见 `docs/agents/experiments.md`。
+  - git 网络操作在 154 或 126 上做（只有这两台能连 GitHub）。
   - 用仓库级 deploy key `YGC/.ssh/moon-exp_deploy`，已配成 `core.sshCommand`。
+  - **不要用 `git archive` 导出副本跑实验**：副本没有 `.git`，记录里的 commit 全是 null（9/28–10/02 的 `YGC/moon-exp-*` 就是这样）。
 - baseline 代码以 git submodule 形式放进 `third_party/`，commit 钉死。
 - 旧的 `projects/optical-sar-matching/` 不再使用。
 - 软件和 conda 环境装在**各容器本地**（如 `/opt`），不装在 gpfs 上，因为 gpfs 传输慢。gpfs 只放代码、数据、权重和结果。
@@ -63,7 +65,7 @@
 ## A6000（2026-09-28 起）
 
 - 8 卡：0 号、7 号是 RTX 5880 Ada（46 GB），1–6 号是 RTX A6000（48 GB）。别人用得多，常常只有一两张空卡。
-- **GPU 编号**：CUDA 默认顺序和 nvidia-smi 不一致，`CUDA_VISIBLE_DEVICES=7` 会拿到别的卡。必须同时设 `CUDA_DEVICE_ORDER=PCI_BUS_ID`（`scripts/finetune/scenes.sh` 已设）。
+- **GPU 编号**：CUDA 默认顺序和 nvidia-smi 不一致，`CUDA_VISIBLE_DEVICES=7` 会拿到别的卡。必须同时设 `CUDA_DEVICE_ORDER=PCI_BUS_ID`（`scripts/finetune/run.py` 已设）。
 - 这个容器别人也在用：`/root` 下的文件、`/root/anaconda3` 的环境、`/workspace/xufang/moon` 都不是我们的，不碰。
 - 存储：`/workspace/xufang` 是组里的 NFS（与 gpfs 是两套），我们的目录是 `/workspace/xufang/YGC`（dataset / weights / results / 代码）。容器里建了软链 `/remote-home/xufang/YGC → /workspace/xufang/YGC`，脚本里的路径不用改。
 - 根分区（overlay）很满，只剩约 80 GB，只放环境。
@@ -74,7 +76,8 @@
 - 已就位（2026-09-28）：数据 `YGC/dataset/Moon`（38 GB，Train 7907 / Val 825 / Test 1130 对）、`YGC/weights/anymatch/LoFTR_AnyMatch.ckpt`、`YGC/results/finetune/labels_b0.jsonl`。
 - 代码：`YGC/moon-exp` 从 154 的仓库克隆（remote = `ssh://root@10.254.1.154:20020/remote-home/xufang/YGC/moon-exp`，`GIT_SSH_COMMAND` 带上面的 key），新提交先在 154 上从 GitHub fetch 再拉过来；LoFTR 子模块直接从 GitHub 拉。
 - 速度：S1 式训练每步约 0.16 s（154 的 TITAN RTX 约 0.3 s）。
-- 与 154/126 不共享存储，`queue.sh` 的 `_claims` 占位跨不过去：给 A6000 单独的任务清单，结果再拷回 gpfs。
+- 与 154/126 不共享存储：A6000 上的 `YGC/moon-exp` 是它自己的主 checkout，worktree 同样建在 `YGC/wt/`（`scripts/wt.sh` 的路径不用改）；`run.py` 的占位在实验目录里，跨不过存储，所以给 A6000 单独的任务清单。跑完先在 A6000 上 `wt.sh close`，再把 `runs/<id>/` 整份（含 ckpt）拷回 gpfs 主 checkout，核对文件数和大小后才能删 A6000 上的副本。
+- **已知缺口（2026-10-02）**：A6000 的 remote 指向 154，154 连不上时拿不到新提交。需要时给它加一个直连 GitHub 的 remote（deploy key 在 gpfs 的 `YGC/.ssh/`，A6000 上没有）。
 
 ## MATLAB（目前只在 154）
 

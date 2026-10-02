@@ -172,12 +172,12 @@ def test_pred_writer_matches_roundtrip(dataset, tmp_path, repo):
     assert r.preds("m", "val")[p4].fail == "error: boom"
 
     meta = json.loads((runs / "B0" / "preds" / "m" / "val.meta.json").read_text(encoding="utf-8"))
-    assert meta == {"commit": head(repo), "dirty": False}
+    assert {k: meta[k] for k in ("commit", "dirty")} == {"commit": head(repo), "dirty": False} and meta["host"]
     (repo / "code.py").write_text("x = 2\n", encoding="utf-8")
     with PredWriter(runs / "B0", "m", "test", repo=repo) as w:
         w.write(p0, A_TRUE)
     meta = json.loads((runs / "B0" / "preds" / "m" / "test.meta.json").read_text(encoding="utf-8"))
-    assert meta == {"commit": head(repo), "dirty": True}
+    assert {k: meta[k] for k in ("commit", "dirty")} == {"commit": head(repo), "dirty": True} and meta["host"]
     assert not (runs / "B0" / "preds" / "m" / "test_matches.npz").exists()   # 没给过点对就不写 npz
 
 
@@ -191,7 +191,7 @@ def test_pred_writer_ignores_untracked_and_runs_for_dirty(tmp_path, repo):
     with PredWriter(repo / "runs" / "B0", "m", "val", repo=repo):
         pass
     meta = json.loads((repo / "runs" / "B0" / "preds" / "m" / "val.meta.json").read_text(encoding="utf-8"))
-    assert meta == {"commit": head(repo), "dirty": False}
+    assert {k: meta[k] for k in ("commit", "dirty")} == {"commit": head(repo), "dirty": False} and meta["host"]
 
 
 def test_lit_and_field_warnings(tmp_path):

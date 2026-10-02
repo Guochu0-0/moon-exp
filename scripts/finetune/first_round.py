@@ -1,3 +1,4 @@
+# 已停用（#76）：产物写到 results/finetune/，不符合 docs/agents/experiments.md。新实验用 scripts/finetune/run.py；本文件留待「历史代码与结果整理」（#77）归位。
 """两条路线首轮实验的任务队列（「【类 RIPE】首轮实验设计」#51、「【伪标签】首轮实验设计」#53）。
 
 在 scripts/finetune/ripe49.py 上改：负样本对监控只对在线信号的任务做（参数含 --w-cexp 或 --neg）；

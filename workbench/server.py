@@ -7,8 +7,13 @@
                                      方法 vs 参考方法（<实验>/<方法>、identity = 未配准、省略 = 无）：两边结果与差值，
                                      以及有标注 pair 的列表与编号（与 errors 一一对应）
     GET  /api/pair?split=&pair=&method=&ref=[&points=0]
-                                     单个 pair：影像尺寸、检查点，两边各自的仿射、失败原因、误差与点对
-                                     （点对状态 ok / not_synced（附 sync 命令）/ absent；points=0 时不读点对）
+                                     单个 pair：影像尺寸、检查点，两边各自的仿射、失败原因、误差、点对与中间结果清单
+                                     （点对与中间结果的状态 ok / not_synced（附 sync 命令）/ absent；points=0 时都不读）
+    GET  /api/inter?split=&pair=&method=&name=
+                                     单个 pair 的一个中间结果：meta、状态、取值范围（flow 为位移大小）、点集的点、图层 PNG 地址
+    GET  /inter.png?split=&pair=&method=&name=
+                                     图层 PNG：scalar 为原分辨率热力图，flow 为另一模态按位移摆回 frame 的影像，image 为原图
+    GET  /api/exp/<id>/scalars       训练图表：tb/<method>/ 下各 run 的 scalars（续训重叠已按 tag 截断，长曲线分桶抽稀）
     GET  /img?split=&pair=&kind=     原图 PNG（opt / sar）
     GET  /runs/<id>/extra/...        附件
 写接口（成功返回 {"ok": true, ...}；被拒绝时 4xx + {"error": "..."}）
@@ -20,6 +25,7 @@
     PUT    /api/canvas               保存画布 {experiments?, groups?, stickies?}；experiments 按 key 合并，
                                      groups / stickies 整体替换（字段见 canvas.py）
     PUT    /api/exp/<id>/notes       保存 notes.md {text}（UTF-8、LF；第一次保存时才创建）
+    POST   /api/exp/<id>/tensorboard 在 TensorBoard 中打开 runs/<id>/tb：起（或复用）子进程，返回 {url}
 
 前端定期重拉 /api/data，所以它必须便宜：exp.toml 每次现读（很小），AUC 按 preds 文件的 mtime 和大小缓存，
 只有变了的方法才重算。
@@ -34,11 +40,11 @@ import threading
 from functools import lru_cache
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlencode, urlparse
 
 import numpy as np
 
-from . import canvas, protocol, reference
+from . import canvas, inter, protocol, reference, tb
 from .dataset import SPLIT_DIRS, Dataset, to_display
 from .evaluate import IDENTITY, evaluate_preds, jsonable, pair_errors
 from .records import (SPLITS, EditError, NotFound, Pred, Run, create_experiment, delete_experiment, load_runs,
@@ -54,8 +60,10 @@ CTYPES = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=ut
 
 
 class Workbench:
-    def __init__(self, runs_dir: Path, ds: Dataset, repo: Path):
+    def __init__(self, runs_dir: Path, ds: Dataset, repo: Path, boards: tb.TensorBoards | None = None):
         self.runs_dir, self.ds, self.repo = Path(runs_dir), ds, repo
+        self._boards = boards
+        self._tb: dict[Path, tuple[tuple, dict]] = {}
         self.lock = threading.RLock()
         self._auc: dict[Path, tuple[tuple, float | None]] = {}
         self._res: dict[Path, tuple[tuple, dict]] = {}
@@ -130,9 +138,54 @@ class Workbench:
                              "baseline": r.baseline, "date": r.date, "lit": r.lit, "methods": methods,
                              "children": [k for k, x in runs.items() if x.parent == rid],
                              "commit": r.commit(), "delta_key": DELTA, "warnings": r.warnings,
-                             "notes": r.notes,
+                             "notes": r.notes, "tb": self._tb_methods(r),
                              "reference": {"groups": reference.groups(r, runs, score)},
                              "protocol": protocol.protocol_info()})
+
+    @staticmethod
+    def _tb_methods(r: Run) -> list[str]:
+        """有 TB 日志（tb/<method>/ 下有 events 文件）的方法；没有日志的实验不显示训练图表。"""
+        d = r.dir / "tb"
+        return [m.name for m in sorted(d.iterdir()) if m.is_dir() and tb.run_dirs(m)] if d.is_dir() else []
+
+    def scalars(self, rid: str) -> dict:
+        """训练图表：各方法各 run 的 scalars。run 按 events 文件的名字、大小、mtime 缓存，只重读变了的。"""
+        with self.lock:
+            r = _get_run(self.runs_dir, rid)
+        methods = []
+        for m in self._tb_methods(r):
+            root, runs = r.dir / "tb" / m, []
+            for d in tb.run_dirs(root):
+                sig = tuple((f.name, (st := f.stat()).st_size, st.st_mtime_ns) for f in tb.event_files(d))
+                hit = self._tb.get(d)
+                if hit is None or hit[0] != sig:
+                    try:
+                        hit = self._tb[d] = (sig, tb.read_dir(d))
+                    except ImportError:
+                        raise EditError("读取训练图表需要 tensorboard 包：pip install tensorboard") from None
+                if hit[1]:
+                    runs.append({"run": d.relative_to(root).as_posix() or ".",
+                                 "tags": {k: tb.thin(v) for k, v in hit[1].items()}})
+            methods.append({"method": m, "runs": runs})
+        return jsonable({"logdir": f"runs/{rid}/tb", "methods": methods})
+
+    def tensorboard(self, rid: str) -> dict:
+        """「在 TensorBoard 中打开」：logdir 为 runs/<id>/tb，每个 logdir 复用一个子进程。"""
+        with self.lock:
+            r = _get_run(self.runs_dir, rid)
+            if not self._tb_methods(r):
+                raise EditError(f"{rid} 没有 TensorBoard 日志")
+            if self._boards is None:
+                self._boards = tb.TensorBoards()
+            boards = self._boards
+        try:
+            return {"ok": True, "url": boards.open(r.dir / "tb")}
+        except RuntimeError as e:
+            raise EditError(str(e)) from e
+
+    def close(self):
+        if self._boards is not None:
+            self._boards.close()
 
     def _split(self, q: dict) -> str:
         split = q.get("split", "val")
@@ -193,7 +246,8 @@ class Workbench:
 
     def _pair_side(self, key, target, runs, split, p, cp, points: bool) -> dict:
         if target == reference.UNREGISTERED:
-            out = {"exp": None, "caveat": None, "A": IDENTITY, "fail": None, "extra": {}, "matches": None}
+            out = {"exp": None, "caveat": None, "A": IDENTITY, "fail": None, "extra": {}, "matches": None,
+                   "inter": [] if points else None}
         else:
             r, m = target
             if split not in r.splits(m):
@@ -201,7 +255,9 @@ class Workbench:
             pr = self._pred_rows(r, m, split).get(p)
             A, fail, extra = (pr.A, pr.fail, pr.extra) if pr else (None, "no_pred", {})
             out = {"exp": r.id, "caveat": r.method_info(m)["caveat"], "A": A, "fail": fail, "extra": extra,
-                   "matches": self._matches(r, m, split, p, A) if points else None}
+                   "matches": self._matches(r, m, split, p, A) if points else None,
+                   "inter": [{"name": k, **meta, **self._inter_state(r, m, k, split, p)}
+                             for k, meta in r.inters(m).items()] if points else None}
         return {"key": key, "label": reference.label(key, runs),
                 "error": protocol.pair_error(out["A"], *cp) if cp else None, **out}
 
@@ -231,6 +287,58 @@ class Workbench:
         conf = x[:, 4]
         return {"state": "ok", "n": len(x), "opt": np.round(x[:, :2], 2).tolist(), "sar": np.round(x[:, 2:4], 2).tolist(),
                 "conf": np.round(conf, 4).tolist() if np.isfinite(conf).any() else None, "resid": resid}
+
+    @staticmethod
+    def _inter_state(r: Run, method: str, name: str, split: str, p: str) -> dict:
+        """一个 pair 的中间结果状态：ok / absent（这个 pair 没有）/ not_synced（数据不在本地，附 sync 命令）。"""
+        if not r.inter_synced(method, name, split):
+            return {"state": "not_synced", "sync": f"python -m workbench sync {r.id} --extra {name}"}
+        return {"state": "ok" if r.inter(method, name, split, p) is not None else "absent"}
+
+    def _inter_target(self, q: dict):
+        runs = load_runs(self.runs_dir)
+        split, p, name = self._split(q), q.get("pair") or "", q.get("name") or ""
+        if p not in self.ds.numbers(split):
+            raise EditError(f"{SPLIT_DIRS[split]} 中没有 pair {p}")
+        key, (r, m) = self._target(q, "method", runs)
+        meta = r.inters(m).get(name)
+        if meta is None:
+            raise NotFound(f"{key} 没有中间结果 {name}")
+        return r, m, name, split, p, meta
+
+    def inter_data(self, q: dict) -> dict:
+        """一个 pair 的一个中间结果：meta、状态、取值范围（flow 为位移大小），点集的点；图层 PNG 另由 /inter.png 取。"""
+        with self.lock:
+            r, m, name, split, p, meta = self._inter_target(q)
+            out = {"name": name, **meta, **self._inter_state(r, m, name, split, p),
+                   "shape": None, "vmin": None, "vmax": None, "points": None, "png": None}
+            if out["state"] != "ok":
+                return out
+            a = r.inter(m, name, split, p)
+            if meta["kind"] != "image":
+                out["shape"] = list(a.shape)
+                v = a[:, 2] if meta["kind"] == "points" else np.linalg.norm(a, axis=-1) if meta["kind"] == "flow" else a
+                out["vmin"], out["vmax"] = inter.value_range(v)
+            if meta["kind"] == "points":
+                out["points"] = [[round(float(x), 2), round(float(y), 2), _finite(v)] for x, y, v in a]
+            else:
+                out["png"] = "/inter.png?" + urlencode({"split": split, "pair": p, "method": f"{r.id}/{m}", "name": name})
+            return jsonable(out)
+
+    def inter_png(self, q: dict) -> bytes:
+        """图层 PNG：scalar 为原分辨率热力图，flow 为另一模态按位移摆回 frame 的影像，image 为原图。"""
+        with self.lock:
+            r, m, name, split, p, meta = self._inter_target(q)
+            a = r.inter(m, name, split, p)
+            if a is None or meta["kind"] == "points":
+                raise NotFound(f"{p} 没有中间结果 {name} 的图层")
+            if meta["kind"] == "image":
+                return a.read_bytes()
+            if meta["kind"] == "scalar":
+                return inter.png(inter.heatmap(a))
+        frame, other = ("Optical", "sar") if meta["frame"] == "opt" else ("SAR", "opt")
+        img = to_display(self.ds.sar(split, p) if other == "sar" else self.ds.optical(split, p))
+        return inter.png(inter.warp(a, self.ds.size(split, p, frame), img))
 
     def data(self) -> dict:
         with self.lock:
@@ -356,6 +464,17 @@ def _public(res: dict) -> dict:
     return {k: v for k, v in res.items() if not k.startswith("_")}
 
 
+def _get_run(runs_dir: Path, rid: str) -> Run:
+    r = load_runs(runs_dir).get(rid)
+    if r is None:
+        raise NotFound(f"实验 {rid} 不存在")
+    return r
+
+
+def _finite(v) -> float | None:
+    return round(float(v), 6) if np.isfinite(v) else None
+
+
 def _num(v) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
@@ -363,6 +482,8 @@ def _num(v) -> bool:
 EXP_ACTION = re.compile(r"/api/exp/([^/]+)/(parent|title|rename)")
 EXP_ITEM = re.compile(r"/api/exp/([^/]+)")
 EXP_NOTES = re.compile(r"/api/exp/([^/]+)/notes")
+EXP_SCALARS = re.compile(r"/api/exp/([^/]+)/scalars")
+EXP_TB = re.compile(r"/api/exp/([^/]+)/tensorboard")
 
 
 def make_handler(wb: Workbench):
@@ -411,12 +532,18 @@ def make_handler(wb: Workbench):
                         return self.send_file(f)
                 if path == "/api/data":
                     return self.send_json(wb.data())
+                if m := EXP_SCALARS.fullmatch(path):
+                    return self.send_json(wb.scalars(m.group(1)))
                 if m := EXP_ITEM.fullmatch(path):
                     return self.send_json(wb.detail(m.group(1)))
                 if path == "/api/compare":
                     return self.send_json(wb.compare(q))
                 if path == "/api/pair":
                     return self.send_json(wb.pair(q))
+                if path == "/api/inter":
+                    return self.send_json(wb.inter_data(q))
+                if path == "/inter.png":
+                    return self.send(wb.inter_png(q), "image/png")
                 if path == "/img":
                     if q.get("split") in SPLIT_DIRS and q.get("kind") in ("opt", "sar") \
                             and q.get("pair") in wb.ds.pairs(q["split"]):
@@ -431,6 +558,8 @@ def make_handler(wb: Workbench):
             elif method == "POST":
                 if path == "/api/exp":
                     return self.send_json(wb.create(self.body()))
+                if m := EXP_TB.fullmatch(path):
+                    return self.send_json(wb.tensorboard(m.group(1)))
                 if m := EXP_ACTION.fullmatch(path):
                     rid, act = m.groups()
                     return self.send_json({"parent": wb.set_parent, "title": wb.set_title,
@@ -476,4 +605,10 @@ def serve(runs_dir: Path, data_root: Path, repo: Path, host: str, port: int):
     wb = Workbench(runs_dir, Dataset(data_root), repo)
     httpd = ThreadingHTTPServer((host, port), make_handler(wb))
     print(f"工作台：http://{host}:{port}/  （{len(load_runs(runs_dir))} 个实验；runs/ 的改动几秒内自动出现在画布上）")
-    httpd.serve_forever()
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("工作台已退出")
+    finally:
+        wb.close()            # 由工作台起的 TensorBoard 一并结束
+        httpd.server_close()

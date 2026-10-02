@@ -157,6 +157,20 @@
 .np .legend .ramp { display: inline-block; width: 140px; height: 10px; align-self: center;
   background: linear-gradient(to right, rgb(26, 152, 80), rgb(254, 224, 139) 30%, rgb(215, 48, 39)); }
 
+.np .views .vsep { color: var(--muted); font-size: 12.5px; padding-left: 14px; border-left: 1px solid var(--rule); align-self: center; }
+.np svg circle.ipt { stroke: #fff; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.np svg text.ival { fill: #fff; stroke: rgba(29, 34, 48, .85); stroke-width: 3px; paint-order: stroke; font-family: var(--mono); }
+
+/* 训练图表 */
+.np .tb-head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-size: 14px; margin-bottom: 6px; }
+.np .tb-head button { border: 1px solid var(--rule); background: var(--paper); border-radius: 2px; padding: 1px 10px; cursor: pointer; font-size: 13.5px; }
+.np .tb-head button:disabled { color: var(--muted); cursor: progress; }
+.np h3 { font-size: 16px; font-weight: 600; margin: 22px 0 4px; }
+.np .tbgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 26px; margin-top: 12px; }
+.np .tbchart { margin: 0; }
+.np .tbchart figcaption { font-size: 12.5px; margin-bottom: 2px; overflow-wrap: anywhere; }
+.np svg .tbln { fill: none; stroke-width: 1.5; }
+
 .np .notes { min-height: 6em; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 2px; line-height: 1.85; background: var(--paper); cursor: text; }
 .np .notes .empty { color: var(--other); margin: 0; }
 .np .notes-edit { display: block; width: 100%; min-height: 220px; padding: 10px 14px; border: 1px solid var(--me); border-radius: 2px;
@@ -181,4 +195,5 @@
   .np .nav li a { padding: 2px 8px; border-left: 0; }
   .np .meta, .np .figs, .np .vr-top, .np .panes { grid-template-columns: 1fr; }
   .np .grid, .np .vr-top:not(.noref) .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .np .tbgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

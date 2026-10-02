@@ -49,7 +49,7 @@ def test_four_kinds_roundtrip_and_partial_coverage(api, runs, dataset):
         w.write(PAIR, rgb)
 
     meta = json.loads((runs / "E1/inter/main/certainty/meta.json").read_text(encoding="utf-8"))
-    assert meta == {"kind": "scalar", "frame": "opt", "desc": "RoMa certainty", "unit": ""}
+    assert meta == {"kind": "scalar", "frame": "opt", "desc": "RoMa certainty", "unit": "", "splits": ["val"]}
 
     # pair 接口给出清单：名称、种类、坐标系、说明、单位，以及这个 pair 的状态
     side = pair(api, "E1/main")[1]["method"]
@@ -143,3 +143,30 @@ def test_splits_kept_apart_and_rewrite_replaces(api, runs, dataset):
     with InterWriter(runs / "E1", "main", "c", "val", kind="scalar", frame="opt") as w:   # 重跑：整份替换
         w.write(OTHER, np.zeros((2, 2)))
     assert inter(api, "c")[1]["state"] == "absent"
+
+
+def test_split_never_written_is_absent_not_unsynced(api, runs, dataset):
+    """meta.json 记下写过的 split：没写过的 split、一个 pair 都没写的 split 都是 absent，不提示去同步。"""
+    lit(runs)
+    write(runs, "E1", "main", {PAIR: (A_TRUE, None, None, None)}, split="test")
+    with InterWriter(runs / "E1", "main", "c", "val", kind="scalar", frame="opt") as w:
+        w.write(PAIR, np.ones((2, 2)))
+    with InterWriter(runs / "E1", "main", "e", "val", kind="image", frame="opt"):
+        pass
+    side = pair(api, "E1/main", split="test")[1]["method"]
+    assert {x["name"]: x["state"] for x in side["inter"]} == {"c": "absent", "e": "absent"}
+    assert {x["name"]: x["state"] for x in pair(api, "E1/main")[1]["method"]["inter"]} == {"c": "ok", "e": "absent"}
+    with InterWriter(runs / "E1", "main", "c", "test", kind="scalar", frame="opt") as w:
+        w.write(PAIR, np.ones((2, 2)))
+    meta = json.loads((runs / "E1/inter/main/c/meta.json").read_text(encoding="utf-8"))
+    assert meta["splits"] == ["test", "val"]
+
+
+def test_failed_run_leaves_no_partial_data(api, runs, dataset):
+    lit(runs)
+    with pytest.raises(RuntimeError):
+        with InterWriter(runs / "E1", "main", "c", "val", kind="scalar", frame="opt") as w:
+            w.write(PAIR, np.ones((2, 2)))
+            raise RuntimeError("中途出错")
+    assert not (runs / "E1/inter/main/c/val.npz").exists()
+    assert pair(api, "E1/main")[1]["method"]["inter"][0]["state"] == "absent"

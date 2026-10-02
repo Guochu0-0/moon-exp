@@ -37,6 +37,7 @@ LEGACY_FIELDS = ("status", "commit", "hypothesis", "change", "verdict", "next")
 MATCHES_CAP = 2000   # 每个 pair 的点对最多存多少个点（按 conf 取前若干）
 INTER_KINDS = ("scalar", "points", "flow", "image")
 INTER_FRAMES = ("opt", "sar")
+INTER_META = ("kind", "frame", "desc", "unit")
 REPO = Path(__file__).resolve().parent.parent
 
 
@@ -164,23 +165,29 @@ class Run:
         return m
 
     def inters(self, method: str) -> dict[str, dict]:
-        """这个方法的中间结果清单 {名称: meta}，来自 inter/<method>/<name>/meta.json（进 git，数据不在本地也有）。"""
+        """这个方法的中间结果清单 {名称: meta}，来自 inter/<method>/<name>/meta.json（进 git，数据不在本地也有）。
+        splits 是写完过的 split；没有这个字段（手写的 meta）时为 None，表示不知道。"""
         d = self.dir / "inter" / method
         out = {}
         for f in sorted(d.glob("*/meta.json")) if d.is_dir() else []:
             meta = json.loads(f.read_text(encoding="utf-8"))
-            out[f.parent.name] = {k: meta.get(k, "") for k in ("kind", "frame", "desc", "unit")}
+            out[f.parent.name] = {**{k: meta.get(k, "") for k in INTER_META}, "splits": meta.get("splits")}
         return out
 
-    def inter_synced(self, method: str, name: str, split: str) -> bool:
-        """本地有没有这个中间结果在这个 split 上的数据；没有 = 留在服务器上，要 sync --extra 拉回。"""
+    def inter_state(self, method: str, name: str, split: str, pair: str) -> str:
+        """一个 pair 的中间结果状态：ok / absent（没写这个 pair 或这个 split）/ not_synced（数据留在服务器上）。"""
+        meta = self.inters(method)[name]
+        if meta["splits"] is not None and split not in meta["splits"]:
+            return "absent"
         d = self.dir / "inter" / method / name
-        return (d / f"{split}.npz").is_file() or (d / split).is_dir()
+        if not ((d / f"{split}.npz").is_file() or (d / split).is_dir()):
+            return "not_synced"
+        return "ok" if self.inter(method, name, split, pair, meta["kind"]) is not None else "absent"
 
-    def inter(self, method: str, name: str, split: str, pair: str):
+    def inter(self, method: str, name: str, split: str, pair: str, kind: str):
         """一个 pair 的中间结果：scalar / points / flow 为数组，image 为 PNG 路径；这个 pair 没有时为 None。"""
         d = self.dir / "inter" / method / name
-        if self.inters(method)[name]["kind"] == "image":
+        if kind == "image":
             f = d / split / f"{_npz_key(pair)}.png"
             return f if f.is_file() else None
         f = d / f"{split}.npz"
@@ -514,7 +521,9 @@ class InterWriter:
     - flow：H×W×2，frame 坐标系下每个像素指向另一模态中对应点的位移 (dx, dy)，单位是原始 patch 的 px；
     - image：H×W、H×W×3 或 H×W×4 的 uint8，每个 pair 一张 PNG。
     frame 为 opt / sar：数据所在的坐标系，显示时按它拉伸到 patch 大小。
-    构造时写 meta.json（进 git）并清掉这个 split 的旧数据；close 时把 scalar / points / flow 写成 <split>.npz（不进 git）。
+    构造时写 meta.json（进 git）并清掉这个 split 的旧数据；close 时把 scalar / points / flow 写成 <split>.npz（不进 git），
+    再把这个 split 记进 meta.json 的 splits：没写过的 split 读出来是「没有」，不会被当成「数据留在服务器上」。
+    with 块里抛异常时丢掉这次写的数据，这个 split 不记。
     """
 
     def __init__(self, run_dir, method: str, name: str, split: str, *, kind: str, frame: str,
@@ -527,13 +536,21 @@ class InterWriter:
         self.dir = Path(run_dir) / "inter" / method / name
         self.dir.mkdir(parents=True, exist_ok=True)
         self.kind, self.split = kind, split
-        meta = {"kind": kind, "frame": frame, "desc": desc, "unit": unit}
-        (self.dir / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8",
-                                            newline="\n")
-        (self.dir / f"{split}.npz").unlink(missing_ok=True)
-        if (self.dir / split).is_dir():
-            shutil.rmtree(self.dir / split)
+        old = self.dir / "meta.json"
+        splits = (json.loads(old.read_text(encoding="utf-8")).get("splits") or []) if old.exists() else []
+        self._meta = {"kind": kind, "frame": frame, "desc": desc, "unit": unit, "splits": sorted(set(splits) - {split})}
+        self._save_meta()
+        self._discard()
         self._data: dict[str, np.ndarray] = {}
+
+    def _save_meta(self):
+        (self.dir / "meta.json").write_text(json.dumps(self._meta, ensure_ascii=False, indent=2) + "\n",
+                                            encoding="utf-8", newline="\n")
+
+    def _discard(self):
+        (self.dir / f"{self.split}.npz").unlink(missing_ok=True)
+        if (self.dir / self.split).is_dir():
+            shutil.rmtree(self.dir / self.split)
 
     def write(self, pair: str, data):
         a = np.asarray(data)
@@ -556,14 +573,21 @@ class InterWriter:
         self._data[_npz_key(pair)] = a
 
     def close(self):
-        if self._data:
+        if self.kind == "image":
+            (self.dir / self.split).mkdir(exist_ok=True)
+        else:
             np.savez_compressed(self.dir / f"{self.split}.npz", **self._data)
+        self._meta["splits"] = sorted({*self._meta["splits"], self.split})
+        self._save_meta()
 
     def __enter__(self):
         return self
 
-    def __exit__(self, *exc):
-        self.close()
+    def __exit__(self, exc_type, *exc):
+        if exc_type is None:
+            self.close()
+        else:
+            self._discard()
 
 
 def _pack_matches(matches, conf=None) -> np.ndarray:

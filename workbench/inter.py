@@ -25,6 +25,11 @@ def value_range(a: np.ndarray) -> tuple[float | None, float | None]:
     return (float(v.min()), float(v.max())) if v.size else (None, None)
 
 
+def magnitude(kind: str, a: np.ndarray) -> np.ndarray:
+    """色标用的量：scalar 为取值，points 为 v 列，flow 为位移大小。"""
+    return a[:, 2] if kind == "points" else np.linalg.norm(a, axis=-1) if kind == "flow" else a
+
+
 def heatmap(a: np.ndarray) -> np.ndarray:
     """标量图按自身的最小、最大值映射到色图，分辨率不变（页面按 frame 拉伸）。"""
     lo, hi = value_range(a)

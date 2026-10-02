@@ -91,12 +91,13 @@ def run_dirs(root) -> list[Path]:
     return out
 
 
-def read_logdir(root) -> dict[str, dict]:
-    """{run 的相对路径: read_dir 的结果}；没有 scalar 的 run（比如 add_scalars 留下的空父目录）不列。"""
+def read_logdir(root, read=read_dir) -> dict[str, dict]:
+    """{run 的相对路径: read_dir 的结果}；没有 scalar 的 run（比如 add_scalars 留下的空父目录）不列。
+    read 可换成带缓存的 read_dir（工作台按文件大小、mtime 缓存）。"""
     root = Path(root)
     out = {}
     for d in run_dirs(root):
-        tags = read_dir(d)
+        tags = read(d)
         if tags:
             out[d.relative_to(root).as_posix() or "."] = tags
     return dict(sorted(out.items()))
@@ -133,8 +134,7 @@ def free_port() -> int:
 class TensorBoards:
     """每个 logdir 一个 TensorBoard 子进程，复用；close（以及 atexit）时统一 terminate。"""
 
-    def __init__(self, python: str = sys.executable):
-        self.python = python
+    def __init__(self):
         self.procs: dict[str, tuple[subprocess.Popen, str]] = {}
         self._lock = threading.Lock()
         self._job = _kill_on_close_job()
@@ -150,7 +150,7 @@ class TensorBoards:
             url = f"http://127.0.0.1:{port}/"
             log = tempfile.TemporaryFile()
             kw = {"preexec_fn": _die_with_parent} if sys.platform.startswith("linux") else {}
-            p = subprocess.Popen([self.python, "-m", "tensorboard.main", "--logdir", key, "--host", "127.0.0.1",
+            p = subprocess.Popen([sys.executable, "-m", "tensorboard.main", "--logdir", key, "--host", "127.0.0.1",
                                   "--port", str(port)], stdin=subprocess.DEVNULL, stdout=log, stderr=log, **kw)
             if self._job:
                 _assign(self._job, p)

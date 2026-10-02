@@ -101,9 +101,13 @@ def test_scalars_api_and_section_only_when_logs(api, runs, dataset):
     code, d = api.get("/api/exp/E1")
     assert code == 200 and d["tb"] == ["main"]
     assert api.get("/api/exp/E2")[1]["tb"] == []                               # 没有日志：页面不显示这一节
+    write_exp(runs, "E3")
+    events(runs / "E3" / "tb" / "main" / "media", 1000, [(0, {"x": 1.0})])     # 只有 media/
+    events(runs / "E3" / "tb" / "main" / "scalars", 1000, [])                  # 只有空文件
+    assert api.get("/api/exp/E3")[1]["tb"] == []
     code, d = api.get("/api/exp/E1/scalars")
     assert code == 200, d
-    assert d["logdir"] == "runs/E1/tb"
+    assert d["logdir"] == "runs/E1/tb" and d["max_points"] == tb.MAX_POINTS
     assert d["methods"] == [{"method": "main", "runs": [
         {"run": "scalars", "tags": {"loss": {"step": [0, 1], "value": [1.0, None], "n": 2}}}]}]
     code, d = api.post("/api/exp/E2/tensorboard")

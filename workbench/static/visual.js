@@ -394,10 +394,10 @@ export function mountVisual(isShown) {
       flow: `左侧为${F}原图，右侧为${O}按位移场摆到${F}坐标后的影像，拖动下方滑杆改变分界位置；位移落到${O}之外的像素留空。`,
       image: `方法输出的图片，原样拉伸到${F} patch 大小。`,
     }[meta.kind]);
-    const kinds = ok.length ? meta.kind : null;
+    const shown = ok.length ? meta.kind : null;   // 有数据可画时的种类
     el.innerHTML = `${head}${hint}<div class="panes">${all.map(([s, x]) => interPane(d, s, meta, x)).join('')}</div>
-      ${kinds === 'flow' ? `<input class="swipe" type="range" min="0" max="100" value="${V.swipe}" aria-label="卷帘分界位置">` : ''}
-      ${kinds === 'scalar' ? `<div class="conf"><label for="valpha">热力图不透明度</label><input id="valpha" type="range" min="0" max="100" step="5" value="${V.alpha}"><span class="num">${V.alpha}%</span></div>` : ''}
+      ${shown === 'flow' ? `<input class="swipe" type="range" min="0" max="100" value="${V.swipe}" aria-label="卷帘分界位置">` : ''}
+      ${shown === 'scalar' ? `<div class="conf"><label for="valpha">热力图不透明度</label><input id="valpha" type="range" min="0" max="100" step="5" value="${V.alpha}"><span class="num">${V.alpha}%</span></div>` : ''}
       ${legend}
       <p class="caption figcap"><b>图 ${V.detailFig}</b>${cap}滚轮缩放、拖动平移、双击复原，各面板同步。</p>`;
     bindBody(el);

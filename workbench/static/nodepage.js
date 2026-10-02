@@ -213,16 +213,15 @@ export function mountNodePage(root, { onBack }) {
       const many = TB.methods.length > 1;
       h = TB.methods.map(m => {
         const name = D.methods.find(x => x.id === m.method)?.name || m.method;
-        if (!m.runs.length) return `${many ? `<h3>${esc(name)}</h3>` : ''}<p class="muted">tb/${esc(m.method)}/ 的日志里没有 scalar。</p>`;
         const tags = [...new Set(m.runs.flatMap(r => Object.keys(r.tags)))].sort();
         const color = i => RUN_COLORS[i % RUN_COLORS.length];
         const legend = m.runs.length > 1 ? `<div class="legend">${m.runs.map((r, i) =>
           `<span><span class="key" style="border-top-color:${color(i)}"></span><span class="mono">${esc(r.run)}</span></span>`).join('')}</div>` : '';
         const thinned = m.runs.some(r => Object.values(r.tags).some(t => t.n > t.step.length));
         const charts = tags.map(tag => chart(tag, m.runs.map((r, i) => ({ s: r.tags[tag], color: color(i), run: r.run })).filter(x => x.s))).join('');
-        const one = m.runs.length === 1 ? `run 为 <span class="mono">${esc(m.runs[0].run)}</span>。` : '不同 run（如 version_N、add_scalars 的子目录）分开画，不拼接。';
+        const one = m.runs.length === 1 ? `TensorBoard run 为 <span class="mono">${esc(m.runs[0].run)}</span>。` : '不同 TensorBoard run（含 events 文件的各个目录，如 version_N、add_scalars 的子目录）分开画，不拼接。';
         return `${many ? `<h3>${esc(name)}</h3>` : ''}${legend}<div class="tbgrid">${charts}</div>
-          <p class="caption figcap"><b>图 ${++fig}</b>${many ? `${esc(name)} ` : ''}训练日志 <span class="mono">tb/${esc(m.method)}/</span> 中的 scalar，每个 tag 一张：横轴为 step（不同 tag 的 step 含义可能不同，例如以 epoch 计），纵轴为取值。${one}同一 run 里续训重叠的 step 已按 tag 截断，保留后写的点。${thinned ? '点数超过 2000 的曲线按序号分桶，只画每桶的最小、最大值和首尾点。' : ''}</p>`;
+          <p class="caption figcap"><b>图 ${++fig}</b>${many ? `${esc(name)} ` : ''}训练日志 <span class="mono">tb/${esc(m.method)}/</span> 中的 scalar，每个 tag 一张：横轴为 step（不同 tag 的 step 含义可能不同，例如以 epoch 计），纵轴为取值。${one}同一目录里续训重叠的 step 已按 tag 截断，保留后写的点。${thinned ? `点数超过 ${TB.max_points} 的曲线按序号分桶，只画每桶的最小、最大值和首尾点。` : ''}</p>`;
       }).join('');
     }
     body.innerHTML = head + h;

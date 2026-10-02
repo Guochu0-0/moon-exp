@@ -27,3 +27,7 @@ M12p --w-pseudo 0 --w-ripe 1 --r-out 0 --cert-out 0 --placebo --steps 4000 --lr 
 M4s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --seed 1 --workers 4
 M13 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --train-vgg --workers 4
 M14 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --workers 4
+# 第五批：M13（解冻 VGG）、M14（lr 3e-5）都在 8000 步取峰、曲线仍在升；合并两者并加长
+M15 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --workers 4
+M16 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --train-vgg --steps 16000 --save-every 2000 --workers 4
+M13s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --train-vgg --seed 1 --workers 4

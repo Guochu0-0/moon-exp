@@ -1,37 +1,76 @@
 # 服务器使用要点
 
-截至 2026-09-26 的积累。主机清单在用户本机的 `~/.ssh/config`（`xufang<编号>外网`）。
+更新于 2026-10-02。本文是服务器事实与用法的唯一来源：机器、怎么连、用卡规矩、操作注意、存储与环境、大文件、A6000、MATLAB。
+**代码怎么上服务器、结果放哪**不在本文，见[实验代码与结果的管理规范](https://github.com/Guochu0-0/moon-exp/issues/75)（落地后为 `docs/agents/experiments.md`）。
 
-## 机器
+每台机器都是课题组统一管理的 Docker 容器，用户是 root。容器重启后挂载可能变化，凡是涉及路径的事，每台机器单独核实（`df`、`hostname`），不要凭以前的印象。
 
-- 154 / 160 / 126 挂同一份 gpfs 存储。用户目录是 `/remote-home/xufang/YGC/`。
-- **150**：2026-09-30 核实已重新挂上 gpfs（`/remote-home/xufang` = gpfsdata），8 张 3090（24 GB）。外网端口常连不上，走内网 `10.254.1.150:20128`，本机经 126 跳：`ssh -i D:\ssh_key\id_rsa -J xufang126外网 -p 20128 root@10.254.1.150`。环境已从 `YGC/tmp/envpack/envs.tar` 解到 `/opt/envs`。**白天同时最多用 2–3 张卡**，即使全空；夜里（如凌晨）没人用，可以多占（用户要求）。与 126 共用 gpfs 和 `_claims`。负样本对的类 RIPE 任务在 24 GB 卡上会 OOM，只放伪标签和不带负样本对的任务。
-  2026-09-28 复查：ssh 能连，但仍未挂 gpfs。`/remote-home` 是本地 sdb1（15 T，已用 92%），没有 YGC 和 `/opt/envs`，8 张 3090 全部被占。目前不用。
-- **A6000 是独立文件系统**，不挂 gpfs。2026-09-28 起纳入使用，见下面「A6000」一节。155 不使用。
-- 容器重启后挂载可能变化。凡是涉及路径的事，每台机器单独核实（`df`、`hostname`），不要凭以前的印象。
-- 每台都是课题组统一管理的 Docker 容器，用户是 root。
+## 机器一览
 
-## 规矩（和其他同学共用）
+| 主机 | GPU | 存储 | 现状 |
+|---|---|---|---|
+| 154 | TITAN RTX | gpfs | 唯一有下载隧道端口和 MATLAB 的机器。2026-09-30 内网端口拒绝连接，2026-10-02 ssh 握手被断开，待查 |
+| 126 | 4 × V100-SXM2 32 GB | gpfs | 可用。GPU0 常被别人占（约 17 GB） |
+| 160 | — | gpfs | 很少用 |
+| 150 | 8 × RTX 3090 24 GB | gpfs（2026-09-30 起重新挂上） | 可用，用卡有专门规矩（见下）。**容器时钟慢约 13 小时** |
+| A6000 | 6 × RTX A6000 48 GB + 2 × RTX 5880 Ada 46 GB | 独立 NFS | 可用，别人用得多，见「A6000」一节 |
+| 155 | — | — | 不使用 |
 
-- 不碰 `YGC/` 以外别人的文件和数据。
-- 在容器里装软件、装环境都可以，只影响自己的容器。
-- 每次用之前先查 GPU。非空闲的卡是别人在跑实验，一律不碰。
+- 154 / 160 / 126 / 150 挂同一份 gpfs，用户目录是 `/remote-home/xufang/YGC/`。四台共用 `results/finetune/_claims`（任务队列的占位）。
+- A6000 不挂 gpfs，`_claims` 不与上面共享。
+
+## 怎么连
+
+主机清单在用户本机的 `~/.ssh/config`，分两组：
+
+- `xufang<编号>外网`：经外网网关 146.56.220.99。**经常断**（`kex_exchange_identification: Connection closed`）。
+- `xufang<编号>内网`：经用户工位机跳转（`ProxyJump lab工位机`），**首选**。
+
+| 内网主机名 | 地址 |
+|---|---|
+| `xufang126内网` | 172.16.2.126:20102 |
+| `xufang160内网` | 10.254.1.160:20198 |
+| `xufang150内网` | 10.254.1.150:20128 |
+| `xufangA6000内网` | 10.254.29.178:15038 |
+| 154 | 10.254.1.154:20020（2026-09-30 拒绝连接，暂无条目） |
+
+- 工位机 `lab工位机`：WD-018，Tailscale 地址 100.91.240.17，用户 guochu，key `D:/ssh_key/id_rsa`。内网组的前提是工位机开着、Tailscale 在线、不睡眠；连不上时先请用户查这三样。
+- 内网组即使跳转成功，单次连接也偶尔被断。见「操作注意」里的重试规矩。
+
+## 用卡规矩（和其他同学共用）
+
+- 每次用之前先查 GPU。非空闲的卡是别人在跑实验，一律不碰；启动后发现与别人同卡，撤下自己的任务。
+- **一台机器不占满**：即使全空，也至少留两张卡（用户，2026-10-02）。
+- **150**：白天同时最多 2–3 张；夜里（如凌晨）没人用，可以多占，但仍留两张，并优先放早上前能跑完的任务。用户当天另有指示时以指示为准。
 - 注意内存和 IO，别把机器拖卡。
+- 停掉自己的任务之前，先确认它在哪个阶段（训练 / 评测）、产物是否已写出，再决定删不删目录。
+
+## 操作注意
+
+- 远程命令都加 `timeout`。本机断开 ssh 并不会停掉远端进程；反过来，本机 `timeout` 杀掉 ssh，远端进程可能已半途退出并留下半成品文件。
+- **只对只读检查和拷文件做重试。** 启动任务、清理占位这类非幂等操作，写成 `mkdir` 锁保护的脚本（放在 `YGC/` 下，不放 `/root`），执行一次，再用单独的只读命令核对。2026-09-30 曾因重试循环把同一任务在一张卡上起了两份。
+- 长任务用 `nohup … < /dev/null &` 在远端起，写日志；结果用只读命令去查，不要让本机 ssh 挂着等。
+- `pkill -f` / `pgrep -f` 会匹配到自己这条 ssh 命令（命令行里含同样的字符串）。用 `[x]yz` 写法，或把命令放进脚本再执行；按 PID 杀之前先 `ps -o cmd= -p <pid>` 确认。
+- 不要在同一条命令里既用管道往 ssh 送数据（如 `git archive … | ssh … tar -x`），又用 heredoc 给 `bash -s` 送脚本：两者抢 stdin，tar 会读到脚本、什么都不执行。分成两条命令。
+- 本机是 Windows 的 Git Bash：参数里的 `/remote-home/...` 传给 Windows 程序（如本机 python）时会被改写成 `C:/Program Files/Git/remote-home/...`。生成要上服务器的文件时用 heredoc 直接写，或设 `MSYS_NO_PATHCONV=1`，写完 `grep "Program Files"` 核对。
+- **时钟**：150 容器时钟慢约 13 小时，日志、`_claims` 里的时间都受影响。跨机器比较时间先在各自机器上 `date -u` 换算，不要直接拿各机器日志里的本地时间比先后。
 - 共享存储上不要跑深层 `find` / `du`，尤其不要扫 `YGC/dataset`。
-- 远程命令都加 `timeout`。本机断开 ssh 并不会停掉远端进程。
-- `pkill -f` / `pgrep -f` 容易匹配到自己这条 ssh 命令。用 `[x]yz` 写法，或者把命令放进脚本再执行。
-- 服务器探查交给 sub agent，并把本节规矩原样写进它的提示。
-- Claude Code 会话处在 git worktree 里时，隔离检查会拦截大多数远程 `ssh … bash/nice` 命令。服务器操作要在主工作区里做。
+- 服务器探查交给 sub agent，并把「用卡规矩」「操作注意」两节原样写进它的提示。
 
-## 代码、环境、数据放在哪
+## 存储、环境、数据放在哪
 
-- 本仓库克隆在 `YGC/moon-exp`。
-  - git 网络操作只在 154 上做（154、126 能连 GitHub）。
-  - 用仓库级 deploy key `YGC/.ssh/moon-exp_deploy`，已配成 `core.sshCommand`。
-- baseline 代码以 git submodule 形式放进 `third_party/`，commit 钉死。
+- 本仓库克隆在 `YGC/moon-exp`。git 网络操作在能连 GitHub 的机器上做（154、126），用仓库级 deploy key `YGC/.ssh/moon-exp_deploy`，已配成 `core.sshCommand`。
+- baseline 代码以 git submodule 形式放在 `third_party/`，commit 钉死。
+- 软件和 conda 环境装在**各容器本地**，不装在 gpfs 上（gpfs 传输慢）。gpfs 只放代码、数据、权重和结果。
+  - `/opt/envs/loftr`（py3.10，torch 2.1.2+cu118，训练与推理）、`/opt/envs/wb`（py3.11，工作台与评测）。
+  - 150 的环境从 `YGC/tmp/envpack/envs.tar` 解出，与 154 一致。
+- 数据在 `YGC/dataset/Moon`（Train 7907 / Val 825 / Test 1130 对）。Val 的 ROI_060 已删除，Val 为 6 个 ROI。
+- 权重在 `YGC/weights/`（`anymatch/`、`minima/`、`matchanything/` 等）。RoMa 系要的 DINOv2 缓存在 `YGC/weights/torch_home`（设 `TORCH_HOME` 指向它，gpfs 上各机共用）。
+- 训练产物目前在 `YGC/results/finetune/<name>/`，离线伪标签在 `YGC/results/finetune/labels_*.jsonl`。按管理规范，今后改写进 `runs/<id>/`，`results/finetune/` 停止写入。
+- `YGC/moon-exp-*`（ft26、ft50、r2、roma、cf70 等）是 9/28 以后用 `git archive` 导出的实验副本，没有 `.git`。按管理规范禁止再用这种副本跑实验，现有副本冻结，待整理后归档。
 - 旧的 `projects/optical-sar-matching/` 不再使用。
-- 软件和 conda 环境装在**各容器本地**（如 `/opt`），不装在 gpfs 上，因为 gpfs 传输慢。gpfs 只放代码、数据、权重和结果。
-- 数据在 `YGC/dataset/Moon`。Val 的 ROI_060 已删除，现在 Val 为 6 个 ROI、825 对。
+
+显存参考（bs 1，PyTorch 峰值分配；nvidia-smi 看到的再多约 1.5 GB）：LoFTR 类 RIPE 带负样本对在 24 GB 卡上会 OOM；RoMa 伪标签约 6.3 GB、解冻 VGG 约 7.0 GB，RoMa 类 RIPE 带负样本对约 11.3 GB（各 run 的 `log.jsonl` 第一行 `mem_gb`）。
 
 ## 大文件进服务器
 
@@ -40,7 +79,7 @@
 - 不从宿舍电脑往服务器传大文件。数据集绝对不行，权重一般也不行。
 - 尽量少占服务器自己的外网带宽。
 
-**已建好的通道**：工位机（Windows，Clash Verge）上有计划任务 `ygc-tunnel`（`%USERPROFILE%\ygc-tunnel\ygc-tunnel.ps1`，断线自动重连）。它维持一条经内网连到 154（`root@10.254.1.154 -p 20020`）的反向 ssh 隧道。2026-09-26 从 150 改到 154，因为 150 没了 YGC，下载的文件落不到共享存储上。
+**已建好的通道**：工位机（Windows，Clash Verge）上有计划任务 `ygc-tunnel`（`%USERPROFILE%\ygc-tunnel\ygc-tunnel.ps1`，断线自动重连）。它维持一条经内网连到 154（`root@10.254.1.154 -p 20020`）的反向 ssh 隧道。154 连不上时这条通道也用不了。
 
 以下两个端口**只在 154 上**可用：
 
@@ -53,28 +92,28 @@
 - 在 154 上用 `curl -x socks5h://127.0.0.1:11080 ...` 下载，Google Drive 和 HF 用 `-x http://127.0.0.1:17890`。
   - Google Drive 大文件：`https://drive.usercontent.google.com/download?id=<ID>&export=download&confirm=t`。
   - 文件夹里各文件的 ID 可以从 `https://drive.google.com/embeddedfolderview?id=<文件夹 ID>` 抓取。
-- 文件存到 `YGC/weights/`，160、126 同样可见。
-- 隧道目标写在工位机的 `ygc-tunnel.ps1` 里。要换机器，改其中的地址和端口，再执行 `Stop-ScheduledTask ygc-tunnel; Start-ScheduledTask ygc-tunnel`。154 的内网地址是 `10.254.1.154:20020`。
+- 文件存到 `YGC/weights/`，gpfs 上各机同样可见。
+- 隧道目标写在工位机的 `ygc-tunnel.ps1` 里。要换机器，改其中的地址和端口，再执行 `Stop-ScheduledTask ygc-tunnel; Start-ScheduledTask ygc-tunnel`。
 - 两个端口不在时，说明工位机关机或已登出，请用户检查。
 - 停用隧道：在工位机上执行 `Unregister-ScheduledTask ygc-tunnel`。
 
-服务器能直连的站点：GitHub（仅 154、126）、pypi、hf-mirror、dl.fbaipublicfiles.com。
+服务器能直连的站点：GitHub（154、126、A6000）、pypi、hf-mirror、dl.fbaipublicfiles.com。
 
 ## A6000（2026-09-28 起）
 
 - 8 卡：0 号、7 号是 RTX 5880 Ada（46 GB），1–6 号是 RTX A6000（48 GB）。别人用得多，常常只有一两张空卡。
-- **GPU 编号**：CUDA 默认顺序和 nvidia-smi 不一致，`CUDA_VISIBLE_DEVICES=7` 会拿到别的卡。必须同时设 `CUDA_DEVICE_ORDER=PCI_BUS_ID`（`scripts/finetune/scenes.sh` 已设）。
-- 这个容器别人也在用：`/root` 下的文件、`/root/anaconda3` 的环境、`/workspace/xufang/moon` 都不是我们的，不碰。
+- **GPU 编号**：CUDA 默认顺序和 nvidia-smi 不一致，`CUDA_VISIBLE_DEVICES=7` 会拿到别的卡。必须同时设 `CUDA_DEVICE_ORDER=PCI_BUS_ID`（`scripts/finetune/scenes.sh`、`roma.sh` 已设）。
+- **`/dev/shm` 只有 64 MB**：DataLoader 多进程会报 `Bus error`，`--workers` 不超过 2。
+- 这个容器别人也在用：`/root` 下的文件、`/root/anaconda3` 的环境、`/workspace/xufang/moon` 都不是我们的，不碰。辅助脚本也不放 `/root`。
 - 存储：`/workspace/xufang` 是组里的 NFS（与 gpfs 是两套），我们的目录是 `/workspace/xufang/YGC`（dataset / weights / results / 代码）。容器里建了软链 `/remote-home/xufang/YGC → /workspace/xufang/YGC`，脚本里的路径不用改。
 - 根分区（overlay）很满，只剩约 80 GB，只放环境。
-- 环境：`/opt/envs/loftr`（py3.10，torch 2.1.2+cu118）与 `/opt/envs/wb`（py3.11），包版本与 154 一致，从 pypi / download.pytorch.org 装。
+- 环境：`/opt/envs/loftr` 与 `/opt/envs/wb`，包版本与 154 一致，从 pypi / download.pytorch.org 装。
 - 网络：GitHub、pypi、hf-mirror、download.pytorch.org 能直连；能经内网到 154（`10.254.1.154:20020`）。
 - **经内网从 154 拉文件**：A6000 上有 key `/root/.ssh/ygc_154`（公钥已加到 154 的 `authorized_keys`，注释 `ygc-a6000-to-154`）。
   用法：`ssh -i /root/.ssh/ygc_154 -p 20020 root@10.254.1.154 "tar cf - -C <目录> <内容>" | tar xf - -C <目标>`（154 没有 rsync）。
-- 已就位（2026-09-28）：数据 `YGC/dataset/Moon`（38 GB，Train 7907 / Val 825 / Test 1130 对）、`YGC/weights/anymatch/LoFTR_AnyMatch.ckpt`、`YGC/results/finetune/labels_b0.jsonl`。
-- 代码：`YGC/moon-exp` 从 154 的仓库克隆（remote = `ssh://root@10.254.1.154:20020/remote-home/xufang/YGC/moon-exp`，`GIT_SSH_COMMAND` 带上面的 key），新提交先在 154 上从 GitHub fetch 再拉过来；LoFTR 子模块直接从 GitHub 拉。
-- 速度：S1 式训练每步约 0.16 s（154 的 TITAN RTX 约 0.3 s）。
-- 与 154/126 不共享存储，`queue.sh` 的 `_claims` 占位跨不过去：给 A6000 单独的任务清单，结果再拷回 gpfs。
+- 代码：`YGC/moon-exp` 从 154 的仓库克隆（remote = `ssh://root@10.254.1.154:20020/remote-home/xufang/YGC/moon-exp`，`GIT_SSH_COMMAND` 带上面的 key）；LoFTR 子模块直接从 GitHub 拉。A6000 能直连 GitHub，也可以直接 fetch。
+- 速度：LoFTR 伪标签训练每步约 0.16 s（154 的 TITAN RTX 约 0.3 s）。
+- 结果要拷回 gpfs；给 A6000 单独的任务清单（`_claims` 跨不过去）。
 
 ## MATLAB（目前只在 154）
 

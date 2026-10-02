@@ -24,13 +24,23 @@ new() {
   else
     git -C "$MAIN" worktree add -q -b "$br" "$d" "$start"
   fi
-  # 子模块：主 checkout 里已初始化的，用它当 --reference（只借对象，不走外网）；嵌套子模块再递归补上
-  local p
-  for p in $(g -C "$MAIN" submodule status | awk '$1 !~ /^-/ {print $2}'); do
-    timeout 600 git -C "$d" submodule update -q --init --reference "$MAIN/$p" -- "$p" || die "子模块 $p 初始化失败"
-  done
-  timeout 600 git -C "$d" submodule update -q --init --recursive || die "嵌套子模块初始化失败"
+  subs "$MAIN" "$d"
   echo "$d"
+}
+
+# 子模块：src 里已初始化的，直接从 src 的那份本地克隆（不走外网；src 的子模块是浅克隆，不能当 --reference），
+# 再 sync 回 .gitmodules 的 URL；嵌套子模块递归同样处理。src 缺所需 commit 时这一步会失败，按提示处理。
+subs() {
+  local src=$1 dst=$2 p name
+  for p in $(g -C "$src" submodule status | awk '$1 !~ /^-/ {print $2}'); do
+    name=$(git -C "$dst" config -f .gitmodules --get-regexp '\.path$' | awk -v p="$p" '$2 == p {sub(/^submodule\./, "", $1); sub(/\.path$/, "", $1); print $1}')
+    git -C "$dst" submodule init -q -- "$p"
+    git -C "$dst" config "submodule.$name.url" "$src/$p"
+    timeout 600 git -C "$dst" -c protocol.file.allow=always submodule update -q -- "$p" \
+      || die "子模块 $p 从 $src/$p 初始化失败（那里可能没有所需 commit）"
+    git -C "$dst" submodule sync -q -- "$p"
+    subs "$src/$p" "$dst/$p"
+  done
 }
 
 close() {

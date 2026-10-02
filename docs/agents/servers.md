@@ -112,7 +112,7 @@
 - 两个端口不在时，说明工位机关机或已登出，请用户检查。
 - 停用隧道：在工位机上执行 `Unregister-ScheduledTask ygc-tunnel`。
 
-服务器能直连的站点：GitHub（154、126、A6000）、pypi、hf-mirror、dl.fbaipublicfiles.com。
+服务器能直连的站点：GitHub（154、126；A6000 只通 22 端口），pypi、hf-mirror、dl.fbaipublicfiles.com。
 
 ## A6000（2026-09-28 起）
 
@@ -123,12 +123,13 @@
 - 存储：`/workspace/xufang` 是组里的 NFS（与 gpfs 是两套），我们的目录是 `/workspace/xufang/YGC`（dataset / weights / results / 代码）。容器里建了软链 `/remote-home/xufang/YGC → /workspace/xufang/YGC`，脚本里的路径不用改。
 - 根分区（overlay）很满，只剩约 80 GB，只放环境。
 - 环境：`/opt/envs/loftr` 与 `/opt/envs/wb`，包版本与 154 一致，从 pypi / download.pytorch.org 装。
-- 网络：GitHub、pypi、hf-mirror、download.pytorch.org 能直连；能经内网到 154（`10.254.1.154:20020`）。
+- 网络：pypi、hf-mirror、download.pytorch.org 能直连；GitHub 只通 22 端口、443 不通（2026-10-02 实测），没有 GitHub key，所以不直接 fetch。能经内网到 154（`10.254.1.154:20020`）、150（`10.254.1.150:20128`）。
 - **经内网从 154 拉文件**：A6000 上有 key `/root/.ssh/ygc_154`（公钥已加到 154 的 `authorized_keys`，注释 `ygc-a6000-to-154`）。
   用法：`ssh -i /root/.ssh/ygc_154 -p 20020 root@10.254.1.154 "tar cf - -C <目录> <内容>" | tar xf - -C <目标>`（154 没有 rsync）。
 - **经内网推到 gpfs**：同一把 key 也加到了 150 的 `authorized_keys`（注释 `ygc-a6000-to-150`，2026-10-02），154 不通时用它：
   `tar cf - -C <目录> <内容> | ssh -i /root/.ssh/ygc_154 -p 20128 root@10.254.1.150 "tar xf - -C <gpfs 目标>"`。长传输写成脚本用 `nohup` 起。
-- 代码：`YGC/moon-exp` 从 154 的仓库克隆（remote = `ssh://root@10.254.1.154:20020/remote-home/xufang/YGC/moon-exp`，`GIT_SSH_COMMAND` 带上面的 key）；LoFTR 子模块直接从 GitHub 拉。A6000 能直连 GitHub，也可以直接 fetch。
+- 代码：`YGC/moon-exp` 的 remote 是 gpfs 主 checkout，经 150 走内网（`ssh://root@10.254.1.150:20128/remote-home/xufang/YGC/moon-exp`，`core.sshCommand` 带上面的 key，2026-10-02 起；之前指向 154）。gpfs 主 checkout 永远停在最新 main，先在 126 上 `pull`，A6000 再 `pull`。本票分支在 A6000 上提交后推到这个 remote，再从 126 推到 GitHub。
+  子模块的 URL 是 GitHub https，A6000 拉不了：已初始化的有 AnyMatch、CoMIR、EfficientLoFTR、GeoFormer、LightGlue、LoFTR、MatchAnything；RoMa_minima、RIFT2、RMSO-ConvNeXt、SuperGlue、XoFTR 未初始化，需要时从 gpfs 主 checkout 的子模块拷。
 - 速度：LoFTR 伪标签训练每步约 0.16 s（154 的 TITAN RTX 约 0.3 s）。
 - A6000 上的 `YGC/moon-exp` 是它自己的主 checkout，worktree 同样建在 `YGC/wt/`。占位跨不过存储，给 A6000 单独的任务清单。跑完先在 A6000 上 `scripts/wt.sh close`，再把 `runs/<id>/` 整份（含 ckpt）拷回 gpfs 主 checkout，核对文件数和大小后才能删 A6000 上的副本。
 

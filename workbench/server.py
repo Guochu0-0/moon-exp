@@ -13,7 +13,8 @@
     POST   /api/exp/<id>/title       改标题 {title}
     POST   /api/exp/<id>/rename      改编号 {id}（仅未点亮）
     DELETE /api/exp/<id>             删除（仅未点亮）
-    PUT    /api/canvas               保存画布 {experiments?, groups?, stickies?}；experiments 按 key 合并
+    PUT    /api/canvas               保存画布 {experiments?, groups?, stickies?}；experiments 按 key 合并，
+                                     groups / stickies 整体替换（字段见 canvas.py）
     PUT    /api/exp/<id>/notes       保存 notes.md {text}（UTF-8、LF；第一次保存时才创建）
 
 前端定期重拉 /api/data，所以它必须便宜：exp.toml 每次现读（很小），AUC 按 preds 文件的 mtime 和大小缓存，
@@ -251,11 +252,12 @@ class Workbench:
                 if not (isinstance(v, dict) and all(_num(v.get(a)) for a in ("x", "y"))):
                     raise EditError(f"{k} 的坐标应为 {{x, y}} 数值")
                 c["experiments"][k] = v
-            for key in ("groups", "stickies"):
-                if key in body:
-                    if not isinstance(body[key], list):
-                        raise EditError(f"{key} 应为数组")
-                    c[key] = body[key]
+            try:
+                for key, clean in (("groups", canvas.clean_groups), ("stickies", canvas.clean_stickies)):
+                    if key in body:
+                        c[key] = clean(body[key])
+            except ValueError as e:
+                raise EditError(str(e)) from e
             canvas.save(self.runs_dir, c, load_runs(self.runs_dir))
             return {"ok": True}
 

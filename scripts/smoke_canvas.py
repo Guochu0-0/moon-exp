@@ -4,7 +4,9 @@
 
 把仓库 runs/ 里的 B0、B0m（exp.toml 与 preds/*.jsonl）复制到临时目录，起一个工作台服务，然后覆盖：
 按 E 新建、菜单派生、拖到空白派生、拖到实验改父、成环被拒、已点亮实验的删除项置灰、
-拖动后刷新位置保持、终端写 exp.toml 后几秒内出现、双击进入节点页并返回；
+拖动后刷新位置保持、终端写 exp.toml 后几秒内出现、便签新建与编辑、Ctrl+G 打组并重命名、
+拖分组框标题带走框内实验和便签、分组框调大小与换色、`?` 面板、框选加多选拖动、Ctrl+A、
+各类右键菜单的内容、Del 删除选中对象时跳过已点亮实验、双击进入节点页并返回；
 节点页：未点亮实验只有三部分、章节导航跳转、编辑并保存 Notes、「← 画布」返回，
 B0 的 Notes 显示 offset 附件图，B0m 的全表显示回退后的显示名和 ΔAUC@10。
 依赖：Chrome 或 Edge、websocket-client。
@@ -81,30 +83,32 @@ class Page:
         assert r, f"找不到元素 {selector}"
         return r
 
-    def mouse(self, kind, x, y, button="left", clicks=1):
+    # mods：CDP 修饰键位掩码，Alt=1、Ctrl=2、Meta=4、Shift=8
+    def mouse(self, kind, x, y, button="left", clicks=1, mods=0):
         buttons = {"left": 1, "right": 2}[button] if kind != "mouseReleased" else 0
-        self.cmd("Input.dispatchMouseEvent", type=kind, x=x, y=y, button=button, buttons=buttons, clickCount=clicks)
+        self.cmd("Input.dispatchMouseEvent", type=kind, x=x, y=y, button=button, buttons=buttons, clickCount=clicks,
+                 modifiers=mods)
 
     def move(self, x, y):
         self.cmd("Input.dispatchMouseEvent", type="mouseMoved", x=x, y=y, button="none", buttons=0)
 
-    def click(self, x, y, button="left", clicks=1):
+    def click(self, x, y, button="left", clicks=1, mods=0):
         self.move(x, y)
         for c in range(1, clicks + 1):
-            self.mouse("mousePressed", x, y, button, c)
-            self.mouse("mouseReleased", x, y, button, c)
+            self.mouse("mousePressed", x, y, button, c, mods)
+            self.mouse("mouseReleased", x, y, button, c, mods)
 
-    def drag(self, a, b, steps=12):
+    def drag(self, a, b, steps=12, mods=0):
         self.move(*a)
-        self.mouse("mousePressed", *a)
+        self.mouse("mousePressed", *a, mods=mods)
         for i in range(1, steps + 1):
             x, y = a[0] + (b[0] - a[0]) * i / steps, a[1] + (b[1] - a[1]) * i / steps
-            self.cmd("Input.dispatchMouseEvent", type="mouseMoved", x=x, y=y, button="left", buttons=1)
-        self.mouse("mouseReleased", *b)
+            self.cmd("Input.dispatchMouseEvent", type="mouseMoved", x=x, y=y, button="left", buttons=1, modifiers=mods)
+        self.mouse("mouseReleased", *b, mods=mods)
 
-    def key(self, key, code=None, text=None, modifiers=0):
-        vk = {"Enter": 13, "Escape": 27, "Delete": 46}.get(key, ord(key.upper()) if len(key) == 1 else 0)
-        base = dict(key=key, code=code or key, windowsVirtualKeyCode=vk, modifiers=modifiers)
+    def key(self, key, code=None, text=None, mods=0):
+        vk = {"Enter": 13, "Escape": 27, "Delete": 46, "?": 191}.get(key, ord(key.upper()) if len(key) == 1 else 0)
+        base = dict(key=key, code=code or key, windowsVirtualKeyCode=vk, modifiers=mods)
         self.cmd("Input.dispatchKeyEvent", type="keyDown", **base, **({"text": text} if text else {}))
         self.cmd("Input.dispatchKeyEvent", type="keyUp", **base)
 
@@ -138,6 +142,34 @@ def menu_click(p, label):
 
 def node(rid):
     return f'.node[data-id="{rid}"]'
+
+
+CTRL, SHIFT = 2, 8
+
+
+def menu_items(p):
+    return p.js("[...document.querySelectorAll('.menu:not([hidden]) button')].map(b => b.querySelector('span').textContent)")
+
+
+def blank_near(p, x, y, w=260, h=140):
+    """离 (x, y) 最近、w×h 范围内没有卡片 / 便签 / 分组框 / 外框控件的点，返回该矩形的中心。"""
+    r = p.js(f"""(() => {{
+        const free = (cx, cy) => {{
+            for (let dx = -{w} / 2; dx <= {w} / 2; dx += 20) for (let dy = -{h} / 2; dy <= {h} / 2; dy += 20) {{
+                const el = document.elementFromPoint(cx + dx, cy + dy);
+                if (!el || !el.classList.contains('viewport')) return false;
+            }}
+            return true;
+        }};
+        let best = null;
+        for (let cx = 160; cx < innerWidth - 160; cx += 20) for (let cy = 110; cy < innerHeight - 110; cy += 20) {{
+            const d = Math.hypot(cx - {x}, cy - {y});
+            if ((!best || d < best[2]) && free(cx, cy)) best = [cx, cy, d];
+        }}
+        return best && best.slice(0, 2);
+    }})()""")
+    assert r, "画布上找不到空白处"
+    return r
 
 
 def main():
@@ -290,6 +322,174 @@ def main():
         (runs / "E9" / "exp.toml").write_text('id = "E9"\ntitle = "终端写的"\nparent = "B0"\n', encoding="utf-8")
         p.wait(f"document.querySelector('{node('E9')}')", 8, "E9 出现在画布上")
         step("09-终端新建")
+        canvas_all = lambda: json.loads((runs / "canvas.json").read_text(encoding="utf-8"))
+
+        # 空白处右键：新建实验 / 便签 / 分组框、打组（没选中时置灰）、适应窗口
+        fit()
+        p.key("Escape")
+        bx, by = blank_near(p, 750, 475)
+        p.click(bx, by, button="right")
+        p.wait("document.querySelector('.menu:not([hidden])')", what="空白处菜单")
+        items = menu_items(p)
+        assert items == ["新建实验", "新建便签", "新建分组框", "把选中的对象打成一组", "适应窗口"], items
+        assert p.js("[...document.querySelectorAll('.menu button')].find(b => b.textContent.includes('打成一组')).disabled")
+        step("12-空白处菜单")
+
+        # 菜单新建便签：随即编辑，Shift+Enter 换行，Enter 确认，写进 canvas.json
+        menu_click(p, "新建便签")
+        p.wait("document.querySelector('.sticky .body[contenteditable=true]')", what="便签进入编辑")
+        p.type("先看 Val")
+        p.key("Enter", text="\r", mods=SHIFT)   # 带 text 才会真的插入换行
+        p.type("再定稿")
+        p.key("Enter")
+        until(lambda: [x["text"] for x in canvas_all()["stickies"]] == ["先看 Val\n再定稿"], "便签文字写回 canvas.json")
+        sid = canvas_all()["stickies"][0]["id"]
+        sticky = f'.sticky[data-s="{sid}"]'
+        assert p.js(f"document.querySelector('{sticky} .hdr').textContent") == "便签"
+        # 便签右键：编辑、删除
+        p.click(*p.center(f"{sticky} .body"), button="right")
+        assert menu_items(p) == ["编辑", "删除便签"], menu_items(p)
+        p.key("Escape")
+        # 双击编辑
+        p.click(*p.center(f"{sticky} .body"), clicks=2)
+        p.wait(f"document.querySelector('{sticky} .body[contenteditable=true]')", what="双击便签进入编辑")
+        p.key("a", "KeyA", mods=CTRL)
+        p.type("Test 只在定稿时跑")
+        p.key("Enter")
+        until(lambda: canvas_all()["stickies"][0]["text"] == "Test 只在定稿时跑", "便签改写写回 canvas.json")
+        step("13-便签")
+
+        # 把便签挪到 B0 正下方，再单击 B0、Ctrl+单击便签，Ctrl+G 打组并重命名
+        b0 = p.js(f"(() => {{ const r = document.querySelector('{node('B0')}').getBoundingClientRect(); return [r.left, r.bottom]; }})()")
+        s0 = p.js(f"(() => {{ const r = document.querySelector('{sticky}').getBoundingClientRect(); return [r.left, r.top]; }})()")
+        hc = p.center(f"{sticky} .hdr")
+        p.drag(hc, (hc[0] + b0[0] + 10 - s0[0], hc[1] + b0[1] + 30 - s0[1]))
+        p.click(*p.center(f"{node('B0')} .hdr .nid"))
+        p.click(*p.center(f"{sticky} .hdr"), mods=CTRL)
+        assert p.js("document.querySelectorAll('.node.sel, .sticky.sel').length") == 2
+        # 实验上有多选时，菜单里有「打成一组」
+        p.click(*p.center(f"{node('B0')} .hdr .nid"), button="right")
+        assert "把选中的 2 个打成一组" in menu_items(p), menu_items(p)
+        p.key("Escape")
+        p.wait("document.querySelector('.menu[hidden]')", what="Esc 关闭菜单")
+        assert p.js("document.querySelectorAll('.node.sel, .sticky.sel').length") == 2
+        p.key("g", "KeyG", mods=CTRL)
+        p.wait("document.querySelector('.grp .gt[contenteditable=true]')", what="Ctrl+G 后进入分组重命名")
+        p.type("零样本基线")
+        p.key("Enter")
+        until(lambda: [g["title"] for g in canvas_all()["groups"]] == ["零样本基线"], "分组标题写回 canvas.json")
+        g = canvas_all()["groups"][0]
+        assert g["color"] in ("c1", "c2", "c3", "c4")
+        grp = f'.grp[data-g="{g["id"]}"]'
+        step("14-Ctrl+G打组")
+
+        # 拖分组框标题：框内的 B0 和便签一起移动，松手后坐标都已保存
+        c0 = canvas_all()
+        g0, e0, n0 = c0["groups"][0], c0["experiments"]["B0"], c0["stickies"][0]
+        t = p.center(f"{grp} .gt")
+        p.drag((t[0] - 60, t[1]), (t[0] - 60 + 90, t[1] + 60))
+        until(lambda: canvas_all()["groups"][0]["x"] != g0["x"], "分组框坐标写回 canvas.json")
+        c1 = canvas_all()
+        dx, dy = c1["groups"][0]["x"] - g0["x"], c1["groups"][0]["y"] - g0["y"]
+        assert dx > 0 and dy > 0
+        assert (c1["experiments"]["B0"]["x"] - e0["x"], c1["experiments"]["B0"]["y"] - e0["y"]) == (dx, dy)
+        assert (c1["stickies"][0]["x"] - n0["x"], c1["stickies"][0]["y"] - n0["y"]) == (dx, dy)
+        step("15-拖分组框")
+
+        # 按 G 在鼠标处新建分组框（找一块放得下的空白），再拖右下角手柄调大小
+        p.key("-", "Minus", "-")
+        p.key("-", "Minus", "-")
+        k = p.js("parseFloat(document.querySelector('.pc').textContent) / 100")
+        cx, cy = blank_near(p, 750, 475, 460 * k + 120, 300 * k + 80)
+        p.move(cx - 230 * k, cy - 150 * k)
+        p.key("g", "KeyG", "g")
+        until(lambda: len(canvas_all()["groups"]) == 2, "按 G 新建的分组框写进 canvas.json")
+        g2 = canvas_all()["groups"][1]
+        assert (g2["w"], g2["h"], g2["title"]) == (460, 300, "新分组")
+        rz = p.center(f'.grp[data-g="{g2["id"]}"] .rz')
+        p.drag(rz, (rz[0] + 70, rz[1] + 40))
+        until(lambda: canvas_all()["groups"][1]["w"] > 460 and canvas_all()["groups"][1]["h"] > 300, "分组框尺寸写回 canvas.json")
+        step("16-分组框调大小")
+
+        # 分组框右键：在此新建实验、重命名、换颜色、贴合框内内容、删除（内容保留）
+        p.click(*p.center(f"{grp} .gt"), button="right")
+        items = menu_items(p)
+        assert items == ["在此新建实验", "重命名", "换颜色", "贴合框内内容", "删除分组框（内容保留）"], items
+        color0 = canvas_all()["groups"][0]["color"]
+        menu_click(p, "换颜色")
+        until(lambda: canvas_all()["groups"][0]["color"] != color0, "换颜色写回 canvas.json")
+        assert p.js(f"document.querySelector('{grp}').classList.contains({json.dumps(canvas_all()['groups'][0]['color'])})")
+        # 贴合框内内容：空框只提示；把便签拖进新框再贴合，框收紧到便签外加留白
+        grp2 = f'.grp[data-g="{g2["id"]}"]'
+        p.click(*p.center(f"{grp2} .gt"), button="right")
+        menu_click(p, "贴合框内内容")
+        p.wait("document.querySelector('.toast.on') && document.querySelector('.toast').textContent.includes('框里没有内容')",
+               what="空框贴合提示")
+        p.key("Escape")                       # 先取消选择（B0 和便签还选着），只拖便签
+        assert p.js("document.querySelectorAll('.sel').length") == 0
+        hc, gc = p.center(f"{sticky} .hdr"), p.center(grp2)
+        p.drag(hc, gc)
+        p.click(*p.center(f"{grp2} .gt"), button="right")
+        menu_click(p, "贴合框内内容")
+        until(lambda: canvas_all()["groups"][1]["w"] == canvas_all()["stickies"][0]["w"] + 60, "贴合后框收紧")
+        step("17-分组框菜单")
+
+        # ? 打开快捷键面板，Esc 关闭；左下角按钮也能开关
+        p.key("?", "Slash", "?", mods=SHIFT)
+        p.wait("getComputedStyle(document.querySelector('.keys')).display !== 'none'", what="? 打开快捷键面板")
+        assert "Ctrl" in p.js("document.querySelector('.keys').textContent")
+        step("18-快捷键面板")
+        p.key("Escape")
+        p.wait("getComputedStyle(document.querySelector('.keys')).display === 'none'", what="Esc 关闭快捷键面板")
+        p.click(*p.center(".keysbtn"))
+        p.wait("document.querySelector('.keys.on')", what="快捷键按钮打开面板")
+        p.click(*p.center(".keysbtn"))
+        p.wait("!document.querySelector('.keys.on')", what="快捷键按钮关闭面板")
+
+        # 框选：Ctrl+从空白处拖，框住 E1 和 E3；再拖其中一个，两个一起移动
+        fit()
+        p.key("Escape")
+        u = p.js(f"""(() => {{ const a = document.querySelector('{node('E1')}').getBoundingClientRect(),
+                    b = document.querySelector('{node('E3')}').getBoundingClientRect();
+                    return [Math.min(a.left, b.left), Math.min(a.top, b.top), Math.max(a.right, b.right), Math.max(a.bottom, b.bottom)]; }})()""")
+        start, end = (u[0] - 12, u[1] - 12), (u[2] + 12, u[3] + 12)
+        assert p.js(f"!document.elementFromPoint({start[0]}, {start[1]}).closest('.node, .sticky, .gt, .rz')"), \
+            "框选起点应在空白处或分组框体上"
+        p.drag(start, end, mods=CTRL)
+        selected = p.js("[...document.querySelectorAll('.node.sel')].map(e => e.dataset.id)")
+        assert {"E1", "E3"} <= set(selected), selected
+        p.click(*p.center(f"{node('E1')} .hdr .nid"), mods=CTRL)      # Ctrl 单击：减选，再加回来
+        assert not p.js(f"document.querySelector('{node('E1')}').classList.contains('sel')")
+        p.click(*p.center(f"{node('E1')} .hdr .nid"), mods=CTRL)
+        before = canvas_all()["experiments"]
+        a = p.center(f"{node('E3')} .hdr .nid")
+        p.drag(a, (a[0] + 50, a[1] + 40))
+        until(lambda: canvas_all()["experiments"]["E3"] != before["E3"], "多选拖动写回 canvas.json")
+        after = canvas_all()["experiments"]
+        d1 = (after["E1"]["x"] - before["E1"]["x"], after["E1"]["y"] - before["E1"]["y"])
+        d3 = (after["E3"]["x"] - before["E3"]["x"], after["E3"]["y"] - before["E3"]["y"])
+        assert d1 == d3 and d1 != (0, 0), (d1, d3)
+        # 在多选中单击（不拖）：只留这一个
+        p.click(*p.center(f"{node('E3')} .hdr .nid"))
+        assert p.js("[...document.querySelectorAll('.node.sel, .sticky.sel')].map(e => e.dataset.id)") == ["E3"]
+        step("19-框选与多选拖动")
+
+        # Ctrl+A 全选实验和便签；单击空白取消选择
+        p.key("a", "KeyA", mods=CTRL)
+        n_all = p.js("document.querySelectorAll('.node').length + document.querySelectorAll('.sticky').length")
+        assert p.js("document.querySelectorAll('.node.sel, .sticky.sel').length") == n_all
+        bx, by = blank_near(p, 750, 475, 40, 40)
+        p.click(bx, by)
+        assert p.js("document.querySelectorAll('.sel').length") == 0
+
+        # Del 删除选中对象：已点亮的 B0 跳过并提示，便签删掉
+        p.click(*p.center(f"{node('B0')} .hdr .nid"))
+        p.click(*p.center(f"{sticky} .hdr"), mods=CTRL)
+        p.key("Delete")
+        p.wait("document.querySelector('.toast').textContent.includes('已跳过')", what="Del 跳过已点亮实验")
+        until(lambda: canvas_all()["stickies"] == [], "便签从 canvas.json 删除")
+        assert (runs / "B0").exists() and p.js(f"!!document.querySelector('{node('B0')}')")
+        step("20-Del删除选中")
 
         # 双击进入节点页，「← 画布」返回，实验居中且选中
         p.click(*p.center(f"{node('E1')} .hdr .nid"), clicks=2)
@@ -300,7 +500,7 @@ def main():
             ["实验信息", "结果", "Notes"]
         assert p.js("document.querySelector('#page #sec-results .body').textContent.trim()") == "尚无结果。"
         assert not p.js("!!document.querySelector('#page .cmp')")
-        step("10-节点页")
+        step("21-节点页")
 
         # 章节导航跳转：点 Notes，Notes 进入视口并高亮
         p.click(*p.center('#page .nav a[data-sec="notes"]'))
@@ -314,11 +514,11 @@ def main():
         p.click(*p.center("#page #sec-notes .edit"))
         p.wait("document.activeElement && document.activeElement.matches('#page textarea.notes-edit')", what="进入编辑")
         p.type("## 计划\n\n先跑 **Val**。")
-        p.key("s", "KeyS", modifiers=2)          # Ctrl+S
+        p.key("s", "KeyS", mods=CTRL)            # Ctrl+S
         until(lambda: (runs / "E1" / "notes.md").read_bytes() == "## 计划\n\n先跑 **Val**。".encode("utf-8"),
               "notes.md 写入")
         p.wait("document.querySelector('#page #sec-notes .md strong')?.textContent === 'Val'", what="Notes 按 Markdown 渲染")
-        step("10b-保存Notes")
+        step("21b-保存Notes")
         p.click(*p.center("#page .back"))
         p.wait(f"""(() => {{ const el = document.querySelector('{node('E1')}.sel'); if (!el || location.hash !== '#/') return false;
                    const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -327,14 +527,14 @@ def main():
         # Enter 也能进入
         p.key("Enter")
         p.wait("location.hash === '#/exp/E1'", what="Enter 进入节点页")
-        step("11-返回画布")
+        step("22-返回画布")
 
         # B0：Notes 里引用的 offset 附件图能显示
         p.js("location.hash = '#/exp/B0'")
         p.wait("document.querySelector('#page #sec-results table.tab')", 60, "B0 结果表")
         p.wait("""(() => { const im = document.querySelector('#page #sec-notes img[src$="extra/offset/offset_val.png"]');
                    return im && im.complete && im.naturalWidth > 0; })()""", 10, "B0 的 offset 附件图")
-        step("12-B0节点页")
+        step("23-B0节点页")
 
         # B0m：全表显示回退后的显示名（「· 映射」）和相对父实验同名基础方法的 ΔAUC@10
         p.js("location.hash = '#/exp/B0m'")
@@ -350,7 +550,7 @@ def main():
         assert {"LoFTR outdoor_ds · minmax", "LoFTR outdoor_ds · zscore_2p5"} <= names, rows
         assert all(d[0] in "+−0" for _, d in rows), rows[:3]
         assert "（默认）" in p.js("document.querySelector('#page #selR option:checked').textContent")
-        step("13-B0m节点页")
+        step("24-B0m节点页")
         ok = True
         print("画布冒烟全部通过")
     except Exception:

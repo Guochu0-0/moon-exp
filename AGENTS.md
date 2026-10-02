@@ -17,3 +17,7 @@ Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/
 ### Servers
 
 Shared lab GPU servers: which hosts, usage rules, where code/envs/data live, how large files get in, MATLAB. Read before touching any server. See `docs/agents/servers.md`.
+
+### Experiments
+
+Running an experiment (writing anything under `runs/<id>/`: preds, intermediate results, TensorBoard logs, notes): first read `workbench/RECORDS.md` and follow it. Don't read `workbench/README.md` for this; it documents the workbench UI.

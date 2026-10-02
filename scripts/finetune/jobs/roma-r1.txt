@@ -34,3 +34,10 @@ M13s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --lab
 M14s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --seed 1 --workers 4
 M15s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --seed 1 --workers 4
 M17 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --steps 16000 --save-every 2000 --workers 4
+# 第六批（用户允许当天多用卡，150 GPU3–7）：平台能否打破
+# M19 不筛标签；M20 只加长（不解冻 VGG、lr 3e-5、16000 步）；M21 lr 1e-4；M22 LoFTR 老师标签 + VGG + 3e-5（老师无关性是否仍成立）；M15s2 第三个种子
+M19 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 1.0 --lr 3e-5 --train-vgg --workers 4
+M20 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --steps 16000 --save-every 2000 --workers 4
+M21 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-4 --train-vgg --workers 4
+M22 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --workers 4
+M15s2 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --seed 2 --workers 4

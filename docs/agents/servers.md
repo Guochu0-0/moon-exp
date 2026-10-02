@@ -16,8 +16,8 @@
 | A6000 | 6 × RTX A6000 48 GB + 2 × RTX 5880 Ada 46 GB | 独立 NFS | 可用，别人用得多，见「A6000」一节 |
 | 155 | — | — | 不使用 |
 
-- 154 / 160 / 126 / 150 挂同一份 gpfs，用户目录是 `/remote-home/xufang/YGC/`。四台共用 `results/finetune/_claims`（旧队列的占位；新驱动 `scripts/finetune/run.py` 的占位在实验目录的 `runs/<id>/.claims/` 里，同样跨这四台）。
-- A6000 不挂 gpfs，`_claims` 不与上面共享。
+- 154 / 160 / 126 / 150 挂同一份 gpfs，用户目录是 `/remote-home/xufang/YGC/`。驱动 `scripts/finetune/run.py` 的占位在实验目录的 `runs/<id>/.claims/` 里，跨这四台共享（旧队列的 `results/finetune/_claims` 已归档）。
+- A6000 不挂 gpfs，占位不与上面共享。
 
 ## 怎么连
 
@@ -68,7 +68,7 @@
 - `pkill -f` / `pgrep -f` 会匹配到自己这条 ssh 命令（命令行里含同样的字符串）。用 `[x]yz` 写法，或把命令放进脚本再执行；按 PID 杀之前先 `ps -o cmd= -p <pid>` 确认。
 - 不要在同一条命令里既用管道往 ssh 送数据（如 `git archive … | ssh … tar -x`），又用 heredoc 给 `bash -s` 送脚本：两者抢 stdin，tar 会读到脚本、什么都不执行。分成两条命令。
 - 本机是 Windows 的 Git Bash：参数里的 `/remote-home/...` 传给 Windows 程序（如本机 python）时会被改写成 `C:/Program Files/Git/remote-home/...`。生成要上服务器的文件时用 heredoc 直接写，或设 `MSYS_NO_PATHCONV=1`，写完 `grep "Program Files"` 核对。
-- **时钟**：150 容器时钟慢约 13 小时，日志、`_claims` 里的时间都受影响。跨机器比较时间先在各自机器上 `date -u` 换算，不要直接拿各机器日志里的本地时间比先后。
+- **时钟**：150 容器时钟慢约 13 小时 07 分（2026-10-02 由占位时间与提交时间对出），日志、`_claims` 里的时间都受影响。跨机器比较时间先在各自机器上 `date -u` 换算，不要直接拿各机器日志里的本地时间比先后。
 - 共享存储上不要跑深层 `find` / `du`，尤其不要扫 `YGC/dataset`。
 - 服务器探查交给 sub agent，并把「用卡规矩」「操作注意」两节原样写进它的提示。
 
@@ -81,9 +81,9 @@
   - 150 的环境从 `YGC/envpack/envs.tar`（2026-10-02 从 `tmp/` 挪出） 解出，与 154 一致。
 - 数据在 `YGC/dataset/Moon`（Train 7907 / Val 825 / Test 1130 对）。Val 的 ROI_060 已删除，Val 为 6 个 ROI。
 - 权重在 `YGC/weights/`（`anymatch/`、`minima/`、`matchanything/` 等）。RoMa 系要的 DINOv2 缓存在 `YGC/weights/torch_home`（设 `TORCH_HOME` 指向它，gpfs 上各机共用）。
-- 训练产物写进实验目录 `runs/<id>/`，结票后归到主 checkout 的 `runs/`。`YGC/results/finetune/<name>/` 是 10/02 以前的旧产物，停止写入；其中的离线伪标签 `labels_*.jsonl` 照常读取。
-- `YGC/moon-exp-*`（ft26、ft50、r2、roma、cf70 等）是 9/28 以后用 `git archive` 导出的实验副本，没有 `.git`。按管理规范禁止再用这种副本跑实验，现有副本冻结，待整理后归档。
-- 旧的 `projects/optical-sar-matching/` 不再使用。
+- 训练产物写进实验目录 `runs/<id>/`，结票后归到主 checkout 的 `runs/`。`YGC/results/finetune/` 停止写入，只剩离线伪标签 `labels_*.jsonl`（任务清单用绝对路径引用，照常读取）；10/02 以前的训练产物已迁进各实验的 `runs/<id>/`（#77）。
+- `YGC/results/baselines`、`baselines_ablation` 是 B0、B0m 的原始匹配输出，`scripts/baselines/` 读它们，留在原位。
+- **归档**：`YGC/_archive/2026-10/` 放 10/02 整理时挪走的东西：旧 worktree 与 `git archive` 副本（`moon-exp-*`）、`tmp/`、`results/finetune` 的其余部分（R 系、S1 变体、日志、锁、一次性脚本原件）、`results/{coarse70,diag_reward}`、`projects/optical-sar-matching/`，以及各方法修剪下来的 ckpt（`ckpt/`：峰值与最后一个之外的，删除前问用户）。迁移日志在 `YGC/_archive/*77*.log`。
 
 显存参考（bs 1，PyTorch 峰值分配；nvidia-smi 看到的再多约 1.5 GB）：LoFTR 类 RIPE 带负样本对在 24 GB 卡上会 OOM；RoMa 伪标签约 6.3 GB、解冻 VGG 约 7.0 GB，RoMa 类 RIPE 带负样本对约 11.3 GB（各 run 的 `log.jsonl` 第一行 `mem_gb`）。
 
@@ -126,6 +126,8 @@
 - 网络：GitHub、pypi、hf-mirror、download.pytorch.org 能直连；能经内网到 154（`10.254.1.154:20020`）。
 - **经内网从 154 拉文件**：A6000 上有 key `/root/.ssh/ygc_154`（公钥已加到 154 的 `authorized_keys`，注释 `ygc-a6000-to-154`）。
   用法：`ssh -i /root/.ssh/ygc_154 -p 20020 root@10.254.1.154 "tar cf - -C <目录> <内容>" | tar xf - -C <目标>`（154 没有 rsync）。
+- **经内网推到 gpfs**：同一把 key 也加到了 150 的 `authorized_keys`（注释 `ygc-a6000-to-150`，2026-10-02），154 不通时用它：
+  `tar cf - -C <目录> <内容> | ssh -i /root/.ssh/ygc_154 -p 20128 root@10.254.1.150 "tar xf - -C <gpfs 目标>"`。长传输写成脚本用 `nohup` 起。
 - 代码：`YGC/moon-exp` 从 154 的仓库克隆（remote = `ssh://root@10.254.1.154:20020/remote-home/xufang/YGC/moon-exp`，`GIT_SSH_COMMAND` 带上面的 key）；LoFTR 子模块直接从 GitHub 拉。A6000 能直连 GitHub，也可以直接 fetch。
 - 速度：LoFTR 伪标签训练每步约 0.16 s（154 的 TITAN RTX 约 0.3 s）。
 - A6000 上的 `YGC/moon-exp` 是它自己的主 checkout，worktree 同样建在 `YGC/wt/`。占位跨不过存储，给 A6000 单独的任务清单。跑完先在 A6000 上 `scripts/wt.sh close`，再把 `runs/<id>/` 整份（含 ckpt）拷回 gpfs 主 checkout，核对文件数和大小后才能删 A6000 上的副本。

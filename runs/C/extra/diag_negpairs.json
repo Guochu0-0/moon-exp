@@ -1,0 +1,206 @@
+{
+ "zs": {
+  "weights": "/remote-home/xufang/YGC/weights/anymatch/LoFTR_AnyMatch.ckpt",
+  "pos": {
+   "n": 200,
+   "n_match": {
+    "median": 835.0,
+    "mean": 891.425
+   },
+   "n_inl": {
+    "median": 175.0,
+    "mean": 216.56
+   },
+   "n_ident": {
+    "median": 9.0,
+    "mean": 51.85
+   },
+   "dist_I": {
+    "median": 28.3415,
+    "mean": 33.8549
+   },
+   "diag": {
+    "median": 0.001,
+    "mean": 0.0041
+   },
+   "ransac_fail": 0
+  },
+  "neg": {
+   "n": 200,
+   "n_match": {
+    "median": 581.0,
+    "mean": 565.715
+   },
+   "n_inl": {
+    "median": 34.0,
+    "mean": 35.525
+   },
+   "n_ident": {
+    "median": 3.0,
+    "mean": 3.955
+   },
+   "dist_I": {
+    "median": 55.773,
+    "mean": 58.7322
+   },
+   "diag": {
+    "median": 0.0004,
+    "mean": 0.0005
+   },
+   "ransac_fail": 0
+  }
+ },
+ "s2_1000": {
+  "weights": "/remote-home/xufang/YGC/results/finetune/S2/ckpt_1000.pt",
+  "pos": {
+   "n": 200,
+   "n_match": {
+    "median": 5776.0,
+    "mean": 5775.515
+   },
+   "n_inl": {
+    "median": 5776.0,
+    "mean": 5775.47
+   },
+   "n_ident": {
+    "median": 5776.0,
+    "mean": 5775.47
+   },
+   "dist_I": {
+    "median": 0.004,
+    "mean": 0.0047
+   },
+   "diag": {
+    "median": 0.7496,
+    "mean": 0.7496
+   },
+   "ransac_fail": 0
+  },
+  "neg": {
+   "n": 200,
+   "n_match": {
+    "median": 5776.0,
+    "mean": 5775.57
+   },
+   "n_inl": {
+    "median": 5776.0,
+    "mean": 5775.555
+   },
+   "n_ident": {
+    "median": 5776.0,
+    "mean": 5775.555
+   },
+   "dist_I": {
+    "median": 0.004,
+    "mean": 0.0042
+   },
+   "diag": {
+    "median": 0.7455,
+    "mean": 0.7451
+   },
+   "ransac_fail": 0
+  }
+ },
+ "s2_8000": {
+  "weights": "/remote-home/xufang/YGC/results/finetune/S2/ckpt_8000.pt",
+  "pos": {
+   "n": 200,
+   "n_match": {
+    "median": 5776.0,
+    "mean": 5776.0
+   },
+   "n_inl": {
+    "median": 5776.0,
+    "mean": 5776.0
+   },
+   "n_ident": {
+    "median": 5776.0,
+    "mean": 5776.0
+   },
+   "dist_I": {
+    "median": 0.0,
+    "mean": 0.0
+   },
+   "diag": {
+    "median": 0.9872,
+    "mean": 0.9871
+   },
+   "ransac_fail": 0
+  },
+  "neg": {
+   "n": 200,
+   "n_match": {
+    "median": 5776.0,
+    "mean": 5776.0
+   },
+   "n_inl": {
+    "median": 5776.0,
+    "mean": 5776.0
+   },
+   "n_ident": {
+    "median": 5776.0,
+    "mean": 5776.0
+   },
+   "dist_I": {
+    "median": 0.0,
+    "mean": 0.0
+   },
+   "diag": {
+    "median": 0.9869,
+    "mean": 0.9868
+   },
+   "ransac_fail": 0
+  }
+ },
+ "s1_6000": {
+  "weights": "/remote-home/xufang/YGC/results/finetune/S1/ckpt_6000.pt",
+  "pos": {
+   "n": 200,
+   "n_match": {
+    "median": 2856.5,
+    "mean": 2842.585
+   },
+   "n_inl": {
+    "median": 1498.5,
+    "mean": 1653.96
+   },
+   "n_ident": {
+    "median": 50.5,
+    "mean": 390.805
+   },
+   "dist_I": {
+    "median": 26.7635,
+    "mean": 35.3697
+   },
+   "diag": {
+    "median": 0.0079,
+    "mean": 0.0326
+   },
+   "ransac_fail": 0
+  },
+  "neg": {
+   "n": 200,
+   "n_match": {
+    "median": 391.5,
+    "mean": 414.245
+   },
+   "n_inl": {
+    "median": 95.0,
+    "mean": 96.66
+   },
+   "n_ident": {
+    "median": 31.0,
+    "mean": 36.93
+   },
+   "dist_I": {
+    "median": 28.0115,
+    "mean": 30.9086
+   },
+   "diag": {
+    "median": 0.0066,
+    "mean": 0.0066
+   },
+   "ransac_fail": 0
+  }
+ }
+}

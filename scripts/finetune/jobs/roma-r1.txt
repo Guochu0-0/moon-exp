@@ -1,0 +1,43 @@
+# RoMa 首轮（#65 伪标签、#66 类 RIPE）。驱动 roma.sh（DRIVER=roma.sh），底座 AnyMatch-RoMa + minmax，只训 decoder。
+# 伪标签：P8 配方搬到 RoMa（LoFTR 第三轮标签 labels_p2 前 50%、geo+photo 扰动、warmup 500 + cosine、8000 步）
+M1 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --lr 1e-5 --save0 --workers 4
+M2 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --lr 3e-6 --workers 4
+M3 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --lr 1e-5 --workers 4
+# 类 RIPE：Q4 配方（外点 −0.25、负样本对、warmup + cosine、4000 步）；M5p 随机 reward 对照；M6 取舍项权重 0.1
+M5 --w-pseudo 0 --w-ripe 1 --neg --steps 4000 --lr 1e-5 --workers 4
+M5p --w-pseudo 0 --w-ripe 1 --neg --placebo --steps 4000 --lr 1e-5 --workers 4
+M6 --w-pseudo 0 --w-ripe 1 --neg --w-cert 0.1 --steps 4000 --lr 1e-5 --workers 4
+# 第二批（M5 / M5p / M6 在 450 步内塌到 certainty 全 0，随机 reward 对照同样塌：是优化动力学问题）
+# M7：只留粗级锚点项（不训 certainty，最接近 Q4）；M7p 其随机 reward 对照；M8：取舍项外点给 0（只奖励内点）；M9：M5 降 lr 到 1e-6
+M7 --w-pseudo 0 --w-ripe 1 --neg --w-cert 0 --steps 4000 --lr 1e-5 --workers 4
+M7p --w-pseudo 0 --w-ripe 1 --neg --w-cert 0 --placebo --steps 4000 --lr 1e-5 --workers 4
+M8 --w-pseudo 0 --w-ripe 1 --neg --cert-out 0 --steps 4000 --lr 1e-5 --workers 4
+M9 --w-pseudo 0 --w-ripe 1 --neg --steps 4000 --lr 1e-6 --workers 4
+# 伪标签：M3 第二个种子；M10 不筛标签（前 100%）
+M3s1 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --lr 1e-5 --seed 1 --workers 4
+M10 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 1.0 --lr 1e-5 --workers 4
+# 第三批（伪标签第二轮，Noisy-Student）：M3（Val 峰值 ckpt_2000）给 Train 重新打标 → labels_rm1，从 zero-shot 重训；M11 带 geo+photo 扰动，M11n 不带
+M11 --labels /remote-home/xufang/YGC/results/finetune/labels_rm1.jsonl --label-top 0.5 --aug geo,photo --lr 1e-5 --workers 4
+M11n --labels /remote-home/xufang/YGC/results/finetune/labels_rm1.jsonl --label-top 0.5 --lr 1e-5 --workers 4
+# 第三批：M4 用 RoMa 自己 zero-shot 打的标签（对照 LoFTR 老师）；M12 类 RIPE 只给正分（外点 0、无负样本对），M12p 其随机对照
+M4 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --workers 4
+M12 --w-pseudo 0 --w-ripe 1 --r-out 0 --cert-out 0 --steps 4000 --lr 1e-5 --workers 4
+M12p --w-pseudo 0 --w-ripe 1 --r-out 0 --cert-out 0 --placebo --steps 4000 --lr 1e-5 --workers 4
+# 第四批：伪标签在 RoMa 上与老师无关地停在 Val ≈ 0.305（M3 / M4 / M11n）；主候选 M4（RoMa 自训练）补种子，并试两个可能打破平台的因素
+M4s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --seed 1 --workers 4
+M13 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --train-vgg --workers 4
+M14 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --workers 4
+# 第五批：M13（解冻 VGG）、M14（lr 3e-5）都在 8000 步取峰、曲线仍在升；合并两者并加长
+M15 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --workers 4
+M16 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --train-vgg --steps 16000 --save-every 2000 --workers 4
+M13s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-5 --train-vgg --seed 1 --workers 4
+M14s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --seed 1 --workers 4
+M15s1 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --seed 1 --workers 4
+M17 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --steps 16000 --save-every 2000 --workers 4
+# 第六批（用户允许当天多用卡，150 GPU3–7）：平台能否打破
+# M19 不筛标签；M20 只加长（不解冻 VGG、lr 3e-5、16000 步）；M21 lr 1e-4；M22 LoFTR 老师标签 + VGG + 3e-5（老师无关性是否仍成立）；M15s2 第三个种子
+M19 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 1.0 --lr 3e-5 --train-vgg --workers 4
+M20 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --steps 16000 --save-every 2000 --workers 4
+M21 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 1e-4 --train-vgg --workers 4
+M22 --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --workers 4
+M15s2 --labels /remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl --label-top 0.5 --lr 3e-5 --train-vgg --seed 2 --workers 4

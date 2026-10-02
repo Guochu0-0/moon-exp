@@ -1,0 +1,16 @@
+# 第二轮（126，gpfs 上有离线标签）。用 scripts/finetune/first_round.py 跑，按行序领取。
+# 用户出差期间授权助手自行继续两条路线（2026-09-30），设计理由见 runs/P/notes.md「第二轮」。
+# 伪标签路线：P8 配方 = labels_p2 前 50% + geo,photo 扰动，从 zero-shot 重训，lr 1e-5，warmup 500 + cosine，8000 步。
+P11  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --seed 1
+P12  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --init /remote-home/xufang/YGC/results/finetune/P2/ckpt_7000.pt
+P13  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --aug-shift 6 --aug-rot 1.5 --aug-scale 0.015
+P14  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --aug-shift 24 --aug-rot 5 --aug-scale 0.05
+# 类 RIPE 两段（原登记在 round2-a6000.txt，150 接入后移到 gpfs 这边；不带负样本对，3090 放得下）：
+# Q11 从 Q4 step 1500 出发，只训细级，纯整对梯度 NCC RL，R27 配方（lr 5e-5、累积 16、4000 步）；Q11p 随机 reward
+Q11  --init /remote-home/xufang/YGC/results/finetune/Q4/ckpt_1500.pt --w-pseudo 0 --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --train-modules fine --lr 5e-5 --accum 16 --steps 4000 --save-every 500
+Q11p --init /remote-home/xufang/YGC/results/finetune/Q4/ckpt_1500.pt --w-pseudo 0 --rl-pair 1 --sig-i 0 --sig-g 0.25 --K 4 --train-modules fine --lr 5e-5 --accum 16 --steps 4000 --save-every 500 --placebo
+# P15：P8 配方，但标签先平移到梯度 NCC 峰（finetune/refine_labels.py → labels_p2n.jsonl），给学生带进老师没有的整体偏移信息
+P15  --labels /remote-home/xufang/YGC/results/finetune/labels_p2n.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
+P15s1 --labels /remote-home/xufang/YGC/results/finetune/labels_p2n.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --seed 1
+# 第三个种子（主表报三种子均值 ± std）：P16 = P8 配方 seed 2
+P16  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000 --seed 2

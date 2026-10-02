@@ -112,3 +112,35 @@ def test_lr_schedule():
     assert lr_at(500, 8000, 1e-5, 500, sched="cosine") == 1e-5         # warmup 结束即峰值
     assert abs(lr_at(4250, 8000, 1e-5, 500, sched="cosine") - 5e-6) < 1e-12
     assert abs(lr_at(8000, 8000, 1e-5, 500, sched="cosine", lr_min=0.1) - 1e-6) < 1e-12
+
+
+def test_augment_warp_matches_label_transform():
+    """SAR 按已知 T warp 后，原来落在 A(p) 的内容应出现在 (T∘A)(p)（#53）。"""
+    from finetune.augment import compose, sample_T, warp
+    from finetune.pseudo import apply_affine
+
+    A = np.array([[1.0, 0.02, 5.0], [-0.01, 1.0, -7.0]])
+    p = np.array([[200.0, 300.0]])                                    # 光学点，中心约定
+    q = np.rint(apply_affine(A, p)[0]).astype(int)                   # SAR 上的对应像素
+    img = np.zeros((512, 512), np.float32)
+    img[q[1] - 1:q[1] + 2, q[0] - 1:q[0] + 2] = 1.0
+    T = sample_T(np.random.default_rng(0), shift=12, rot=3, scale=0.03)
+    out = warp(img, T)
+    ys, xs = np.nonzero(out > 0.1)
+    got = np.array([(xs * out[ys, xs]).sum(), (ys * out[ys, xs]).sum()]) / out[ys, xs].sum()
+    want = apply_affine(T, q[None].astype(float))[0]
+    assert np.abs(got - want).max() < 0.3
+    assert np.allclose(apply_affine(compose(T, A), p), apply_affine(T, apply_affine(A, p)))
+
+
+def test_load_labels_top(tmp_path):
+    import json
+    from finetune.label import load_labels
+
+    rows = [{"pair": f"R/{i}", "A": [[1, 0, 0], [0, 1, 0]], "n_match": 200, "n_inliers": i, "keep": i > 0}
+            for i in range(5)]
+    f = tmp_path / "l.jsonl"
+    f.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
+    assert sum(v is not None for v in load_labels(f).values()) == 4
+    top = load_labels(f, 0.5)
+    assert [k for k, v in top.items() if v is not None] == ["R/3", "R/4"]

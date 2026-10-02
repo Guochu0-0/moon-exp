@@ -24,14 +24,13 @@ HW = 512
 MIN_MATCHES, MIN_INLIERS = 100, 20
 
 
-def load_labels(path):
-    """label.py 的输出 → {pair: A（list）或 None}。keep=false 的记 None。"""
-    out = {}
-    for line in Path(path).read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            d = json.loads(line)
-            out[d["pair"]] = d["A"] if d["keep"] else None
-    return out
+def load_labels(path, top=1.0):
+    """label.py 的输出 → {pair: A（list）或 None}。keep=false 的记 None。
+    top < 1：只留 keep 的对里内点数最多的前 top 比例（课程式取子集，#53 调研 C4），其余记 None。"""
+    rows = [json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
+    kept = sorted((d for d in rows if d["keep"]), key=lambda d: -d["n_inliers"])
+    ok = {d["pair"] for d in kept[: int(round(len(kept) * top))]}
+    return {d["pair"]: d["A"] if d["pair"] in ok else None for d in rows}
 
 
 def main(argv=None):

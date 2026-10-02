@@ -93,11 +93,11 @@ def inlier_cells(A, k0, k1, i_ids, s, thr):
     return np.unique(i_ids[d < thr])
 
 
-def pseudo_loss(data, s, affines=None, thr=3.0, min_inliers=0, w_coarse=1.0, w_fine=1.0, coarse_set="all"):
+def pseudo_loss(data, s, affines=None, thr=3.0, min_inliers=0, w_coarse=1.0, w_fine=1.0, coarse_set="all", n_pos=None):
     """一个 batch 的伪标签损失。data 是 LoFTR 前向后的字典（模块 eval、开梯度，见 finetune/model.py）。
     s = 原尺寸 / 输入尺寸（标量）。affines：离线伪仿射，每对一个 2×3 或 None（None 的对不监督）；
     不给则用本步匹配在线估计。coarse_set：all = 所有落在图内的光学格（上游 LoFTR 形式）；
-    inliers = 只取本步内点所在的格。返回 (loss, 统计 dict)。"""
+    inliers = 只取本步内点所在的格。n_pos：只监督前 n_pos 对（其后是负样本对，#51）。返回 (loss, 统计 dict)。"""
     conf, expec_f = data["conf_matrix"], data["expec_f"]
     B = conf.shape[0]
     hw_c = tuple(int(x) for x in data["hw0_c"])
@@ -114,7 +114,7 @@ def pseudo_loss(data, s, affines=None, thr=3.0, min_inliers=0, w_coarse=1.0, w_f
     gt = np.zeros((len(b_ids), 2))
     valid = np.zeros(len(b_ids), bool)
     n_inl, used = [], 0
-    for k in range(B):
+    for k in range(B if n_pos is None else n_pos):
         sel = b_ids == k
         if affines is None:
             A, n = fit_pseudo(k0[sel], k1f[sel], s, thr, min_inliers)

@@ -51,6 +51,9 @@ def sha256(path, bufsize=1 << 22) -> str:
 
 
 def git_head(path) -> str | None:
+    stamp = Path(path) / "COMMIT"   # 没有 .git 的部署副本（git archive 解包，见 #49）在这里记 commit
+    if stamp.exists():
+        return stamp.read_text().strip()
     try:
         out = subprocess.run(["git", "-C", str(path), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
         # --no-optional-locks：不刷新索引、不拿 index.lock。gpfs 上 status 很慢，被超时杀掉时会留下残锁
@@ -90,12 +93,13 @@ def key(pair: str) -> str:
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("config")
-    ap.add_argument("--split", required=True, choices=("val", "test"))
+    ap.add_argument("--split", required=True, choices=("train", "val", "test"))
     ap.add_argument("--data", default=os.environ.get("MOON_DATA"))
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--timeout", type=int, default=120, help="单个 pair 的超时秒数（0 不设）")
+    ap.add_argument("--shard", default="", help="k/n：只跑第 k 份（pairs[k::n]），Train 推理分卡用")
     ap.add_argument("--limit", type=int, default=0, help="只跑前 N 个 pair（调试用）")
     ap.add_argument("--resume", action="store_true", help="跳过 <split>.jsonl 里已有的 pair")
     ap.add_argument("--weights", help="覆盖配置里的权重路径（如微调产出的 ckpt）")
@@ -123,7 +127,10 @@ def main(argv=None):
     seed = int(cfg.get("seed", 0))
 
     data = Data(args.data)
-    pairs = data.pairs(args.split)
+    pairs = data.pairs(args.split, labelled_only=args.split != "train")   # Train 无标注，全跑（RoMa 伪标签 #65）
+    if args.shard:
+        k, n = map(int, args.shard.split("/"))
+        pairs = pairs[k::n]
     if args.limit:
         pairs = pairs[:args.limit]
 

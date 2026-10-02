@@ -8,7 +8,11 @@
       preds/<method>/<split>.jsonl          每个 pair 一行：估计仿射（光学 → SAR，2×3）或失败原因
       preds/<method>/<split>.meta.json      写入时的 commit 与 dirty
       preds/<method>/<split>_matches.npz    点对 N×5 (x_opt, y_opt, x_sar, y_sar, conf)，不进 git
-      extra/                                附件，Notes 引用时才显示
+      inter/<method>/<name>/meta.json       中间结果的种类、坐标系、说明、单位
+      inter/<method>/<name>/<split>.npz     中间结果数据（scalar / points / flow），不进 git
+      inter/<method>/<name>/<split>/*.png   中间结果数据（image），不进 git
+      tb/<method>/                          TensorBoard 日志，不进 git
+      extra/                               附件，Notes 引用时才显示
       metrics.json                          派生物：`python -m workbench eval` 写出，勿手改
 """
 from __future__ import annotations
@@ -31,6 +35,9 @@ FIELDS = ("id", "title", "parent", "init", "baseline", "date", "methods")
 METHOD_FIELDS = ("name", "caveat")
 LEGACY_FIELDS = ("status", "commit", "hypothesis", "change", "verdict", "next")
 MATCHES_CAP = 2000   # 每个 pair 的点对最多存多少个点（按 conf 取前若干）
+INTER_KINDS = ("scalar", "points", "flow", "image")
+INTER_FRAMES = ("opt", "sar")
+INTER_META = ("kind", "frame", "desc", "unit")
 REPO = Path(__file__).resolve().parent.parent
 
 
@@ -156,6 +163,39 @@ class Run:
         if m.shape[1] == 4:
             m = np.c_[m, np.full(len(m), np.nan, np.float32)]
         return m
+
+    def inters(self, method: str) -> dict[str, dict]:
+        """这个方法的中间结果清单 {名称: meta}，来自 inter/<method>/<name>/meta.json（进 git，数据不在本地也有）。
+        splits 是写完过的 split；没有这个字段（手写的 meta）时为 None，表示不知道。"""
+        d = self.dir / "inter" / method
+        out = {}
+        for f in sorted(d.glob("*/meta.json")) if d.is_dir() else []:
+            meta = json.loads(f.read_text(encoding="utf-8"))
+            out[f.parent.name] = {**{k: meta.get(k, "") for k in INTER_META}, "splits": meta.get("splits")}
+        return out
+
+    def inter_state(self, method: str, name: str, split: str, pair: str) -> str:
+        """一个 pair 的中间结果状态：ok / absent（没写这个 pair 或这个 split）/ not_synced（数据留在服务器上）。"""
+        meta = self.inters(method)[name]
+        if meta["splits"] is not None and split not in meta["splits"]:
+            return "absent"
+        d = self.dir / "inter" / method / name
+        if not ((d / f"{split}.npz").is_file() or (d / split).is_dir()):
+            return "not_synced"
+        return "ok" if self.inter(method, name, split, pair, meta["kind"]) is not None else "absent"
+
+    def inter(self, method: str, name: str, split: str, pair: str, kind: str):
+        """一个 pair 的中间结果：scalar / points / flow 为数组，image 为 PNG 路径；这个 pair 没有时为 None。"""
+        d = self.dir / "inter" / method / name
+        if kind == "image":
+            f = d / split / f"{_npz_key(pair)}.png"
+            return f if f.is_file() else None
+        f = d / f"{split}.npz"
+        if not f.is_file():
+            return None
+        with np.load(f) as z:
+            key = _npz_key(pair)
+            return z[key] if key in z.files else None
 
     def extras(self) -> list[Path]:
         d = self.dir / "extra"
@@ -466,6 +506,88 @@ class PredWriter:
 
     def __exit__(self, *exc):
         self.close()
+
+
+class InterWriter:
+    """给跑实验的代码用：逐 pair 写一个方法的一个中间结果在一个 split 上的数据，可以只覆盖部分 pair。
+
+        with InterWriter("runs/E3", "main", "certainty", "val", kind="scalar", frame="opt", desc="RoMa certainty") as w:
+            for pair in pairs:
+                w.write(pair, cert)                    # cert: H×W，分辨率任意
+
+    kind 与数据形状（写入时校验，不符就报错）：
+    - scalar：H×W 标量图；
+    - points：N×3 (x, y, v)，坐标取 matcher 的约定（整数 = 像素中心），写入端 +0.5，与点对一致；
+    - flow：H×W×2，frame 坐标系下每个像素指向另一模态中对应点的位移 (dx, dy)，单位是原始 patch 的 px；
+    - image：H×W、H×W×3 或 H×W×4 的 uint8，每个 pair 一张 PNG。
+    frame 为 opt / sar：数据所在的坐标系，显示时按它拉伸到 patch 大小。
+    构造时写 meta.json（进 git）并清掉这个 split 的旧数据；close 时把 scalar / points / flow 写成 <split>.npz（不进 git），
+    再把这个 split 记进 meta.json 的 splits：没写过的 split 读出来是「没有」，不会被当成「数据留在服务器上」。
+    with 块里抛异常时丢掉这次写的数据，这个 split 不记。
+    """
+
+    def __init__(self, run_dir, method: str, name: str, split: str, *, kind: str, frame: str,
+                 desc: str = "", unit: str = ""):
+        assert split in SPLITS, split
+        if kind not in INTER_KINDS:
+            raise ValueError(f"kind 应为 {' / '.join(INTER_KINDS)}，现为 {kind!r}")
+        if frame not in INTER_FRAMES:
+            raise ValueError(f"frame 应为 {' / '.join(INTER_FRAMES)}，现为 {frame!r}")
+        self.dir = Path(run_dir) / "inter" / method / name
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.kind, self.split = kind, split
+        old = self.dir / "meta.json"
+        splits = (json.loads(old.read_text(encoding="utf-8")).get("splits") or []) if old.exists() else []
+        self._meta = {"kind": kind, "frame": frame, "desc": desc, "unit": unit, "splits": sorted(set(splits) - {split})}
+        self._save_meta()
+        self._discard()
+        self._data: dict[str, np.ndarray] = {}
+
+    def _save_meta(self):
+        (self.dir / "meta.json").write_text(json.dumps(self._meta, ensure_ascii=False, indent=2) + "\n",
+                                            encoding="utf-8", newline="\n")
+
+    def _discard(self):
+        (self.dir / f"{self.split}.npz").unlink(missing_ok=True)
+        if (self.dir / self.split).is_dir():
+            shutil.rmtree(self.dir / self.split)
+
+    def write(self, pair: str, data):
+        a = np.asarray(data)
+        ok = {"scalar": a.ndim == 2,
+              "points": a.ndim == 2 and a.shape[1] == 3,
+              "flow": a.ndim == 3 and a.shape[2] == 2,
+              "image": a.dtype == np.uint8 and (a.ndim == 2 or (a.ndim == 3 and a.shape[2] in (3, 4)))}[self.kind]
+        if not ok or (self.kind != "points" and a.size == 0):
+            shape = {"scalar": "H×W", "points": "N×3", "flow": "H×W×2", "image": "H×W、H×W×3 或 H×W×4 的 uint8"}
+            raise ValueError(f"{self.kind} 中间结果应为 {shape[self.kind]}，{pair} 的是 {a.shape} {a.dtype}")
+        if self.kind == "image":
+            from PIL import Image
+
+            (self.dir / self.split).mkdir(exist_ok=True)
+            Image.fromarray(a).save(self.dir / self.split / f"{_npz_key(pair)}.png")
+            return
+        a = a.astype(np.float32)
+        if self.kind == "points":
+            a[:, :2] += 0.5
+        self._data[_npz_key(pair)] = a
+
+    def close(self):
+        if self.kind == "image":
+            (self.dir / self.split).mkdir(exist_ok=True)
+        else:
+            np.savez_compressed(self.dir / f"{self.split}.npz", **self._data)
+        self._meta["splits"] = sorted({*self._meta["splits"], self.split})
+        self._save_meta()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, *exc):
+        if exc_type is None:
+            self.close()
+        else:
+            self._discard()
 
 
 def _pack_matches(matches, conf=None) -> np.ndarray:

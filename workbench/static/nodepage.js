@@ -1,11 +1,12 @@
 // 节点页（#/exp/<id>）：一份严谨的实验记录。纸面、衬线；只呈现事实，唯一可编辑的是 Notes。
-// 版式参照 prototype/node-page 分支的定稿：左栏章节导航，右栏 实验信息（含比较设置）→ 结果 → 可视化结果 → Notes。
-// 可视化结果见 visual.js；训练图表由后续票填充。没有内容的章节不显示。
+// 版式参照 prototype/node-page 分支的定稿：左栏章节导航，右栏 实验信息（含比较设置）→ 结果 → 可视化结果 → 训练图表 → Notes。
+// 可视化结果见 visual.js。训练图表读 runs/<id>/tb/ 的 TensorBoard scalars，每个 tag 一张小图。没有内容的章节不显示。
 import { api } from './api.js';
 import { mountVisual } from './visual.js';
 
 const BINS = [5, 20];          // 误差分档：≤5、5–20、>20 px（错配）、失败
 const CDF_MAX = 30;            // 累积分布横轴上限（px）
+const RUN_COLORS = ['var(--me)', '#C26A00', '#2E8B57', '#8E44AD', '#B03A48', '#5D6D7E'];   // 训练图表：同一 tag 下的各 run
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const num = x => typeof x === 'number' && isFinite(x);
@@ -21,7 +22,7 @@ const median = s => s && s.n > 0 && s.median == null ? '∞' : pxf(s?.median);
 
 export function mountNodePage(root, { onBack }) {
   root.className = 'np';
-  let D = null, CMP = null, seq = 0, FIGS = 0;
+  let D = null, CMP = null, TB = null, seq = 0, FIGS = 0, VFIGS = 0;
   const vis = mountVisual(() => !root.hidden);
   const S = { method: null, ref: undefined, split: 'val', editing: false };
   const $ = s => root.querySelector(s);
@@ -43,8 +44,9 @@ export function mountNodePage(root, { onBack }) {
       const d = await api.detail(id);
       if (my !== seq) return;
       D = d; Object.assign(S, { method: d.methods[0]?.id ?? null, ref: undefined, split: 'val', editing: false });
-      CMP = null;
+      CMP = null; TB = null; VFIGS = 0;
       page();
+      if (D.tb.length) loadScalars(d.id);
       if (D.lit) await compare();
     } catch (err) {
       if (my !== seq) return;
@@ -62,7 +64,7 @@ export function mountNodePage(root, { onBack }) {
       CMP = { error: err.message };
     }
     if (my !== seq || D?.id !== id) return;
-    info(); results(); visual();
+    info(); results(); visual(); train();
   }
 
   // ---------------- 页面骨架 ----------------
@@ -71,7 +73,8 @@ export function mountNodePage(root, { onBack }) {
     $('.back').addEventListener('click', ev => { ev.preventDefault(); onBack(id); });
   }
   function page() {
-    const secs = [['info', '实验信息'], ['results', '结果'], ...(D.lit ? [['visual', '可视化结果']] : []), ['notes', 'Notes']];
+    const secs = [['info', '实验信息'], ['results', '结果'], ...(D.lit ? [['visual', '可视化结果']] : []),
+      ...(D.tb.length ? [['train', '训练图表']] : []), ['notes', 'Notes']];
     root.innerHTML = `<div class="layout">
       <nav class="nav" aria-label="章节">${backLink()}<ol>${secs.map(([k, t]) => `<li><a href="#sec-${k}" data-sec="${k}">${t}</a></li>`).join('')}</ol></nav>
       <div class="content">${secs.map(([k, t]) => `<section class="sec" id="sec-${k}">${k === 'info' ? '' : `<h2>${t}</h2>`}<div class="body"></div></section>`).join('')}</div></div>`;
@@ -79,7 +82,7 @@ export function mountNodePage(root, { onBack }) {
     root.querySelectorAll('.nav a[data-sec]').forEach(a => a.addEventListener('click', ev => {
       ev.preventDefault(); $(`#sec-${a.dataset.sec}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
-    info(); results(); visual(); notes(); markNav();
+    info(); results(); visual(); train(); notes(); markNav();
   }
   function markNav() {
     const secs = [...root.querySelectorAll('.content .sec')];
@@ -187,7 +190,77 @@ export function mountNodePage(root, { onBack }) {
     if (!body) return;
     if (!CMP) body.innerHTML = '<p class="muted">计算中…</p>';
     else if (CMP.error) body.innerHTML = '<p class="muted">比较结果读取失败，见上节。</p>';
-    else vis.render(body, CMP, FIGS);
+    else VFIGS = vis.render(body, CMP, FIGS);
+  }
+
+  // ---------------- 训练图表 ----------------
+  async function loadScalars(id) {
+    let tb;
+    try { tb = await api.scalars(id); } catch (err) { tb = { error: err.message }; }
+    if (D?.id !== id) return;
+    TB = tb; train();
+  }
+  function train() {
+    const body = $('#sec-train .body');
+    if (!body) return;
+    const head = `<div class="tb-head"><span class="muted">日志：<span class="mono">runs/${esc(D.id)}/tb/</span></span>
+      <button class="tbopen">在 TensorBoard 中打开</button><span class="tbstatus muted" role="status"></span></div>`;
+    let h = '';
+    if (!TB) h = '<p class="muted">读取中…</p>';
+    else if (TB.error) h = `<p>读取训练日志失败：${esc(TB.error)}</p>`;
+    else {
+      let fig = VFIGS || FIGS;
+      const many = TB.methods.length > 1;
+      h = TB.methods.map(m => {
+        const name = D.methods.find(x => x.id === m.method)?.name || m.method;
+        const tags = [...new Set(m.runs.flatMap(r => Object.keys(r.tags)))].sort();
+        const color = i => RUN_COLORS[i % RUN_COLORS.length];
+        const legend = m.runs.length > 1 ? `<div class="legend">${m.runs.map((r, i) =>
+          `<span><span class="key" style="border-top-color:${color(i)}"></span><span class="mono">${esc(r.run)}</span></span>`).join('')}</div>` : '';
+        const thinned = m.runs.some(r => Object.values(r.tags).some(t => t.n > t.step.length));
+        const charts = tags.map(tag => chart(tag, m.runs.map((r, i) => ({ s: r.tags[tag], color: color(i), run: r.run })).filter(x => x.s))).join('');
+        const one = m.runs.length === 1 ? `TensorBoard run 为 <span class="mono">${esc(m.runs[0].run)}</span>。` : '不同 TensorBoard run（含 events 文件的各个目录，如 version_N、add_scalars 的子目录）分开画，不拼接。';
+        return `${many ? `<h3>${esc(name)}</h3>` : ''}${legend}<div class="tbgrid">${charts}</div>
+          <p class="caption figcap"><b>图 ${++fig}</b>${many ? `${esc(name)} ` : ''}训练日志 <span class="mono">tb/${esc(m.method)}/</span> 中的 scalar，每个 tag 一张：横轴为 step（不同 tag 的 step 含义可能不同，例如以 epoch 计），纵轴为取值。${one}同一目录里续训重叠的 step 已按 tag 截断，保留后写的点。${thinned ? `点数超过 ${TB.max_points} 的曲线按序号分桶，只画每桶的最小、最大值和首尾点。` : ''}</p>`;
+      }).join('');
+    }
+    body.innerHTML = head + h;
+    const btn = body.querySelector('.tbopen'), st = body.querySelector('.tbstatus'), id = D.id;
+    btn.addEventListener('click', async () => {
+      const w = window.open('', '_blank');   // 先开窗口：等子进程就绪后再开会被拦截
+      btn.disabled = true; st.textContent = '正在启动 TensorBoard…';
+      try {
+        const { url } = await api.tensorboard(id);
+        if (w) w.location = url;
+        st.innerHTML = `已打开 <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>`;
+      } catch (err) {
+        w?.close(); st.textContent = `启动失败：${err.message}`;
+      }
+      btn.disabled = false;
+    });
+  }
+  // 一张小图：真实坐标轴（step、取值），各 run 一条线；只有一个点时画成点
+  function chart(tag, series) {
+    const W = 300, H = 196, L = 50, B = 30, T = 8, R = 10, pw = W - L - R, ph = H - B - T;
+    const xs = series.flatMap(x => x.s.step), ys = series.flatMap(x => x.s.value).filter(num);
+    let [x0, x1] = [Math.min(...xs), Math.max(...xs)], [y0, y1] = ys.length ? [Math.min(...ys), Math.max(...ys)] : [0, 1];
+    if (x1 === x0) { x0 -= 1; x1 += 1; }
+    if (y1 === y0) { const d = Math.abs(y0) * .1 || 1; y0 -= d; y1 += d; }
+    const xt = ticks(x0, x1, 4), yt = ticks(y0, y1, 4);
+    [x0, x1] = [Math.min(x0, xt.lo), Math.max(x1, xt.hi)]; [y0, y1] = [Math.min(y0, yt.lo), Math.max(y1, yt.hi)];
+    const X = v => L + (v - x0) / (x1 - x0) * pw, Y = v => T + ph - (v - y0) / (y1 - y0) * ph;
+    let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(tag)}"><g class="ax">`;
+    for (const t of xt.v) g += `<line x1="${X(t)}" x2="${X(t)}" y1="${T + ph}" y2="${T + ph + 4}"/><text x="${X(t)}" y="${T + ph + 16}" text-anchor="middle">${tick(t, xt.step)}</text>`;
+    for (const t of yt.v) g += `<line class="grid" x1="${L}" x2="${L + pw}" y1="${Y(t)}" y2="${Y(t)}"/><line x1="${L - 4}" x2="${L}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${L - 7}" y="${Y(t) + 4}" text-anchor="end">${tick(t, yt.step)}</text>`;
+    g += `<line x1="${L}" x2="${L}" y1="${T}" y2="${T + ph}"/><line x1="${L}" x2="${L + pw}" y1="${T + ph}" y2="${T + ph}"/><text x="${L + pw}" y="${H - 2}" text-anchor="end">step</text></g>`;
+    for (const { s, color, run } of series) {
+      let d = '', pen = false;
+      s.step.forEach((x, i) => { const v = s.value[i]; if (!num(v)) { pen = false; return; } d += `${pen ? 'L' : 'M'}${X(x).toFixed(1)},${Y(v).toFixed(1)}`; pen = true; });
+      const n = s.value.filter(num).length;
+      g += n === 1 ? s.step.map((x, i) => num(s.value[i]) ? `<circle cx="${X(x)}" cy="${Y(s.value[i])}" r="2.5" fill="${color}"/>` : '').join('')
+        : `<path class="tbln" d="${d}" stroke="${color}"><title>${esc(run)}：${s.n} 个点</title></path>`;
+    }
+    return `<figure class="tbchart"><figcaption class="mono">${esc(tag)}</figcaption>${g}</svg></figure>`;
   }
 
   // ---------------- 图 ----------------
@@ -280,6 +353,18 @@ export function mountNodePage(root, { onBack }) {
     show(id) { root.hidden = false; root.scrollTop = 0; load(id); },
     hide() { root.hidden = true; root.innerHTML = ''; D = null; seq++; },
   };
+}
+
+// 坐标轴刻度：步长取 1、2、5 × 10^k，大约 n 个
+function ticks(lo, hi, n) {
+  const raw = (hi - lo) / n, p = 10 ** Math.floor(Math.log10(raw)), step = [1, 2, 5, 10].map(k => k * p).find(k => k >= raw);
+  const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step, v = [];
+  for (let t = a; t <= b + step * 1e-9; t += step) v.push(+t.toPrecision(12));
+  return { v, step, lo: a, hi: b };
+}
+function tick(t, step) {
+  if (Math.abs(t) >= 1e5 || (t !== 0 && Math.abs(step) < 1e-4)) return t.toExponential(1);
+  return t.toFixed(Math.max(0, -Math.floor(Math.log10(step))));
 }
 
 // ---------------- Markdown ----------------

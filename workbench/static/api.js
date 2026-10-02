@@ -21,6 +21,9 @@ export const api = {
   compare: (method, ref, split) => call('GET', `/api/compare?${new URLSearchParams({ method, split, ...(ref ? { ref } : {}) })}`),
   pair: (method, ref, split, pair, points = true) =>
     call('GET', `/api/pair?${new URLSearchParams({ method, split, pair, ...(ref ? { ref } : {}), ...(points ? {} : { points: '0' }) })}`),
+  inter: (method, split, pair, name) => call('GET', `/api/inter?${new URLSearchParams({ method, split, pair, name })}`),
+  scalars: id => call('GET', `${exp(id)}/scalars`),
+  tensorboard: id => call('POST', `${exp(id)}/tensorboard`),
   saveNotes: (id, text) => call('PUT', `${exp(id)}/notes`, { text }),
   create: body => call('POST', '/api/exp', body),
   setParent: (id, parent, init = null) => call('POST', `${exp(id)}/parent`, { parent, init }),

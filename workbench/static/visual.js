@@ -2,6 +2,7 @@
 // 散点总览（逐级放大后点选）→ 筛选 → 排序 → 缩略图网格（每次 12 张）→ 详情（方法与参考方法并排，← → 在当前列表里移动）。
 // 影像视图都是 SVG：底图取 /img，卷帘里的 SAR 按估计仿射的逆变换摆到光学坐标，残差箭头和点对画成矢量。
 // 详情里的各面板共用一个 viewBox，所以缩放和平移同步。
+// 方法写了中间结果时，详情多出对应的视图：标量图画成热力图叠加，点集画成点加取值，位移场画成 warp，图片原样显示。
 import { api } from './api.js';
 
 const GOOD = 5;            // 改善 / 退化以 5 px 为界：误差不超过 5 px 算配准
@@ -22,6 +23,13 @@ const MAX_ZOOM = 40;
 // 筛选切换时自动换成合适的排序；其余筛选回到默认的误差下降量
 const FILTER_SORT = { worse: 'loss', neither: 'me', both: 'no' };
 const isPointView = v => POINT_VIEWS.some(([x]) => x === v);
+const INTER = 'inter:';    // 中间结果视图的 id 前缀，后接名称
+const interName = v => v.startsWith(INTER) ? v.slice(INTER.length) : null;
+// 与服务端热力图同一色图（viridis 的 9 个采样点）
+const VIRIDIS = [[68, 1, 84], [71, 44, 122], [59, 81, 139], [44, 113, 142], [33, 144, 141], [39, 173, 129], [92, 200, 99], [170, 220, 50], [253, 231, 37]];
+const FRAME = { opt: '光学', sar: 'SAR' };
+const KIND = { scalar: '标量图', points: '点集', flow: '位移场', image: '图片' };
+const POINT_LABELS = 60;   // 点集不超过这么多点时，在点旁标出取值
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fin = v => v == null ? Infinity : v;
@@ -38,6 +46,14 @@ function inverse(A) {
   const p = e / det, q = -b / det, r = -d / det, s = a / det;
   return { m: [p, r, q, s, -(p * c + q * f), -(r * c + s * f)], apply: (x, y) => [p * (x - c) + q * (y - f), r * (x - c) + s * (y - f)] };
 }
+
+function viridis(t) {
+  if (t == null || !isFinite(t)) return NEUTRAL;
+  const x = Math.min(Math.max(t, 0), 1) * (VIRIDIS.length - 1), i = Math.min(Math.floor(x), VIRIDIS.length - 2), f = x - i;
+  return `rgb(${VIRIDIS[i].map((c, j) => Math.round(c + (VIRIDIS[i + 1][j] - c) * f))})`;
+}
+const RAMP = `linear-gradient(to right, ${VIRIDIS.map((c, i) => `rgb(${c}) ${i / (VIRIDIS.length - 1) * 100}%`).join(', ')})`;
+const fmt = v => v == null ? '—' : Math.abs(v) >= 1e4 || (v !== 0 && Math.abs(v) < 1e-3) ? v.toExponential(2) : +v.toPrecision(4);
 
 function residColor(v) {
   if (v == null) return NEUTRAL;
@@ -82,7 +98,7 @@ export function mountVisual(isShown) {
   let host = null, C = null, ctxKey = '', FIG = 0, V = null, seq = 0;
   const cache = new Map();
   const fresh = (prev, ref) => ({ filter: 'all', sort: ref ? 'gain' : 'me', n: PAGE, sel: null, zoom: null, zstack: [],
-    view: prev?.view || 'swipe', swipe: prev?.swipe ?? 50, vb: null, vbl: null, conf: 0, find: '' });
+    view: prev?.view || 'swipe', swipe: prev?.swipe ?? 50, vb: null, vbl: null, conf: 0, find: '', alpha: prev?.alpha ?? 60, iv: null });
   const $ = s => host.querySelector(s);
   const SPLIT = () => C.split === 'val' ? 'Val' : 'Test';
 
@@ -116,8 +132,9 @@ export function mountVisual(isShown) {
     host = el; C = cmp; FIG = fig;
     const k = `${cmp.method.key}|${cmp.ref?.key ?? ''}|${cmp.split}`;
     if (k !== ctxKey) { ctxKey = k; V = fresh(V, cmp.ref); cache.clear(); }
-    if (!C.pairs.length) { host.innerHTML = `<p>${SPLIT()} 上没有有标注 pair。</p>`; return; }
+    if (!C.pairs.length) { host.innerHTML = `<p>${SPLIT()} 上没有有标注 pair。</p>`; return FIG; }
     draw();
+    return V.detailFig;   // 本节用到的最后一个图号，供后面的章节接着编
   }
 
   function draw() {
@@ -288,7 +305,10 @@ export function mountVisual(isShown) {
     const d = V.d, el = $('.detail .dbody'), sides = [d.method, d.ref].filter(Boolean);
     const hasPts = sides.some(s => s.matches?.state === 'ok');
     if (!hasPts && isPointView(V.view)) V.view = 'swipe';
+    const inters = [...new Map(sides.flatMap(s => s.inter || []).map(x => [x.name, x])).values()];
+    if (interName(V.view) != null && !inters.some(x => x.name === interName(V.view))) V.view = 'swipe';
     const views = [...VIEWS, ...(hasPts ? POINT_VIEWS : [])];
+    if (interName(V.view) != null) { interBody(el, sides, views, inters); return; }
     const point = isPointView(V.view);
     const missing = sides.filter(s => s.matches?.state === 'not_synced');
     const cmds = [...new Set(missing.map(s => s.matches.sync))];
@@ -309,7 +329,7 @@ export function mountVisual(isShown) {
       lines: `左为光学、右为 SAR，连线为方法给出的点对（RANSAC 之前的全部点）。内点、外点由估计仿射重新判定：残差不超过 ${d.inlier_px} px 为内点（绿），其余为外点（橙）；估计失败时不区分（灰）。`,
       dots: '光学图上的匹配点，颜色为该点经估计仿射映射后到对应 SAR 点的距离（残差），图例见下；估计失败时为灰色。',
     }[V.view];
-    el.innerHTML = `<div class="views" role="group" aria-label="视图">${views.map(([v, t]) => `<button data-v="${v}" aria-pressed="${V.view === v}">${t}</button>`).join('')}</div>
+    el.innerHTML = `${viewBar(views, inters)}
       ${hint}${caveats}
       <div class="panes ${V.view === 'lines' ? 'wide' : ''}">${panes}</div>
       ${V.view === 'swipe' ? `<input class="swipe" type="range" min="0" max="100" value="${V.swipe}" aria-label="卷帘分界位置">` : ''}
@@ -317,17 +337,101 @@ export function mountVisual(isShown) {
       ${V.view === 'dots' ? `<div class="legend"><span>残差</span><span class="num">0</span><span class="ramp" title="0 px 绿，3 px 黄，10 px 及以上红"></span><span class="num">≥10 px</span><span>（3 px 处为黄色）</span></div>` : ''}
       ${V.view === 'lines' ? `<div class="legend"><span><span class="swatch" style="background:${INLIER}"></span>内点</span><span><span class="swatch" style="background:${OUTLIER}"></span>外点</span></div>` : ''}
       <p class="caption figcap"><b>图 ${V.detailFig}</b>${cap}滚轮缩放、拖动平移、双击复原，各面板同步。</p>`;
-    el.querySelectorAll('.views button').forEach(b => b.addEventListener('click', () => { V.view = b.dataset.v; body(); }));
-    el.querySelector('.copy')?.addEventListener('click', ev => {
-      navigator.clipboard?.writeText(ev.target.dataset.cmd).then(() => { ev.target.textContent = '已复制'; }, () => {});
-    });
-    el.querySelector('.swipe')?.addEventListener('input', ev => { V.swipe = +ev.target.value; zoomApply(); });
+    bindBody(el);
     el.querySelector('#vconf')?.addEventListener('input', ev => {
       V.conf = +ev.target.value; el.querySelector('.conf .num').textContent = confText(); zoomApply();
     });
     bindZoom();
   }
   const confText = () => V.conf ? `只保留 conf 不低于第 ${V.conf} 百分位的点` : '显示全部点';
+
+  function viewBar(views, inters) {
+    const btn = ([v, t, title]) => `<button data-v="${esc(v)}" aria-pressed="${V.view === v}"${title ? ` title="${esc(title)}"` : ''}>${esc(t)}</button>`;
+    return `<div class="views" role="group" aria-label="视图">${views.map(btn).join('')}${inters.length
+      ? `<span class="vsep">中间结果</span>${inters.map(x => btn([INTER + x.name, x.name, x.desc])).join('')}` : ''}</div>`;
+  }
+  function bindBody(el) {
+    el.querySelectorAll('.views button').forEach(b => b.addEventListener('click', () => { V.view = b.dataset.v; body(); }));
+    el.querySelectorAll('.copy').forEach(b => b.addEventListener('click', ev => {
+      navigator.clipboard?.writeText(ev.target.dataset.cmd).then(() => { ev.target.textContent = '已复制'; }, () => {});
+    }));
+    el.querySelector('.swipe')?.addEventListener('input', ev => { V.swipe = +ev.target.value; zoomApply(); });
+  }
+
+  // ---------------- 中间结果 ----------------
+  // 只给声明了这个中间结果的一侧出面板；数据按 pair 与名称取一次，翻页或切换视图后重取。
+  const side = s => s === V.d.method ? 'method' : 'ref';
+  function interBody(el, sides, views, inters) {
+    const d = V.d, name = interName(V.view), meta = inters.find(x => x.name === name);
+    const own = sides.filter(s => s.inter?.some(x => x.name === name));
+    const key = `${ctxKey}|${d.pair}|${name}`;
+    if (V.iv?.key !== key) {
+      const my = V.iv = { key, data: {} };
+      Promise.all(own.map(async s => {
+        const st = s.inter.find(x => x.name === name);
+        my.data[side(s)] = st.state === 'ok' ? await api.inter(s.key, d.split, d.pair, name) : st;
+      })).then(() => { if (V.iv === my && V.d === d && interName(V.view) === name) body(); },
+        err => { my.error = err.message; if (V.iv === my && V.d === d) body(); });
+    }
+    const iv = V.iv, head = viewBar(views, inters);
+    if (iv.error || !own.every(s => iv.data[side(s)])) {
+      el.innerHTML = `${head}${iv.error ? `<p>读取中间结果失败：${esc(iv.error)}</p>` : '<p class="muted">读取中…</p>'}`;
+      bindBody(el);
+      return;
+    }
+    const all = own.map(s => [s, iv.data[side(s)]]);
+    const cmds = [...new Set(all.filter(([, x]) => x.state === 'not_synced').map(([, x]) => x.sync))];
+    const hint = cmds.map(c => `<p class="synchint">本地没有中间结果 ${esc(name)} 的数据，拉回后可看：<code>${esc(c)}</code><button class="copy" data-cmd="${esc(c)}">复制</button></p>`).join('');
+    const ok = all.filter(([, x]) => x.state === 'ok');
+    const unit = meta.unit ? `（${esc(meta.unit)}）` : '';
+    const legend = ok.filter(([, x]) => x.kind !== 'image').map(([s, x]) => `<div class="legend"><span>${ok.length > 1 ? `${esc(s.label)}：` : ''}${x.kind === 'flow' ? '位移大小' : '取值'}${unit}</span>
+      <span class="num">${fmt(x.vmin)}</span><span class="ramp" style="background:${RAMP}"></span><span class="num">${fmt(x.vmax)}</span></div>`).join('');
+    const res = [...new Set(ok.filter(([, x]) => x.kind === 'scalar').map(([, x]) => x.shape.join('×')))];
+    const F = FRAME[meta.frame], O = FRAME[meta.frame === 'opt' ? 'sar' : 'opt'];
+    const cap = `中间结果 ${esc(name)}（${KIND[meta.kind]}，${F}坐标系）${meta.desc ? `：${esc(meta.desc)}` : ''}。` + (!ok.length ? '' : {
+      scalar: `热力图叠加在${F}原图上，颜色按该 pair 自身的最小、最大值映射（见色标）${res.length ? `；原分辨率 ${res.join(' / ')}，拉伸到 patch 大小` : ''}。滑杆调节热力图的不透明度。`,
+      points: `点画在${F}原图上，颜色为取值（见色标）；不超过 ${POINT_LABELS} 个点时在点旁标出取值，悬停可看单点取值。`,
+      flow: `左侧为${F}原图，右侧为${O}按位移场摆到${F}坐标后的影像，拖动下方滑杆改变分界位置；位移落到${O}之外的像素留空。`,
+      image: `方法输出的图片，原样拉伸到${F} patch 大小。`,
+    }[meta.kind]);
+    const shown = ok.length ? meta.kind : null;   // 有数据可画时的种类
+    el.innerHTML = `${head}${hint}<div class="panes">${all.map(([s, x]) => interPane(d, s, meta, x)).join('')}</div>
+      ${shown === 'flow' ? `<input class="swipe" type="range" min="0" max="100" value="${V.swipe}" aria-label="卷帘分界位置">` : ''}
+      ${shown === 'scalar' ? `<div class="conf"><label for="valpha">热力图不透明度</label><input id="valpha" type="range" min="0" max="100" step="5" value="${V.alpha}"><span class="num">${V.alpha}%</span></div>` : ''}
+      ${legend}
+      <p class="caption figcap"><b>图 ${V.detailFig}</b>${cap}滚轮缩放、拖动平移、双击复原，各面板同步。</p>`;
+    bindBody(el);
+    el.querySelector('#valpha')?.addEventListener('input', ev => {
+      V.alpha = +ev.target.value; el.querySelector('.conf .num').textContent = `${V.alpha}%`;
+      el.querySelectorAll('image.heat').forEach(im => im.setAttribute('opacity', V.alpha / 100));
+    });
+    bindZoom();
+  }
+
+  function interPane(d, s, meta, x) {
+    const sd = side(s), [w, h] = meta.frame === 'sar' ? d.sar_size : d.size, full = [0, 0, w, h];
+    const layer = cls => `<image class="${cls}" href="${esc(x.png)}" width="${w}" height="${h}" preserveAspectRatio="none"${cls === 'heat' ? ` opacity="${V.alpha / 100}"` : ''}/>`;
+    let base = `<image href="${img(d.split, d.pair, meta.frame)}" width="${w}" height="${h}"/>`, msg = '';
+    if (x.state === 'absent') msg = '此 pair 没有该中间结果';
+    else if (x.state === 'not_synced') msg = '本地没有该中间结果的数据';
+    else if (meta.kind === 'scalar') base += layer('heat');
+    else if (meta.kind === 'flow') base += `<g class="clip">${layer('warp')}</g><line class="cut"/>`;
+    else if (meta.kind === 'image') base = layer('raw');
+    const right = x.state !== 'ok' ? '' : meta.kind === 'points' ? `${x.points.length} 个点` : meta.kind === 'image' ? '' : x.shape.slice(0, 2).join('×');
+    return `<div class="pane"><div class="ttl"><span>${esc(s.label)}</span><span class="num stat">${right}</span></div>
+      <div class="box" style="aspect-ratio:${w} / ${h}"><svg class="zoom" data-side="${sd}" data-full="${full.join(' ')}" viewBox="${full.join(' ')}">
+      <defs><clipPath id="vc-${sd}" clipPathUnits="userSpaceOnUse"><rect class="cliprect" x="0" y="${-1e4}" width="${2e4}" height="${2e4}"/></clipPath></defs>
+      ${base}<g class="ov"></g></svg>${msg ? `<div class="msg">${msg}</div>` : ''}</div></div>`;
+  }
+
+  // 点集：颜色为取值，按该 pair 的最小、最大值映射；点少时旁边标出取值
+  function interPoints(x, k) {
+    if (x?.kind !== 'points' || x.state !== 'ok') return '';
+    const span = x.vmax - x.vmin, t = v => v == null ? null : span > 0 ? (v - x.vmin) / span : 0.5;
+    const label = x.points.length <= POINT_LABELS;
+    return x.points.map(([px, py, v]) => `<circle class="ipt" cx="${px}" cy="${py}" r="${f2(3 * k)}" fill="${viridis(t(v))}"><title>(${px}, ${py})  ${fmt(v)}</title></circle>`
+      + (label ? `<text class="ival" x="${f2(px + 4.5 * k)}" y="${f2(py - 4.5 * k)}" font-size="${f2(11 * k)}">${fmt(v)}</text>` : '')).join('');
+  }
 
   // 一个面板：底图 + 叠加层（叠加层随缩放重画，线宽、圆点在屏幕上大小不变）
   function pane(d, s, title, right, view) {
@@ -382,6 +486,7 @@ export function mountVisual(isShown) {
     return mt.resid ? `${t}，内点 ${ks.filter(i => mt.resid[i] <= d.inlier_px).length}` : t;
   }
   function overlay(d, s, k, full) {
+    if (interName(V.view) != null) return interPoints(V.iv?.data[side(s)], k);
     if (V.view === 'resid') return arrows(d.checkpoints, s.A, k);
     const mt = s.matches;
     if (!mt || mt.state !== 'ok' || !mt.n) return '';

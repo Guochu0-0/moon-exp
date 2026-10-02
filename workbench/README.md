@@ -11,7 +11,7 @@ python -m workbench new E3 --parent E2 [--init E2/main] --title "…"   # 按 v2
 python -m workbench sync B0 B0m [--extra certainty] [--tb all]   # 从服务器拉回点对等不进 git 的文件
 ```
 
-依赖：numpy、tifffile、Pillow，Python ≥ 3.11（用到 tomllib）。不需要 cv2。页面零构建：Python 标准库 HTTP 服务 + 静态页（`static/`），字体自托管，不访问外网。
+依赖：numpy、tifffile、Pillow，Python ≥ 3.11（用到 tomllib）。不需要 cv2。训练图表和「在 TensorBoard 中打开」另需 `tensorboard`（只用它的 event proto 和命令行，不需要 TF）。页面零构建：Python 标准库 HTTP 服务 + 静态页（`static/`），字体自托管，不访问外网。
 
 ## 画布
 
@@ -57,14 +57,16 @@ python -m workbench sync B0 B0m [--extra certainty] [--tb all]   # 从服务器�
   - 筛选（以 5 px 为界，附数量）：全部 / 改善 / 退化 / 均未配准 / 均配准。排序：误差下降量大在前（默认）、误差上升量大在前（选「退化」时自动切换）、方法误差大在前、编号；按误差差值排序时失败与 >50 px 都按 50 px 计。可按编号查找。没有参考方法时只有排序和网格，默认方法误差大在前。
   - 缩略图网格：一次 12 张残差图（光学原图上的检查点与原尺寸残差箭头），可再显示 12 张。
   - 详情：方法与参考方法并排，视图有卷帘（默认）、残差、原图；滚轮缩放、拖动平移、双击复原，各面板同步。← → 在当前筛选和排序的列表里移动。失败的一侧显示失败原因和光学原图。
-  - 5 px 分界、按 50 px 截断排序、conf 按分位数过滤、残差点图的 0 / 3 / 10 px 色阶都是本工作台自拟的展示选择，没有文献出处，只影响怎么看，不进评价协议；3 px 内点阈值取自匹配类方法的 RANSAC 阈值。
+  - 5 px 分界、按 50 px 截断排序、conf 按分位数过滤、残差点图的 0 / 3 / 10 px 色阶、中间结果按每个 pair 自身范围着色、训练曲线超过 2000 点时分桶抽稀都是本工作台自拟的展示选择，没有文献出处，只影响怎么看，不进评价协议；3 px 内点阈值取自匹配类方法的 RANSAC 阈值。
+  - 中间结果视图（方法写了**中间结果**时出现，列在「中间结果」之后，按名称，悬停显示说明）：只给写了它的一侧出面板，画在 frame 指定的原图坐标系里，分辨率任意，拉伸到 patch 大小。标量图画成热力图叠加（viridis，按该 pair 自身的最小、最大值映射，附色标和不透明度滑杆）；点集画成按取值着色的点，不超过 60 个点时在旁边标出取值；位移场画成 warp：另一模态按位移摆到 frame 坐标后与 frame 原图做卷帘；图片原样显示。切换的视图在翻看 pair 时保持。某个 pair 没有该中间结果时显示「此 pair 没有该中间结果」；本地没有数据（但有 meta.json）时给出可直接复制的 `python -m workbench sync <id> --extra <name>`。
   - 点对视图（本地有点对时出现）：点对连线（全部点，内点 / 外点由估计的仿射按 3 px 残差重新判定后着色）与残差点图（光学图上的匹配点，颜色为到估计仿射的残差）。conf 过滤按分位数取值，方法没有 conf 时隐藏，conf 全部相同时注明不起作用；0 个点的 pair 照常显示；方法的 caveat 显示在视图旁。本地没有点对时给出可直接复制的 `python -m workbench sync <id>`。
+- **训练图表**（`runs/<id>/tb/` 的日志里有 scalar 时出现，未点亮的实验也有）：读各方法 `tb/<method>/` 的 TensorBoard scalars，每个 tag 一张小图，横轴 step、纵轴取值，用真实坐标轴。`tb/<method>/` 下每个含 events 文件的目录各是一个 TensorBoard run（按相对路径命名）：不同的 `version_N` 分开画、不拼接，`add_scalars` 建的子目录也各是一个；`media/` 不读。同一目录里的多个 events 文件按文件名时间戳排序，逐个 tag 丢掉旧文件中 step ≥ 新文件里该 tag 起始 step 的点（续训重叠；必须按 tag 做，因为有的 tag 用 epoch 当 step）。点数超过 2000 的曲线按序号分桶，只画每桶最小、最大值和首尾点，图注会写明。「在 TensorBoard 中打开」由工作台起子进程 `python -m tensorboard.main --logdir runs/<id>/tb --host 127.0.0.1 --port <空闲端口>`，每个 logdir 复用一个实例，工作台退出时统一结束（被强杀时也会：Windows 上用 job，Linux 上用 PDEATHSIG）。解析器在 `tb.py`，调研见 `docs/research/tensorboard-logs.md`。
 - **Notes**：点「编辑」或双击就地编辑（Markdown，Ctrl+S 保存，Esc 取消），保存到 `runs/<id>/notes.md`（UTF-8、LF，第一次保存时才创建）。平时按 Markdown 渲染，相对路径按实验目录解析，所以 `![](extra/offset/offset_val.png)` 能显示附件；不放行原始 HTML。
 - **未点亮的实验**：只有实验信息、「尚无结果。」和 Notes。
 
 ### API
 
-见 `server.py` 顶部。前端冒烟（画布与节点页）：`python scripts/smoke_canvas.py`（需要 Chrome / Edge 和 websocket-client；在临时目录里复制 B0 / B0m，不动仓库的 `runs/`）。点对视图那几步要 B0 的点对：先 `python -m workbench sync B0`；在 worktree 里跑时用 `--matches-from <主工作区>/runs` 指过去。
+见 `server.py` 顶部。训练产物冒烟：`python scripts/smoke_training.py --python <装了 tensorboard 的 python>`（合成一个写了 scalar 中间结果和 TB scalars 的实验，起工作台子进程，检查热力图图层可切换、训练图表按 tag 出图、「在 TensorBoard 中打开」能打开、强行结束工作台后 TensorBoard 随之结束）。前端冒烟（画布与节点页）：`python scripts/smoke_canvas.py`（需要 Chrome / Edge 和 websocket-client；在临时目录里复制 B0 / B0m，不动仓库的 `runs/`）。点对视图那几步要 B0 的点对：先 `python -m workbench sync B0`；在 worktree 里跑时用 `--matches-from <主工作区>/runs` 指过去。
 
 ## 记录格式（v2）
 
@@ -78,6 +80,10 @@ runs/<id>/
   preds/<method>/<split>.jsonl         每个 pair 一行，存估计的仿射
   preds/<method>/<split>.meta.json     写入时的 commit 与 dirty
   preds/<method>/<split>_matches.npz   点对，不进 git
+  inter/<method>/<name>/meta.json      中间结果的种类、坐标系、说明、单位
+  inter/<method>/<name>/<split>.npz    中间结果数据（scalar / points / flow），不进 git
+  inter/<method>/<name>/<split>/*.png  中间结果数据（image），不进 git
+  tb/<method>/                         TensorBoard 日志，不进 git
   extra/                               附件
 ```
 
@@ -135,6 +141,26 @@ runs/<id>/
 
 点对不进 git（`runs/*/preds/*/*_matches.npz`），在服务器上生成，需要时拉回本地。
 
+### 中间结果
+
+`inter/<method>/<name>/meta.json`（进 git）：
+
+```json
+{"kind": "scalar", "frame": "opt", "desc": "RoMa certainty", "unit": ""}
+```
+
+- `kind` 与每个 pair 的数据形状：`scalar` 为 H×W；`points` 为 N×3 `(x, y, v)`；`flow` 为 H×W×2，frame 坐标系下每个像素指向另一模态中对应点的位移 `(dx, dy)`，单位是原始 patch 的 px；`image` 每个 pair 一张 PNG。
+- `frame` 为 `opt` / `sar`：数据所在的坐标系。分辨率任意，显示时按 frame 拉伸到 patch 大小。
+- 数据不进 git：scalar / points / flow 存在 `<split>.npz`（以 pair 为 key，`/` 换成 `__`，float32），image 存在 `<split>/<ROI>__<patch>.png`。覆盖了哪些 pair 由 npz 的 key 或目录里的文件决定，可以只覆盖部分 pair。
+- points 的坐标是 frame 那张 patch 的原始像素坐标（不随分辨率拉伸），与点对同一约定（+0.5，写入端负责）。
+- `InterWriter` 在 meta.json 里另记 `splits`：写完过的 split。没写过的 split 显示为「没有」；写过但本地没有数据的才提示同步。
+
+### TB 日志
+
+- 自己写的训练用两个 `SummaryWriter`，分别写 `tb/<method>/scalars/`（标量）和 `tb/<method>/media/`（图片、直方图），**必须显式传 `log_dir`**：不传时会写到 `./runs/<时间>_<host>`，和工作台的 `runs/` 撞名。不要用 `add_scalars`（会建子目录，读得出来但不好对齐）。
+- 上游 Lightning 代码的 `save_dir` 指向 `tb/<method>/`，日志落在 `tb/<method>/<name>/version_N/`；ckpt 放在 version 目录的 `checkpoints/` 下，同步永远排除。
+- 单方法实验的方法名为 `main`，即 `tb/main/`。
+
 ### extra/
 
 附件，例如诊断图表和它们的数据。页面不单独展示附件，只有 Notes 引用它们时才显示出来。
@@ -151,6 +177,18 @@ with PredWriter("runs/B0", "roma", "test") as w:
 ```
 
 `matches` 取 matcher 的坐标约定（整数 = 像素中心）。+0.5、按 conf 截断到 2000、写 npz 和 meta.json 都由写入端负责。
+
+中间结果（按方法、名称、split 逐 pair 写，可以只覆盖部分 pair；形状按 kind 校验，不符就抛 ValueError）：
+
+```python
+from workbench.records import InterWriter
+
+with InterWriter("runs/E3", "main", "certainty", "val", kind="scalar", frame="opt", desc="RoMa certainty") as w:
+    for pair in pairs:
+        w.write(pair, cert)                 # scalar: H×W；points: N×3 (x, y, v)；flow: H×W×2；image: uint8 H×W[×3|4]
+```
+
+构造时写 meta.json 并清掉这个 split 的旧数据（重跑即整份替换），close 时写 npz。points 的坐标取 matcher 的约定，+0.5 由写入端负责。
 
 ### 同步
 

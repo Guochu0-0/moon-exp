@@ -19,6 +19,9 @@ const POINT_VIEWS = [['lines', '点对连线'], ['dots', '残差点图']];
 const INLIER = '#1B9E77', OUTLIER = '#D95F02', NEUTRAL = '#8A8F99';
 const RESID_STOPS = [[0, [26, 152, 80]], [3, [254, 224, 139]], [10, [215, 48, 39]]];   // 残差点图：0 → 3 → ≥10 px
 const MAX_ZOOM = 40;
+// 筛选切换时自动换成合适的排序；其余筛选回到默认的误差下降量
+const FILTER_SORT = { worse: 'loss', neither: 'me', both: 'no' };
+const isPointView = v => POINT_VIEWS.some(([x]) => x === v);
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fin = v => v == null ? Infinity : v;
@@ -72,7 +75,6 @@ function confCut(mt, q) {
   const thr = v[Math.min(v.length - 1, Math.floor(q / 100 * v.length))];
   return { ks: all.filter(i => mt.conf[i] != null && mt.conf[i] >= thr), thr };
 }
-const keep = (mt, q) => confCut(mt, q).ks;
 // conf 全部相同（如 RoMa 系截到前 2000 个点后 certainty 都是 1）时，按分位数过滤不起作用
 const flatConf = mt => { const v = mt.conf.filter(x => x != null); return v.every(x => x === v[0]) ? v[0] : null; };
 
@@ -145,7 +147,7 @@ export function mountVisual(isShown) {
 
   function bindControls() {
     host.querySelectorAll('.chips button').forEach(b => b.addEventListener('click', () => {
-      V.filter = b.dataset.f; V.sort = V.filter === 'worse' ? 'loss' : 'gain';   // 选「退化」时自动按误差上升量排
+      V.filter = b.dataset.f; V.sort = FILTER_SORT[V.filter] || 'gain';
       V.n = PAGE; V.sel = null; draw();
     }));
     $('#vsort').addEventListener('change', ev => { V.sort = ev.target.value; V.n = PAGE; V.sel = null; draw(); });
@@ -170,7 +172,7 @@ export function mountVisual(isShown) {
     if (grow && pos >= V.n) { V.n = Math.ceil((pos + 1) / PAGE) * PAGE; drawList(I); }
     else {
       host.querySelectorAll('.grid .th').forEach(b => b.setAttribute('aria-current', String(b.dataset.pair === pair)));
-      if (I.eR) { $('.sc').innerHTML = scatter(I); bindScatter(); }
+      if (I.eR) redrawScatter(I);
     }
     drawDetail();
     if (scroll) $('.detail').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -186,7 +188,7 @@ export function mountVisual(isShown) {
 
   // ---------------- 散点与网格 ----------------
   function drawList(I) {
-    if (I.eR) { $('.sc').innerHTML = scatter(I); bindScatter(); }
+    if (I.eR) redrawScatter(I);
     const shown = I.list.slice(0, V.n);
     $('.grid').innerHTML = shown.map(i => `<button class="th" data-pair="${esc(C.pairs[i])}" aria-current="${C.pairs[i] === V.sel}">
       <div class="im"></div><div class="cap num"><span>#${pad(C.no[i])}</span><span>${errTxt(I.eM[i])}${I.eR ? ` / ${errTxt(I.eR[i])}` : ''}</span></div></button>`).join('')
@@ -243,8 +245,9 @@ export function mountVisual(isShown) {
       : '<span class="muted">点击图中任意位置，放大该区域后再点选</span>';
     return `<div class="${V.zoom ? 'zoomed' : ''}">${g}<div class="zbar">${bar}</div></div>`;
   }
+  function redrawScatter(I) { $('.sc').innerHTML = scatter(I); bindScatter(); }
   function bindScatter() {
-    const svg = $('.sc svg'), redraw = () => { const I = info(); $('.sc').innerHTML = scatter(I); bindScatter(); };
+    const svg = $('.sc svg'), redraw = () => redrawScatter(info());
     svg.addEventListener('click', ev => {
       const pt = ev.target.closest('circle.pt');
       if (pt && V.zoom) { select(C.pairs[+pt.dataset.i], { scroll: true }); return; }
@@ -284,9 +287,9 @@ export function mountVisual(isShown) {
   function body() {
     const d = V.d, el = $('.detail .dbody'), sides = [d.method, d.ref].filter(Boolean);
     const hasPts = sides.some(s => s.matches?.state === 'ok');
-    if (!hasPts && POINT_VIEWS.some(([v]) => v === V.view)) V.view = 'swipe';
+    if (!hasPts && isPointView(V.view)) V.view = 'swipe';
     const views = [...VIEWS, ...(hasPts ? POINT_VIEWS : [])];
-    const point = V.view === 'lines' || V.view === 'dots';
+    const point = isPointView(V.view);
     const missing = sides.filter(s => s.matches?.state === 'not_synced');
     const cmds = [...new Set(missing.map(s => s.matches.sync))];
     const cmd = cmds.length > 1 ? `python -m workbench sync ${[...new Set(missing.map(s => s.exp))].join(' ')}` : cmds[0];
@@ -341,9 +344,10 @@ export function mountVisual(isShown) {
       if (view === 'swipe' && inv) base += `<g class="clip"><image href="${img(d.split, d.pair, 'sar')}" width="${sw}" height="${sh}" transform="matrix(${inv.m.map(f2).join(' ')})"/></g><line class="cut"/>`;
     }
     if (s && !s.A && (view === 'swipe' || view === 'resid')) msg = '估计失败，只显示光学原图';
-    if (s && (view === 'lines' || view === 'dots')) {
+    if (s && isPointView(view)) {
       const mt = s.matches;
-      if (!mt || mt.state === 'not_synced') msg = '本地没有点对';
+      if (!mt) msg = '未配准没有点对';
+      else if (mt.state === 'not_synced') msg = '本地没有点对';
       else if (mt.state === 'absent') msg = '没有点对（该 pair 出错）';
       else if (!mt.n) msg = '0 个点';
     }
@@ -369,7 +373,7 @@ export function mountVisual(isShown) {
         svg.querySelector('.cut').setAttribute('y1', -1e4); svg.querySelector('.cut').setAttribute('y2', 1e4); }
       svg.querySelector('.ov').innerHTML = s ? overlay(d, s, k, full) : '';
       const stat = svg.closest('.pane').querySelector('.stat');
-      if (s && (V.view === 'lines' || V.view === 'dots') && s.matches?.state === 'ok') stat.textContent = ptsText(s, d);
+      if (s && isPointView(V.view) && s.matches?.state === 'ok') stat.textContent = ptsText(s, d);
     });
   }
   function ptsText(s, d) {
@@ -381,7 +385,7 @@ export function mountVisual(isShown) {
     if (V.view === 'resid') return arrows(d.checkpoints, s.A, k);
     const mt = s.matches;
     if (!mt || mt.state !== 'ok' || !mt.n) return '';
-    const ks = keep(mt, V.conf);
+    const { ks } = confCut(mt, V.conf);
     if (V.view === 'dots') return ks.map(i => `<circle cx="${mt.opt[i][0]}" cy="${mt.opt[i][1]}" r="${f2(2.4 * k)}" fill="${residColor(mt.resid?.[i])}"/>`).join('');
     if (V.view === 'lines') {
       const off = full[2] - d.sar_size[0];

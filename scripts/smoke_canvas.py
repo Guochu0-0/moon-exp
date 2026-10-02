@@ -310,6 +310,9 @@ def visual(p, has_matches, step):
         assert err(me) > 5 >= err(ref), (me, ref)
     tap(p, f'{VIS} .chips button[data-f="all"]')
     p.wait(f"document.querySelector('{VIS} #vsort').value === 'gain'", what="回到全部")
+    for f, sort in (("neither", "me"), ("both", "no"), ("all", "gain")):    # 均未配准 → 方法误差，均配准 → 编号
+        tap(p, f'{VIS} .chips button[data-f="{f}"]')
+        p.wait(f"document.querySelector('{VIS} #vsort').value === '{sort}'", what=f"筛选 {f} → 排序 {sort}")
     # 本地没有 B0m 的点对：提示可直接复制的 sync 命令
     p.wait(f"document.querySelector('{VIS} .synchint code')", 20, "sync 提示")
     assert p.js(f"document.querySelector('{VIS} .synchint code').textContent") == "python -m workbench sync B0m"

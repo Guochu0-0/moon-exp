@@ -21,7 +21,7 @@ export const api = {
   compare: (method, ref, split) => call('GET', `/api/compare?${new URLSearchParams({ method, split, ...(ref ? { ref } : {}) })}`),
   pair: (method, ref, split, pair, points = true) =>
     call('GET', `/api/pair?${new URLSearchParams({ method, split, pair, ...(ref ? { ref } : {}), ...(points ? {} : { points: '0' }) })}`),
-  saveNotes:(id, text) => call('PUT', `${exp(id)}/notes`, { text }),
+  saveNotes: (id, text) => call('PUT', `${exp(id)}/notes`, { text }),
   create: body => call('POST', '/api/exp', body),
   setParent: (id, parent, init = null) => call('POST', `${exp(id)}/parent`, { parent, init }),
   setTitle: (id, title) => call('POST', `${exp(id)}/title`, { title }),

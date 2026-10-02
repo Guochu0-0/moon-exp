@@ -84,6 +84,10 @@ class Run:
     def _has(self, method: str, split: str) -> bool:
         return (self.dir / "preds" / method / f"{split}.jsonl").exists()
 
+    def splits(self, method: str) -> list[str]:
+        """这个方法有 preds 的 split。"""
+        return [s for s in SPLITS if self._has(method, s)]
+
     def method_info(self, method: str) -> dict:
         """显示名与 caveat。变体 `x__v` 没写 [methods] 时沿父链回退到基础方法 `x`，显示名后加「· v」。"""
         own = self.meta.get("methods", {}).get(method)
@@ -355,6 +359,14 @@ def delete_experiment(root: Path, rid: str):
         elif (r.init or "").partition("/")[0] == rid:
             _edit_toml(r.dir / "exp.toml", init=None)
     shutil.rmtree(runs[rid].dir)
+
+
+def save_notes(root: Path, rid: str, text: str):
+    """写 runs/<id>/notes.md：UTF-8、LF 换行；文件第一次保存时才创建。"""
+    if not isinstance(text, str):
+        raise EditError("notes 应为字符串")
+    path = _get(root, rid).dir / "notes.md"
+    path.write_text(text.replace("\r\n", "\n").replace("\r", "\n"), encoding="utf-8", newline="\n")
 
 
 def _edit_toml(path: Path, **fields):

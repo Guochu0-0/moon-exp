@@ -28,7 +28,9 @@ OLD = Y / "results/finetune"
 A6K = Y / "_archive/2026-10/a6000-finetune"   # A6000 上的 Q8 Q9 Q10 Q12 Q12p，原样拷来
 ARC = Y / "_archive/2026-10"
 REPO = Path(__file__).resolve().parents[1]
-H150 = "bcb626e99cea"   # 150 的容器 hostname，时钟慢约 13 小时
+H150 = "bcb626e99cea"   # 150 的容器 hostname
+# 150 时钟慢 13h07m：这样换算后 M7–M10 的占位是 12:08:22，紧接加入它们的 1cd5d54（12:08:20），且 M8 用了 b7246eb 才有的 --cert-out
+LAG150 = 13 * 3600 + 7 * 60
 
 # 训练代码的提交（#77 blob 比对）
 C_FT49 = "ea09457"   # moon-exp-ft49 副本：C 系
@@ -56,10 +58,10 @@ def methods():
 
 
 def claim_time(m):
-    """M 系：领取时间（北京时间）。占位文件只记了时分秒，日期取文件 mtime；150 加 13 小时。"""
+    """M 系：领取时间（北京时间）。占位文件只记了时分秒，日期取文件 mtime；150 按 LAG150 校正。"""
     h = OLD / "_claims" / m / "host"
     host = h.read_text().split()[0]
-    t = h.stat().st_mtime + (13 * 3600 if host == H150 else 0)
+    t = h.stat().st_mtime + (LAG150 if host == H150 else 0)
     return host, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t))
 
 

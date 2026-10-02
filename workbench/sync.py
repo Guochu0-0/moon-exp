@@ -1,6 +1,6 @@
 """按实验把服务器 runs/<id>/ 里被 gitignore 的部分拉回本地。
 
-    python -m workbench sync B0 B0m [--extra certainty]... [--tb all] [--host xufang126外网]
+    python -m workbench sync B0 B0m [--extra certainty]... [--tb all] [--host xufang126内网]
 
 拉什么（路径相对 runs/）：
 - 点对 `<id>/preds/<m>/<split>_matches.npz`：默认拉。
@@ -23,7 +23,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_HOST = "xufang126外网"   # 154 与 126 挂同一份 gpfs；154 常连不上（2026-10-02）
+DEFAULT_HOST = "xufang126内网"   # 与 154 同一份 gpfs；内网组首选、外网常断（docs/agents/servers.md）
 DEFAULT_ROOT = "/remote-home/xufang/YGC/moon-exp"
 HOST_ENV = "MOON_SYNC_HOST"
 ROOT_ENV = "MOON_SYNC_ROOT"

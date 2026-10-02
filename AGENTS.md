@@ -16,7 +16,7 @@ Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/
 
 ### Servers
 
-Shared lab GPU servers: which hosts, usage rules, where code/envs/data live, how large files get in, MATLAB. Read before touching any server. See `docs/agents/servers.md`.
+Shared lab GPU servers: which hosts, how to connect, GPU-sharing rules, remote-operation pitfalls, where envs/data live, how large files get in, MATLAB. Read before touching any server. See `docs/agents/servers.md`. How code gets onto servers and where results go: `docs/agents/experiments.md`.
 
 ### Experiments
 

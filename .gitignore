@@ -5,3 +5,4 @@ runs/*/inter/*/*/*
 !runs/*/inter/*/*/meta.json
 runs/*/tb/
 runs/*/ckpt/
+runs/canvas.json

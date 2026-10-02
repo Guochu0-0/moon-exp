@@ -135,6 +135,7 @@ def main(argv=None):
         ap.error(f"任务清单应放在本仓库的 runs/<id>/code/ 下：{jobs}")
     R = jobs.parents[1]
     gpu = os.environ["GPU"]
+    os.environ.update(CUDA_VISIBLE_DEVICES=str(gpu), CUDA_DEVICE_ORDER=ENV["CUDA_DEVICE_ORDER"])   # launch 记录里也要有
     launch.require_clean(REPO)   # 清单本身也必须已提交
     claims = R / ".claims"
     claims.mkdir(exist_ok=True)

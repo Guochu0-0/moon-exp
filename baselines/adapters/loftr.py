@@ -9,6 +9,8 @@
   resize 用 cv2.resize 默认双线性，与官方 loader 相同。512² 无需 pad，不传 mask。
 - 输出：`mkpts0_f/mkpts1_f/mconf`，在输入张量网格上，整数 = 像素中心。不往 batch 里放 scale0/1，
   由 base.to_original 用中心对齐公式映射回 512 网格（官方的 x·s 有 0.5·(s−1) 偏差）。
+- `level="coarse"`：改出 `mkpts0_c/mkpts1_c`（粗格坐标，未经细级精化），用于分级评估（#70）。
+  细级只移动图 1 一侧（`mkpts0_f` 就是 `mkpts0_c`），两级坐标约定相同。
 """
 from __future__ import annotations
 
@@ -21,7 +23,9 @@ from .base import load_ckpt, long_side_size, to_original
 
 
 class LoFTRAdapter:
-    def __init__(self, repo, weights, device="cuda", long_side=840, temp_bug_fix=False, coarse_thr=None):
+    def __init__(self, repo, weights, device="cuda", long_side=840, temp_bug_fix=False, coarse_thr=None,
+                 level="fine"):
+        assert level in ("fine", "coarse"), level
         sys.path.insert(0, str(repo))
         from src.loftr import LoFTR, default_cfg
 
@@ -33,9 +37,9 @@ class LoFTRAdapter:
         sd = load_ckpt(weights)["state_dict"]
         self.model.load_state_dict(sd, strict=True)
         self.model = self.model.eval().to(device)
-        self.device, self.long_side = device, long_side
+        self.device, self.long_side, self.level = device, long_side, level
         self.notes = (f"long_side={long_side}, temp_bug_fix={temp_bug_fix}, coarse_thr={cfg['match_coarse']['thr']}, "
-                      f"float input (no uint8)")
+                      f"float input (no uint8), level={level}")
 
     def _tensor(self, img):
         import cv2
@@ -55,6 +59,7 @@ class LoFTRAdapter:
         batch = {"image0": t0, "image1": t1}
         with torch.no_grad():
             self.model(batch)
-        kp0 = to_original(batch["mkpts0_f"].cpu().numpy(), *g0)
-        kp1 = to_original(batch["mkpts1_f"].cpu().numpy(), *g1)
+        s = "f" if self.level == "fine" else "c"
+        kp0 = to_original(batch[f"mkpts0_{s}"].cpu().numpy(), *g0)
+        kp1 = to_original(batch[f"mkpts1_{s}"].cpu().numpy(), *g1)
         return kp0, kp1, batch["mconf"].cpu().numpy()

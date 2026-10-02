@@ -6,7 +6,9 @@
 按 E 新建、菜单派生、拖到空白派生、拖到实验改父、成环被拒、已点亮实验的删除项置灰、
 拖动后刷新位置保持、终端写 exp.toml 后几秒内出现、便签新建与编辑、Ctrl+G 打组并重命名、
 拖分组框标题带走框内实验和便签、分组框调大小与换色、`?` 面板、框选加多选拖动、Ctrl+A、
-各类右键菜单的内容、Del 删除选中对象时跳过已点亮实验、双击进入节点页并返回。
+各类右键菜单的内容、Del 删除选中对象时跳过已点亮实验、双击进入节点页并返回；
+节点页：未点亮实验只有三部分、章节导航跳转、编辑并保存 Notes、「← 画布」返回，
+B0 的 Notes 显示 offset 附件图，B0m 的全表显示回退后的显示名和 ΔAUC@10。
 依赖：Chrome 或 Edge、websocket-client。
 """
 from __future__ import annotations
@@ -188,6 +190,10 @@ def main():
         src = REPO / "runs" / rid
         (runs / rid).mkdir(parents=True)
         shutil.copy(src / "exp.toml", runs / rid / "exp.toml")
+        if (src / "notes.md").exists():
+            shutil.copy(src / "notes.md", runs / rid / "notes.md")
+        if (src / "extra").exists():
+            shutil.copytree(src / "extra", runs / rid / "extra")
         for f in src.glob("preds/*/*.jsonl"):
             (runs / rid / f.relative_to(src)).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(f, runs / rid / f.relative_to(src))
@@ -488,7 +494,31 @@ def main():
         # 双击进入节点页，「← 画布」返回，实验居中且选中
         p.click(*p.center(f"{node('E1')} .hdr .nid"), clicks=2)
         p.wait("location.hash === '#/exp/E1' && document.querySelector('#page .back')", what="进入节点页")
+        # 未点亮实验：只有实验信息、「尚无结果。」和 Notes
+        p.wait("document.querySelector('#page #sec-notes .edit')", what="节点页渲染")
+        assert p.js("[...document.querySelectorAll('#page .nav a[data-sec]')].map(a => a.textContent)") == \
+            ["实验信息", "结果", "Notes"]
+        assert p.js("document.querySelector('#page #sec-results .body').textContent.trim()") == "尚无结果。"
+        assert not p.js("!!document.querySelector('#page .cmp')")
         step("21-节点页")
+
+        # 章节导航跳转：点 Notes，Notes 进入视口并高亮
+        p.click(*p.center('#page .nav a[data-sec="notes"]'))
+        p.wait("""(() => { const r = document.querySelector('#sec-notes').getBoundingClientRect();
+                   return r.top >= 0 && r.top < innerHeight; })()""", what="跳到 Notes")
+        p.wait("""document.querySelector('#page .nav a[data-sec="notes"]').getAttribute('aria-current') === 'true'""",
+               what="Notes 高亮")
+
+        # 编辑并保存 Notes：首次保存才创建 notes.md（UTF-8、LF）
+        assert not (runs / "E1" / "notes.md").exists()
+        p.click(*p.center("#page #sec-notes .edit"))
+        p.wait("document.activeElement && document.activeElement.matches('#page textarea.notes-edit')", what="进入编辑")
+        p.type("## 计划\n\n先跑 **Val**。")
+        p.key("s", "KeyS", mods=CTRL)            # Ctrl+S
+        until(lambda: (runs / "E1" / "notes.md").read_bytes() == "## 计划\n\n先跑 **Val**。".encode("utf-8"),
+              "notes.md 写入")
+        p.wait("document.querySelector('#page #sec-notes .md strong')?.textContent === 'Val'", what="Notes 按 Markdown 渲染")
+        step("21b-保存Notes")
         p.click(*p.center("#page .back"))
         p.wait(f"""(() => {{ const el = document.querySelector('{node('E1')}.sel'); if (!el || location.hash !== '#/') return false;
                    const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -498,6 +528,29 @@ def main():
         p.key("Enter")
         p.wait("location.hash === '#/exp/E1'", what="Enter 进入节点页")
         step("22-返回画布")
+
+        # B0：Notes 里引用的 offset 附件图能显示
+        p.js("location.hash = '#/exp/B0'")
+        p.wait("document.querySelector('#page #sec-results table.tab')", 60, "B0 结果表")
+        p.wait("""(() => { const im = document.querySelector('#page #sec-notes img[src$="extra/offset/offset_val.png"]');
+                   return im && im.complete && im.naturalWidth > 0; })()""", 10, "B0 的 offset 附件图")
+        step("23-B0节点页")
+
+        # B0m：全表显示回退后的显示名（「· 映射」）和相对父实验同名基础方法的 ΔAUC@10
+        p.js("location.hash = '#/exp/B0m'")
+        p.wait("document.querySelector('#page h1')?.textContent.includes('B0m') && document.querySelector('#page tr.pick')",
+               60, "B0m 全表")
+        heads = p.js("[...document.querySelector('#page #sec-results table.tab').querySelectorAll('th')]"
+                     ".map(t => t.textContent)")
+        assert heads[-1] == "ΔAUC@10", heads
+        rows = p.js("[...document.querySelectorAll('#page tr.pick')]"
+                    ".map(tr => [tr.cells[0].textContent, tr.cells[tr.cells.length - 1].textContent])")
+        assert len(rows) == len(list((runs / "B0m" / "preds").iterdir())), rows
+        names = {name for name, _ in rows}                    # B0 里写了 [methods.loftr]，其余方法没写
+        assert {"LoFTR outdoor_ds · minmax", "LoFTR outdoor_ds · zscore_2p5"} <= names, rows
+        assert all(d[0] in "+−0" for _, d in rows), rows[:3]
+        assert "（默认）" in p.js("document.querySelector('#page #selR option:checked').textContent")
+        step("24-B0m节点页")
         ok = True
         print("画布冒烟全部通过")
     except Exception:

@@ -2,6 +2,9 @@
 
 读接口
     GET  /api/data                   全部实验摘要（画布用）+ canvas.json 里的便签、分组框
+    GET  /api/exp/<id>               单个实验详情（节点页用）：信息、commit、各方法结果、参考方法默认值与候选、notes
+    GET  /api/compare?method=&ref=&split=
+                                     方法 vs 参考方法（<实验>/<方法>、identity = 未配准、省略 = 无）：两边结果与差值
     GET  /img?split=&pair=&kind=     原图 PNG（opt / sar）
     GET  /runs/<id>/extra/...        附件
 写接口（成功返回 {"ok": true, ...}；被拒绝时 4xx + {"error": "..."}）
@@ -12,6 +15,7 @@
     DELETE /api/exp/<id>             删除（仅未点亮）
     PUT    /api/canvas               保存画布 {experiments?, groups?, stickies?}；experiments 按 key 合并，
                                      groups / stickies 整体替换（字段见 canvas.py）
+    PUT    /api/exp/<id>/notes       保存 notes.md {text}（UTF-8、LF；第一次保存时才创建）
 
 前端定期重拉 /api/data，所以它必须便宜：exp.toml 每次现读（很小），AUC 按 preds 文件的 mtime 和大小缓存，
 只有变了的方法才重算。
@@ -28,15 +32,16 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import canvas, protocol
+from . import canvas, protocol, reference
 from .dataset import SPLIT_DIRS, Dataset, to_display
-from .evaluate import jsonable, pair_errors
-from .records import (EditError, NotFound, Run, create_experiment, delete_experiment, load_runs, next_id,
-                      rename_experiment, set_parent, set_title)
+from .evaluate import IDENTITY, evaluate_preds, jsonable, pair_errors
+from .records import (SPLITS, EditError, NotFound, Pred, Run, create_experiment, delete_experiment, load_runs,
+                      next_id, rename_experiment, save_notes, set_parent, set_title)
 
 STATIC = Path(__file__).parent / "static"
 CARD_AUC = 10.0           # 画布卡片上的数值条：AUC@10（Val），不算 bootstrap CI
 CARD_SPLIT = "val"
+DELTA = "auc@10"          # 节点页全表末列：相对父实验同名基础方法的 ΔAUC@10
 CTYPES = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
           ".html": "text/html; charset=utf-8", ".woff2": "font/woff2", ".svg": "image/svg+xml"}
 
@@ -46,6 +51,8 @@ class Workbench:
         self.runs_dir, self.ds, self.repo = Path(runs_dir), ds, repo
         self.lock = threading.RLock()
         self._auc: dict[Path, tuple[tuple, float | None]] = {}
+        self._res: dict[Path, tuple[tuple, dict]] = {}
+        self._identity: dict[str, dict] = {}
 
     # ---------------- 读 ----------------
 
@@ -60,6 +67,91 @@ class Workbench:
             v = protocol.auc(pair_errors(self.ds, CARD_SPLIT, r.preds(method, CARD_SPLIT)), CARD_AUC)
             hit = self._auc[p] = (sig, v)
         return hit[1]
+
+    def _result(self, r: Run, method: str, split: str) -> dict | None:
+        """一个方法在一个 split 上的 summary 与逐 pair 误差（同 metrics.json），按 preds 文件的 mtime 和大小缓存。
+        "_err" 是未取整的误差数组（失败为 ∞），只在服务端用，不下发。"""
+        p = r.dir / "preds" / method / f"{split}.jsonl"
+        if not p.exists():
+            return None
+        st = p.stat()
+        sig = (st.st_mtime_ns, st.st_size)
+        hit = self._res.get(p)
+        if hit is None or hit[0] != sig:
+            hit = self._res[p] = (sig, self._evaluate(split, r.preds(method, split)))
+        return hit[1]
+
+    def _identity_result(self, split: str) -> dict:
+        if split not in self._identity:
+            self._identity[split] = self._evaluate(split, {p: Pred(p, IDENTITY) for p in self.ds.pairs(split)})
+        return self._identity[split]
+
+    def _evaluate(self, split: str, preds: dict) -> dict:
+        e = evaluate_preds(self.ds, split, preds)
+        return {"summary": e["summary"], "errors": e["errors"], "_err": pair_errors(self.ds, split, preds)}
+
+    def _score(self, runs: dict[str, Run]):
+        main = protocol.protocol_info()["main"]
+
+        def score(rid: str, m: str) -> float | None:
+            res = self._result(runs[rid], m, "val")
+            return res["summary"][main] if res else None
+        return score
+
+    def detail(self, rid: str) -> dict:
+        """节点页：一个实验的全部事实。"""
+        with self.lock:
+            runs = load_runs(self.runs_dir)
+            if rid not in runs:
+                raise NotFound(f"实验 {rid} 不存在")
+            r, score = runs[rid], self._score(runs)
+            p = runs.get(r.parent) if r.parent else None
+            methods = []
+            for m in reference.ranked(r, score):
+                res = {s: x for s in SPLITS if (x := self._result(r, m, s))}
+                base = reference.base_method(m)
+                base = f"{p.id}/{base}" if p is not None and base in p.methods else None
+                delta = {}
+                for s, x in res.items():
+                    b = self._result(p, base.partition("/")[2], s) if base else None
+                    if b and x["summary"][DELTA] is not None and b["summary"][DELTA] is not None:
+                        delta[s] = x["summary"][DELTA] - b["summary"][DELTA]
+                methods.append({"id": m, **r.method_info(m), "ref": reference.default_ref(r, m, runs, score),
+                                "base": base, "delta": delta, "results": {k: _public(x) for k, x in res.items()}})
+            return jsonable({"id": rid, "title": r.title, "parent": r.parent, "init": r.init,
+                             "baseline": r.baseline, "date": r.date, "lit": r.lit, "methods": methods,
+                             "children": [k for k, x in runs.items() if x.parent == rid],
+                             "commit": r.commit(), "delta_key": DELTA, "warnings": r.warnings,
+                             "notes": r.notes,
+                             "reference": {"groups": reference.groups(r, runs, score)},
+                             "protocol": protocol.protocol_info()})
+
+    def compare(self, q: dict) -> dict:
+        """方法 vs 参考方法：两边的 summary 与逐 pair 误差，以及差值（方法 − 参考方法）。"""
+        with self.lock:
+            runs = load_runs(self.runs_dir)
+            split = q.get("split", "val")
+            if split not in SPLITS:
+                raise EditError(f"split 应为 {' / '.join(SPLITS)}")
+            side = {}
+            for name in ("method", "ref"):
+                key = q.get(name) or None
+                try:
+                    target = reference.parse(key, runs)
+                except KeyError:
+                    raise EditError(f"找不到方法 {key}") from None
+                if name == "method" and not isinstance(target, tuple):
+                    raise EditError("method 应写成 <实验>/<方法>")
+                if target is None:
+                    side[name] = None
+                    continue
+                res = self._identity_result(split) if target == reference.UNREGISTERED else self._result(*target, split)
+                if res is None:
+                    raise EditError(f"{key} 没有 {split} 结果")
+                side[name] = {"key": key, "label": reference.label(key, runs), **res}
+            a, b = side["method"], side["ref"]
+            diff = reference.paired_diff(a["_err"], b["_err"], a["summary"], b["summary"]) if b else None
+            return jsonable({"split": split, "method": _public(a), "ref": b and _public(b), "diff": diff})
 
     def data(self) -> dict:
         with self.lock:
@@ -124,6 +216,11 @@ class Workbench:
             set_parent(self.runs_dir, rid, body.get("parent"), body.get("init"))
             return {"ok": True}
 
+    def save_notes(self, rid: str, body: dict) -> dict:
+        with self.lock:
+            save_notes(self.runs_dir, rid, body.get("text"))
+            return {"ok": True}
+
     def set_title(self, rid: str, body: dict) -> dict:
         with self.lock:
             set_title(self.runs_dir, rid, str(body.get("title", "")))
@@ -176,12 +273,17 @@ class Workbench:
         return buf.getvalue()
 
 
+def _public(res: dict) -> dict:
+    return {k: v for k, v in res.items() if not k.startswith("_")}
+
+
 def _num(v) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
 EXP_ACTION = re.compile(r"/api/exp/([^/]+)/(parent|title|rename)")
 EXP_ITEM = re.compile(r"/api/exp/([^/]+)")
+EXP_NOTES = re.compile(r"/api/exp/([^/]+)/notes")
 
 
 def make_handler(wb: Workbench):
@@ -230,6 +332,10 @@ def make_handler(wb: Workbench):
                         return self.send_file(f)
                 if path == "/api/data":
                     return self.send_json(wb.data())
+                if m := EXP_ITEM.fullmatch(path):
+                    return self.send_json(wb.detail(m.group(1)))
+                if path == "/api/compare":
+                    return self.send_json(wb.compare(q))
                 if path == "/img":
                     if q.get("split") in SPLIT_DIRS and q.get("kind") in ("opt", "sar") \
                             and q.get("pair") in wb.ds.pairs(q["split"]):
@@ -251,6 +357,8 @@ def make_handler(wb: Workbench):
             elif method == "PUT":
                 if path == "/api/canvas":
                     return self.send_json(wb.save_canvas(self.body()))
+                if m := EXP_NOTES.fullmatch(path):
+                    return self.send_json(wb.save_notes(m.group(1), self.body()))
             elif method == "DELETE":
                 if m := EXP_ITEM.fullmatch(path):
                     return self.send_json(wb.delete(m.group(1)))

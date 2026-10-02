@@ -58,6 +58,20 @@ class Dataset:
     def labelled(self, split: str) -> list[str]:
         return [p for p in self.pairs(split) if self._path(split, p, "Label").exists()]
 
+    @lru_cache(maxsize=None)
+    def numbers(self, split: str) -> dict[str, int]:
+        """pair → 编号。"""
+        return {p: i for i, p in enumerate(self.pairs(split))}
+
+    @lru_cache(maxsize=4096)
+    def size(self, split: str, pair: str, kind: str) -> tuple[int, int]:
+        """影像宽、高（px），只读 TIFF 头。kind 为 Optical / SAR。"""
+        import tifffile
+
+        with tifffile.TiffFile(self._path(split, pair, kind)) as t:
+            h, w = t.pages[0].shape[:2]
+        return w, h
+
     def optical(self, split: str, pair: str) -> np.ndarray:
         return read_tif(self._path(split, pair, "Optical"))
 

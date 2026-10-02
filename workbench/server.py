@@ -4,7 +4,11 @@
     GET  /api/data                   全部实验摘要（画布用）+ canvas.json 里的便签、分组框
     GET  /api/exp/<id>               单个实验详情（节点页用）：信息、commit、各方法结果、参考方法默认值与候选、notes
     GET  /api/compare?method=&ref=&split=
-                                     方法 vs 参考方法（<实验>/<方法>、identity = 未配准、省略 = 无）：两边结果与差值
+                                     方法 vs 参考方法（<实验>/<方法>、identity = 未配准、省略 = 无）：两边结果与差值，
+                                     以及有标注 pair 的列表与编号（与 errors 一一对应）
+    GET  /api/pair?split=&pair=&method=&ref=[&points=0]
+                                     单个 pair：影像尺寸、检查点，两边各自的仿射、失败原因、误差与点对
+                                     （点对状态 ok / not_synced（附 sync 命令）/ absent；points=0 时不读点对）
     GET  /img?split=&pair=&kind=     原图 PNG（opt / sar）
     GET  /runs/<id>/extra/...        附件
 写接口（成功返回 {"ok": true, ...}；被拒绝时 4xx + {"error": "..."}）
@@ -32,6 +36,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
+import numpy as np
+
 from . import canvas, protocol, reference
 from .dataset import SPLIT_DIRS, Dataset, to_display
 from .evaluate import IDENTITY, evaluate_preds, jsonable, pair_errors
@@ -42,6 +48,7 @@ STATIC = Path(__file__).parent / "static"
 CARD_AUC = 10.0           # 画布卡片上的数值条：AUC@10（Val），不算 bootstrap CI
 CARD_SPLIT = "val"
 DELTA = "auc@10"          # 节点页全表末列：相对父实验同名基础方法的 ΔAUC@10
+INLIER_PX = 3.0           # 点对的内点 / 外点：到估计仿射的残差不超过 3 px（与匹配类方法的 RANSAC 阈值相同）
 CTYPES = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
           ".html": "text/html; charset=utf-8", ".woff2": "font/woff2", ".svg": "image/svg+xml"}
 
@@ -52,6 +59,7 @@ class Workbench:
         self.lock = threading.RLock()
         self._auc: dict[Path, tuple[tuple, float | None]] = {}
         self._res: dict[Path, tuple[tuple, dict]] = {}
+        self._preds: dict[Path, tuple[tuple, dict]] = {}
         self._identity: dict[str, dict] = {}
 
     # ---------------- 读 ----------------
@@ -126,22 +134,32 @@ class Workbench:
                              "reference": {"groups": reference.groups(r, runs, score)},
                              "protocol": protocol.protocol_info()})
 
+    def _split(self, q: dict) -> str:
+        split = q.get("split", "val")
+        if split not in SPLITS:
+            raise EditError(f"split 应为 {' / '.join(SPLITS)}")
+        return split
+
+    @staticmethod
+    def _target(q: dict, name: str, runs: dict[str, Run]):
+        """查询参数 method / ref → (实验, 方法)、UNREGISTERED 或 None。method 必须是 <实验>/<方法>。"""
+        key = q.get(name) or None
+        try:
+            target = reference.parse(key, runs)
+        except KeyError:
+            raise EditError(f"找不到方法 {key}") from None
+        if name == "method" and not isinstance(target, tuple):
+            raise EditError("method 应写成 <实验>/<方法>")
+        return key, target
+
     def compare(self, q: dict) -> dict:
         """方法 vs 参考方法：两边的 summary 与逐 pair 误差，以及差值（方法 − 参考方法）。"""
         with self.lock:
             runs = load_runs(self.runs_dir)
-            split = q.get("split", "val")
-            if split not in SPLITS:
-                raise EditError(f"split 应为 {' / '.join(SPLITS)}")
+            split = self._split(q)
             side = {}
             for name in ("method", "ref"):
-                key = q.get(name) or None
-                try:
-                    target = reference.parse(key, runs)
-                except KeyError:
-                    raise EditError(f"找不到方法 {key}") from None
-                if name == "method" and not isinstance(target, tuple):
-                    raise EditError("method 应写成 <实验>/<方法>")
+                key, target = self._target(q, name, runs)
                 if target is None:
                     side[name] = None
                     continue
@@ -151,7 +169,68 @@ class Workbench:
                 side[name] = {"key": key, "label": reference.label(key, runs), **res}
             a, b = side["method"], side["ref"]
             diff = reference.paired_diff(a["_err"], b["_err"], a["summary"], b["summary"]) if b else None
-            return jsonable({"split": split, "method": _public(a), "ref": b and _public(b), "diff": diff})
+            pairs, no = self.ds.labelled(split), self.ds.numbers(split)
+            return jsonable({"split": split, "method": _public(a), "ref": b and _public(b), "diff": diff,
+                             "pairs": pairs, "no": [no[p] for p in pairs]})
+
+    def pair(self, q: dict) -> dict:
+        """单个 pair 的可视化素材：影像尺寸、检查点（无标注为 None），以及方法和参考方法各自的仿射与点对。"""
+        with self.lock:
+            runs = load_runs(self.runs_dir)
+            split, p = self._split(q), q.get("pair") or ""
+            if p not in self.ds.numbers(split):
+                raise EditError(f"{SPLIT_DIRS[split]} 中没有 pair {p}")
+            cp = self.ds.checkpoints(split, p)
+            points = q.get("points") != "0"
+            side = {}
+            for name in ("method", "ref"):
+                key, target = self._target(q, name, runs)
+                side[name] = target and self._pair_side(key, target, runs, split, p, cp, points)
+            return jsonable({"split": split, "pair": p, "no": self.ds.numbers(split)[p],
+                             "size": self.ds.size(split, p, "Optical"), "sar_size": self.ds.size(split, p, "SAR"),
+                             "checkpoints": cp and {"opt": cp[0].tolist(), "sar": cp[1].tolist()},
+                             "inlier_px": INLIER_PX, **side})
+
+    def _pair_side(self, key, target, runs, split, p, cp, points: bool) -> dict:
+        if target == reference.UNREGISTERED:
+            out = {"exp": None, "caveat": None, "A": IDENTITY, "fail": None, "extra": {}, "matches": None}
+        else:
+            r, m = target
+            if split not in r.splits(m):
+                raise EditError(f"{key} 没有 {split} 结果")
+            pr = self._pred_rows(r, m, split).get(p)
+            A, fail, extra = (pr.A, pr.fail, pr.extra) if pr else (None, "no_pred", {})
+            out = {"exp": r.id, "caveat": r.method_info(m)["caveat"], "A": A, "fail": fail, "extra": extra,
+                   "matches": self._matches(r, m, split, p, A) if points else None}
+        return {"key": key, "label": reference.label(key, runs),
+                "error": protocol.pair_error(out["A"], *cp) if cp else None, **out}
+
+    def _pred_rows(self, r: Run, method: str, split: str) -> dict:
+        """preds 按文件的 mtime 和大小缓存：翻看 pair 时每次只取一行。"""
+        path = r.dir / "preds" / method / f"{split}.jsonl"
+        st = path.stat()
+        sig = (st.st_mtime_ns, st.st_size)
+        hit = self._preds.get(path)
+        if hit is None or hit[0] != sig:
+            hit = self._preds[path] = (sig, r.preds(method, split))
+        return hit[1]
+
+    @staticmethod
+    def _matches(r: Run, method: str, split: str, p: str, A) -> dict:
+        """点对与每个点到估计仿射的残差（失败时为 None）。npz 不在本地时给出拉取命令。"""
+        if not (r.dir / "preds" / method / f"{split}_matches.npz").exists():
+            return {"state": "not_synced", "sync": f"python -m workbench sync {r.id}"}
+        x = r.matches(method, split, p)
+        if x is None:
+            return {"state": "absent"}
+        x = x.astype(np.float64)
+        resid = None
+        if A is not None:
+            a = np.asarray(A, dtype=np.float64)
+            resid = np.round(np.linalg.norm(x[:, :2] @ a[:, :2].T + a[:, 2] - x[:, 2:4], axis=1), 3).tolist()
+        conf = x[:, 4]
+        return {"state": "ok", "n": len(x), "opt": np.round(x[:, :2], 2).tolist(), "sar": np.round(x[:, 2:4], 2).tolist(),
+                "conf": np.round(conf, 4).tolist() if np.isfinite(conf).any() else None, "resid": resid}
 
     def data(self) -> dict:
         with self.lock:
@@ -336,6 +415,8 @@ def make_handler(wb: Workbench):
                     return self.send_json(wb.detail(m.group(1)))
                 if path == "/api/compare":
                     return self.send_json(wb.compare(q))
+                if path == "/api/pair":
+                    return self.send_json(wb.pair(q))
                 if path == "/img":
                     if q.get("split") in SPLIT_DIRS and q.get("kind") in ("opt", "sar") \
                             and q.get("pair") in wb.ds.pairs(q["split"]):
@@ -367,6 +448,8 @@ def make_handler(wb: Workbench):
         def handle_method(self, method):
             try:
                 self.route(method)
+            except ConnectionError:   # 浏览器取消了请求（比如翻页时还没加载完的缩略图），不用回话
+                pass
             except NotFound as e:
                 self.send_json({"error": str(e)}, 404)
             except EditError as e:

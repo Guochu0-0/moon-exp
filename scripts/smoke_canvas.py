@@ -8,7 +8,11 @@
 拖分组框标题带走框内实验和便签、分组框调大小与换色、`?` 面板、框选加多选拖动、Ctrl+A、
 各类右键菜单的内容、Del 删除选中对象时跳过已点亮实验、双击进入节点页并返回；
 节点页：未点亮实验只有三部分、章节导航跳转、编辑并保存 Notes、「← 画布」返回，
-B0 的 Notes 显示 offset 附件图，B0m 的全表显示回退后的显示名和 ΔAUC@10。
+B0 的 Notes 显示 offset 附件图，B0m 的全表显示回退后的显示名和 ΔAUC@10；
+可视化结果：B0（参考方法为无）只有排序和网格、按方法误差从大到小，B0m 的筛选数量与散点一致、
+散点放大后选点、筛选「退化」时自动切换排序、详情中 ← → 翻看、本地没有点对时的 sync 提示；
+--matches-from 下有 B0 的点对时（先 `python -m workbench sync B0`），再看 RoMa 系方法的点对视图与 conf 过滤，
+以及 minima_xoftr（Val 全空）的退化显示。B0m 的点对有意不复制。
 依赖：Chrome 或 Edge、websocket-client。
 """
 from __future__ import annotations
@@ -16,7 +20,9 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import math
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -107,7 +113,7 @@ class Page:
         self.mouse("mouseReleased", *b, mods=mods)
 
     def key(self, key, code=None, text=None, mods=0):
-        vk = {"Enter": 13, "Escape": 27, "Delete": 46, "?": 191}.get(key, ord(key.upper()) if len(key) == 1 else 0)
+        vk = {"Enter": 13, "Escape": 27, "Delete": 46, "?": 191, "ArrowLeft": 37, "ArrowRight": 39}.get(key, ord(key.upper()) if len(key) == 1 else 0)
         base = dict(key=key, code=code or key, windowsVirtualKeyCode=vk, modifiers=mods)
         self.cmd("Input.dispatchKeyEvent", type="keyDown", **base, **({"text": text} if text else {}))
         self.cmd("Input.dispatchKeyEvent", type="keyUp", **base)
@@ -172,11 +178,170 @@ def blank_near(p, x, y, w=260, h=140):
     return r
 
 
+VIS = "#page #sec-visual"
+
+
+def tap(p, selector):
+    """先把元素滚到视口中间（节点页在一个可滚动容器里，元素可能在视口外），再点它的中心。"""
+    p.js(f"document.querySelector({json.dumps(selector)}).scrollIntoView({{block: 'center', behavior: 'instant'}})")
+    p.click(*p.center(selector))
+
+
+def shot_detail(p, step, name):
+    """截图前把详情滚到视口顶端：可视化结果的要点在详情面板里。"""
+    p.js(f"document.querySelector('{VIS} .detail').scrollIntoView({{block: 'start', behavior: 'instant'}})")
+    time.sleep(.5)   # 等面板底图解码
+    step(name)
+
+
+def caps(p):
+    """网格里各缩略图的（编号, 方法误差文本, 参考方法误差文本或 None）。"""
+    rows = p.js(f"[...document.querySelectorAll('{VIS} .grid .th .cap')].map(c => [...c.children].map(s => s.textContent))")
+    return [(int(n.lstrip("#")), *(e.split(" / ") + [None])[:2]) for n, e in rows]
+
+
+def err(t):
+    return math.inf if t == "失败" else float(t)
+
+
+def detail_no(p):
+    return int(p.js(f"document.querySelector('{VIS} .dhead .pn').textContent").split("#")[1])
+
+
+def pos(p):
+    return p.js(f"document.querySelector('{VIS} .dhead .muted.num').textContent")
+
+
+def view(p, name):
+    p.js(f"[...document.querySelectorAll('{VIS} .views button')].find(b => b.textContent === '{name}').click()")
+    p.wait(f"document.querySelector('{VIS} .views button[aria-pressed=true]')?.textContent === '{name}'", what=f"视图 {name}")
+
+
+def set_method(p, m):
+    p.js(f"(() => {{ const s = document.querySelector('#page #selM'); s.value = {json.dumps(m)};"
+         f" s.dispatchEvent(new Event('change')); }})()")
+
+
+def visual(p, has_matches, step):
+    # B0：基线、参考方法为无 → 只有排序和网格，默认按方法误差从大到小，即最差的 pair 在前
+    p.js("location.hash = '#/exp/B0'")
+    p.wait(f"document.querySelector('{VIS} .grid .th .im svg')", 60, "B0 缩略图")
+    assert p.js("[...document.querySelectorAll('#page .nav a[data-sec]')].map(a => a.textContent)") == \
+        ["实验信息", "结果", "可视化结果", "Notes"]
+    assert not p.js(f"!!document.querySelector('{VIS} .sc, {VIS} .chips')"), "无参考方法时不该有散点和筛选"
+    assert p.js(f"document.querySelector('{VIS} #vsort').value") == "me"
+    c = caps(p)
+    assert len(c) == 12 and all(r is None for *_, r in c), c
+    errs = [err(e) for _, e, _ in c]
+    assert errs == sorted(errs, reverse=True), c
+    tap(p, f"{VIS} .more button")
+    p.wait(f"document.querySelectorAll('{VIS} .grid .th').length === 24", what="再显示 12 个")
+    # 详情里 ← → 在当前列表里移动
+    p.wait(f"document.querySelector('{VIS} .detail .pane svg image')", 20, "详情面板")
+    assert detail_no(p) == c[0][0] and pos(p).startswith("当前列表第 1 / ")
+    p.key("ArrowRight")
+    p.wait(f"document.querySelector('{VIS} .dhead .pn')?.textContent.endsWith('#{c[1][0]:04d}')", what="→ 下一个")
+    assert pos(p).startswith("当前列表第 2 / ")
+    p.key("ArrowLeft")
+    p.wait(f"document.querySelector('{VIS} .dhead .pn')?.textContent.endsWith('#{c[0][0]:04d}')", what="← 上一个")
+    for v in ("残差", "原图", "卷帘"):
+        view(p, v)
+    shot_detail(p, step, "25-B0可视化结果")
+    # 失败的 pair：minima_splg 在 Val 上大多失败，按方法误差从大到小时排在最前；详情写失败原因，仍显示光学原图
+    set_method(p, "minima_splg")
+    p.wait(f"document.querySelector('{VIS} .pane .ttl span')?.textContent === 'B0 / minima_splg'", 60, "切到 minima_splg")
+    assert caps(p)[0][1] == "失败"
+    assert p.js(f"document.querySelector('{VIS} .pane .stat').textContent").startswith("估计失败（")
+    assert p.js(f"!!document.querySelector('{VIS} .pane svg image') && !document.querySelector('{VIS} .pane g.clip')")
+    shot_detail(p, step, "25b-失败pair")
+
+    if has_matches:
+        # RoMa 系：点对连线、残差点图与 conf 过滤
+        set_method(p, "anymatch_roma")
+        p.wait(f"[...document.querySelectorAll('{VIS} .views button')].some(b => b.textContent === '点对连线')", 60,
+               "anymatch_roma 的点对视图")
+        assert not p.js(f"!!document.querySelector('{VIS} .synchint')")
+        view(p, "点对连线")
+        p.wait(f"document.querySelectorAll('{VIS} line.mline').length > 0", what="点对连线")
+        n0 = p.js(f"document.querySelectorAll('{VIS} line.mline').length")
+        stat = p.js(f"document.querySelector('{VIS} .pane .stat').textContent")
+        assert re.match(r"\d+ / \d+ 个点", stat), stat
+        # B0 的 RoMa 系截到前 2000 个点后 conf 都是 1：滑杆在，但注明过滤不起作用
+        assert p.js(f"!!document.querySelector('{VIS} #vconf')")
+        assert "过滤不起作用" in p.js(f"document.querySelector('{VIS} .conf').textContent")
+        view(p, "残差点图")
+        p.wait(f"document.querySelectorAll('{VIS} .pane g.ov circle').length === {n0}", what="残差点图")
+        shot_detail(p, step, "26-点对视图")
+        # LoFTR 的 conf 有区分度：拉到第 50 百分位，点数减少约一半
+        set_method(p, "loftr")
+        p.wait(f"document.querySelector('#page #selM').value === 'loftr' && document.querySelector('{VIS} #vconf')",
+               60, "loftr conf 过滤")
+        view(p, "点对连线")
+        p.wait(f"document.querySelector('{VIS} .pane .ttl span')?.textContent === 'B0 / LoFTR outdoor_ds' && "
+               f"document.querySelectorAll('{VIS} line.mline').length > 0", 20, "loftr 点对连线")
+        n0 = p.js(f"document.querySelectorAll('{VIS} line.mline').length")
+        p.js(f"(() => {{ const r = document.querySelector('{VIS} #vconf'); r.value = 50; r.dispatchEvent(new Event('input')); }})()")
+        n1 = p.js(f"document.querySelectorAll('{VIS} line.mline').length")
+        assert 0 < n1 < n0, (n0, n1)
+        assert "conf ≥" in p.js(f"document.querySelector('{VIS} .pane .stat').textContent")
+        # minima_xoftr：Val 全是 0×5 → 点对视图照常出现，面板写「0 个点」，没有 conf 过滤
+        set_method(p, "minima_xoftr")
+        p.wait(f"document.querySelector('#page #selM').value === 'minima_xoftr' && "
+               f"document.querySelector('{VIS} .pane .msg')?.textContent === '0 个点'", 60, "minima_xoftr 退化显示")
+        assert not p.js(f"!!document.querySelector('{VIS} #vconf')")
+        shot_detail(p, step, "27-minima_xoftr")
+    else:
+        print("跳过  点对视图（--matches-from 下没有 B0 的点对）")
+
+    # B0m：参考方法默认为父实验同名基础方法 → 散点 + 筛选；筛选数量与散点一致
+    p.js("location.hash = '#/exp/B0m'")
+    p.wait(f"document.querySelector('{VIS} .sc svg') && document.querySelector('{VIS} .grid .th')", 60, "B0m 散点")
+    counts = dict(p.js(f"[...document.querySelectorAll('{VIS} .chips button')]"
+                       ".map(b => [b.dataset.f, +b.querySelector('.num').textContent])"))
+    assert counts["all"] == p.js(f"document.querySelectorAll('{VIS} .sc circle.pt').length") > 0, counts
+    assert counts["all"] == sum(counts[k] for k in ("better", "worse", "neither", "both")), counts
+    assert p.js(f"document.querySelector('{VIS} #vsort').value") == "gain"
+    # 选「退化」：排序自动切到误差上升量，散点里深色点数 = 退化数，第一张确实退化
+    tap(p, f'{VIS} .chips button[data-f="worse"]')
+    p.wait(f"document.querySelector('{VIS} #vsort').value === 'loss'", what="退化 → 按误差上升量排序")
+    assert p.js(f"document.querySelectorAll('{VIS} .sc circle.pt.on').length") == counts["worse"]
+    if counts["worse"]:
+        _, me, ref = caps(p)[0]
+        assert err(me) > 5 >= err(ref), (me, ref)
+    tap(p, f'{VIS} .chips button[data-f="all"]')
+    p.wait(f"document.querySelector('{VIS} #vsort').value === 'gain'", what="回到全部")
+    for f, sort in (("neither", "me"), ("both", "no"), ("all", "gain")):    # 均未配准 → 方法误差，均配准 → 编号
+        tap(p, f'{VIS} .chips button[data-f="{f}"]')
+        p.wait(f"document.querySelector('{VIS} #vsort').value === '{sort}'", what=f"筛选 {f} → 排序 {sort}")
+    # 本地没有 B0m 的点对：提示可直接复制的 sync 命令
+    p.wait(f"document.querySelector('{VIS} .synchint code')", 20, "sync 提示")
+    assert p.js(f"document.querySelector('{VIS} .synchint code').textContent") == "python -m workbench sync B0m"
+    # 散点：全图点一下放大，放大后点选一个点，详情跳到该 pair
+    p.js(f"document.querySelector('{VIS} .sc').scrollIntoView({{block: 'center', behavior: 'instant'}})")
+    i, no, x, y = p.js(f"""(() => {{ const c = document.querySelector('{VIS} .sc circle.pt.on'), r = c.getBoundingClientRect();
+        return [c.dataset.i, +c.querySelector('title').textContent.match(/#(\\d+)/)[1], r.left + r.width / 2, r.top + r.height / 2]; }})()""")
+    p.click(x, y)
+    p.wait(f"document.querySelector('{VIS} .sc .zoomed')", what="散点放大")
+    assert p.js(f"document.querySelector('{VIS} .sc .zbar').textContent").startswith("放大区域")
+    tap(p, f'{VIS} .sc circle.pt[data-i="{i}"]')
+    p.wait(f"document.querySelector('{VIS} .dhead .pn')?.textContent.endsWith('#{no:04d}')", what="放大后点选")
+    assert p.js(f"!!document.querySelector('{VIS} .sc .selring')")
+    tap(p, f'{VIS} .sc [data-z="full"]')
+    p.wait(f"!document.querySelector('{VIS} .sc .zoomed')", what="返回全图")
+    p.key("ArrowRight")
+    p.wait(f"!document.querySelector('{VIS} .dhead .pn')?.textContent.endsWith('#{no:04d}')", what="B0m 中 → 翻看")
+    p.wait(f"document.querySelectorAll('{VIS} .detail .pane').length === 2", 20, "方法与参考方法并排")
+    assert p.js("window.__errors.length") == 0, p.js("window.__errors")
+    shot_detail(p, step, "28-B0m可视化结果")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=os.environ.get("MOON_DATA"))
     ap.add_argument("--shots", help="把各步截图存到这个目录")
     ap.add_argument("--headed", action="store_true")
+    ap.add_argument("--matches-from", default=str(REPO / "runs"),
+                    help="从这个 runs/ 目录复制 B0 的点对（*_matches.npz）；worktree 里没有时指向主工作区的 runs/")
     args = ap.parse_args()
     if not args.data:
         sys.exit("需要数据集根目录：--data 或环境变量 MOON_DATA")
@@ -197,6 +362,9 @@ def main():
         for f in src.glob("preds/*/*.jsonl"):
             (runs / rid / f.relative_to(src)).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(f, runs / rid / f.relative_to(src))
+    for f in (Path(args.matches_from) / "B0").glob("preds/*/*_matches.npz"):
+        shutil.copy(f, runs / "B0" / f.relative_to(Path(args.matches_from) / "B0"))
+    has_matches = any((runs / "B0").glob("preds/*/val_matches.npz"))
 
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.make_handler(server.Workbench(runs, Dataset(args.data), REPO)))
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
@@ -495,7 +663,8 @@ def main():
         p.click(*p.center(f"{node('E1')} .hdr .nid"), clicks=2)
         p.wait("location.hash === '#/exp/E1' && document.querySelector('#page .back')", what="进入节点页")
         # 未点亮实验：只有实验信息、「尚无结果。」和 Notes
-        p.wait("document.querySelector('#page #sec-notes .edit')", what="节点页渲染")
+        # 第一次打开节点页时，参考方法候选要把 B0 / B0m 全部方法的指标（含 bootstrap）算一遍，本机约 8 s
+        p.wait("document.querySelector('#page #sec-notes .edit')", 30, what="节点页渲染")
         assert p.js("[...document.querySelectorAll('#page .nav a[data-sec]')].map(a => a.textContent)") == \
             ["实验信息", "结果", "Notes"]
         assert p.js("document.querySelector('#page #sec-results .body').textContent.trim()") == "尚无结果。"
@@ -551,6 +720,7 @@ def main():
         assert all(d[0] in "+−0" for _, d in rows), rows[:3]
         assert "（默认）" in p.js("document.querySelector('#page #selR option:checked').textContent")
         step("24-B0m节点页")
+        visual(p, has_matches, step)
         ok = True
         print("画布冒烟全部通过")
     except Exception:

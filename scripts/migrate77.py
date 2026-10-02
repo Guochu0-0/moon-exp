@@ -160,7 +160,13 @@ def migrate(P: Plan, src: Path, exp: str, m: str, warn: list):
         if meta and not old.get("commit"):
             P.write(dst / f"{s}.meta.json", json.dumps(meta, ensure_ascii=False, indent=2) + "\n")
 
-    # 2. sweep
+    # 2. sweep（peak.json 要读 S/metrics.json，先算好再挪）
+    pk = None
+    if not (src / "peak.json").exists():
+        ms = json.loads((S_old / "metrics.json").read_text(encoding="utf-8"))["methods"][f"step{st}"]
+        pk = {"step": st, "metric": "val auc@5", "val": ms["val"]["summary"]}
+        if "test" in ms:
+            pk["test"] = ms["test"]["summary"]
     for name in ("S", "match", "neg"):
         if (src / "sweep" / name).exists():
             P.mv(src / "sweep" / name, sw / name)
@@ -169,11 +175,7 @@ def migrate(P: Plan, src: Path, exp: str, m: str, warn: list):
     for name in ("peak.json", "collapse.json"):
         if (src / name).exists():
             P.mv(src / name, sw / name)
-    if not (src / "peak.json").exists():
-        ms = json.loads((S_old / "metrics.json").read_text(encoding="utf-8"))["methods"][f"step{st}"]
-        pk = {"step": st, "metric": "val auc@5", "val": ms["val"]["summary"]}
-        if "test" in ms:
-            pk["test"] = ms["test"]["summary"]
+    if pk:
         P.write(sw / "peak.json", json.dumps(pk, indent=1) + "\n")
     rest = [p for p in (src / "sweep").iterdir() if p.name not in ("S", "match", "neg")] if (src / "sweep").exists() else []
     for p in rest:

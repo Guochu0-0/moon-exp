@@ -12,8 +12,9 @@
 .cv .world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .cv .edges { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
 .cv .layer > * { position: absolute; }
+.cv .layer > .grp { z-index: -1; }   /* 分组框垫在连线和卡片下面 */
 
-/* 外框：左上标题与计数，右上操作条 */
+/* 外框：左上标题与计数，右上操作条，右下小地图，左下快捷键 */
 .cv .title { position: absolute; left: 14px; top: 12px; z-index: 5; display: flex; align-items: baseline; gap: 12px; padding: 7px 14px; background: #1E1F23; border: 1px solid #2E3035; border-radius: 10px; }
 .cv .title b { font-weight: 600; font-size: 14px; }
 .cv .title span { color: #8B8D94; font-size: 12px; }
@@ -23,6 +24,16 @@
 .cv .act .pri { background: #2A7FDB; color: #fff; } .cv .act .pri:hover { background: #3A8DEA; }
 .cv .act .pri kbd { color: #DDE9FA; }
 .cv .act .pc { padding: 5px 4px; min-width: 44px; text-align: center; color: #A3A5AC; font: 12px/1.8 var(--mono); }
+.cv .mini { position: absolute; right: 14px; bottom: 14px; z-index: 5; width: 232px; background: #1E1F23; border: 1px solid #2E3035; border-radius: 10px; overflow: hidden; }
+.cv .mini svg { display: block; cursor: pointer; }
+.cv .keysbtn { position: absolute; left: 14px; bottom: 14px; z-index: 5; border: 1px solid #2E3035; background: #1E1F23; border-radius: 8px; padding: 5px 11px; color: #A3A5AC; font-size: 12.5px; }
+.cv .keysbtn:hover { color: #E4E5E8; }
+.cv .keys { position: absolute; left: 14px; bottom: 52px; z-index: 6; width: 300px; max-height: calc(100% - 120px); overflow: auto; background: #1E1F23; border: 1px solid #2E3035; border-radius: 10px; padding: 10px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.45); display: none; }
+.cv .keys.on { display: block; }
+.cv .keys h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+.cv .keys dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 12.5px; }
+.cv .keys dt { text-align: right; } .cv .keys dd { margin: 0; color: #C9CBD0; }
+.cv .keys dt kbd { display: inline-block; border: 1px solid #3A3C42; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: #E4E5E8; }
 
 /* 实验卡片 */
 .node { width: 300px; background: #26272B; border: 1px solid #3A3C42; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.35); user-select: none; cursor: pointer; }
@@ -57,6 +68,28 @@
 .node.drop { border-color: #64A8F5; box-shadow: 0 0 0 2px #64A8F5; }
 .node.new { animation: pop .35s ease-out; }
 @keyframes pop { from { transform: scale(.94); opacity: 0; } }
+
+/* 分组框：半透明色块，34 px 实色标题带，右下角三角调大小 */
+.grp { border-radius: 6px; user-select: none; }
+.grp .gt { position: absolute; left: 0; right: 0; top: 0; height: 34px; padding: 0 12px; font-size: 16px; font-weight: 500; line-height: 34px; border-radius: 6px 6px 0 0; cursor: move; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grp .gt[contenteditable=true] { cursor: text; outline: 1px solid rgba(255,255,255,.5); user-select: text; text-overflow: clip; }
+.grp .rz { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; }
+.grp .rz::after { content: ""; position: absolute; right: 3px; bottom: 3px; border-style: solid; border-width: 0 0 11px 11px; border-color: transparent transparent rgba(255,255,255,.35) transparent; }
+.grp .rz:hover::after { border-bottom-color: rgba(255,255,255,.7); }
+.grp.c1 { background: rgba(62,122,168,.16); border: 1px solid rgba(62,122,168,.45); } .grp.c1 .gt { background: rgba(62,122,168,.42); }
+.grp.c2 { background: rgba(160,110,56,.14); border: 1px solid rgba(160,110,56,.45); } .grp.c2 .gt { background: rgba(160,110,56,.40); }
+.grp.c3 { background: rgba(110,140,90,.14); border: 1px solid rgba(110,140,90,.45); } .grp.c3 .gt { background: rgba(110,140,90,.40); }
+.grp.c4 { background: rgba(140,90,150,.14); border: 1px solid rgba(140,90,150,.45); } .grp.c4 .gt { background: rgba(140,90,150,.40); }
+
+/* 便签：ComfyUI Note 样式 */
+.sticky { background: #3A3526; border: 1px solid #574F37; border-radius: 10px; overflow: hidden; cursor: move; user-select: none; }
+.sticky .hdr { height: 30px; padding: 0 10px; line-height: 30px; background: #2E2A1F; color: #D9C99A; font-size: 12.5px; }
+.sticky .body { padding: 8px 12px 10px; color: #E9E1C9; font-size: 13px; min-height: 2.4em; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sticky .body:empty::before { content: "双击编辑"; color: #8C7F5C; }
+.sticky .body[contenteditable=true] { cursor: text; outline: 1px solid #8C7A48; user-select: text; }
+.sticky .body[contenteditable=true]:empty::before { content: none; }
+.sticky.sel { box-shadow: 0 0 0 2px #fff; }
+.cv .boxsel { position: absolute; z-index: 30; border: 1px solid #64A8F5; background: rgba(100,168,245,.12); pointer-events: none; }
 
 /* 连线：水平贝塞尔 */
 .edge { fill: none; stroke-width: 2.6; }

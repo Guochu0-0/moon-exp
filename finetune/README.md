@@ -26,26 +26,25 @@
 实测（显存、吞吐、RANSAC 耗时）与「lr=0 走训练循环后推理与 zero-shot 逐点一致」的验证记在 #25 的解答里；
 当时用的一次性脚本不在库中。
 
-## 训练（154 / 126，loftr 环境）
+## 训练（154 / 126 / 150 / A6000，loftr 环境）
 
-一键跑（打标 → 训练 → 逐 ckpt 在 Val 上评测）：`GPU=<空卡> scripts/finetune/scenes.sh <name> [train 参数]`，见脚本头注释。例：
+在本票的 worktree 里用 `scripts/finetune/run.py` 跑：训练 → 逐 ckpt 在 Val 上评测 → 按 Val 峰值补评 Test → 写成正式记录。
+任务清单放在 `runs/<id>/code/jobs.txt`，每行 `<方法> <训练参数...>`。流程和启动命令见 `docs/agents/experiments.md`，产物布局见 `workbench/RECORDS.md`「训练产物」。例：
 
-```bash
-# SCENES 式离线伪标签（S1）
-GPU=0 scripts/finetune/scenes.sh S1 --labels $MOON_RESULTS/finetune/labels_b0.jsonl --steps 8000 --save-every 1000
-# 从 S1 出发，伪标签项 + 整对 RL
-GPU=0 scripts/finetune/scenes.sh R1 --init $MOON_RESULTS/finetune/S1/ckpt_6000.pt \
-    --labels $MOON_RESULTS/finetune/labels_b0.jsonl --steps 4000 --save-every 1000 --rl-pair 1
+```
+# runs/E5/code/jobs.txt
+P8a  --labels /remote-home/xufang/YGC/results/finetune/labels_p2.jsonl --label-top 0.5 --aug geo,photo --warmup 500 --sched cosine --steps 8000 --save-every 1000
 ```
 
-粗级闭式期望的塌缩测试（#49）用 Python 队列 `scripts/finetune/ripe49.py`：训练 → 逐 ckpt Val sweep → 负样本对监控 → 塌缩汇总，
-任务清单见 `scripts/finetune/jobs/ripe49.txt`。用法：`GPU=<空卡> /opt/envs/loftr/bin/python scripts/finetune/ripe49.py <jobs.txt>`。
+`--trainer roma` 换成 `finetune.train_roma`（AnyMatch-RoMa + minmax）。`scenes.sh`、`roma.sh`、`queue.sh`、`first_round.py`、`ripe49.py` 已停用，它们把产物写到 `results/finetune/`。
 
-## 评测微调后的权重（154 / 126，loftr 环境）
+## 单独评测一个 ckpt（loftr 环境）
+
+`run.py` 之外手工评测时，原始点对也放进实验目录（不进 git）：
 
 ```bash
-export MOON_DATA=/remote-home/xufang/YGC/dataset/Moon MOON_WEIGHTS=/remote-home/xufang/YGC/weights MOON_RESULTS=/remote-home/xufang/YGC/results
+export MOON_DATA=/remote-home/xufang/YGC/dataset/Moon MOON_WEIGHTS=/remote-home/xufang/YGC/weights
 CUDA_VISIBLE_DEVICES=<空卡> nice -n 10 /opt/envs/loftr/bin/python -m baselines.match configs/baselines/anymatch_loftr.json \
-    --split val --weights <ckpt.pt> --name <run 名> --out $MOON_RESULTS/finetune
-/opt/envs/wb/bin/python -m baselines.fit $MOON_RESULTS/finetune/<run 名> --split val --run runs/<id>
+    --split val --weights runs/<id>/ckpt/<m>/ckpt_<step>.pt --name <m> --out runs/<id>/sweep/<m>/match
+/opt/envs/wb/bin/python -m baselines.fit runs/<id>/sweep/<m>/match/<m> --split val --run runs/<id>
 ```

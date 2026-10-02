@@ -18,6 +18,8 @@ import numpy as np
 import torch
 
 from baselines.match import env_info, git_head, seed_all
+from workbench.launch import require_clean
+from workbench.tbwriter import ScalarWriter
 
 from .augment import compose
 from .data import PairSet
@@ -35,6 +37,7 @@ def main(argv=None):
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
     ap.add_argument("--init", help="起点 ckpt（{'model': ...}），默认配置里的底座权重")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--tb", help="TB 标量目录（runs/<id>/tb/<方法>/scalars）；不给则只写 log.jsonl")
     ap.add_argument("--labels", help="离线伪仿射（finetune.label 格式）")
     ap.add_argument("--label-top", type=float, default=1.0)
     ap.add_argument("--aug", default="")
@@ -68,6 +71,7 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cuda")
     args = ap.parse_args(argv)
+    require_clean(REPO)   # 先提交再跑（#76）
 
     cfg = json.loads(Path(args.config).read_text(encoding="utf-8"))
     out = Path(args.out)
@@ -104,6 +108,7 @@ def main(argv=None):
 
     rng = np.random.default_rng(args.seed)
     step, t_start = 0, time.time()
+    tbw = ScalarWriter(args.tb) if args.tb else None
     with open(out / "log.jsonl", "a", encoding="utf-8") as log:
         while step < args.steps:
             for batch in dl:
@@ -150,6 +155,8 @@ def main(argv=None):
                 if step == 1 and torch.cuda.is_available():
                     rec["mem_gb"] = round(torch.cuda.max_memory_allocated() / 2 ** 30, 2)
                 log.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                if tbw:
+                    tbw.add_dict(rec, step)
                 if step % 50 == 0:
                     log.flush()
                     print(f"step {step}: loss={float(loss):.4f} "
@@ -160,6 +167,8 @@ def main(argv=None):
                     torch.save(base.state_dict(), out / f"ckpt_{step}.pt")
                 if step >= args.steps:
                     break
+    if tbw:
+        tbw.close()
     if args.save_every and step % args.save_every:
         torch.save(base.state_dict(), out / f"ckpt_{step}.pt")
 

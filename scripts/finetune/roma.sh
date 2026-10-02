@@ -1,4 +1,5 @@
 #!/bin/bash
+# 已停用（#76）：产物写到 results/finetune/，不符合 docs/agents/experiments.md。新实验用 scripts/finetune/run.py；本文件留待「历史代码与结果整理」（#77）归位。
 # RoMa 系微调 + 逐 ckpt 在 Val 上评测（「【RoMa】微调代码接入与实测」#64），照 scenes.sh。
 # usage: GPU=<id> roma.sh <name> [finetune.train_roma 的参数...]
 # 产物在 $MOON_RESULTS/finetune/<name>/：训练日志、ckpt、match/、sweep/S/metrics.json（各 step 的 Val AUC@5）。

@@ -27,6 +27,8 @@ import numpy as np
 import torch
 
 from baselines.match import env_info, git_head, seed_all
+from workbench.launch import require_clean
+from workbench.tbwriter import ScalarWriter
 
 from .data import PairSet
 from .augment import compose
@@ -58,6 +60,7 @@ def main(argv=None):
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
     ap.add_argument("--init", help="起点 ckpt，默认配置里的底座权重")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--tb", help="TB 标量目录（runs/<id>/tb/<方法>/scalars）；不给则只写 log.jsonl")
     ap.add_argument("--labels", help="finetune.label 的离线伪仿射（SCENES 做法）；不给则每步在线估计")
     ap.add_argument("--label-top", type=float, default=1.0, help="只用内点数最多的前这一比例的标签（课程式子集，#53）")
     ap.add_argument("--aug", default="", help="学生侧扰动，逗号分隔：geo（SAR 已知随机仿射，标签按 T∘A 变换）、photo（#53）")
@@ -108,6 +111,7 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cuda")
     args = ap.parse_args(argv)
+    require_clean(REPO)   # 先提交再跑（#76）
 
     cfg = json.loads(Path(args.config).read_text(encoding="utf-8"))
     out = Path(args.out)
@@ -151,6 +155,7 @@ def main(argv=None):
     np_rng = np.random.default_rng(args.seed)   # placebo 打乱用
     save_at = {int(x) for x in args.save_at.split(",") if x}
     step, t_start = 0, time.time()
+    tbw = ScalarWriter(args.tb) if args.tb else None
     with open(out / "log.jsonl", "a", encoding="utf-8") as log:
         while step < args.steps:
             for batch in dl:
@@ -214,6 +219,8 @@ def main(argv=None):
                 rec = {"step": step, "pairs": batch["pair"], "loss": round(float(loss), 5), **st, **upd,
                        "sec": round(time.time() - t0, 3)}
                 log.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                if tbw:
+                    tbw.add_dict(rec, step)
                 if step % 50 == 0:
                     log.flush()
                     keys = ("coarse", "fine", "n_inliers", "pairs_used", "cexp", "n_match", "n_inl", "dist_I",
@@ -224,6 +231,8 @@ def main(argv=None):
                     torch.save(base.state_dict(), out / f"ckpt_{step}.pt")
                 if step >= args.steps:
                     break
+    if tbw:
+        tbw.close()
     if args.save_every and step % args.save_every:
         torch.save(base.state_dict(), out / f"ckpt_{step}.pt")
 

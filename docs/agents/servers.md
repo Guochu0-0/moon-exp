@@ -1,7 +1,7 @@
 # 服务器使用要点
 
 更新于 2026-10-02。本文是服务器事实与用法的唯一来源：机器、怎么连、用卡规矩、操作注意、存储与环境、大文件、A6000、MATLAB。
-**代码怎么上服务器、结果放哪**不在本文，见[实验代码与结果的管理规范](https://github.com/Guochu0-0/moon-exp/issues/75)（落地后为 `docs/agents/experiments.md`）。
+**代码怎么上服务器、结果放哪**不在本文，见 `docs/agents/experiments.md`（来由见[实验代码与结果的管理规范](https://github.com/Guochu0-0/moon-exp/issues/75)）。
 
 每台机器都是课题组统一管理的 Docker 容器，用户是 root。容器重启后挂载可能变化，凡是涉及路径的事，每台机器单独核实（`df`、`hostname`），不要凭以前的印象。
 
@@ -16,7 +16,7 @@
 | A6000 | 6 × RTX A6000 48 GB + 2 × RTX 5880 Ada 46 GB | 独立 NFS | 可用，别人用得多，见「A6000」一节 |
 | 155 | — | — | 不使用 |
 
-- 154 / 160 / 126 / 150 挂同一份 gpfs，用户目录是 `/remote-home/xufang/YGC/`。四台共用 `results/finetune/_claims`（任务队列的占位）。
+- 154 / 160 / 126 / 150 挂同一份 gpfs，用户目录是 `/remote-home/xufang/YGC/`。四台共用 `results/finetune/_claims`（旧队列的占位；新驱动 `scripts/finetune/run.py` 的占位在实验目录的 `runs/<id>/.claims/` 里，同样跨这四台）。
 - A6000 不挂 gpfs，`_claims` 不与上面共享。
 
 ## 怎么连
@@ -74,14 +74,14 @@
 
 ## 存储、环境、数据放在哪
 
-- 本仓库克隆在 `YGC/moon-exp`。git 网络操作在能连 GitHub 的机器上做（154、126），用仓库级 deploy key `YGC/.ssh/moon-exp_deploy`，已配成 `core.sshCommand`。
+- 本仓库克隆在 `YGC/moon-exp`，是**主 checkout**：永远停在 main，只做 `git pull --ff-only`；每张票的代码在 `YGC/wt/<分支>` 的 worktree 里改和跑（`scripts/wt.sh`）。git 网络操作在能连 GitHub 的机器上做（154、126），用仓库级 deploy key `YGC/.ssh/moon-exp_deploy`，已配成 `core.sshCommand`。
 - baseline 代码以 git submodule 形式放在 `third_party/`，commit 钉死。
 - 软件和 conda 环境装在**各容器本地**，不装在 gpfs 上（gpfs 传输慢）。gpfs 只放代码、数据、权重和结果。
   - `/opt/envs/loftr`（py3.10，torch 2.1.2+cu118，训练与推理）、`/opt/envs/wb`（py3.11，工作台与评测）。
   - 150 的环境从 `YGC/tmp/envpack/envs.tar` 解出，与 154 一致。
 - 数据在 `YGC/dataset/Moon`（Train 7907 / Val 825 / Test 1130 对）。Val 的 ROI_060 已删除，Val 为 6 个 ROI。
 - 权重在 `YGC/weights/`（`anymatch/`、`minima/`、`matchanything/` 等）。RoMa 系要的 DINOv2 缓存在 `YGC/weights/torch_home`（设 `TORCH_HOME` 指向它，gpfs 上各机共用）。
-- 训练产物目前在 `YGC/results/finetune/<name>/`，离线伪标签在 `YGC/results/finetune/labels_*.jsonl`。按管理规范，今后改写进 `runs/<id>/`，`results/finetune/` 停止写入。
+- 训练产物写进实验目录 `runs/<id>/`，结票后归到主 checkout 的 `runs/`。`YGC/results/finetune/<name>/` 是 10/02 以前的旧产物，停止写入；其中的离线伪标签 `labels_*.jsonl` 照常读取。
 - `YGC/moon-exp-*`（ft26、ft50、r2、roma、cf70 等）是 9/28 以后用 `git archive` 导出的实验副本，没有 `.git`。按管理规范禁止再用这种副本跑实验，现有副本冻结，待整理后归档。
 - 旧的 `projects/optical-sar-matching/` 不再使用。
 
@@ -117,7 +117,7 @@
 ## A6000（2026-09-28 起）
 
 - 8 卡：0 号、7 号是 RTX 5880 Ada（46 GB），1–6 号是 RTX A6000（48 GB）。别人用得多，常常只有一两张空卡。
-- **GPU 编号**：CUDA 默认顺序和 nvidia-smi 不一致，`CUDA_VISIBLE_DEVICES=7` 会拿到别的卡。必须同时设 `CUDA_DEVICE_ORDER=PCI_BUS_ID`（`scripts/finetune/scenes.sh`、`roma.sh` 已设）。
+- **GPU 编号**：CUDA 默认顺序和 nvidia-smi 不一致，`CUDA_VISIBLE_DEVICES=7` 会拿到别的卡。必须同时设 `CUDA_DEVICE_ORDER=PCI_BUS_ID`（`scripts/finetune/run.py` 已设）。
 - **`/dev/shm` 只有 64 MB**：DataLoader 多进程会报 `Bus error`，`--workers` 不超过 2。
 - 这个容器别人也在用：`/root` 下的文件、`/root/anaconda3` 的环境、`/workspace/xufang/moon` 都不是我们的，不碰。辅助脚本也不放 `/root`。
 - 存储：`/workspace/xufang` 是组里的 NFS（与 gpfs 是两套），我们的目录是 `/workspace/xufang/YGC`（dataset / weights / results / 代码）。容器里建了软链 `/remote-home/xufang/YGC → /workspace/xufang/YGC`，脚本里的路径不用改。
@@ -128,7 +128,7 @@
   用法：`ssh -i /root/.ssh/ygc_154 -p 20020 root@10.254.1.154 "tar cf - -C <目录> <内容>" | tar xf - -C <目标>`（154 没有 rsync）。
 - 代码：`YGC/moon-exp` 从 154 的仓库克隆（remote = `ssh://root@10.254.1.154:20020/remote-home/xufang/YGC/moon-exp`，`GIT_SSH_COMMAND` 带上面的 key）；LoFTR 子模块直接从 GitHub 拉。A6000 能直连 GitHub，也可以直接 fetch。
 - 速度：LoFTR 伪标签训练每步约 0.16 s（154 的 TITAN RTX 约 0.3 s）。
-- 结果要拷回 gpfs；给 A6000 单独的任务清单（`_claims` 跨不过去）。
+- A6000 上的 `YGC/moon-exp` 是它自己的主 checkout，worktree 同样建在 `YGC/wt/`。占位跨不过存储，给 A6000 单独的任务清单。跑完先在 A6000 上 `scripts/wt.sh close`，再把 `runs/<id>/` 整份（含 ckpt）拷回 gpfs 主 checkout，核对文件数和大小后才能删 A6000 上的副本。
 
 ## MATLAB（目前只在 154）
 

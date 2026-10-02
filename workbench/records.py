@@ -22,7 +22,9 @@ import json
 import math
 import re
 import shutil
+import socket
 import subprocess
+import time
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -466,7 +468,7 @@ class PredWriter:
     - 坐标 +0.5，与 A 和标注（ArcGIS 角点原点）同一约定；
     - 超过 MATCHES_CAP 个点时按 conf 取前 MATCHES_CAP；
     - 0 个点写 0×5；fail 以 "error" 开头的 pair 不写点对。
-    close 时写 <split>.meta.json：commit 与 dirty（取自构造时的 repo，默认本仓库）。
+    close 时写 <split>.meta.json：commit 与 dirty（取自构造时的 repo，默认本仓库）、主机与写入时间。
     """
 
     def __init__(self, run_dir, method: str, split: str, repo=REPO):
@@ -499,7 +501,8 @@ class PredWriter:
         self._f.close()
         if self._matches:
             np.savez_compressed(self.dir / f"{self.split}_matches.npz", **self._matches)
-        (self.dir / f"{self.split}.meta.json").write_text(json.dumps(self._git, indent=2) + "\n", encoding="utf-8")
+        meta = {**self._git, "host": socket.gethostname(), "written": time.strftime("%Y-%m-%d %H:%M:%S %z")}
+        (self.dir / f"{self.split}.meta.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
 
     def __enter__(self):
         return self

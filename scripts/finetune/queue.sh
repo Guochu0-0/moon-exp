@@ -1,4 +1,5 @@
 #!/bin/bash
+# 已停用（#76）：产物写到 results/finetune/，不符合 docs/agents/experiments.md。新实验用 scripts/finetune/run.py；本文件留待「历史代码与结果整理」（#77）归位。
 # 多卡多机共用一个任务清单，逐个跑 scenes.sh（「把 S1 调好」#50）。
 # usage: GPU=<id> queue.sh <jobs.txt>      每张空卡起一个；154 / 126 / 160 共用 gpfs，靠 mkdir 占位，不会重复跑。
 # jobs.txt 每行 `<name> <finetune.train 参数...>`，# 开头为注释。每跑完一个就从头重读清单，所以中途追加的任务也会被领走。

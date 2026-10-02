@@ -154,11 +154,11 @@ export function mountNodePage(root, { onBack }) {
   const ranked = () => D.methods.slice().sort((a, b) =>
     (b.results[S.split]?.summary[D.protocol.main] ?? -1) - (a.results[S.split]?.summary[D.protocol.main] ?? -1));
   function methodsTable(n) {
-    const P = D.protocol, MAIN = P.main, s = S.split, withBase = D.parent && D.methods.some(m => m.base);
+    const P = D.protocol, MAIN = P.main, s = S.split, withBase = !!D.parent;
     const cols = [...P.table_auc.map(t => `auc@${t}`), ...P.table_sr.map(t => `sr@${t}`)];
     const rows = ranked();
     const delta = D.delta_key;
-    return `<p class="caption"><b>表 ${++n.tab}</b>${esc(D.id)} 各方法在 ${SPLIT()} 上的指标，按 ${up(MAIN)} 降序。AUC、SR、失败率单位为 %；${up(MAIN)} 后方括号内为 bootstrap 95% 置信区间；误差中位数统计全部有标注 pair，失败计为无穷大。${withBase ? `末列为相对父实验 ${esc(D.parent)} 中同名基础方法的 ${up(delta)} 差值（百分点）。` : ''}点击一行设为当前方法。</p>
+    return `<p class="caption"><b>表 ${++n.tab}</b>${esc(D.id)} 各方法在 ${SPLIT()} 上的指标，按 ${up(MAIN)} 降序。AUC、SR、失败率单位为 %；${up(MAIN)} 后方括号内为 bootstrap 95% 置信区间；误差中位数统计全部有标注 pair，失败计为无穷大。${withBase ? `末列为相对父实验 ${esc(D.parent)} 中同名基础方法的 ${up(delta)} 差值（百分点），父实验没有同名基础方法时为「—」。` : ''}点击一行设为当前方法。</p>
       <div class="scroll"><table class="tab num"><thead><tr><th>方法</th>${cols.map(k => `<th>${up(k)}</th>`).join('')}<th>失败率</th><th>误差中位数（px）</th>${withBase ? `<th>Δ${up(delta)}</th>` : ''}</tr></thead>
       <tbody>${rows.map(m => { const v = m.results[s]?.summary || {};
         return `<tr class="pick ${m.id === cur().id ? 'on' : ''}" data-m="${esc(m.id)}" title="${esc(m.id)}"><td>${esc(m.name)}</td>
@@ -172,7 +172,7 @@ export function mountNodePage(root, { onBack }) {
     const val = (sm, k, u) => u === 'px' ? median(sm) : pct(sm[k]);
     const dv = (k, u) => u === 'px' ? signed(d[k], x => x.toFixed(2)) : signed(d[k] * 100, x => x.toFixed(1));
     const dci = k => d[k + '_ci'] ? `<span class="ci">[${d[k + '_ci'].map(x => signed(x * 100, y => y.toFixed(1))).join(', ')}]</span>` : '';
-    return `<p class="caption"><b>表 ${++n.tab}</b>${esc(a.label)}${b ? ` 与参考方法 ${esc(b.label)}` : ''} 在 ${SPLIT()} 上的全部指标（n = <span class="num">${a.summary.n}</span> 个有标注 pair）。AUC、SR、失败率单位为 %；方括号内为 bootstrap 95% 置信区间${b ? '；差值 = 方法 − 参考方法，单位为百分点或 px，其置信区间由配对 bootstrap 得到' : ''}。</p>
+    return `<p class="caption"><b>表 ${++n.tab}</b>${esc(a.label)}${b ? ` 与参考方法 ${esc(b.label)}` : ''} 在 ${SPLIT()} 上的全部指标（n = <span class="num">${a.summary.n}</span> 个有标注 pair）。AUC、SR、失败率单位为 %；AUC 与 SR 后方括号内为 bootstrap 95% 置信区间${b ? '；差值 = 方法 − 参考方法，单位为百分点或 px，其置信区间由配对 bootstrap 得到' : ''}。</p>
       <table class="tab num"><thead><tr><th>指标</th><th>${esc(a.label)}</th>${b ? `<th>${esc(b.label)}</th><th>差值</th>` : ''}</tr></thead>
       <tbody>${rows.map(([nm, k, u]) => `<tr><td>${nm}</td><td class="me">${val(a.summary, k, u)}${ci(a.summary[k + '_ci'])}</td>
         ${b ? `<td class="ref">${val(b.summary, k, u)}${ci(b.summary[k + '_ci'])}</td><td>${dv(k, u)}${dci(k)}</td>` : ''}</tr>`).join('')}</tbody></table>`;
@@ -235,10 +235,14 @@ export function mountNodePage(root, { onBack }) {
       ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = `${Math.max(220, ta.scrollHeight + 8)}px`; });
       ta.addEventListener('keydown', ev => {
         if ((ev.ctrlKey || ev.metaKey) && ev.key === 's') { ev.preventDefault(); save(ta.value); }
-        else if (ev.key === 'Escape') { S.editing = false; notes(); }
+        else if (ev.key === 'Escape') cancel();
       });
+      const cancel = () => {   // 有未保存的改动时先确认，免得误按 Esc 丢掉
+        if (ta.value !== D.notes && !confirm('放弃未保存的 Notes 改动？')) return;
+        S.editing = false; notes();
+      };
       body.querySelector('.save').addEventListener('click', () => save(ta.value));
-      body.querySelector('.cancel').addEventListener('click', () => { S.editing = false; notes(); });
+      body.querySelector('.cancel').addEventListener('click', cancel);
       return;
     }
     body.innerHTML = `<div class="notes md" title="双击编辑">${D.notes.trim() ? markdown(D.notes, `/runs/${encodeURIComponent(D.id)}/`) : '<p class="empty">（空）</p>'}</div>

@@ -1,6 +1,6 @@
 """参考方法：节点页上「方法 vs 参考方法」的默认值与候选。纯函数，规则见 #37 用户故事 42、43。
 
-参考方法用一个 key 表示：`<实验>/<方法>`；IDENTITY 是未配准（恒等变换）；None 是无参考。
+参考方法用一个 key 表示：`<实验>/<方法>`；UNREGISTERED 是未配准（恒等变换）；None 是无参考。
 score(rid, method) 给出该方法 Val 上的主指标，没有 Val 结果时为 None。
 """
 from __future__ import annotations
@@ -13,7 +13,7 @@ import numpy as np
 from . import protocol
 from .records import SPLITS, Run
 
-IDENTITY = "identity"
+UNREGISTERED = "identity"
 Score = Callable[[str, str], "float | None"]
 
 
@@ -41,12 +41,12 @@ def default_ref(run: Run, method: str, runs: dict[str, Run], score: Score) -> st
         best = [m for m in ranked(p, score) if score(p.id, m) is not None]
         if best:
             return f"{p.id}/{best[0]}"
-    return None if run.baseline else IDENTITY
+    return None if run.baseline else UNREGISTERED
 
 
 def parse(key: str | None, runs: dict[str, Run]) -> tuple[Run, str] | str | None:
-    """key → (实验, 方法)、IDENTITY 或 None；找不到时抛 KeyError。"""
-    if key in (None, "", IDENTITY):
+    """key → (实验, 方法)、UNREGISTERED 或 None；找不到时抛 KeyError。"""
+    if key in (None, "", UNREGISTERED):
         return key or None
     rid, _, m = key.partition("/")
     if rid not in runs or m not in runs[rid].methods:
@@ -58,7 +58,7 @@ def label(key: str | None, runs: dict[str, Run]) -> str:
     """给人看的名字：单方法实验只写实验编号，其余写「实验 / 显示名」。"""
     if key is None:
         return "无"
-    if key == IDENTITY:
+    if key == UNREGISTERED:
         return "未配准"
     r, m = parse(key, runs)
     return r.id if len(r.methods) == 1 else f"{r.id} / {r.method_info(m)['name']}"
@@ -106,6 +106,6 @@ def groups(run: Run, runs: dict[str, Run], score: Score) -> list[dict]:
         if r.methods:
             out.append({"label": title, "options": [{"key": f"{r.id}/{m}", "label": label(f"{r.id}/{m}", runs),
                                                      "splits": r.splits(m)} for m in ranked(r, score)]})
-    out.append({"label": "其他", "options": [{"key": IDENTITY, "label": label(IDENTITY, runs), "splits": list(SPLITS)},
+    out.append({"label": "其他", "options": [{"key": UNREGISTERED, "label": label(UNREGISTERED, runs), "splits": list(SPLITS)},
                                            {"key": None, "label": label(None, runs), "splits": list(SPLITS)}]})
     return out

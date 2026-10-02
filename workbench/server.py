@@ -144,7 +144,7 @@ class Workbench:
                 if target is None:
                     side[name] = None
                     continue
-                res = self._identity_result(split) if target == reference.IDENTITY else self._result(*target, split)
+                res = self._identity_result(split) if target == reference.UNREGISTERED else self._result(*target, split)
                 if res is None:
                     raise EditError(f"{key} 没有 {split} 结果")
                 side[name] = {"key": key, "label": reference.label(key, runs), **res}

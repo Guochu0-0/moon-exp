@@ -90,6 +90,73 @@
 .np .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; outline: 1px solid var(--rule); }
 .np .b0 { background: var(--me); } .np .b1 { background: #7F97C9; } .np .b2 { background: #C7D1E6; } .np .b3 { background: #A9ADB5; }
 
+/* 可视化结果（visual.js） */
+.np .vr-top { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 32px; align-items: start; }
+.np .vr-top.noref { grid-template-columns: 1fr; }
+.np .sc-fig { margin: 0; }
+.np .vr-ctl { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; font-size: 14px; margin-bottom: 12px; }
+.np .vr-ctl label, .np .vr-ctl .lbl { color: var(--muted); margin-right: 8px; }
+.np .vr-ctl input { width: 6em; border: 1px solid var(--rule); border-radius: 2px; padding: 1px 6px; font-size: 13.5px; }
+.np .vr-ctl .find button { margin-left: 6px; }
+.np .vr-ctl .msg { margin-left: 8px; color: var(--muted); font-size: 13px; }
+.np .chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.np .chips button, .np .vr-ctl button, .np .more button, .np .dhead button, .np .zbar button, .np .synchint button {
+  border: 1px solid var(--rule); background: var(--paper); border-radius: 2px; padding: 1px 10px; cursor: pointer; font-size: 13.5px; }
+.np .chips button[aria-pressed=true] { border-color: var(--strong); background: var(--strong); color: var(--paper); }
+.np .grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.np .vr-top:not(.noref) .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.np .th { border: 0; padding: 0; background: none; cursor: pointer; text-align: left; font-size: 12.5px; line-height: 1.4; }
+.np .th .im { position: relative; aspect-ratio: 1; background: var(--wash); display: flex; align-items: center; justify-content: center;
+  color: var(--muted); overflow: hidden; outline: 1px solid var(--rule); }
+.np .th .im svg { width: 100%; height: 100%; display: block; }
+.np .th .im .fail { position: absolute; inset: auto 0 0 0; background: rgba(29, 34, 48, .72); color: #fff; text-align: center; font-size: 12px; }
+.np .th[aria-current=true] .im { outline: 3px solid var(--me); }
+.np .th .cap { margin-top: 4px; display: flex; justify-content: space-between; gap: 4px; }
+.np .more { margin-top: 10px; font-size: 13.5px; display: flex; gap: 16px; align-items: center; }
+.np .sc svg { display: block; width: 100%; height: auto; cursor: zoom-in; }
+.np .sc .zoomed svg { cursor: crosshair; }
+.np .sc .zoomed circle.pt { cursor: pointer; }
+.np .sc .band { fill: var(--wash); }
+.np .sc .diag { stroke: var(--muted); stroke-dasharray: 3 3; }
+.np .sc .five { stroke: var(--rule); }
+.np .sc circle.pt { fill: var(--other); }
+.np .sc circle.pt.on { fill: var(--ink); }
+.np .sc .selring { fill: none; stroke: var(--me); stroke-width: 2; }
+.np .sc .frame { fill: none; stroke: var(--ink); stroke-width: .8; }
+.np .sc .ax { font-size: 11.5px; }
+.np .sc .zbar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 13px; margin-top: 6px; min-height: 26px; }
+.np .sc .zbar button { font-size: 13px; }
+.np .detail { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--rule); scroll-margin-top: 20px; }
+.np .dhead { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline; font-size: 14.5px; }
+.np .dhead .pn { font-size: 17px; font-weight: 600; }
+.np .dhead .sp { flex: 1; }
+.np .views { display: flex; gap: 4px 18px; margin: 12px 0 10px; font-size: 14px; }
+.np .views button { border: 0; background: none; padding: 0 0 2px; cursor: pointer; color: var(--muted); }
+.np .views button[aria-pressed=true] { color: var(--ink); border-bottom: 1.5px solid var(--strong); }
+.np .synchint, .np .caveat { font-size: 13.5px; margin: 0 0 8px; }
+.np .synchint code { font: 13px var(--mono); background: var(--wash); padding: 1px 6px; margin: 0 6px; user-select: all; }
+.np .caveat { color: var(--test); }
+.np .panes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.np .panes.wide { grid-template-columns: 1fr; }
+.np .pane .ttl { font-size: 13.5px; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 12px; }
+.np .pane .box { position: relative; background: var(--wash); outline: 1px solid var(--rule); overflow: hidden; }
+.np .pane .box svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: zoom-in; touch-action: none; }
+.np .pane .box svg.grab { cursor: grabbing; }
+.np .pane .box image { image-rendering: pixelated; }
+.np .pane .box .msg { position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 10px; background: rgba(29, 34, 48, .72); color: #fff;
+  font-size: 13px; text-align: center; pointer-events: none; }
+.np svg .cut { stroke: #fff; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.np svg line.arr { stroke: #E63C28; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.np svg polygon.arr { fill: #E63C28; }
+.np svg circle.cp { fill: none; stroke: #FFD600; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.np svg line.mline { stroke-width: 1; opacity: .75; vector-effect: non-scaling-stroke; }
+.np .swipe { width: 100%; margin-top: 10px; }
+.np .conf { display: flex; gap: 12px; align-items: center; font-size: 13.5px; margin-top: 10px; }
+.np .conf label { color: var(--muted); }
+.np .conf input { width: 260px; }
+.np .legend .ramp { display: inline-block; width: 140px; height: 10px; align-self: center;
+  background: linear-gradient(to right, rgb(26, 152, 80), rgb(254, 224, 139) 30%, rgb(215, 48, 39)); }
+
 .np .notes { min-height: 6em; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 2px; line-height: 1.85; background: var(--paper); cursor: text; }
 .np .notes .empty { color: var(--other); margin: 0; }
 .np .notes-edit { display: block; width: 100%; min-height: 220px; padding: 10px 14px; border: 1px solid var(--me); border-radius: 2px;
@@ -112,5 +179,6 @@
   .np .nav { position: static; margin-bottom: 16px; }
   .np .nav ol { display: flex; flex-wrap: wrap; gap: 0 4px; border-left: 0; }
   .np .nav li a { padding: 2px 8px; border-left: 0; }
-  .np .meta, .np .figs { grid-template-columns: 1fr; }
+  .np .meta, .np .figs, .np .vr-top, .np .panes { grid-template-columns: 1fr; }
+  .np .grid, .np .vr-top:not(.noref) .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

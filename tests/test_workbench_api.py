@@ -331,8 +331,7 @@ def test_hand_edited_canvas_with_bad_items_does_not_block_writes(api, runs):
 
 
 def test_v1_endpoints_gone(api):
-    assert api.get("/api/pair?split=val&pair=x")[0] == 404
-    assert api.get("/api/reload")[0] == 404
+    assert api.get("/api/reload")[0] == 404        # /api/pair 已按 v2 重新定义，见 test_workbench_visual.py
 
 
 def test_delete_clears_only_links_to_deleted(api, runs):

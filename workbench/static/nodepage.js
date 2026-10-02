@@ -1,7 +1,8 @@
 // 节点页（#/exp/<id>）：一份严谨的实验记录。纸面、衬线；只呈现事实，唯一可编辑的是 Notes。
-// 版式参照 prototype/node-page 分支的定稿：左栏章节导航，右栏 实验信息（含比较设置）→ 结果 → Notes。
-// 可视化结果、训练图表两节由后续票填充；没有内容的章节不显示。
+// 版式参照 prototype/node-page 分支的定稿：左栏章节导航，右栏 实验信息（含比较设置）→ 结果 → 可视化结果 → Notes。
+// 可视化结果见 visual.js；训练图表由后续票填充。没有内容的章节不显示。
 import { api } from './api.js';
+import { mountVisual } from './visual.js';
 
 const BINS = [5, 20];          // 误差分档：≤5、5–20、>20 px（错配）、失败
 const CDF_MAX = 30;            // 累积分布横轴上限（px）
@@ -20,7 +21,8 @@ const median = s => s && s.n > 0 && s.median == null ? '∞' : pxf(s?.median);
 
 export function mountNodePage(root, { onBack }) {
   root.className = 'np';
-  let D = null, CMP = null, seq = 0;
+  let D = null, CMP = null, seq = 0, FIGS = 0;
+  const vis = mountVisual(() => !root.hidden);
   const S = { method: null, ref: undefined, split: 'val', editing: false };
   const $ = s => root.querySelector(s);
 
@@ -60,7 +62,7 @@ export function mountNodePage(root, { onBack }) {
       CMP = { error: err.message };
     }
     if (my !== seq || D?.id !== id) return;
-    info(); results();
+    info(); results(); visual();
   }
 
   // ---------------- 页面骨架 ----------------
@@ -69,7 +71,7 @@ export function mountNodePage(root, { onBack }) {
     $('.back').addEventListener('click', ev => { ev.preventDefault(); onBack(id); });
   }
   function page() {
-    const secs = [['info', '实验信息'], ['results', '结果'], ['notes', 'Notes']];
+    const secs = [['info', '实验信息'], ['results', '结果'], ...(D.lit ? [['visual', '可视化结果']] : []), ['notes', 'Notes']];
     root.innerHTML = `<div class="layout">
       <nav class="nav" aria-label="章节">${backLink()}<ol>${secs.map(([k, t]) => `<li><a href="#sec-${k}" data-sec="${k}">${t}</a></li>`).join('')}</ol></nav>
       <div class="content">${secs.map(([k, t]) => `<section class="sec" id="sec-${k}">${k === 'info' ? '' : `<h2>${t}</h2>`}<div class="body"></div></section>`).join('')}</div></div>`;
@@ -77,7 +79,7 @@ export function mountNodePage(root, { onBack }) {
     root.querySelectorAll('.nav a[data-sec]').forEach(a => a.addEventListener('click', ev => {
       ev.preventDefault(); $(`#sec-${a.dataset.sec}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
-    info(); results(); notes(); markNav();
+    info(); results(); visual(); notes(); markNav();
   }
   function markNav() {
     const secs = [...root.querySelectorAll('.content .sec')];
@@ -148,6 +150,7 @@ export function mountNodePage(root, { onBack }) {
     if (!multi() || CMP.ref) h += pairTable(n);
     h += `<div class="figs">${cdfFigure(n)}${binFigure(n)}</div>`;
     body.innerHTML = h;
+    FIGS = n.fig;
     body.querySelectorAll('tr.pick').forEach(tr => tr.addEventListener('click', () => pickMethod(tr.dataset.m)));
   }
   // 全表与分档图的行序：按当前数据集上的主指标降序，没有该数据集结果的排最后
@@ -176,6 +179,15 @@ export function mountNodePage(root, { onBack }) {
       <table class="tab num"><thead><tr><th>指标</th><th>${esc(a.label)}</th>${b ? `<th>${esc(b.label)}</th><th>差值</th>` : ''}</tr></thead>
       <tbody>${rows.map(([nm, k, u]) => `<tr><td>${nm}</td><td class="me">${val(a.summary, k, u)}${ci(a.summary[k + '_ci'])}</td>
         ${b ? `<td class="ref">${val(b.summary, k, u)}${ci(b.summary[k + '_ci'])}</td><td>${dv(k, u)}${dci(k)}</td>` : ''}</tr>`).join('')}</tbody></table>`;
+  }
+
+  // ---------------- 可视化结果 ----------------
+  function visual() {
+    const body = $('#sec-visual .body');
+    if (!body) return;
+    if (!CMP) body.innerHTML = '<p class="muted">计算中…</p>';
+    else if (CMP.error) body.innerHTML = '<p class="muted">比较结果读取失败，见上节。</p>';
+    else vis.render(body, CMP, FIGS);
   }
 
   // ---------------- 图 ----------------

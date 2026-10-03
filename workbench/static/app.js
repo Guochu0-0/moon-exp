@@ -5,9 +5,11 @@ import { mountNodePage } from './nodepage.js';
 
 const canvas = mountCanvas(document.getElementById('canvas'), { onOpen: id => { location.hash = `#/exp/${encodeURIComponent(id)}`; } });
 const page = mountNodePage(document.getElementById('page'), { onBack: id => { back = id; location.hash = '#/'; } });
-let back = null;
+let back = null, here = location.hash;
 
 function route() {
+  if (page.shown() && !page.leave()) { history.pushState(null, '', here); return; }   // Notes 有未保存的改动：留下，地址改回来（push，后退那一格还在）
+  here = location.hash;
   const m = location.hash.match(/^#\/exp\/(.+)$/);
   if (m) {
     const id = decodeURIComponent(m[1]);

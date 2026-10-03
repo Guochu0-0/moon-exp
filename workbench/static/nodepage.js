@@ -3,6 +3,7 @@
 // 可视化结果见 visual.js。训练图表读 runs/<id>/tb/ 的 TensorBoard scalars，每个 tag 一张小图。没有内容的章节不显示。
 import { api } from './api.js';
 import { mountVisual } from './visual.js';
+import { mountNotes } from './notes.js';
 
 const BINS = [5, 20];          // 误差分档：≤5、5–20、>20 px（错配）、失败
 const CDF_MAX = 30;            // 累积分布横轴上限（px）
@@ -22,10 +23,11 @@ const median = s => s && s.n > 0 && s.median == null ? '∞' : pxf(s?.median);
 
 export function mountNodePage(root, { onBack }) {
   root.className = 'np';
-  let D = null, CMP = null, TB = null, seq = 0, FIGS = 0, VFIGS = 0;
+  let D = null, CMP = null, TB = null, NOTES = null, seq = 0, FIGS = 0, VFIGS = 0;
   const vis = mountVisual(() => !root.hidden);
-  const S = { method: null, ref: undefined, split: 'val', editing: false };
+  const S = { method: null, ref: undefined, split: 'val' };
   const $ = s => root.querySelector(s);
+  window.addEventListener('beforeunload', ev => { if (NOTES?.dirty()) ev.preventDefault(); });
 
   // ---------------- 选择 ----------------
   const multi = () => D.methods.length > 1;
@@ -43,7 +45,7 @@ export function mountNodePage(root, { onBack }) {
     try {
       const d = await api.detail(id);
       if (my !== seq) return;
-      D = d; Object.assign(S, { method: d.methods[0]?.id ?? null, ref: undefined, split: 'val', editing: false });
+      D = d; Object.assign(S, { method: d.methods[0]?.id ?? null, ref: undefined, split: 'val' });
       CMP = null; TB = null; VFIGS = 0;
       page();
       if (D.tb.length) loadScalars(d.id);
@@ -70,7 +72,11 @@ export function mountNodePage(root, { onBack }) {
   // ---------------- 页面骨架 ----------------
   const backLink = () => '<a class="back" href="#/">← 画布</a>';
   function bindBack(id) {
-    $('.back').addEventListener('click', ev => { ev.preventDefault(); onBack(id); });
+    $('.back').addEventListener('click', ev => {
+      ev.preventDefault();
+      if (NOTES?.dirty() && !confirm('Notes 有未保存的改动，仍然离开？')) return;
+      onBack(id);
+    });
   }
   function page() {
     const secs = [['info', '实验信息'], ['results', '结果'], ...(D.lit ? [['visual', '可视化结果']] : []),
@@ -309,49 +315,16 @@ export function mountNodePage(root, { onBack }) {
 
   // ---------------- Notes ----------------
   function notes() {
-    const body = $('#sec-notes .body'), path = `runs/${esc(D.id)}/notes.md`;
-    if (S.editing) {
-      body.innerHTML = `<textarea class="notes-edit" spellcheck="false" aria-label="Notes（Markdown）"></textarea>
-        <div class="notes-foot"><button class="save">保存</button><button class="cancel">取消</button><span>Markdown；Ctrl+S 保存，Esc 取消。保存到 ${path}</span></div>`;
-      const ta = body.querySelector('textarea');
-      ta.value = D.notes;
-      ta.style.height = `${Math.max(220, ta.scrollHeight + 8)}px`;
-      ta.focus();
-      ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = `${Math.max(220, ta.scrollHeight + 8)}px`; });
-      ta.addEventListener('keydown', ev => {
-        if ((ev.ctrlKey || ev.metaKey) && ev.key === 's') { ev.preventDefault(); save(ta.value); }
-        else if (ev.key === 'Escape') cancel();
-      });
-      const cancel = () => {   // 有未保存的改动时先确认，免得误按 Esc 丢掉
-        if (ta.value !== D.notes && !confirm('放弃未保存的 Notes 改动？')) return;
-        S.editing = false; notes();
-      };
-      body.querySelector('.save').addEventListener('click', () => save(ta.value));
-      body.querySelector('.cancel').addEventListener('click', cancel);
-      return;
-    }
-    body.innerHTML = `<div class="notes md" title="双击编辑">${D.notes.trim() ? markdown(D.notes, `/runs/${encodeURIComponent(D.id)}/`) : '<p class="empty">（空）</p>'}</div>
-      <div class="notes-foot"><button class="edit">编辑</button><span class="status">${path}</span></div>`;
-    const edit = () => { S.editing = true; notes(); };
-    body.querySelector('.edit').addEventListener('click', edit);
-    body.querySelector('.notes').addEventListener('dblclick', ev => { if (!ev.target.closest('a')) edit(); });
-  }
-  async function save(text) {
     const id = D.id;
-    try {
-      await api.saveNotes(id, text);
-    } catch (err) {
-      const st = $('#sec-notes .notes-foot span'); if (st) st.textContent = `保存失败：${err.message}`;
-      return;
-    }
-    if (D?.id !== id) return;
-    D.notes = text.replace(/\r\n?/g, '\n'); S.editing = false; notes();
-    $('#sec-notes .status').textContent = `已保存到 runs/${id}/notes.md`;
+    NOTES = mountNotes($('#sec-notes .body'), {
+      text: D.notes, base: `/runs/${encodeURIComponent(id)}/`, path: `runs/${id}/notes.md`,
+      save: async text => { await api.saveNotes(id, text); if (D?.id === id) D.notes = text; },
+    });
   }
 
   return {
     show(id) { root.hidden = false; root.scrollTop = 0; load(id); },
-    hide() { root.hidden = true; root.innerHTML = ''; D = null; seq++; },
+    hide() { root.hidden = true; root.innerHTML = ''; D = null; NOTES = null; seq++; },
   };
 }
 
@@ -365,80 +338,4 @@ function ticks(lo, hi, n) {
 function tick(t, step) {
   if (Math.abs(t) >= 1e5 || (t !== 0 && Math.abs(step) < 1e-4)) return t.toExponential(1);
   return t.toFixed(Math.max(0, -Math.floor(Math.log10(step))));
-}
-
-// ---------------- Markdown ----------------
-// 只覆盖记录里会用到的子集：标题、段落、列表、引用、代码块、分隔线，以及行内代码、粗体、斜体、链接、图片。
-// 先整体转义再生成标签，不放行任何原始 HTML；相对路径按实验目录解析（附件如 extra/offset/offset_val.png）。
-export function markdown(src, base) {
-  const lines = src.replace(/\r\n?/g, '\n').split('\n'), out = [];
-  let i = 0;
-  const para = [];
-  const flush = () => { if (para.length) { out.push(`<p>${inline(join(para), base)}</p>`); para.length = 0; } };
-  while (i < lines.length) {
-    const l = lines[i];
-    let m;
-    if ((m = l.match(/^\s*(```|~~~)/))) {
-      flush();
-      const fence = m[1], code = [];
-      for (i++; i < lines.length && !lines[i].trimStart().startsWith(fence); i++) code.push(lines[i]);
-      out.push(`<pre><code>${esc(code.join('\n'))}</code></pre>`); i++; continue;
-    }
-    if (!l.trim()) { flush(); i++; continue; }
-    if ((m = l.match(/^(#{1,6})\s+(.*?)\s*#*\s*$/))) { flush(); const k = Math.min(m[1].length + 2, 6); out.push(`<h${k}>${inline(m[2], base)}</h${k}>`); i++; continue; }
-    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(l)) { flush(); out.push('<hr>'); i++; continue; }
-    if (/^\s*>/.test(l)) {
-      flush(); const q = [];
-      for (; i < lines.length && /^\s*>/.test(lines[i]); i++) q.push(lines[i].replace(/^\s*>\s?/, ''));
-      out.push(`<blockquote>${markdown(q.join('\n'), base)}</blockquote>`); continue;
-    }
-    if ((m = l.match(/^\s*([-*+]|\d+[.)])\s+/))) {
-      flush(); const ordered = /\d/.test(m[1]), items = [];
-      for (; i < lines.length; i++) {
-        const li = lines[i].match(/^\s*([-*+]|\d+[.)])\s+(.*)$/);
-        if (li && /\d/.test(li[1]) === ordered) items.push(li[2]);
-        else if (lines[i].trim() && /^\s{2,}/.test(lines[i]) && items.length) items[items.length - 1] += '\n' + lines[i].trim();
-        else break;
-      }
-      const tag = ordered ? 'ol' : 'ul';
-      out.push(`<${tag}>${items.map(t => `<li>${inline(t, base)}</li>`).join('')}</${tag}>`); continue;
-    }
-    para.push(l); i++;
-  }
-  flush();
-  return out.join('\n');
-}
-
-// 段内换行：两侧都是中文（含全角标点）时直接相连，否则按 Markdown 惯例成为空白
-const CJK = '⺀-鿿　-〿＀-￯';
-const join = lines => lines.join('\n').replace(new RegExp(`([${CJK}])\\n(?=[${CJK}])`, 'g'), '$1');
-
-function url(raw, base) {
-  const u = raw.trim().replace(/^<|>$/g, '');
-  if (/^(https?:|mailto:)/i.test(u) || u.startsWith('#')) return u;
-  if (/^[a-z][a-z0-9+.-]*:/i.test(u) || u.startsWith('/') || u.startsWith('\\')) return null;   // 其他协议、绝对路径不放行
-  return base + u.replace(/^\.\//, '');
-}
-
-function inline(text, base) {
-  const keep = [];
-  const hold = h => `\u0000${keep.push(h) - 1}\u0000`;
-  let s = text.replace(/`([^`]+)`/g, (_, c) => hold(`<code>${esc(c)}</code>`));
-  s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, (all, alt, src) => {
-    const u = url(src, base); return u ? hold(`<img src="${esc(u)}" alt="${esc(alt)}" loading="lazy">`) : all;
-  });
-  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, (all, t, href) => {
-    const u = url(href, base);
-    return u ? hold(`<a href="${esc(u)}"${/^https?:/i.test(u) ? ' target="_blank" rel="noopener"' : ''}>${inlineText(t)}</a>`) : all;
-  });
-  s = inlineText(s);
-  return s.replace(/\u0000(\d+)\u0000/g, (_, k) => keep[+k]);
-}
-
-function inlineText(s) {
-  return esc(s)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/(^|[^\w])__(?!\s)(.+?)__(?!\w)/g, '$1<strong>$2</strong>')   // 方法名 a__b 里的 __ 不算
-    .replace(/(^|[^*\w])\*(?!\s)(.+?)\*(?!\w)/g, '$1<em>$2</em>')
-    .replace(/  \n/g, '<br>');
 }

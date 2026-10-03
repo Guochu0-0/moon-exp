@@ -36,7 +36,7 @@
        > runs/<id>/ckpt/queue_<host>_g<GPU>.log 2>&1 < /dev/null &
    ```
    - 驱动直接接收实验目录，按文件名顺序领取 `configs/` 里的方法。每张卡起一个进程，靠 `runs/<id>/.claims/<方法>` 占位。中途新增的方法也会被领走，但要先提交配置，否则会被拒绝启动。开跑前驱动先把全部配置展开一遍，有错就不开跑。
-   - 每个方法的启动记录写进 `runs/<id>/launch/<方法>.json`，进 git：commit、主机、GPU、命令、起止时间、结果，以及入口（`entry`）、配置文件（`config_file`）和**展开所有默认值后的完整配置**（`config`）。
+   - 每个方法的启动记录写进 `runs/<id>/launch/<方法>.json`，进 git：commit、主机、GPU、命令、起止时间、结果，以及入口（`entry`）、配置文件（`config_file`）、**展开所有默认值后的完整配置**（`args`）和推理配置（`config`）。字段见 `workbench/RECORDS.md`「启动记录」。
    - 一次性的手工命令同样要先提交再跑。临时调试可以设 `MOON_ALLOW_DIRTY=1` 放行，launch 记录里会留下 dirty 标记；不能用它产出要进论文的结果。
 5. **写 Notes，提交小文件，开 PR。** 大文件由 `.gitignore` 排除，留在 worktree 里。
 6. **结票**：合并 PR → 在主 checkout 上 `git pull --ff-only` → `scripts/wt.sh close <分支> --dry-run` 看一眼 → `scripts/wt.sh close <分支>`。

@@ -1,0 +1,78 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "7224de2c0017a407a8d3f1f5939b99206073ec37",
+  "dirty": true,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/rmso__minmax.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines_ablation",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "repo:weights/Pre-training-weight.pth",
+   "weights_sha256": "f796dbdfd0212acda9e32f89972d605d12206e1d3a719a15263b017ff6e3ec05",
+   "config_path": "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/rmso__minmax.json",
+   "method": "rmso__minmax",
+   "adapter": "rmso",
+   "repo": "third_party/RMSO-ConvNeXt",
+   "params": {
+    "template": 256,
+    "stride": 32
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0,
+   "_note": "模板匹配网络；官方只给单模板平移，这里用 256² 模板网格（stride 32，81 个）在整张 512 光学图上匹配，模板中心作对应点（我们的设计）"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "rmso__minmax",
+   "adapter": "rmso",
+   "repo": "third_party/RMSO-ConvNeXt",
+   "weights": "repo:weights/Pre-training-weight.pth",
+   "params": {
+    "template": 256,
+    "stride": 32
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0,
+   "_note": "模板匹配网络；官方只给单模板平移，这里用 256² 模板网格（stride 32，81 个）在整张 512 光学图上匹配，模板中心作对应点（我们的设计）"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines_ablation/rmso__minmax",
+  "host": "653cd62be801",
+  "start": "2026-09-26 21:34:44",
+  "end": "2026-09-26 21:41:25",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：7224de2c00（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：19c8faa525bb1f32911f5a56382db0982870862a",
+   "配置由 scripts/baselines/ablate.sh 从 rmso 的配置派生，只改 SAR 输入映射"
+  ],
+  "tag": "exp/B0m-7224de2"
+ }
+]

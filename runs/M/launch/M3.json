@@ -1,0 +1,83 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "推断",
+  "commit": "8457109bb5dd7ddf70c70636ce5cf887889765a6",
+  "dirty": null,
+  "entry": "python -m finetune.train_roma",
+  "args": {
+   "config": "configs/baselines/anymatch_roma__minmax.json",
+   "data": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights_root": "/remote-home/xufang/YGC/weights",
+   "init": null,
+   "out": "/remote-home/xufang/YGC/results/finetune/M3",
+   "labels": "/remote-home/xufang/YGC/results/finetune/labels_p2.jsonl",
+   "label_top": 0.5,
+   "aug": "",
+   "aug_shift": 12.0,
+   "aug_rot": 3.0,
+   "aug_scale": 0.03,
+   "swap": 0.5,
+   "w_pseudo": 1.0,
+   "w_ripe": 0.0,
+   "r_out": -0.25,
+   "w_cert": 1.0,
+   "num": 5000,
+   "neg": false,
+   "placebo": false,
+   "train_vgg": false,
+   "steps": 8000,
+   "batch": 1,
+   "lr": 1e-05,
+   "wd": 0.01,
+   "warmup": 500,
+   "warmup_start": 0.1,
+   "sched": "cosine",
+   "lr_min": 0.0,
+   "clip": 0.0,
+   "accum": 1,
+   "limit": 0,
+   "save_every": 1000,
+   "save0": false,
+   "workers": 4,
+   "seed": 0,
+   "device": "cuda"
+  },
+  "args_source": "训练时写下的 args.json（argparse 展开默认值后的全部参数）",
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "init_weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+  "n_train": 3680,
+  "origin": "/remote-home/xufang/YGC/results/finetune/M3",
+  "host": "bcb626e99cea",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "bcb626e99cea",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.31",
+   "cuda_visible_devices": "2",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "NVIDIA GeForce RTX 3090",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "预测文件的 commit 是事后重建的：事后重建（#77）：moon-exp-roma 副本被就地覆盖过；按领取时间 2026-09-30 23:00:45（bcb626e99cea）取此前最后一个改过训练代码的提交",
+   "训练时没有记下 commit"
+  ]
+ }
+]

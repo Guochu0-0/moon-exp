@@ -1,0 +1,76 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "9e85c61735e110935762998f62da0236bc8d65d6",
+  "dirty": true,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/minima_roma__zscore_2p5.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines_ablation",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "minima/minima_roma.pth",
+   "weights_sha256": "17f3923bd780e8f1450792706e0643f70c8864ad11bf5fd4f2b54714bac23538",
+   "config_path": "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/minima_roma__zscore_2p5.json",
+   "method": "minima_roma__zscore_2p5",
+   "adapter": "romatch",
+   "repo": "third_party/RoMa_minima",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "zscore_2p5"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "minima_roma__zscore_2p5",
+   "adapter": "romatch",
+   "repo": "third_party/RoMa_minima",
+   "weights": "minima/minima_roma.pth",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "zscore_2p5"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines_ablation/minima_roma__zscore_2p5",
+  "host": "653cd62be801",
+  "start": "2026-09-26 18:00:57",
+  "end": "2026-09-26 18:10:38",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：9e85c61735（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：0d3fd22dfaf5b7e463a93c3d7f0cbc26df953663",
+   "配置由 scripts/baselines/ablate.sh 从 minima_roma 的配置派生，只改 SAR 输入映射"
+  ],
+  "tag": "exp/B0m-9e85c61"
+ }
+]

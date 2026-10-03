@@ -81,7 +81,8 @@ def _save(p: Path, items: list):
 
 def begin(run_dir, method: str, cmd: list[str], repo=REPO, **extra) -> dict:
     """检查代码，然后在 runs/<id>/launch/<method>.json 追加一次启动（续训、重跑各算一次）。
-    extra 原样记进这次启动：驱动用它记入口（entry）、配置文件（config_file）和展开后的完整配置（config）。"""
+    extra 原样记进这次启动：微调驱动用它记入口（entry）、配置文件（config_file）、展开后的完整配置（args）和
+    推理配置（config），字段含义见 RECORDS.md「启动记录」。"""
     st = require_clean(repo)
     rec = {"start": _now(), "end": None, "status": None, "commit": st["commit"], "dirty": st["dirty"],
            "allow_dirty": st["allow_dirty"], "host": socket.gethostname(), "cwd": os.getcwd(),

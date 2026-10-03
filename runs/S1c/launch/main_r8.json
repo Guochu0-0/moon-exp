@@ -1,0 +1,39 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "事后补记",
+  "commit": "53d9bc875e22e7e797597e0e3455bd3405737970",
+  "dirty": null,
+  "entry": "python -m baselines.match（只用粗级匹配），再 python -m baselines.fit --ransac <阈值>",
+  "args": {
+   "config_path": "configs/baselines/anymatch_loftr_coarse.json",
+   "weights": "/remote-home/xufang/YGC/results/finetune/S1/ckpt_6000.pt",
+   "ransac": 8.0,
+   "name": "main_r8"
+  },
+  "args_source": "任务脚本 runs/B0c/code/common.sh、fit.sh（与 53d9bc875e 一起提交）",
+  "config": {
+   "method": "anymatch_loftr-coarse",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1,
+    "level": "coarse"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "origin": "/remote-home/xufang/YGC/results/coarse70/main-coarse（现归档在 /remote-home/xufang/YGC/_archive/2026-10/results/coarse70/）",
+  "notes": [
+   "预测文件的 commit 是事后重建的：事后重建（#77）：moon-exp-cf70 副本的代码与此提交逐文件一致",
+   "只评测、不训练；同一份粗级点对分别以 RANSAC 3 px 与 8 px 拟合"
+  ]
+ }
+]

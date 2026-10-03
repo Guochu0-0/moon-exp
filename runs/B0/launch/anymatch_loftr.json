@@ -1,0 +1,160 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "563b7380344287951e1dea843b781505407531e4",
+  "dirty": true,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/anymatch_loftr.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "weights_sha256": "5c0851fa7db76fc776fe6a67f0e5f85a10c2c0e7e8b9b6a7afa9d01ce958a624",
+   "config_path": "configs/baselines/anymatch_loftr.json",
+   "method": "anymatch_loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "anymatch_loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/anymatch_loftr",
+  "host": "5445214b0719",
+  "start": "2026-09-26 16:22:02",
+  "end": "2026-09-26 16:24:45",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：563b738034（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：df7ca80f917334b94cfbe32cc2901e09a80e70a8"
+  ],
+  "tag": "exp/B0-563b738"
+ },
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "563b7380344287951e1dea843b781505407531e4",
+  "dirty": true,
+  "split": "test",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/anymatch_loftr.json",
+   "--split",
+   "test",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "test",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "weights_sha256": "5c0851fa7db76fc776fe6a67f0e5f85a10c2c0e7e8b9b6a7afa9d01ce958a624",
+   "config_path": "configs/baselines/anymatch_loftr.json",
+   "method": "anymatch_loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "anymatch_loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/anymatch_loftr",
+  "host": "5445214b0719",
+  "start": "2026-09-26 16:25:11",
+  "end": "2026-09-26 16:29:14",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：563b738034（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：df7ca80f917334b94cfbe32cc2901e09a80e70a8"
+  ],
+  "tag": "exp/B0-563b738"
+ }
+]

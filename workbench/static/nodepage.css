@@ -69,6 +69,12 @@
 .np table.tab tr.on td:first-child { box-shadow: inset 3px 0 0 var(--me); }
 .np table.tab td.me { color: var(--me); }
 .np table.tab td.ref { color: var(--muted); }
+/* 启动记录：参数表两列都左对齐、取值可换行；命令整行等宽 */
+.np table.launch-args { width: auto; min-width: 50%; }
+.np table.launch-args th, .np table.launch-args td { text-align: left; }
+.np table.launch-args td:last-child { white-space: normal; overflow-wrap: anywhere; }
+.np .launch-cmd { background: var(--wash); padding: 8px 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.np .launch-notes { margin: 4px 0; padding-left: 1.4em; font-size: 14px; }
 .np .scroll { overflow-x: auto; }
 
 .np .figs { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 36px; align-items: start; }

@@ -1,0 +1,152 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录",
+  "commit": "6c4e3f3827b5c5c4d46ec29fbe60723669e88c8e",
+  "dirty": false,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/loftr.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "official/loftr/outdoor_ds.ckpt",
+   "weights_sha256": "21f5bec5968178e8bc8b7633441836fe5de4f47d861dd2cd7dc38e271b0479ec",
+   "config_path": "configs/baselines/loftr.json",
+   "method": "loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "params": {
+    "long_side": 840,
+    "temp_bug_fix": false
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "official/loftr/outdoor_ds.ckpt",
+   "params": {
+    "long_side": 840,
+    "temp_bug_fix": false
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/loftr",
+  "host": "5445214b0719",
+  "start": "2026-09-26 14:59:20",
+  "end": "2026-09-26 15:02:50",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：6c4e3f3827",
+   "匹配器上游代码（third_party 子模块）的 commit：df7ca80f917334b94cfbe32cc2901e09a80e70a8"
+  ],
+  "tag": "exp/B0-6c4e3f3"
+ },
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录",
+  "commit": "6c4e3f3827b5c5c4d46ec29fbe60723669e88c8e",
+  "dirty": false,
+  "split": "test",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/loftr.json",
+   "--split",
+   "test",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "test",
+   "weights": "official/loftr/outdoor_ds.ckpt",
+   "weights_sha256": "21f5bec5968178e8bc8b7633441836fe5de4f47d861dd2cd7dc38e271b0479ec",
+   "config_path": "configs/baselines/loftr.json",
+   "method": "loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "params": {
+    "long_side": 840,
+    "temp_bug_fix": false
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "official/loftr/outdoor_ds.ckpt",
+   "params": {
+    "long_side": 840,
+    "temp_bug_fix": false
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/loftr",
+  "host": "5445214b0719",
+  "start": "2026-09-26 15:03:14",
+  "end": "2026-09-26 15:09:24",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：6c4e3f3827",
+   "匹配器上游代码（third_party 子模块）的 commit：df7ca80f917334b94cfbe32cc2901e09a80e70a8"
+  ],
+  "tag": "exp/B0-6c4e3f3"
+ }
+]

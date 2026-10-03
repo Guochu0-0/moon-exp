@@ -1,0 +1,150 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "563b7380344287951e1dea843b781505407531e4",
+  "dirty": true,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/minima_xoftr.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "minima/minima_xoftr.ckpt",
+   "weights_sha256": "551eaa814713b3c60ca380eda022be9b7609e51737302e12370f8943a1e864d7",
+   "config_path": "configs/baselines/minima_xoftr.json",
+   "method": "minima_xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "MINIMA load_xoftr（load_model.py:143-155）：子模块 XoFTR@e9635d8 同上游，inference cfg，coarse 0.3 / fine 0.1（= 默认），长边 640；权重显式用 minima_xoftr.ckpt（MINIMA 默认路径指向原版）"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "minima_xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "weights": "minima/minima_xoftr.ckpt",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "MINIMA load_xoftr（load_model.py:143-155）：子模块 XoFTR@e9635d8 同上游，inference cfg，coarse 0.3 / fine 0.1（= 默认），长边 640；权重显式用 minima_xoftr.ckpt（MINIMA 默认路径指向原版）"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/minima_xoftr",
+  "host": "5445214b0719",
+  "start": "2026-09-26 16:01:48",
+  "end": "2026-09-26 16:04:19",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：563b738034（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：e0fbea431b30be9742effbf5577c90aa8eb938f9-dirty"
+  ],
+  "tag": "exp/B0-563b738"
+ },
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "563b7380344287951e1dea843b781505407531e4",
+  "dirty": true,
+  "split": "test",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/minima_xoftr.json",
+   "--split",
+   "test",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "test",
+   "weights": "minima/minima_xoftr.ckpt",
+   "weights_sha256": "551eaa814713b3c60ca380eda022be9b7609e51737302e12370f8943a1e864d7",
+   "config_path": "configs/baselines/minima_xoftr.json",
+   "method": "minima_xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "MINIMA load_xoftr（load_model.py:143-155）：子模块 XoFTR@e9635d8 同上游，inference cfg，coarse 0.3 / fine 0.1（= 默认），长边 640；权重显式用 minima_xoftr.ckpt（MINIMA 默认路径指向原版）"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "minima_xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "weights": "minima/minima_xoftr.ckpt",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "MINIMA load_xoftr（load_model.py:143-155）：子模块 XoFTR@e9635d8 同上游，inference cfg，coarse 0.3 / fine 0.1（= 默认），长边 640；权重显式用 minima_xoftr.ckpt（MINIMA 默认路径指向原版）"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/minima_xoftr",
+  "host": "5445214b0719",
+  "start": "2026-09-26 16:04:42",
+  "end": "2026-09-26 16:09:22",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：563b738034（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：e0fbea431b30be9742effbf5577c90aa8eb938f9-dirty"
+  ],
+  "tag": "exp/B0-563b738"
+ }
+]

@@ -1,0 +1,132 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录",
+  "commit": "6c4e3f3827b5c5c4d46ec29fbe60723669e88c8e",
+  "dirty": false,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/identity.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--device",
+   "cpu"
+  ],
+  "args": {
+   "split": "val",
+   "weights": null,
+   "weights_sha256": null,
+   "config_path": "configs/baselines/identity.json",
+   "method": "identity",
+   "adapter": "identity",
+   "params": {
+    "step": 32
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "identity",
+   "adapter": "identity",
+   "params": {
+    "step": 32
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/identity",
+  "host": "5445214b0719",
+  "start": "2026-09-26 14:53:59",
+  "end": "2026-09-26 14:55:36",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": null
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：6c4e3f3827"
+  ],
+  "tag": "exp/B0-6c4e3f3"
+ },
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录",
+  "commit": "6c4e3f3827b5c5c4d46ec29fbe60723669e88c8e",
+  "dirty": false,
+  "split": "test",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/identity.json",
+   "--split",
+   "test",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--device",
+   "cpu"
+  ],
+  "args": {
+   "split": "test",
+   "weights": null,
+   "weights_sha256": null,
+   "config_path": "configs/baselines/identity.json",
+   "method": "identity",
+   "adapter": "identity",
+   "params": {
+    "step": 32
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "identity",
+   "adapter": "identity",
+   "params": {
+    "step": 32
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/identity",
+  "host": "5445214b0719",
+  "start": "2026-09-26 14:55:50",
+  "end": "2026-09-26 14:58:13",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": null
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：6c4e3f3827"
+  ],
+  "tag": "exp/B0-6c4e3f3"
+ }
+]

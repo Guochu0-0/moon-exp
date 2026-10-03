@@ -1,0 +1,152 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "4b2a395040ba2cbb5dba07b3462d0666701f3556",
+  "dirty": true,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/anymatch_roma.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "config_path": "configs/baselines/anymatch_roma.json",
+   "method": "anymatch_roma",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "anymatch_roma",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/anymatch_roma",
+  "host": "653cd62be801",
+  "start": "2026-09-26 15:56:30",
+  "end": "2026-09-26 16:06:07",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：4b2a395040（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：259ad343ffa9ca0703965f56880b3b5d2ecbc9e1"
+  ],
+  "tag": "exp/B0-4b2a395"
+ },
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "563b7380344287951e1dea843b781505407531e4",
+  "dirty": true,
+  "split": "test",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/anymatch_roma.json",
+   "--split",
+   "test",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "test",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "config_path": "configs/baselines/anymatch_roma.json",
+   "method": "anymatch_roma",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "anymatch_roma",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/anymatch_roma",
+  "host": "653cd62be801",
+  "start": "2026-09-26 16:06:32",
+  "end": "2026-09-26 16:21:34",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：563b738034（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：259ad343ffa9ca0703965f56880b3b5d2ecbc9e1"
+  ],
+  "tag": "exp/B0-563b738"
+ }
+]

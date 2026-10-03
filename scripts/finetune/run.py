@@ -161,8 +161,9 @@ def main(argv=None):
         except C.ConfigError as e:
             log(f"FAIL {m}: {e}")
             continue
-        launch.begin(R, m, [sys.executable, *sys.argv], repo=REPO, entry=ENTRY,
-                     config_file=src.relative_to(REPO).as_posix(), config=cfg)
+        infer = json.loads((REPO / cfg["model"]["config"]).read_text(encoding="utf-8"))
+        launch.begin(R, m, [sys.executable, *sys.argv], repo=REPO, entry=ENTRY,      # 字段同 RECORDS.md「启动记录」
+                     config_file=src.relative_to(REPO).as_posix(), args=cfg, config=infer)
         try:
             Job(R, m, cfg, gpu)()
             launch.end(R, m, "ok")

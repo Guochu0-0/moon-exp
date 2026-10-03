@@ -81,6 +81,7 @@ def test_begin_records_config(repo, tmp_path, monkeypatch):
     run = tmp_path / "runs" / "E1"
     cfg = {"model": {"name": "loftr"}, "optim": {"lr": 1e-5}, "cexp": {"r_out": -0.25}}
     rec = launch.begin(run, "main", ["run.py", "runs/E1"], repo=repo, entry="scripts/finetune/run.py",
-                       config_file="runs/E1/configs/main.toml", config=cfg)
+                       config_file="runs/E1/configs/main.toml", args=cfg, config={"adapter": "loftr"})
     items = json.loads((run / "launch" / "main.json").read_text(encoding="utf-8"))
-    assert items[0]["config"] == cfg == rec["config"] and items[0]["entry"] == "scripts/finetune/run.py"
+    assert items[0]["args"] == cfg == rec["args"] and items[0]["entry"] == "scripts/finetune/run.py"
+    assert items[0]["config"] == {"adapter": "loftr"}

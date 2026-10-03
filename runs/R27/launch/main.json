@@ -1,0 +1,77 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "00343c121a18ec4478cafad53237b97255b1955b",
+  "dirty": true,
+  "entry": "python -m finetune.train",
+  "args": {
+   "config": "configs/baselines/anymatch_loftr.json",
+   "data": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights_root": "/remote-home/xufang/YGC/weights",
+   "init": "/remote-home/xufang/YGC/results/finetune/S1/ckpt_6000.pt",
+   "out": "/remote-home/xufang/YGC/results/finetune/R27",
+   "labels": "/remote-home/xufang/YGC/results/finetune/labels_b0.jsonl",
+   "steps": 4000,
+   "batch": 1,
+   "lr": 5e-05,
+   "wd": 0.0,
+   "ransac": 3.0,
+   "min_inliers": 20,
+   "coarse_set": "all",
+   "w_coarse": 1.0,
+   "w_fine": 1.0,
+   "w_pseudo": 0.0,
+   "rl_pair": 1.0,
+   "reward": "gradncc",
+   "rl_match": 0.0,
+   "K": 4,
+   "sig_g": 0.25,
+   "sig_i": 0.0,
+   "w_l2sp": 0.0,
+   "accum": 16,
+   "train_modules": "fine",
+   "limit": 0,
+   "save_every": 1000,
+   "workers": 4,
+   "seed": 0,
+   "device": "cuda"
+  },
+  "args_source": "训练时写下的 args.json（argparse 展开默认值后的全部参数）",
+  "config": {
+   "method": "anymatch_loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "init_weights": "/remote-home/xufang/YGC/results/finetune/S1/ckpt_6000.pt",
+  "n_train": 7880,
+  "origin": "/remote-home/xufang/YGC/results/finetune/R27（现归档在 /remote-home/xufang/YGC/_archive/2026-10/results/finetune/R27/）",
+  "host": "653cd62be801",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "2",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [],
+  "tag": "exp/R27-00343c1"
+ }
+]

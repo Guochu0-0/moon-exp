@@ -5,10 +5,10 @@ init = "B0/anymatch_loftr"
 date = "2026-09-27"
 
 [methods.main]
-name = "SCENES 式离线伪标签（step 6000）"
+name = "SCENES 式离线伪标签（第 6000 步）"
 
 [methods.seed1]
-name = "换种子 1（S1s1 step 4000）"
+name = "SCENES 式离线伪标签，换种子 1（第 4000 步）"
 
 [methods.seed2]
-name = "换种子 2（S1s2 step 5000）"
+name = "SCENES 式离线伪标签，换种子 2（第 5000 步）"

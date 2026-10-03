@@ -5,7 +5,13 @@ init = "B0/anymatch_loftr"
 date = "2026-09-28"
 
 [methods.C1]
-name = "无约束（C1 step 1500）"
+name = "粗级 ±1 期望，无约束（第 1500 步）"
+
+[methods.C1p]
+name = "粗级 ±1 期望，无约束，随机 reward 对照（第 500 步）"
 
 [methods.C2]
-name = "加负样本对（C2 step 500）"
+name = "粗级 ±1 期望 + 负样本对（第 500 步）"
+
+[methods.C2p]
+name = "粗级 ±1 期望 + 负样本对，随机 reward 对照（第 10 步）"

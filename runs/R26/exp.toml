@@ -5,13 +5,13 @@ init = "S1/main"
 date = "2026-09-28"
 
 [methods.main]
-name = "共享平移 RL，64 对（R26 step 1000）"
+name = "共享平移强化学习，64 对（第 1000 步）"
 
 [methods.seed1]
-name = "换种子（R35）"
+name = "共享平移强化学习，64 对，种子 1"
 
 [methods.pairs256]
-name = "256 对（R36）"
+name = "共享平移强化学习，256 对"
 
 [methods.placebo]
-name = "安慰剂：随机 reward（R34）"
+name = "共享平移强化学习，64 对，随机 reward 对照"

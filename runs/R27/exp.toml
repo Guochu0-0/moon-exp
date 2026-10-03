@@ -1,44 +1,44 @@
 id = "R27"
-title = "细级 RL（只探索共享平移），全量 Train，从 S1 出发（探索性）"
+title = "细级强化学习（只探索共享平移），全部训练集，从离线伪标签模型出发"
 parent = "R26"
 init = "S1/main"
 date = "2026-09-28"
 
 [methods.main]
-name = "共享平移 RL（R27 step 2000）"
+name = "共享平移强化学习（第 2000 步）"
 
 [methods.seed1]
-name = "换种子 1（R27s1）"
+name = "共享平移强化学习，种子 1"
 
 [methods.seed2]
-name = "换种子 2（R27s2）"
+name = "共享平移强化学习，种子 2"
 
 [methods.placebo]
-name = "安慰剂：随机 reward（R27p）"
+name = "共享平移强化学习，随机 reward 对照"
 
-[methods."lr1e-4"]
-name = "lr 1e-4（R37）"
+[methods.lr1e-4]
+name = "共享平移强化学习，学习率 1e-4"
 
 [methods.steps8000]
-name = "8000 步（R38）"
+name = "共享平移强化学习，8000 步"
 
 [methods.K8]
-name = "K 8（R39）"
+name = "共享平移强化学习，采样 8 次"
 
 [methods.sigg05]
-name = "σ_g 0.5（R40）"
+name = "共享平移强化学习，平移标准差 0.5"
 
 [methods.cfog]
-name = "CFOG reward（R41）"
+name = "共享平移强化学习，CFOG 相似度"
 
 [methods.match]
-name = "再加逐匹配 reward（R44）"
+name = "共享平移强化学习，再加逐匹配 reward"
 
 [methods.from_b0]
-name = "从 zero-shot 出发（R42）"
+name = "共享平移强化学习，从 zero-shot 出发"
 
 [methods.on_S1s1]
-name = "起点 S1/seed1（R27b1）"
+name = "共享平移强化学习，从离线伪标签种子 1 出发"
 
 [methods.on_S1s2]
-name = "起点 S1/seed2（R27b2）"
+name = "共享平移强化学习，从离线伪标签种子 2 出发"

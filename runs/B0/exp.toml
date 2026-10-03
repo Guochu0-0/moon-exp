@@ -4,7 +4,55 @@ baseline = true
 date = "2026-09-26"
 
 [methods.identity]
-name = "identity（链路自检）"
+name = "未配准（恒等变换）"
 
 [methods.loftr]
-name = "LoFTR outdoor_ds"
+name = "LoFTR（原版 outdoor 权重）"
+
+[methods.xoftr]
+name = "XoFTR（原版）"
+
+[methods.spsg]
+name = "SuperPoint + SuperGlue（原版 outdoor 权重）"
+
+[methods.geoformer]
+name = "GeoFormer"
+
+[methods.rift2]
+name = "RIFT2"
+
+[methods.rmso]
+name = "RMSO-ConvNeXt"
+
+[methods.comir]
+name = "CoMIR（航拍 RGB–近红外模型）"
+
+[methods.ma_eloftr]
+name = "MatchAnything-ELoFTR"
+
+[methods.ma_roma]
+name = "MatchAnything-RoMa"
+
+[methods.minima_splg]
+name = "MINIMA-SuperPoint + LightGlue"
+
+[methods.minima_loftr]
+name = "MINIMA-LoFTR"
+
+[methods.minima_roma]
+name = "MINIMA-RoMa"
+
+[methods.minima_eloftr]
+name = "MINIMA-ELoFTR"
+
+[methods.minima_xoftr]
+name = "MINIMA-XoFTR"
+
+[methods.anymatch_loftr]
+name = "AnyMatch-LoFTR"
+
+[methods.anymatch_edm]
+name = "AnyMatch-EDM"
+
+[methods.anymatch_roma]
+name = "AnyMatch-RoMa"

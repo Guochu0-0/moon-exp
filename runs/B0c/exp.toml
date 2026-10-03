@@ -1,5 +1,11 @@
 id = "B0c"
-title = "B0 粗级匹配（LoFTR coarse，#70）"
+title = "zero-shot 起点的粗级匹配评估"
 parent = "B0"
 # init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
 date = "2026-10-02"
+
+[methods.anymatch_loftr_r3]
+name = "zero-shot 起点，粗级匹配，RANSAC 3 px"
+
+[methods.anymatch_loftr_r8]
+name = "zero-shot 起点，粗级匹配，RANSAC 8 px"

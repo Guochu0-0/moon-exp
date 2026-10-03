@@ -3,3 +3,99 @@ title = "zero-shot baselines：SAR 输入映射消融（Val）"
 parent = "B0"
 baseline = true
 date = "2026-09-26"
+
+[methods.loftr__zscore_2p5]
+name = "LoFTR（原版 outdoor 权重），SAR z-score 映射"
+
+[methods.loftr__minmax]
+name = "LoFTR（原版 outdoor 权重），SAR min–max 映射"
+
+[methods.xoftr__zscore_2p5]
+name = "XoFTR（原版），SAR z-score 映射"
+
+[methods.xoftr__minmax]
+name = "XoFTR（原版），SAR min–max 映射"
+
+[methods.spsg__zscore_2p5]
+name = "SuperPoint + SuperGlue（原版 outdoor 权重），SAR z-score 映射"
+
+[methods.spsg__minmax]
+name = "SuperPoint + SuperGlue（原版 outdoor 权重），SAR min–max 映射"
+
+[methods.geoformer__zscore_2p5]
+name = "GeoFormer，SAR z-score 映射"
+
+[methods.geoformer__minmax]
+name = "GeoFormer，SAR min–max 映射"
+
+[methods.rmso__zscore_2p5]
+name = "RMSO-ConvNeXt，SAR z-score 映射"
+
+[methods.rmso__minmax]
+name = "RMSO-ConvNeXt，SAR min–max 映射"
+
+[methods.comir__zscore_2p5]
+name = "CoMIR（航拍 RGB–近红外模型），SAR z-score 映射"
+
+[methods.comir__minmax]
+name = "CoMIR（航拍 RGB–近红外模型），SAR min–max 映射"
+
+[methods.ma_eloftr__zscore_2p5]
+name = "MatchAnything-ELoFTR，SAR z-score 映射"
+
+[methods.ma_eloftr__minmax]
+name = "MatchAnything-ELoFTR，SAR min–max 映射"
+
+[methods.ma_roma__zscore_2p5]
+name = "MatchAnything-RoMa，SAR z-score 映射"
+
+[methods.ma_roma__minmax]
+name = "MatchAnything-RoMa，SAR min–max 映射"
+
+[methods.minima_splg__zscore_2p5]
+name = "MINIMA-SuperPoint + LightGlue，SAR z-score 映射"
+
+[methods.minima_splg__minmax]
+name = "MINIMA-SuperPoint + LightGlue，SAR min–max 映射"
+
+[methods.minima_loftr__zscore_2p5]
+name = "MINIMA-LoFTR，SAR z-score 映射"
+
+[methods.minima_loftr__minmax]
+name = "MINIMA-LoFTR，SAR min–max 映射"
+
+[methods.minima_roma__zscore_2p5]
+name = "MINIMA-RoMa，SAR z-score 映射"
+
+[methods.minima_roma__minmax]
+name = "MINIMA-RoMa，SAR min–max 映射"
+
+[methods.minima_eloftr__zscore_2p5]
+name = "MINIMA-ELoFTR，SAR z-score 映射"
+
+[methods.minima_eloftr__minmax]
+name = "MINIMA-ELoFTR，SAR min–max 映射"
+
+[methods.minima_xoftr__zscore_2p5]
+name = "MINIMA-XoFTR，SAR z-score 映射"
+
+[methods.minima_xoftr__minmax]
+name = "MINIMA-XoFTR，SAR min–max 映射"
+
+[methods.anymatch_loftr__zscore_2p5]
+name = "AnyMatch-LoFTR，SAR z-score 映射"
+
+[methods.anymatch_loftr__minmax]
+name = "AnyMatch-LoFTR，SAR min–max 映射"
+
+[methods.anymatch_edm__zscore_2p5]
+name = "AnyMatch-EDM，SAR z-score 映射"
+
+[methods.anymatch_edm__minmax]
+name = "AnyMatch-EDM，SAR min–max 映射"
+
+[methods.anymatch_roma__zscore_2p5]
+name = "AnyMatch-RoMa，SAR z-score 映射"
+
+[methods.anymatch_roma__minmax]
+name = "AnyMatch-RoMa，SAR min–max 映射"

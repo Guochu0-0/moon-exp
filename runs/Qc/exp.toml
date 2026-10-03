@@ -1,5 +1,17 @@
 id = "Qc"
-title = "Q 粗级匹配（LoFTR coarse，#70）"
+title = "外点扣分 −0.25 模型的粗级匹配评估"
 parent = "Q"
 # init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
 date = "2026-10-02"
+
+[methods.Q4_r3]
+name = "外点扣分 −0.25 第 1500 步，粗级匹配，RANSAC 3 px"
+
+[methods.Q4_r8]
+name = "外点扣分 −0.25 第 1500 步，粗级匹配，RANSAC 8 px"
+
+[methods.Q4s1_r3]
+name = "外点扣分 −0.25，种子 1，第 1500 步，粗级匹配，RANSAC 3 px"
+
+[methods.Q4s1_r8]
+name = "外点扣分 −0.25，种子 1，第 1500 步，粗级匹配，RANSAC 8 px"

@@ -1,5 +1,11 @@
 id = "S1c"
-title = "S1 粗级匹配（LoFTR coarse，#70）"
+title = "离线伪标签模型的粗级匹配评估"
 parent = "S1"
 # init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
 date = "2026-10-02"
+
+[methods.main_r3]
+name = "离线伪标签第 6000 步，粗级匹配，RANSAC 3 px"
+
+[methods.main_r8]
+name = "离线伪标签第 6000 步，粗级匹配，RANSAC 8 px"

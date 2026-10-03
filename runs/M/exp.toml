@@ -1,5 +1,5 @@
 id = "M"
-title = "RoMa 首轮：伪标签（P8 式）与类 RIPE（Q4 式）搬到 AnyMatch-RoMa"
+title = "RoMa 底座：伪标签路线与类 RIPE 路线最好的配方搬到 AnyMatch-RoMa"
 parent = "B0m"
 init = "B0m/anymatch_roma__minmax"
 date = "2026-09-30"

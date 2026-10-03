@@ -1,5 +1,11 @@
 id = "Cc"
-title = "C 粗级匹配（LoFTR coarse，#70）"
+title = "粗级期望加负样本对模型的粗级匹配评估"
 parent = "C"
 # init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
 date = "2026-10-02"
+
+[methods.C2_r3]
+name = "粗级期望 + 负样本对第 500 步，粗级匹配，RANSAC 3 px"
+
+[methods.C2_r8]
+name = "粗级期望 + 负样本对第 500 步，粗级匹配，RANSAC 8 px"

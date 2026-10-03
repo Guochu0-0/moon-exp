@@ -1,5 +1,5 @@
 id = "P"
-title = "伪标签首轮：Noisy-Student 式第二轮（S1 老师、zero-shot 学生、学生侧扰动）"
+title = "伪标签路线两轮：Noisy-Student 式迭代打标（更好的老师、从 zero-shot 重训、学生侧扰动）"
 parent = "S1"
 init = "B0/anymatch_loftr"
 date = "2026-09-28"

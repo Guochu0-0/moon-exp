@@ -1,0 +1,10 @@
+# 旧方法 P8（第三轮离线伪标签、只用内点最多的前 50%、学生侧已知随机扰动）按新格式改写，可当模板。
+# 不是实验记录：真正的实验配置放在 runs/<id>/configs/<方法>.toml。
+[model]
+name = "loftr"
+
+[pseudo]
+labels = "/remote-home/xufang/YGC/results/finetune/labels_p2.jsonl"
+top = 0.5
+
+[aug]

@@ -7,7 +7,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path.cwd()))
-from baselines import adapters, inputs  # noqa: E402
+from baselines import adapters  # noqa: E402
+from moonlib import inputs  # noqa: E402
 from baselines.data import Data  # noqa: E402
 
 cfg = json.loads(Path(sys.argv[1]).read_text())

@@ -19,12 +19,10 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from .coarse import diag_mean, pair_stats
 from .data import PairSet, neg_partner
-from .model import Base
+from .models.loftr import Model
+from .parts.cexp import diag_mean, pair_stats
 
-REPO = Path(__file__).resolve().parents[1]
-HW = 512
 KEYS = ("n_match", "n_inl", "n_ident", "dist_I", "diag")
 
 
@@ -54,16 +52,15 @@ def main(argv=None):
     ap.add_argument("--device", default="cuda")
     args = ap.parse_args(argv)
 
-    cfg = json.loads(Path(args.config).read_text(encoding="utf-8"))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     summ = json.loads((out / "summary.json").read_text()) if (out / "summary.json").exists() else {}
     for spec in args.weights:
         name, ck = spec.split("=", 1)
-        ck = str(Path(args.weights_root) / cfg["weights"]) if ck == "default" else ck
-        base = Base(REPO / cfg["repo"], ck, device=args.device, **cfg.get("params", {}))
-        s = HW / base.long_side
-        ds = PairSet(args.data, args.split, base.resize, **cfg["input"])
+        base = Model({"model": {"config": args.config, "init": "" if ck == "default" else ck}}, args.weights_root,
+                     device=args.device)
+        ck, s = base.weights, base.s
+        ds = PairSet(args.data, args.split, base.resize, **base.input)
         idx = np.linspace(0, len(ds.pairs) - 1, args.n).round().astype(int)
         rows = []
         for i in idx:

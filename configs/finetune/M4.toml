@@ -1,0 +1,8 @@
+# 旧方法 M4（RoMa 用自己 zero-shot 打的离线伪标签自训练，前 50%）按新格式改写，用于核对 RoMa 部分，也可当模板。
+# 不是实验记录：真正的实验配置放在 runs/<id>/configs/<方法>.toml。
+[model]
+name = "roma"
+
+[pseudo]
+labels = "/remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl"
+top = 0.5

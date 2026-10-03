@@ -175,10 +175,13 @@ export function mountNodePage(root, { onBack }) {
       ...(x.status ? [['结果', esc(x.status)]] : []),
       ...(x.origin ? [['原位置', mono(x.origin)]] : [])];
     const cmd = x.cmd?.length ? `<p class="caption">命令</p><pre class="mono launch-cmd">${esc(x.cmd.join(' '))}</pre>` : '';
-    const kv = (title, o, tail = '') => `<p class="caption">${title}（<span class="num">${Object.keys(o).length}</span> 项）${tail}</p>
-      <table class="tab launch-args"><thead><tr><th>参数</th><th>取值</th></tr></thead><tbody>${Object.entries(o).map(([k, v]) =>
-        `<tr><td class="mono">${esc(k)}</td><td class="mono">${esc(typeof v === 'string' ? v : JSON.stringify(v))}</td></tr>`).join('')}</tbody></table>`;
     const obj = v => v && typeof v === 'object' && !Array.isArray(v);
+    // 嵌套的表（微调配置的 optim、cexp 等）展开成 optim.lr 这样的键；空表（如 neg）照列一行
+    const flat = (o, pre = '') => Object.entries(o).flatMap(([k, v]) =>
+      obj(v) && Object.keys(v).length ? flat(v, pre + k + '.') : [[pre + k, v]]);
+    const kv = (title, o, tail = '') => { const ent = flat(o); return `<p class="caption">${title}（<span class="num">${ent.length}</span> 项）${tail}</p>
+      <table class="tab launch-args"><thead><tr><th>参数</th><th>取值</th></tr></thead><tbody>${ent.map(([k, v]) =>
+        `<tr><td class="mono">${esc(k)}</td><td class="mono">${esc(typeof v === 'string' ? v : JSON.stringify(v))}</td></tr>`).join('')}</tbody></table>`; };
     const src = x.args_source ? `。来源：${esc(x.args_source)}` : '';
     const params = 'args' in x ? (obj(x.args) ? kv('参数', x.args, src) : `<p class="caption">参数：未知${src}。</p>`) : '';
     const config = obj(x.config) && x.config !== x.args && !x.split ? kv('模型配置', x.config) : '';

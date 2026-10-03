@@ -13,15 +13,23 @@ import os
 import time
 from pathlib import Path
 
+import numpy as np
 import torch
 
-from .data import PairSet
-from .model import Base
-from .pseudo import fit_pseudo
+from moonlib.ransac import fit_affine
 
-REPO = Path(__file__).resolve().parents[1]
-HW = 512
+from .data import PairSet
+from .geom import in_to_orig
+from .models.loftr import Model
+
 MIN_MATCHES, MIN_INLIERS = 100, 20
+
+
+def fit_pseudo(kp0, kp1, s, thr=3.0):
+    """输入网格上的一对匹配点集 → 原网格上的伪仿射。返回 (A 或 None, 内点数)。"""
+    M = np.c_[in_to_orig(kp0, s), in_to_orig(kp1, s), np.ones(len(kp0))].astype(np.float32)
+    A, inl, _ = fit_affine(M, thr)
+    return A, int(inl.sum()) if inl is not None else 0
 
 
 def load_labels(path, top=1.0):
@@ -46,11 +54,9 @@ def main(argv=None):
     ap.add_argument("--device", default="cuda")
     args = ap.parse_args(argv)
 
-    cfg = json.loads(Path(args.config).read_text(encoding="utf-8"))
-    weights = args.init or str(Path(args.weights_root) / cfg["weights"])
-    base = Base(REPO / cfg["repo"], weights, device=args.device, **cfg.get("params", {}))
-    s = HW / base.long_side
-    ds = PairSet(args.data, "train", base.resize, limit=args.limit, **cfg["input"])
+    base = Model({"model": {"config": args.config, "init": args.init or ""}}, args.weights_root, device=args.device)
+    s = base.s
+    ds = PairSet(args.data, "train", base.resize, limit=args.limit, **base.input)
     dl = torch.utils.data.DataLoader(ds, batch_size=1, num_workers=args.workers)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

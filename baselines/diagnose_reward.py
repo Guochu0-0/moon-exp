@@ -24,7 +24,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from baselines import inputs
+from moonlib import inputs
 from workbench import protocol
 from workbench.dataset import Dataset
 

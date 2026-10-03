@@ -1,0 +1,11 @@
+# 旧方法 S1（SCENES 式离线伪标签，第一轮标签由 zero-shot 打）按新格式改写，用于核对重构前后训练一致，也可当模板。
+# 不是实验记录：真正的实验配置放在 runs/<id>/configs/<方法>.toml。
+[model]
+name = "loftr"
+
+[optim]
+warmup = 0
+sched = "const"
+
+[pseudo]
+labels = "/remote-home/xufang/YGC/results/finetune/labels_b0.jsonl"

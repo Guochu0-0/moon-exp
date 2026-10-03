@@ -2,7 +2,7 @@
 
     python -m baselines.fit $MOON_RESULTS/baselines/loftr --split val --run runs/B0 [--ransac 3] [--name loftr]
 
-口径（「定义评价协议与指标」#2）：RANSAC 阈值 3 px，实现在 baselines/ransac.py（微调代码在 matcher 环境里也要用）；
+口径（「定义评价协议与指标」#2）：RANSAC 阈值 3 px，实现在 moonlib/ransac.py（与微调代码共用）；
 点对少于 3 或内点少于 3 记失败。有标注但没跑到（或匹配阶段报错）的 pair 也写一行失败。
 
 坐标：matcher 输出「整数 = 像素中心」，而标注（workbench 的检查点）是 ArcGIS 角点原点，像素中心在 c + 0.5，
@@ -21,7 +21,7 @@ import numpy as np
 from workbench.dataset import Dataset
 from workbench.records import PredWriter
 
-from .ransac import fit_affine
+from moonlib.ransac import fit_affine
 
 
 def main(argv=None):

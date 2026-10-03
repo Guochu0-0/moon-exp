@@ -1,0 +1,13 @@
+# 旧方法 M7（RoMa 上的粗级 ±1 期望，只训锚点项、不训 certainty，外点 −0.25，负样本对）按新格式改写，用于核对 RoMa 部分。
+# 不是实验记录：真正的实验配置放在 runs/<id>/configs/<方法>.toml。
+[model]
+name = "roma"
+
+[optim]
+steps = 4000
+
+[cexp]
+r_out = -0.25
+w_cert = 0.0
+
+[neg]

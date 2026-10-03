@@ -23,18 +23,20 @@
 1. **开 worktree**（在 154 或 126 上，它们能连 GitHub）：
    `/remote-home/xufang/YGC/moon-exp/scripts/wt.sh new <分支>`：已有远端分支就跟踪它，否则从 `origin/main` 新建。子模块从主 checkout 借对象初始化。路径默认值可用环境变量 `MAIN`、`WT` 覆盖。
 2. **建实验**：`python -m workbench new <id> --parent <父> --title "…"`（见 RECORDS.md）。
-3. **写代码和任务清单，提交并推送。**
-   - 可复用的代码（被多个实验调用、或被 import 的）放在 `finetune/`、`baselines/`、`scripts/` 等。
-   - 只服务这一个实验的放 `runs/<id>/code/`：任务清单、驱动、诊断和画图脚本。以后被第二个实验用到时，再提升到 `scripts/` 或包里。
+3. **写配置（和需要的代码），提交并推送。**
+   - 每个方法一份 `runs/<id>/configs/<方法>.toml`：选模型、列出用到的训练成分、只写与默认不同的参数；同一实验内可用 `base` 继承另一个方法的配置，文件名以 `_` 开头的只当 base。格式与全部参数见 `finetune/README.md`。
+   - 现有训练成分不够用时改 `finetune/`：新行为只能通过新增参数开启，默认保持旧行为；修 bug 例外，但在 commit 和受影响实验的 notes 里写明。
+   - 可复用的代码（被多个实验调用、或被 import 的）放在 `finetune/`、`baselines/`、`moonlib/`、`scripts/` 等。`scripts/` 只放可复用工具。
+   - 只服务这一个实验的放 `runs/<id>/code/`：诊断和画图脚本、一次性命令。以后被第二个实验用到时，再提升到 `scripts/` 或包里。
    - 跨实验的分析，归「Notes 里写这份结论的实验」；没有合适的实验，就为这次分析单独建一个。
 4. **启动**（先查空卡，见 `servers.md`）：
    ```bash
    cd $WT/<分支>
-   GPU=<空卡> nohup /opt/envs/loftr/bin/python scripts/finetune/run.py runs/<id>/code/jobs.txt [--trainer roma] \
+   GPU=<空卡> nohup /opt/envs/loftr/bin/python scripts/finetune/run.py runs/<id> \
        > runs/<id>/ckpt/queue_<host>_g<GPU>.log 2>&1 < /dev/null &
    ```
-   - 清单每行 `<方法> <训练参数...>`。每张卡起一个进程，靠 `runs/<id>/.claims/<方法>` 占位。中途追加的任务也会被领走，但追加前要先提交清单，否则下一个任务会被拒绝启动。
-   - 每个方法的启动记录（commit、主机、GPU、命令、起止时间、结果）写进 `runs/<id>/launch/<方法>.json`，进 git。
+   - 驱动直接接收实验目录，按文件名顺序领取 `configs/` 里的方法。每张卡起一个进程，靠 `runs/<id>/.claims/<方法>` 占位。中途新增的方法也会被领走，但要先提交配置，否则会被拒绝启动。开跑前驱动先把全部配置展开一遍，有错就不开跑。
+   - 每个方法的启动记录写进 `runs/<id>/launch/<方法>.json`，进 git：commit、主机、GPU、命令、起止时间、结果，以及入口（`entry`）、配置文件（`config_file`）和**展开所有默认值后的完整配置**（`config`）。
    - 一次性的手工命令同样要先提交再跑。临时调试可以设 `MOON_ALLOW_DIRTY=1` 放行，launch 记录里会留下 dirty 标记；不能用它产出要进论文的结果。
 5. **写 Notes，提交小文件，开 PR。** 大文件由 `.gitignore` 排除，留在 worktree 里。
 6. **结票**：合并 PR → 在主 checkout 上 `git pull --ff-only` → `scripts/wt.sh close <分支> --dry-run` 看一眼 → `scripts/wt.sh close <分支>`。

@@ -5,7 +5,7 @@
 ## 流程
 
 1. 建目录：`python -m workbench new E3 --parent E2 [--init E2/main] --title "一句话标题"`。编号取下一个未用的 `E<n>`；用户已在画布上建好的直接用。
-2. 跑实验（先提交代码，见 `docs/agents/experiments.md`）。微调用 `scripts/finetune/run.py`，它按下文「训练产物」写好全部记录；自己写的用 `PredWriter` 写预测，需要时用 `InterWriter` 写中间结果、按下文约定写 TB 日志。产物全部放在 `runs/<id>/` 里，不要写到别处。
+2. 跑实验（先提交代码，见 `docs/agents/experiments.md`）。微调时每个方法写一份 `configs/<方法>.toml`（格式见 `finetune/README.md`），用 `scripts/finetune/run.py runs/<id>` 跑，它按下文「训练产物」写好全部记录；自己写的用 `PredWriter` 写预测，需要时用 `InterWriter` 写中间结果、按下文约定写 TB 日志。产物全部放在 `runs/<id>/` 里，不要写到别处。
 3. 假设、改动、看完结果后的分析写进 `runs/<id>/notes.md`。
 4. 可选：`python -m workbench eval <id>` 生成 `metrics.json`；`python -m workbench check` 检查记录。
 5. 提交小文件。大文件由 `.gitignore` 排除，结票时由 `scripts/wt.sh close` 挪到 gpfs 主 checkout，用户需要时在本地 `python -m workbench sync <id>` 拉回。
@@ -27,9 +27,10 @@ runs/<id>/
   inter/<method>/<name>/<split>/*.png  中间结果数据（image），不进 git
   tb/<method>/                         TensorBoard 日志，不进 git
   ckpt/<method>/                       权重与训练日志，不进 git，也不同步
-  launch/<method>.json                 每次启动的 commit、主机、GPU、命令、起止时间（自动写）
+  configs/<method>.toml                微调方法的配置（见「训练产物」）
+  launch/<method>.json                 每次启动的 commit、主机、GPU、命令、起止时间、完整配置（自动写）
   sweep/<method>/                      逐 ckpt 评测（见「训练产物」）
-  code/                                只服务本实验的代码：任务清单、驱动、诊断与画图脚本
+  code/                                只服务本实验的代码：诊断与画图脚本、一次性命令
   extra/                               附件
 ```
 
@@ -111,17 +112,20 @@ with InterWriter("runs/E3", "main", "certainty", "val", kind="scalar", frame="op
 - 不要用 `add_scalars`（会建子目录）。
 - 上游 Lightning 代码把 `save_dir` 指向 `runs/<id>/tb/<method>/`，日志落在 `tb/<method>/<name>/version_N/`；ckpt 放在 version 目录的 `checkpoints/` 下。
 - 续训接着写到同一个目录即可，重叠的 step 由读取端处理。
-- 服务器的训练环境没装 tensorboard，标量可用 `workbench.tbwriter.ScalarWriter`（纯标准库，读写格式与官方一致）；`finetune.train`、`finetune.train_roma` 的 `--tb` 就是用它写的。
+- 服务器的训练环境没装 tensorboard，标量可用 `workbench.tbwriter.ScalarWriter`（纯标准库，读写格式与官方一致）；`finetune.train` 的 `--tb` 就是用它写的。
 
 ## 训练产物
 
-`scripts/finetune/run.py` 对一个方法 `<m>` 依次做：训练 → 每个 ckpt 在 Val 上评测 → 按 Val AUC@5 峰值（不含 step 0）选 ckpt，在 Test 上补评 → 把选中 step 的 Val、Test 预测复制成 `preds/<m>/`，即这个方法的正式结果。
+微调实验的每个方法 `<m>` 由一份 `configs/<m>.toml` 描述（进 git，要先提交再跑）：用哪个模型、哪些训练成分、与默认不同的参数；同一实验内可用 `base` 继承，文件名以 `_` 开头的只当 base。格式见 `finetune/README.md`。
+
+`scripts/finetune/run.py runs/<id>` 逐个领取这些方法，对每个方法 `<m>` 依次做：训练 → 每个 ckpt 在 Val 上评测 → 按 Val AUC@5 峰值（不含 step 0）选 ckpt，在 Test 上补评 → 把选中 step 的 Val、Test 预测复制成 `preds/<m>/`，即这个方法的正式结果。
 
 ```
 runs/<id>/
+  configs/<m>.toml     方法的配置（进 git，手写）
   ckpt/<m>/            ckpt_<step>.pt、log.jsonl、args.json、train.log、sweep.log（不进 git）
   tb/<m>/scalars/      训练曲线（不进 git）
-  launch/<m>.json      启动记录（进 git）
+  launch/<m>.json      启动记录（进 git）：commit、主机、GPU、命令、起止时间、结果、入口、配置文件、展开默认值后的完整配置
   sweep/<m>/S/         逐 ckpt 的工作台记录，方法名 step<N>；exp.toml、metrics.json 进 git，preds/ 不进
   sweep/<m>/match/     逐 ckpt 的原始点对（不进 git）
   sweep/<m>/peak.json  选中的 step 与 Val / Test 指标（进 git）
@@ -134,7 +138,7 @@ sweep 里的每个 step 不是独立的方法：只有 `preds/<m>/` 出现在工
 
 ## code/
 
-只服务本实验的代码：任务清单、驱动、诊断与画图脚本。进 git，同样要先提交再跑。被第二个实验用到时，提升到 `scripts/` 或包里。产出的图放 `extra/`。
+只服务本实验的代码：诊断与画图脚本、一次性命令。微调方法不写在这里，写成 `configs/<m>.toml`。旧实验的任务清单和驱动也留在这里，是当时的记录，对现在的训练代码不再可用。进 git，同样要先提交再跑。被第二个实验用到时，提升到 `scripts/` 或包里。产出的图放 `extra/`。
 
 ## extra/
 

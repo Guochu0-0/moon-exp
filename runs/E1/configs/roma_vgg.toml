@@ -1,0 +1,5 @@
+# 同 roma，另解冻 VGG 特征，给细尺度更多可拟合的参数。
+base = "roma"
+
+[model]
+train_vgg = true

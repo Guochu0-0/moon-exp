@@ -1,0 +1,86 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "9e85c61735e110935762998f62da0236bc8d65d6",
+  "dirty": true,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/spsg__zscore_2p5.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines_ablation",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": null,
+   "weights_sha256": null,
+   "config_path": "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/spsg__zscore_2p5.json",
+   "method": "spsg__zscore_2p5",
+   "adapter": "spsg",
+   "repo": "third_party/SuperGlue",
+   "params": {
+    "long_side": 1600,
+    "superglue": "outdoor",
+    "max_keypoints": 2048,
+    "nms_radius": 3,
+    "keypoint_threshold": 0.005,
+    "sinkhorn_iterations": 20,
+    "match_threshold": 0.2
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "zscore_2p5"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "spsg__zscore_2p5",
+   "adapter": "spsg",
+   "repo": "third_party/SuperGlue",
+   "params": {
+    "long_side": 1600,
+    "superglue": "outdoor",
+    "max_keypoints": 2048,
+    "nms_radius": 3,
+    "keypoint_threshold": 0.005,
+    "sinkhorn_iterations": 20,
+    "match_threshold": 0.2
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "zscore_2p5"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines_ablation/spsg__zscore_2p5",
+  "host": "653cd62be801",
+  "start": "2026-09-26 17:36:02",
+  "end": "2026-09-26 17:38:16",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "2",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：9e85c61735（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：ddcf11f42e7e0732a0c4607648f9448ea8d73590",
+   "配置由 scripts/baselines/ablate.sh 从 spsg 的配置派生，只改 SAR 输入映射"
+  ],
+  "tag": "exp/B0m-9e85c61"
+ }
+]

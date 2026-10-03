@@ -1,0 +1,144 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "未知",
+  "commit": null,
+  "dirty": null,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": null,
+  "args": {
+   "split": "val",
+   "weights": null,
+   "weights_sha256": null,
+   "config_path": null,
+   "method": "rift2",
+   "adapter": "matlab:rift2_split",
+   "repo": "third_party/RIFT2",
+   "params": {
+    "s": 4,
+    "o": 6,
+    "npt": 5000,
+    "patch_size": 96,
+    "no": 6,
+    "nbin": 6,
+    "n_threads": 4
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "rift2",
+   "adapter": "matlab:rift2_split",
+   "repo": "third_party/RIFT2",
+   "params": {
+    "s": 4,
+    "o": 6,
+    "npt": 5000,
+    "patch_size": 96,
+    "no": 6,
+    "nbin": 6,
+    "n_threads": 4
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/rift2",
+  "host": "5445214b0719",
+  "start": null,
+  "end": "2026-09-26 17:59:36",
+  "status": "ok",
+  "env": {
+   "python": "3.11.16",
+   "numpy": "2.4.6",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": null
+  },
+  "notes": [
+   "匹配时没有记下 commit（当时取 commit 超时，23d65aa 修复）",
+   "由点对拟合仿射（baselines.fit）时的 commit：未知",
+   "匹配器上游代码（third_party 子模块）的 commit：0e980ce4124d2abd62727dcf040198db0a18b269"
+  ]
+ },
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "cb293a84c2b9f076817f457c6bf0da60df6ea6a9",
+  "dirty": true,
+  "split": "test",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": null,
+  "args": {
+   "split": "test",
+   "weights": null,
+   "weights_sha256": null,
+   "config_path": null,
+   "method": "rift2",
+   "adapter": "matlab:rift2_split",
+   "repo": "third_party/RIFT2",
+   "params": {
+    "s": 4,
+    "o": 6,
+    "npt": 5000,
+    "patch_size": 96,
+    "no": 6,
+    "nbin": 6,
+    "n_threads": 4
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "rift2",
+   "adapter": "matlab:rift2_split",
+   "repo": "third_party/RIFT2",
+   "params": {
+    "s": 4,
+    "o": 6,
+    "npt": 5000,
+    "patch_size": 96,
+    "no": 6,
+    "nbin": 6,
+    "n_threads": 4
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/rift2",
+  "host": "5445214b0719",
+  "start": null,
+  "end": "2026-09-26 21:01:56",
+  "status": "ok",
+  "env": {
+   "python": "3.11.16",
+   "numpy": "2.4.6",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": null
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：cb293a84c2（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：0e980ce4124d2abd62727dcf040198db0a18b269"
+  ],
+  "tag": "exp/B0-cb293a8"
+ }
+]

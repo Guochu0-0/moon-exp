@@ -1,0 +1,146 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "未知",
+  "commit": null,
+  "dirty": null,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/xoftr.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "official/xoftr/weights_xoftr_640.ckpt",
+   "weights_sha256": "6e7f24e553f76746ef49061bf44c7d11252e56057470d1421bcd4e6506af3a67",
+   "config_path": "configs/baselines/xoftr.json",
+   "method": "xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "weights": "official/xoftr/weights_xoftr_640.ckpt",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/xoftr",
+  "host": "5445214b0719",
+  "start": "2026-09-26 15:34:50",
+  "end": "2026-09-26 15:38:34",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "匹配时没有记下 commit（当时取 commit 超时，23d65aa 修复）",
+   "由点对拟合仿射（baselines.fit）时的 commit：未知",
+   "匹配器上游代码（third_party 子模块）的 commit：e0fbea431b30be9742effbf5577c90aa8eb938f9-dirty"
+  ]
+ },
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "23d65aad1220ec99d653e1bee705a5e95fca6e2e",
+  "dirty": true,
+  "split": "test",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/xoftr.json",
+   "--split",
+   "test",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "test",
+   "weights": "official/xoftr/weights_xoftr_640.ckpt",
+   "weights_sha256": "6e7f24e553f76746ef49061bf44c7d11252e56057470d1421bcd4e6506af3a67",
+   "config_path": "configs/baselines/xoftr.json",
+   "method": "xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "weights": "official/xoftr/weights_xoftr_640.ckpt",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/xoftr",
+  "host": "5445214b0719",
+  "start": "2026-09-26 15:39:16",
+  "end": "2026-09-26 15:42:59",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：23d65aad12（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：e0fbea431b30be9742effbf5577c90aa8eb938f9-dirty"
+  ],
+  "tag": "exp/B0-23d65aa"
+ }
+]

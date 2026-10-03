@@ -1,0 +1,90 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "事后补记",
+  "commit": "ea094579eb72ea833fa3c415006b100ffc0504d1",
+  "dirty": null,
+  "entry": "python -m finetune.train",
+  "args": {
+   "config": "configs/baselines/anymatch_loftr.json",
+   "data": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights_root": "/remote-home/xufang/YGC/weights",
+   "init": null,
+   "out": "/remote-home/xufang/YGC/results/finetune/C1",
+   "labels": null,
+   "steps": 3000,
+   "batch": 1,
+   "lr": 1e-05,
+   "wd": 0.0,
+   "ransac": 3.0,
+   "min_inliers": 20,
+   "coarse_set": "all",
+   "w_coarse": 1.0,
+   "w_fine": 1.0,
+   "w_pseudo": 0.0,
+   "rl_pair": 0.0,
+   "reward": "gradncc",
+   "rl_match": 0.0,
+   "K": 4,
+   "sig_g": 0.25,
+   "sig_i": 0.1,
+   "w_cexp": 1.0,
+   "cexp_placebo": false,
+   "neg": false,
+   "w_l2sp": 0.0,
+   "placebo": false,
+   "inject_shift": 0,
+   "accum": 1,
+   "warmup": 0,
+   "warmup_start": 0.1,
+   "sched": "const",
+   "lr_min": 0.0,
+   "clip": 0.0,
+   "train_modules": "all",
+   "limit": 0,
+   "save_every": 500,
+   "save_at": "10,25,50,100,250",
+   "workers": 4,
+   "seed": 0,
+   "device": "cuda"
+  },
+  "args_source": "训练时写下的 args.json（argparse 展开默认值后的全部参数）",
+  "config": {
+   "method": "anymatch_loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "init_weights": "/remote-home/xufang/YGC/weights/anymatch/LoFTR_AnyMatch.ckpt",
+  "n_train": 7907,
+  "origin": "/remote-home/xufang/YGC/results/finetune/C1",
+  "host": "653cd62be801",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "预测文件的 commit 是事后重建的：事后重建（#77）：moon-exp-ft49 副本的代码与此提交逐文件一致",
+   "训练时记下的 commit 标签是「f8a93c2」：当时从导出副本运行，标签取自副本的来源 commit，副本之后可能被改过；以按文件内容比对得到的 commit 为准"
+  ]
+ }
+]

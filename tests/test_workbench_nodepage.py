@@ -122,3 +122,15 @@ def test_notes_empty_then_created_on_first_save_with_lf(api, runs):
     assert api.put("/api/exp/E1/notes", {"text": 3})[0] == 400
     assert api.put("/api/exp/Z9/notes", {"text": ""})[0] == 404
     assert not (runs / "Z9").exists()
+
+
+def test_detail_launch(api, tree):
+    """启动记录：只列有 launch/<方法>.json 的方法，原样返回（含事后补记的字段）；没有时为空。"""
+    import json
+    rec = [{"backfilled": "2026-10-03", "reliability": "推断", "commit": None, "entry": "python -m finetune.train",
+            "args": {"lr": 1e-5}, "args_source": "args.json"}]
+    (tree / "B0" / "launch").mkdir()
+    (tree / "B0" / "launch" / "loftr.json").write_text(json.dumps(rec), encoding="utf-8")
+    (tree / "B0" / "launch" / "gone.json").write_text(json.dumps(rec), encoding="utf-8")   # 没有这个方法：不列
+    assert detail(api, "B0")["launch"] == {"loftr": rec}
+    assert detail(api, "E1")["launch"] == {}

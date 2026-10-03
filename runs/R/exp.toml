@@ -5,43 +5,43 @@ init = "S1/main"
 date = "2026-09-28"
 
 [methods.pair]
-name = "整对 RL（R1）"
+name = "伪标签 + 整对强化学习"
 
 [methods.pair_match]
-name = "整对 + 逐匹配（R2）"
+name = "伪标签 + 整对与逐匹配强化学习"
 
 [methods.match]
-name = "只逐匹配（R3）"
+name = "伪标签 + 逐匹配强化学习"
 
 [methods.pair_x4]
-name = "整对 ×4（R4）"
+name = "伪标签 + 整对强化学习，权重 4"
 
 [methods.sigg05]
-name = "σ_g 0.5（R5）"
-
-[methods.cfog]
-name = "CFOG reward（R6）"
-
-[methods.l2sp_pure]
-name = "纯 RL + L2-SP（R7）"
+name = "伪标签 + 整对强化学习，共享平移标准差 0.5"
 
 [methods.K8]
-name = "K 8（R8）"
-
-[methods.l2sp]
-name = "整对 + L2-SP（R9）"
-
-[methods.from_b0]
-name = "从 zero-shot 出发（R10）"
+name = "伪标签 + 整对强化学习，采样 8 次"
 
 [methods.small_sigma]
-name = "σ_g 0.1 / σ_i 0.05（R11）"
+name = "伪标签 + 整对强化学习，独立噪声 0.05、共享平移 0.1"
+
+[methods.cfog]
+name = "伪标签 + 整对强化学习，CFOG 相似度"
+
+[methods.l2sp]
+name = "伪标签 + 整对强化学习 + 参数锚定"
+
+[methods.l2sp_pure]
+name = "强化学习 + 参数锚定，无伪标签"
+
+[methods.from_b0]
+name = "伪标签 + 整对强化学习，从 zero-shot 出发"
 
 [methods.fine_only]
-name = "纯 RL 只训细级（R19）"
+name = "整对强化学习，无伪标签，只训细级"
 
 [methods.fine_accum]
-name = "纯 RL 只训细级 + 累积 16（R20）"
+name = "整对强化学习，无伪标签，只训细级，累积 16"
 
 [methods.pair_x4_accum]
-name = "伪标签 + 整对 ×4 + 累积 16（R21）"
+name = "伪标签 + 整对强化学习，权重 4，累积 16"

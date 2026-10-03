@@ -1,0 +1,78 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录",
+  "commit": "880b580a3fcfc661c5a6f9b69bebe5b74d474b3b",
+  "dirty": false,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/comir__minmax.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines_ablation",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "official/comir/model_zurich_rot90_enabled.pt",
+   "weights_sha256": "c02a1e72a04638c83939992f271f1a3396f01133bd47589404a68ba22340a8aa",
+   "config_path": "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/comir__minmax.json",
+   "method": "comir__minmax",
+   "adapter": "comir",
+   "repo": "third_party/CoMIR",
+   "params": {
+    "channel": 0,
+    "classpath": "/opt/mpicbg/*"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0,
+   "_note": "zero-shot：官方 Release 1.0 的 Zurich（RGB↔NIR）模型；光学灰度×3 送 A、SAR 送 B；CoMIR 第 0 通道上跑 mpicbg SIFT（官方 Fiji 脚本参数，rod 0.9），取官方 RANSAC 之前的匹配"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "comir__minmax",
+   "adapter": "comir",
+   "repo": "third_party/CoMIR",
+   "weights": "official/comir/model_zurich_rot90_enabled.pt",
+   "params": {
+    "channel": 0,
+    "classpath": "/opt/mpicbg/*"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0,
+   "_note": "zero-shot：官方 Release 1.0 的 Zurich（RGB↔NIR）模型；光学灰度×3 送 A、SAR 送 B；CoMIR 第 0 通道上跑 mpicbg SIFT（官方 Fiji 脚本参数，rod 0.9），取官方 RANSAC 之前的匹配"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines_ablation/comir__minmax",
+  "host": "653cd62be801",
+  "start": "2026-09-27 12:09:07",
+  "end": "2026-09-27 12:28:55",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：880b580a3f",
+   "匹配器上游代码（third_party 子模块）的 commit：1750b11e29532cd4096bd3060d086ecac9b9291c",
+   "配置由 scripts/baselines/ablate.sh 从 comir 的配置派生，只改 SAR 输入映射"
+  ],
+  "tag": "exp/B0m-880b580"
+ }
+]

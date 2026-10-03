@@ -1,0 +1,156 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "563b7380344287951e1dea843b781505407531e4",
+  "dirty": true,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/ma_eloftr.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "matchanything/matchanything_eloftr.ckpt",
+   "weights_sha256": "b394fd368488e5e3136906daac825fadd3dd5376755dcdf5cb6ede0de20f6e7e",
+   "config_path": "configs/baselines/ma_eloftr.json",
+   "method": "ma_eloftr",
+   "adapter": "matchanything",
+   "repo": "third_party/MatchAnything",
+   "params": {
+    "model": "eloftr",
+    "size": 832,
+    "coarse_thr": 0.05
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "ma_eloftr",
+   "adapter": "matchanything",
+   "repo": "third_party/MatchAnything",
+   "weights": "matchanything/matchanything_eloftr.ckpt",
+   "params": {
+    "model": "eloftr",
+    "size": 832,
+    "coarse_thr": 0.05
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/ma_eloftr",
+  "host": "653cd62be801",
+  "start": "2026-09-26 16:22:12",
+  "end": "2026-09-26 16:24:35",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：563b738034（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：6a7bcb589ec8da3a9e861e799122beaa5eba2193"
+  ],
+  "tag": "exp/B0-563b738"
+ },
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "563b7380344287951e1dea843b781505407531e4",
+  "dirty": true,
+  "split": "test",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/ma_eloftr.json",
+   "--split",
+   "test",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines",
+   "--resume"
+  ],
+  "args": {
+   "split": "test",
+   "weights": "matchanything/matchanything_eloftr.ckpt",
+   "weights_sha256": "b394fd368488e5e3136906daac825fadd3dd5376755dcdf5cb6ede0de20f6e7e",
+   "config_path": "configs/baselines/ma_eloftr.json",
+   "method": "ma_eloftr",
+   "adapter": "matchanything",
+   "repo": "third_party/MatchAnything",
+   "params": {
+    "model": "eloftr",
+    "size": 832,
+    "coarse_thr": 0.05
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "ma_eloftr",
+   "adapter": "matchanything",
+   "repo": "third_party/MatchAnything",
+   "weights": "matchanything/matchanything_eloftr.ckpt",
+   "params": {
+    "model": "eloftr",
+    "size": 832,
+    "coarse_thr": 0.05
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/ma_eloftr",
+  "host": "653cd62be801",
+  "start": "2026-09-26 16:24:58",
+  "end": "2026-09-26 16:28:58",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：563b738034（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：6a7bcb589ec8da3a9e861e799122beaa5eba2193"
+  ],
+  "tag": "exp/B0-563b738"
+ }
+]

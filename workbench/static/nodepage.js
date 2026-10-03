@@ -71,7 +71,7 @@ export function mountNodePage(root, { onBack }) {
       CMP = { error: err.message };
     }
     if (my !== seq || D?.id !== id) return;
-    info(); results(); visual(); train();
+    info(); launch(); results(); visual(); train();
   }
 
   // ---------------- 页面骨架 ----------------
@@ -83,7 +83,7 @@ export function mountNodePage(root, { onBack }) {
     });
   }
   function page() {
-    const secs = [['info', '实验信息'], ['results', '结果'], ...(D.lit ? [['visual', '可视化结果']] : []),
+    const secs = [['info', '实验信息'], ...(Object.keys(D.launch).length ? [['launch', '启动记录']] : []), ['results', '结果'], ...(D.lit ? [['visual', '可视化结果']] : []),
       ...(D.tb.length ? [['train', '训练图表']] : []), ['notes', 'Notes']];
     root.innerHTML = `<div class="layout">
       <nav class="nav" aria-label="章节">${backLink()}<ol>${secs.map(([k, t]) => `<li><a href="#sec-${k}" data-sec="${k}">${t}</a></li>`).join('')}</ol></nav>
@@ -92,7 +92,7 @@ export function mountNodePage(root, { onBack }) {
     root.querySelectorAll('.nav a[data-sec]').forEach(a => a.addEventListener('click', ev => {
       ev.preventDefault(); $(`#sec-${a.dataset.sec}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
-    info(); results(); visual(); train(); notes(); markNav();
+    info(); launch(); results(); visual(); train(); notes(); markNav();
   }
   function markNav() {
     const secs = [...root.querySelectorAll('.content .sec')];
@@ -150,6 +150,44 @@ export function mountNodePage(root, { onBack }) {
       ${S.split === 'test' ? '<span class="testflag" role="status">当前显示 Test 结果</span>' : ''}</div>`;
   }
   function pickMethod(id) { S.method = id; S.ref = undefined; compare(); }
+
+  // ---------------- 启动记录 ----------------
+  // runs/<id>/launch/<方法>.json：每次启动一条。事后补记的（backfilled）另有可靠程度、入口、完整参数、原位置。
+  function launch() {
+    const body = $('#sec-launch .body');
+    if (!body) return;
+    const m = cur(), items = D.launch[m?.id];
+    const who = multi() ? `方法 ${esc(m.name)}（<span class="mono">${esc(m.id)}</span>）` : '本实验';
+    if (!items?.length) { body.innerHTML = `<p>${who}没有启动记录。</p>`; return; }
+    body.innerHTML = (items.length > 1 ? `<p class="muted">${who}共 <span class="num">${items.length}</span> 次启动。</p>` : '') +
+      items.map((x, i) => launchItem(x, i, items.length)).join('');
+  }
+  function launchItem(x, i, n) {
+    const mono = v => `<span class="mono">${esc(v)}</span>`;
+    const commit = x.commit ? mono(String(x.commit).slice(0, 10)) : '未知';
+    const rel = x.reliability || (x.commit ? (x.dirty ? '跑时记录但 dirty' : '跑时记录') : '');
+    const time = x.start ? esc(x.start) + (x.end ? ` – ${esc(x.end)}` : '') : '';
+    const rows = [['commit', commit + (rel && x.commit ? `（${esc(rel)}）` : '')],
+      ...(x.tag ? [['tag', mono(x.tag)]] : []),
+      ...(x.entry ? [['入口', mono(x.entry)]] : []),
+      ...(x.host ? [['主机', mono(x.host)]] : []),
+      ...(time ? [['时间', time]] : []),
+      ...(x.status ? [['结果', esc(x.status)]] : []),
+      ...(x.origin ? [['原位置', mono(x.origin)]] : [])];
+    const cmd = x.cmd?.length ? `<p class="caption">命令</p><pre class="mono launch-cmd">${esc(x.cmd.join(' '))}</pre>` : '';
+    const kv = (title, o, tail = '') => `<p class="caption">${title}（<span class="num">${Object.keys(o).length}</span> 项）${tail}</p>
+      <table class="tab launch-args"><thead><tr><th>参数</th><th>取值</th></tr></thead><tbody>${Object.entries(o).map(([k, v]) =>
+        `<tr><td class="mono">${esc(k)}</td><td class="mono">${esc(typeof v === 'string' ? v : JSON.stringify(v))}</td></tr>`).join('')}</tbody></table>`;
+    const obj = v => v && typeof v === 'object' && !Array.isArray(v);
+    const src = x.args_source ? `。来源：${esc(x.args_source)}` : '';
+    const params = 'args' in x ? (obj(x.args) ? kv('参数', x.args, src) : `<p class="caption">参数：未知${src}。</p>`) : '';
+    const config = obj(x.config) && x.config !== x.args && !x.split ? kv('模型配置', x.config) : '';
+    const note = x.backfilled ? `<p class="muted">事后补记于 ${esc(x.backfilled)}，不是启动时自动写下的。</p>` : '';
+    const notes = x.notes?.length ? `<ul class="launch-notes">${x.notes.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
+    const head = n > 1 ? `<h3>第 ${i + 1} 次启动${x.split ? `（${x.split === 'val' ? 'Val' : 'Test'}）` : ''}</h3>` : '';
+    return `<div class="launch">${head}${note}
+      <dl class="meta">${rows.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>${notes}${cmd}${params}${config}</div>`;
+  }
 
   // ---------------- 结果 ----------------
   function results() {

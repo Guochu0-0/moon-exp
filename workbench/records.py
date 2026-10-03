@@ -139,6 +139,18 @@ class Run:
         return {"state": "single", "commit": commits.pop(), "dirty": any(v.get("dirty") for v in metas),
                 "methods": methods}
 
+    def launches(self) -> dict[str, list[dict]]:
+        """{方法: 启动记录列表}，来自 launch/<method>.json（进 git）。只列有记录的方法；
+        事后补记的记录带 backfilled 字段（格式见 RECORDS.md「启动记录」）。"""
+        d = self.dir / "launch"
+        out = {}
+        for m in self.methods:
+            p = d / f"{m}.json"
+            if p.exists():
+                items = json.loads(p.read_text(encoding="utf-8"))
+                out[m] = items if isinstance(items, list) else [items]
+        return out
+
     def preds(self, method: str, split: str) -> dict[str, Pred]:
         path = self.dir / "preds" / method / f"{split}.jsonl"
         out = {}

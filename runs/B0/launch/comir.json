@@ -1,0 +1,150 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录",
+  "commit": "6a7549987e60cb1cd06ae6a3e24672c55e1f9ff2",
+  "dirty": false,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/comir.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "official/comir/model_zurich_rot90_enabled.pt",
+   "weights_sha256": "c02a1e72a04638c83939992f271f1a3396f01133bd47589404a68ba22340a8aa",
+   "config_path": "configs/baselines/comir.json",
+   "method": "comir",
+   "adapter": "comir",
+   "repo": "third_party/CoMIR",
+   "params": {
+    "channel": 0,
+    "classpath": "/opt/mpicbg/*"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "zero-shot：官方 Release 1.0 的 Zurich（RGB↔NIR）模型；光学灰度×3 送 A、SAR 送 B；CoMIR 第 0 通道上跑 mpicbg SIFT（官方 Fiji 脚本参数，rod 0.9），取官方 RANSAC 之前的匹配"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "comir",
+   "adapter": "comir",
+   "repo": "third_party/CoMIR",
+   "weights": "official/comir/model_zurich_rot90_enabled.pt",
+   "params": {
+    "channel": 0,
+    "classpath": "/opt/mpicbg/*"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "zero-shot：官方 Release 1.0 的 Zurich（RGB↔NIR）模型；光学灰度×3 送 A、SAR 送 B；CoMIR 第 0 通道上跑 mpicbg SIFT（官方 Fiji 脚本参数，rod 0.9），取官方 RANSAC 之前的匹配"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/comir",
+  "host": "5445214b0719",
+  "start": "2026-09-27 00:16:01",
+  "end": "2026-09-27 00:59:46",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：6a7549987e",
+   "匹配器上游代码（third_party 子模块）的 commit：1750b11e29532cd4096bd3060d086ecac9b9291c"
+  ],
+  "tag": "exp/B0-6a75499"
+ },
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录",
+  "commit": "6a7549987e60cb1cd06ae6a3e24672c55e1f9ff2",
+  "dirty": false,
+  "split": "test",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "configs/baselines/comir.json",
+   "--split",
+   "test",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines"
+  ],
+  "args": {
+   "split": "test",
+   "weights": "official/comir/model_zurich_rot90_enabled.pt",
+   "weights_sha256": "c02a1e72a04638c83939992f271f1a3396f01133bd47589404a68ba22340a8aa",
+   "config_path": "configs/baselines/comir.json",
+   "method": "comir",
+   "adapter": "comir",
+   "repo": "third_party/CoMIR",
+   "params": {
+    "channel": 0,
+    "classpath": "/opt/mpicbg/*"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "zero-shot：官方 Release 1.0 的 Zurich（RGB↔NIR）模型；光学灰度×3 送 A、SAR 送 B；CoMIR 第 0 通道上跑 mpicbg SIFT（官方 Fiji 脚本参数，rod 0.9），取官方 RANSAC 之前的匹配"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "comir",
+   "adapter": "comir",
+   "repo": "third_party/CoMIR",
+   "weights": "official/comir/model_zurich_rot90_enabled.pt",
+   "params": {
+    "channel": 0,
+    "classpath": "/opt/mpicbg/*"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "zero-shot：官方 Release 1.0 的 Zurich（RGB↔NIR）模型；光学灰度×3 送 A、SAR 送 B；CoMIR 第 0 通道上跑 mpicbg SIFT（官方 Fiji 脚本参数，rod 0.9），取官方 RANSAC 之前的匹配"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines/comir",
+  "host": "5445214b0719",
+  "start": "2026-09-27 00:59:54",
+  "end": "2026-09-27 02:01:17",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "5445214b0719",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：6a7549987e",
+   "匹配器上游代码（third_party 子模块）的 commit：1750b11e29532cd4096bd3060d086ecac9b9291c"
+  ],
+  "tag": "exp/B0-6a75499"
+ }
+]

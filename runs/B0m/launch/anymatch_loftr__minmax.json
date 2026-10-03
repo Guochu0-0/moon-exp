@@ -1,0 +1,82 @@
+[
+ {
+  "backfilled": "2026-10-03",
+  "reliability": "跑时记录但 dirty",
+  "commit": "9e85c61735e110935762998f62da0236bc8d65d6",
+  "dirty": true,
+  "split": "val",
+  "entry": "python -m baselines.match，再 python -m baselines.fit",
+  "cmd": [
+   "python",
+   "-m",
+   "baselines.match",
+   "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/anymatch_loftr__minmax.json",
+   "--split",
+   "val",
+   "--out",
+   "/remote-home/xufang/YGC/results/baselines_ablation",
+   "--resume"
+  ],
+  "args": {
+   "split": "val",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "weights_sha256": "5c0851fa7db76fc776fe6a67f0e5f85a10c2c0e7e8b9b6a7afa9d01ce958a624",
+   "config_path": "/remote-home/xufang/YGC/results/baselines_ablation/_cfg/anymatch_loftr__minmax.json",
+   "method": "anymatch_loftr__minmax",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "args_source": "匹配时写下的 meta.json（完整配置）",
+  "config": {
+   "method": "anymatch_loftr__minmax",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "origin": "/remote-home/xufang/YGC/results/baselines_ablation/anymatch_loftr__minmax",
+  "host": "653cd62be801",
+  "start": "2026-09-26 17:54:56",
+  "end": "2026-09-26 17:56:32",
+  "status": "ok",
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "653cd62be801",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "2",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "notes": [
+   "由点对拟合仿射（baselines.fit）时的 commit：9e85c61735（dirty）",
+   "匹配器上游代码（third_party 子模块）的 commit：df7ca80f917334b94cfbe32cc2901e09a80e70a8",
+   "配置由 scripts/baselines/ablate.sh 从 anymatch_loftr 的配置派生，只改 SAR 输入映射"
+  ],
+  "tag": "exp/B0m-9e85c61"
+ }
+]

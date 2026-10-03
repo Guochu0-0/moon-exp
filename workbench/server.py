@@ -2,7 +2,7 @@
 
 读接口
     GET  /api/data                   全部实验摘要（画布用）+ canvas.json 里的便签、分组框
-    GET  /api/exp/<id>               单个实验详情（节点页用）：信息、commit、各方法结果、参考方法默认值与候选、notes
+    GET  /api/exp/<id>               单个实验详情（节点页用）：信息、commit、启动记录、各方法结果、参考方法默认值与候选、notes
     GET  /api/compare?method=&ref=&split=
                                      方法 vs 参考方法（<实验>/<方法>、identity = 未配准、省略 = 无）：两边结果与差值，
                                      以及有标注 pair 的列表与编号（与 errors 一一对应）
@@ -149,7 +149,7 @@ class Workbench:
             return jsonable({"id": rid, "title": r.title, "parent": r.parent, "init": r.init,
                              "baseline": r.baseline, "date": r.date, "lit": r.lit, "methods": methods,
                              "children": [k for k, x in runs.items() if x.parent == rid],
-                             "commit": r.commit(), "delta_key": DELTA, "warnings": r.warnings,
+                             "commit": r.commit(), "launch": r.launches(), "delta_key": DELTA, "warnings": r.warnings,
                              "notes": r.notes, "tb": self._tb_methods(r),
                              "reference": {"groups": reference.groups(r, runs, score)},
                              "protocol": protocol.protocol_info()})

@@ -194,6 +194,25 @@ runs/<id>/
 
 sweep 里的每个 step 不是独立的方法：只有 `preds/<m>/` 出现在工作台上。想换选模规则，就在 Notes 里写明，再把对应 step 的预测复制过去。
 
+## 启动记录
+
+`launch/<m>.json` 是一个列表，每次启动（含续训、重跑）一条，由 `workbench.launch` 在启动时自动写：`start`、`end`、`status`、`commit`、`dirty`、`allow_dirty`、`host`、`cwd`、`cuda_visible_devices`、`cuda_device_order`、`cmd`。不要手写。
+
+2026-10-03 以前的旧方法没有自动记录，由 `scripts/backfill_launch85.py` 事后补记，节点页同样显示。补记的每条另有：
+
+| 字段 | 含义 |
+|---|---|
+| `backfilled` | 补记日期；有这个字段就是事后补记 |
+| `reliability` | commit 的可靠程度：`跑时记录`（运行时从 git 取到）/ `跑时记录但 dirty` / `事后补记`（事后按代码文件内容比对出来）/ `推断`（按时间或整个实验共用的 commit 推出来）/ `未知` |
+| `tag` | commit 不在 main 上时保全它的 tag，`exp/<实验>-<短 commit>` |
+| `entry` | 入口 |
+| `args`、`args_source` | 完整参数及其来源；查不到时 `args` 为 null |
+| `config` | 模型配置（`configs/baselines/*.json` 的内容） |
+| `origin` | 产物原来在服务器上的位置 |
+| `env`、`split`、`notes` | 运行环境；基线按 split 各一条时标明 split；来源之间不一致等说明 |
+
+参数里的路径是当时的路径，产物已迁进 `runs/<id>/`，原位置见 `origin`。
+
 ## code/
 
 只服务本实验的代码：任务清单、驱动、诊断与画图脚本。进 git，同样要先提交再跑。被第二个实验用到时，提升到 `scripts/` 或包里。产出的图放 `extra/`。

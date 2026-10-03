@@ -18,9 +18,9 @@ from pathlib import Path
 
 import numpy as np
 
-from baselines import inputs
-from baselines.diagnose_reward import FEATS, peak, surface, warp_feat
 from baselines.data import Data
+from baselines.diagnose_reward import FEATS, peak, surface, warp_feat
+from moonlib import inputs
 
 
 def refine(A, opt, sar, feat="gradncc"):

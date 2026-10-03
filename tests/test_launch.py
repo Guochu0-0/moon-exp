@@ -37,7 +37,8 @@ def test_run_products_do_not_count(repo):
     assert not launch.repo_state(repo)["dirty"]
 
 
-@pytest.mark.parametrize("path", ["finetune/train.py", "finetune/new.py", "runs/E1/code/plot.py"])
+@pytest.mark.parametrize("path", ["finetune/train.py", "finetune/new.py", "runs/E1/code/plot.py",
+                                  "runs/E1/configs/main.toml"])
 def test_uncommitted_code_refused(repo, monkeypatch, path):
     monkeypatch.delenv(launch.ALLOW_ENV, raising=False)
     f = repo / path
@@ -73,3 +74,13 @@ def test_begin_appends_and_end_closes_last(repo, tmp_path, monkeypatch):
     assert [i["status"] for i in items] == ["fail", "ok"]
     assert items[1]["cmd"] == ["a", "--resume"] and items[1]["cuda_visible_devices"] == "3"
     assert all(i["end"] for i in items)
+
+
+def test_begin_records_config(repo, tmp_path, monkeypatch):
+    monkeypatch.delenv(launch.ALLOW_ENV, raising=False)
+    run = tmp_path / "runs" / "E1"
+    cfg = {"model": {"name": "loftr"}, "optim": {"lr": 1e-5}, "cexp": {"r_out": -0.25}}
+    rec = launch.begin(run, "main", ["run.py", "runs/E1"], repo=repo, entry="scripts/finetune/run.py",
+                       config_file="runs/E1/configs/main.toml", config=cfg)
+    items = json.loads((run / "launch" / "main.json").read_text(encoding="utf-8"))
+    assert items[0]["config"] == cfg == rec["config"] and items[0]["entry"] == "scripts/finetune/run.py"

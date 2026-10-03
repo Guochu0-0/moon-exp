@@ -82,7 +82,7 @@
 - 数据在 `YGC/dataset/Moon`（Train 7907 / Val 825 / Test 1130 对）。Val 的 ROI_060 已删除，Val 为 6 个 ROI。
 - 权重在 `YGC/weights/`（`anymatch/`、`minima/`、`matchanything/` 等）。RoMa 系要的 DINOv2 缓存在 `YGC/weights/torch_home`（设 `TORCH_HOME` 指向它，gpfs 上各机共用）。
 - 训练产物写进实验目录 `runs/<id>/`，结票后归到主 checkout 的 `runs/`。`YGC/results/finetune/` 停止写入，只剩离线伪标签 `labels_*.jsonl`（任务清单用绝对路径引用，照常读取）；10/02 以前的训练产物已迁进各实验的 `runs/<id>/`（#77）。
-- `YGC/results/baselines`、`baselines_ablation` 是 B0、B0m 的原始匹配输出，`scripts/baselines/` 读它们，留在原位。
+- `YGC/results/baselines`、`baselines_ablation` 是 B0、B0m 的原始匹配输出，`runs/B0/code/`、`runs/B0m/code/` 里的脚本读它们，留在原位。
 - **归档**：`YGC/_archive/2026-10/` 放 10/02 整理时挪走的东西：旧 worktree 与 `git archive` 副本（`moon-exp-*`）、`tmp/`、`results/finetune` 的其余部分（R 系、S1 变体、日志、锁、一次性脚本原件）、`results/{coarse70,diag_reward}`、`projects/optical-sar-matching/`，以及各方法修剪下来的 ckpt（`ckpt/`：峰值与最后一个之外的，删除前问用户）。迁移日志在 `YGC/_archive/*77*.log`。
 
 显存参考（bs 1，PyTorch 峰值分配；nvidia-smi 看到的再多约 1.5 GB）：LoFTR 类 RIPE 带负样本对在 24 GB 卡上会 OOM；RoMa 伪标签约 6.3 GB、解冻 VGG 约 7.0 GB，RoMa 类 RIPE 带负样本对约 11.3 GB（各 run 的 `log.jsonl` 第一行 `mem_gb`）。

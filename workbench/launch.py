@@ -4,7 +4,8 @@
     python -m workbench.launch begin runs/P P17 -- <命令...>   # 检查 + 在 launch/P17.json 追加一次启动
     python -m workbench.launch end runs/P P17 ok|fail          # 给最近一次启动补上结束时间与结果
 
-「干净」= 有 git、已跟踪的代码没有改动、没有未跟踪的代码文件。runs/ 下的产物不算，但 runs/<id>/code/ 算（一次性代码也要先提交）。
+「干净」= 有 git、已跟踪的代码没有改动、没有未跟踪的代码文件。runs/ 下的产物不算，但 runs/<id>/code/ 和
+runs/<id>/configs/ 算（一次性代码、方法配置也要先提交）。
 被 .gitignore 排除的文件不算。临时调试可设 MOON_ALLOW_DIRTY=1 放行，launch 记录里会留下 dirty 和放行标记。
 兼容 Python 3.10（训练环境也调用 require_clean），不依赖 workbench 的其他模块。
 """
@@ -21,7 +22,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 ALLOW_ENV = "MOON_ALLOW_DIRTY"
 _CODE = (".", ":(exclude,top)runs")
-_RUN_CODE = (":(glob,top)runs/*/code/**",)
+_RUN_CODE = (":(glob,top)runs/*/code/**", ":(glob,top)runs/*/configs/**")
 
 
 def _git(repo: Path, *args, timeout=120) -> str | None:
@@ -78,13 +79,14 @@ def _save(p: Path, items: list):
     p.write_text(json.dumps(items, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
 
 
-def begin(run_dir, method: str, cmd: list[str], repo=REPO) -> dict:
-    """检查代码，然后在 runs/<id>/launch/<method>.json 追加一次启动（续训、重跑各算一次）。"""
+def begin(run_dir, method: str, cmd: list[str], repo=REPO, **extra) -> dict:
+    """检查代码，然后在 runs/<id>/launch/<method>.json 追加一次启动（续训、重跑各算一次）。
+    extra 原样记进这次启动：驱动用它记入口（entry）、配置文件（config_file）和展开后的完整配置（config）。"""
     st = require_clean(repo)
     rec = {"start": _now(), "end": None, "status": None, "commit": st["commit"], "dirty": st["dirty"],
            "allow_dirty": st["allow_dirty"], "host": socket.gethostname(), "cwd": os.getcwd(),
            "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
-           "cuda_device_order": os.environ.get("CUDA_DEVICE_ORDER"), "cmd": cmd}
+           "cuda_device_order": os.environ.get("CUDA_DEVICE_ORDER"), "cmd": cmd, **extra}
     if st["dirty"]:
         rec["changes"] = st["changes"]
     p = _path(run_dir, method)

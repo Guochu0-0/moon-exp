@@ -19,7 +19,8 @@ from pathlib import Path
 
 import numpy as np
 
-from . import inputs
+from moonlib import inputs
+
 from .data import Data
 from .match import REPO, env_info, git_head, key
 

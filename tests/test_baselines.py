@@ -4,7 +4,7 @@ import json
 import numpy as np
 import pytest
 
-from baselines import inputs
+from moonlib import inputs
 from baselines.adapters.base import long_side_size, to_original
 from baselines.fit import fit_affine
 from baselines.tif import read_tif

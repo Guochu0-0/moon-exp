@@ -1,11 +1,11 @@
-"""无标注训练集的 patch 对加载。影像映射与 baseline 主表同口径（baselines/inputs.py）。"""
+"""无标注训练集的 patch 对加载。影像映射与 baseline 主表同口径（moonlib/inputs.py）。"""
 from __future__ import annotations
 
 import numpy as np
 import torch
 
-from baselines import inputs
 from baselines.data import Data
+from moonlib import inputs
 
 from . import augment
 

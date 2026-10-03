@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-from baselines.ransac import fit_affine
+from moonlib.ransac import fit_affine
 
 from .label import MIN_INLIERS, MIN_MATCHES
 

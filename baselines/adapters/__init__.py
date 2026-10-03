@@ -3,7 +3,7 @@
 适配器契约：
     a = Adapter(repo=..., weights=..., device=..., **params)
     kp0, kp1, conf = a.match(opt, sar)
-- opt、sar：H×W float32，值域 [0,1]（映射见 baselines/inputs.py）。适配器从张量层接入官方 pipeline，
+- opt、sar：H×W float32，值域 [0,1]（映射见 moonlib/inputs.py）。适配器从张量层接入官方 pipeline，
   跳过官方的 uint8 loader；不得不量化的地方写进 a.notes。
 - kp0（光学）、kp1（SAR）：N×2 float，**原 512 网格、0-based、整数 = 像素中心**。内部 resize 过的由适配器映射回来。
 - conf：N，或 None。

@@ -27,7 +27,9 @@ from pathlib import Path
 
 import numpy as np
 
-from . import adapters, inputs
+from moonlib import inputs
+
+from . import adapters
 from .data import Data
 
 REPO = Path(__file__).resolve().parents[1]

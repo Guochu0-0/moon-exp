@@ -3,3 +3,96 @@ title = "RoMa 首轮：伪标签（P8 式）与类 RIPE（Q4 式）搬到 AnyMat
 parent = "B0m"
 init = "B0m/anymatch_roma__minmax"
 date = "2026-09-30"
+
+[methods.M1]
+name = "LoFTR 第三轮标签 + 扰动（第 5000 步）"
+
+[methods.M2]
+name = "LoFTR 第三轮标签 + 扰动，学习率 3e-6（第 8000 步）"
+
+[methods.M3]
+name = "LoFTR 第三轮标签，不加扰动（第 2000 步）"
+
+[methods.M3s1]
+name = "LoFTR 第三轮标签，不加扰动，种子 1（第 8000 步）"
+
+[methods.M10]
+name = "LoFTR 第三轮标签，不加扰动，全部对（第 4000 步）"
+
+[methods.M11]
+name = "RoMa 第二轮标签 + 扰动（第 6000 步）"
+
+[methods.M11n]
+name = "RoMa 第二轮标签，不加扰动（第 6000 步）"
+
+[methods.M4]
+name = "RoMa 自己的标签（第 2000 步）"
+
+[methods.M4s1]
+name = "RoMa 自己的标签，种子 1（第 4000 步）"
+
+[methods.M14]
+name = "RoMa 自己的标签，学习率 3e-5（第 8000 步）"
+
+[methods.M14s1]
+name = "RoMa 自己的标签，学习率 3e-5，种子 1（第 7000 步）"
+
+[methods.M13]
+name = "RoMa 自己的标签，训 VGG（第 8000 步）"
+
+[methods.M13s1]
+name = "RoMa 自己的标签，训 VGG，种子 1（第 6000 步）"
+
+[methods.M15]
+name = "RoMa 自己的标签，训 VGG，学习率 3e-5（第 7000 步）"
+
+[methods.M15s1]
+name = "RoMa 自己的标签，训 VGG，学习率 3e-5，种子 1（第 8000 步）"
+
+[methods.M15s2]
+name = "RoMa 自己的标签，训 VGG，学习率 3e-5，种子 2（第 4000 步）"
+
+[methods.M16]
+name = "RoMa 自己的标签，训 VGG，16000 步（第 16000 步）"
+
+[methods.M17]
+name = "RoMa 自己的标签，训 VGG，学习率 3e-5，16000 步（第 14000 步）"
+
+[methods.M20]
+name = "RoMa 自己的标签，学习率 3e-5，16000 步（第 14000 步）"
+
+[methods.M21]
+name = "RoMa 自己的标签，训 VGG，学习率 1e-4（第 7000 步）"
+
+[methods.M19]
+name = "RoMa 自己的标签，训 VGG，学习率 3e-5，全部对（第 7000 步）"
+
+[methods.M22]
+name = "LoFTR 第三轮标签，训 VGG，学习率 3e-5（第 8000 步）"
+
+[methods.M5]
+name = "类 RIPE 基础配方（第 1000 步）"
+
+[methods.M5p]
+name = "类 RIPE 基础配方，随机 reward 对照（第 1000 步）"
+
+[methods.M6]
+name = "类 RIPE，取舍项权重 0.1（第 1000 步）"
+
+[methods.M9]
+name = "类 RIPE，学习率 1e-6（第 1000 步）"
+
+[methods.M7]
+name = "类 RIPE，只留锚点项（第 1000 步）"
+
+[methods.M7p]
+name = "类 RIPE，只留锚点项，随机 reward 对照（第 1000 步）"
+
+[methods.M8]
+name = "类 RIPE，取舍项外点记 0（第 3000 步）"
+
+[methods.M12]
+name = "类 RIPE，只给正分（第 1000 步）"
+
+[methods.M12p]
+name = "类 RIPE，只给正分，随机 reward 对照（第 1000 步）"

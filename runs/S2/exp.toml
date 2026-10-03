@@ -5,4 +5,4 @@ init = "B0/anymatch_loftr"
 date = "2026-09-27"
 
 [methods.main]
-name = "在线伪标签（step 1000）"
+name = "在线伪标签（第 1000 步）"

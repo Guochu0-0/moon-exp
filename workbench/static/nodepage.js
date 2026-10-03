@@ -28,6 +28,11 @@ export function mountNodePage(root, { onBack }) {
   const S = { method: null, ref: undefined, split: 'val' };
   const $ = s => root.querySelector(s);
   window.addEventListener('beforeunload', ev => { if (NOTES?.dirty()) ev.preventDefault(); });
+  // 离开节点页前：Notes 有未保存的改动就问一次，问过了（或没改动）就不再管
+  function leave() {
+    if (NOTES?.dirty() && !confirm('Notes 有未保存的改动，仍然离开？')) return false;
+    NOTES = null; return true;
+  }
 
   // ---------------- 选择 ----------------
   const multi = () => D.methods.length > 1;
@@ -74,8 +79,7 @@ export function mountNodePage(root, { onBack }) {
   function bindBack(id) {
     $('.back').addEventListener('click', ev => {
       ev.preventDefault();
-      if (NOTES?.dirty() && !confirm('Notes 有未保存的改动，仍然离开？')) return;
-      onBack(id);
+      if (leave()) onBack(id);
     });
   }
   function page() {
@@ -324,6 +328,8 @@ export function mountNodePage(root, { onBack }) {
 
   return {
     show(id) { root.hidden = false; root.scrollTop = 0; load(id); },
+    shown: () => !root.hidden,
+    leave,
     hide() { root.hidden = true; root.innerHTML = ''; D = null; NOTES = null; seq++; },
   };
 }

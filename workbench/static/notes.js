@@ -105,7 +105,7 @@ function inlineText(s) {
 // 把 markdown() 的输出（以及编辑器里浏览器顺手生成的 b/i/div/嵌套列表）写回 Markdown。
 // 不加转义：渲染器本来就不认转义，正文里的 `**` 之类写回去会再次成为格式，这正是边打边渲染要的效果。
 // caret 给出时在光标处插入 MARK，编辑器据此在重新渲染后找回光标。
-const MARK = '', ZW = '​';
+const MARK = '\uE000', ZW = '\u200b';
 const BLOCKS = new Set(['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'PRE', 'HR', 'TABLE',
   'THEAD', 'TBODY', 'TR', 'TH', 'TD', 'SECTION', 'FIGURE']);
 const isBlock = n => n.nodeType === 1 && BLOCKS.has(n.nodeName);
@@ -195,7 +195,7 @@ function one(n) {
   if (n.nodeType === 3) {
     let t = n.nodeValue;
     if (CARET && CARET.node === n) t = t.slice(0, CARET.offset) + MARK + t.slice(CARET.offset);
-    return t.replace(/ /g, ' ').replaceAll(ZW, '');
+    return t.replace(/\u00a0/g, ' ').replaceAll(ZW, '');
   }
   if (n.nodeType !== 1) return '';
   const wrap = m => {
@@ -225,7 +225,8 @@ export function mountNotes(body, { text, base, path, save }) {
   const ed = body.querySelector('.notes'), ta = body.querySelector('.notes-src'), $ = s => body.querySelector(`.notes-foot .${s}`);
   const render = md => markdown(md, base);
   const current = () => source ? ta.value.replace(/\r\n?/g, '\n') : toMarkdown(ed);
-  const dirty = () => source ? current() !== saved : render(current()) !== render(saved);
+  let savedHtml = render(saved);   // 每次输入都要比，存一份
+  const dirty = () => source ? current() !== saved : render(current()) !== savedHtml;
 
   function fill(md) {
     ed.innerHTML = render(md) || '<p><br></p>';
@@ -263,6 +264,7 @@ export function mountNotes(body, { text, base, path, save }) {
     }
     return false;
   }
+  const empty = () => { const p = document.createElement('p'); p.innerHTML = '<br>'; return p; };
   const blockOf = n => { while (n && n.parentNode !== ed) n = n.parentNode; return n; };
   const inside = (n, ...names) => { for (; n && n !== ed; n = n.parentNode) if (names.includes(n.nodeName)) return n; return null; };
   const offsetIn = (el, node, offset) => { const r = document.createRange(); r.setStart(el, 0); r.setEnd(node, offset); return r.toString().length; };
@@ -280,7 +282,7 @@ export function mountNotes(body, { text, base, path, save }) {
   }
 
   // ---- 边打边渲染：光标所在的块按 Markdown 重新渲染，结构变了才替换 ----
-  const sig = nodes => [...nodes].map(n => n.nodeType === 3 ? n.nodeValue.replace(/[​]/g, '').replace(/[\s ]+/g, ' ').trim()
+  const sig = nodes => [...nodes].map(n => n.nodeType === 3 ? n.nodeValue.replace(/[\uE000\u200b]/g, '').replace(/[\s\u00a0]+/g, ' ').trim()
     : n.nodeType !== 1 || (n.nodeName === 'BR' && n === n.parentNode?.lastChild) ? '' : `<${n.nodeName}>${sig(n.childNodes)}</>`).join('');
   function live() {
     const c = caret(); if (!c || !getSelection().isCollapsed) return;
@@ -308,7 +310,7 @@ export function mountNotes(body, { text, base, path, save }) {
   }
   function replace(blk, frag) {
     for (const t of [...frag.childNodes]) if (t.nodeType === 3 && !t.nodeValue.trim()) t.remove();
-    if (!frag.childNodes.length) { const p = document.createElement('p'); p.innerHTML = '<br>'; frag.append(p); }
+    if (!frag.childNodes.length) frag.append(empty());
     const last = frag.lastChild;
     blk.replaceWith(frag);
     if (!place(ed)) setCaret(last, last.childNodes.length);
@@ -336,18 +338,21 @@ export function mountNotes(body, { text, base, path, save }) {
     replace(blk, tpl.content);
     refresh();
   }
+  // 代码块按纯文本改：在光标处插入 ins，光标后移 move 个字
+  function codeInsert(pre, r, ins, move = ins.length) {
+    const off = offsetIn(pre, r.startContainer, r.startOffset), t = pre.textContent, code = pre.querySelector('code') || pre;
+    code.textContent = t.slice(0, off) + ins + t.slice(off);
+    setCaret(code.firstChild, off + move);
+  }
   // 代码块里回车是换行；在末尾的空行上再按一次回车就离开代码块
   function codeEnter(pre) {
     const r = getSelection().getRangeAt(0);
     r.deleteContents();
-    const off = offsetIn(pre, r.startContainer, r.startOffset), t = pre.textContent, code = pre.querySelector('code') || pre;
+    const off = offsetIn(pre, r.startContainer, r.startOffset), t = pre.textContent;
     if (t.slice(off).replace(/\n$/, '') === '' && (t[off - 1] === '\n' || !t.replaceAll(ZW, ''))) {
-      code.textContent = t.slice(0, Math.max(0, off - 1)).replaceAll(ZW, '');
-      const p = document.createElement('p'); p.innerHTML = '<br>'; pre.after(p); setCaret(p, 0);
-    } else {
-      code.textContent = t.slice(0, off) + '\n' + t.slice(off) + (off === t.length ? '\n' : '');   // 末尾多留一个换行，新行才看得见
-      setCaret(code.firstChild, off + 1);
-    }
+      (pre.querySelector('code') || pre).textContent = t.slice(0, Math.max(0, off - 1)).replaceAll(ZW, '');
+      const p = empty(); pre.after(p); setCaret(p, 0);
+    } else codeInsert(pre, r, off === t.length ? '\n\n' : '\n', 1);   // 末尾多留一个换行，新行才看得见
     refresh();
   }
   // 表格里：回车到下一行同一列，Tab / Shift+Tab 到下一格 / 上一格；走出最后一行时加一行
@@ -380,12 +385,8 @@ export function mountNotes(body, { text, base, path, save }) {
     remember(true);
     const r = getSelection().getRangeAt(0); r.deleteContents();
     const pre = inside(r.startContainer, 'PRE');
-    if (pre) {
-      const off = offsetIn(pre, r.startContainer, r.startOffset), t = pre.textContent, code = pre.querySelector('code') || pre;
-      code.textContent = t.slice(0, off) + text + t.slice(off); setCaret(code.firstChild, off + text.length);
-    } else {
-      fill(toMarkdown(ed, { node: r.startContainer, offset: r.startOffset }).replace(MARK, text + MARK));
-    }
+    if (pre) codeInsert(pre, r, text);
+    else fill(toMarkdown(ed, { node: r.startContainer, offset: r.startOffset }).replace(MARK, text + MARK));
     refresh();
   }
 
@@ -398,7 +399,7 @@ export function mountNotes(body, { text, base, path, save }) {
     } catch (err) {
       busy = false; refresh(`保存失败：${err.message}`); return;
     }
-    busy = false; saved = t;
+    busy = false; saved = t; savedHtml = render(t);
     refresh(`已保存到 ${path}`);
   }
   function revert() {
@@ -435,7 +436,7 @@ export function mountNotes(body, { text, base, path, save }) {
       const c = caret(), blk = c && blockOf(c.node);
       if (!blk || !/^H[1-6]$/.test(blk.nodeName) || offsetIn(blk, c.node, c.offset)) return;
       ev.preventDefault(); remember(true);
-      const p = document.createElement('p'); p.append(...blk.childNodes); if (!p.firstChild) p.innerHTML = '<br>';
+      const p = blk.firstChild ? document.createElement('p') : empty(); p.append(...blk.childNodes);
       blk.replaceWith(p); setCaret(p, 0); refresh();
     }
   });

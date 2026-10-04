@@ -11,7 +11,8 @@ from . import augment
 
 
 class PairSet(torch.utils.data.Dataset):
-    """一个 split 的全部 patch 对（train 没有标注，所以不筛 Label）。返回网络输入网格上的 (1,H,W) 张量。"""
+    """一个 split 的全部 patch 对（train 没有标注，所以不筛 Label）。返回网络输入网格上的 (1,H,W) 张量。
+    split 可用 + 连接多个（如 "val+test"，过拟合上限参考 #96），pair 标识在各 split 之间不能重名。"""
 
     def __init__(self, root, split, resize, optical="div255", sar="p2p98", limit=0, neg=False, seed=0, aug=(),
                  aug_shift=12.0, aug_rot=3.0, aug_scale=0.03):
@@ -21,7 +22,13 @@ class PairSet(torch.utils.data.Dataset):
         self.data, self.split, self.resize, self.neg = Data(root), split, resize, neg
         self.seed, self.aug = seed, tuple(aug)
         self.aug_kw = {"shift": aug_shift, "rot": aug_rot, "scale": aug_scale}
-        self.pairs = self.data.pairs(split, labelled_only=False)
+        self.src = {}                                    # pair → 所在 split
+        for sp in split.split("+"):
+            for q in self.data.pairs(sp, labelled_only=False):
+                if q in self.src:
+                    raise ValueError(f"{q} 同时出现在 {self.src[q]} 和 {sp}")
+                self.src[q] = sp
+        self.pairs = list(self.src)
         if limit:
             self.pairs = self.pairs[:limit]
         self.map_opt, self.map_sar = inputs.get("optical", optical), inputs.get("sar", sar)
@@ -31,8 +38,8 @@ class PairSet(torch.utils.data.Dataset):
 
     def __getitem__(self, i):
         pair = self.pairs[i]
-        opt = self.map_opt(self.data.optical(self.split, pair)).astype(np.float32)
-        sar = self.map_sar(self.data.sar(self.split, pair)).astype(np.float32)
+        opt = self.map_opt(self.data.optical(self.src[pair], pair)).astype(np.float32)
+        sar = self.map_sar(self.data.sar(self.src[pair], pair)).astype(np.float32)
         extra = {}
         if self.aug:   # 每个 epoch、每个 worker 不同（worker 的 torch 种子逐 epoch 变化）
             rng = np.random.default_rng([self.seed, i, torch.initial_seed() % 2 ** 32])
@@ -48,7 +55,7 @@ class PairSet(torch.utils.data.Dataset):
         if self.neg:
             other = neg_partner(self.pairs, pair, np.random.default_rng([self.seed, i]))   # 按索引播种，与 worker 无关
             out["pair_neg"] = other
-            out["image1_neg"] = t(self.resize(self.map_sar(self.data.sar(self.split, other))))
+            out["image1_neg"] = t(self.resize(self.map_sar(self.data.sar(self.src[other], other))))
         return out
 
 

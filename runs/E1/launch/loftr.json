@@ -1,0 +1,73 @@
+[
+ {
+  "start": "2026-10-03 11:15:51 +0800",
+  "end": "2026-10-03 14:48:18 +0800",
+  "status": "ok",
+  "commit": "172d9c4cd6239f9c2a6c95ac1530ef4f7568de0f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/overfit-ceiling",
+  "cuda_visible_devices": "3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "scripts/finetune/run.py",
+   "runs/E1"
+  ],
+  "entry": "scripts/finetune/run.py",
+  "config_file": "runs/E1/configs/loftr.toml",
+  "args": {
+   "model": {
+    "name": "loftr",
+    "config": "configs/baselines/anymatch_loftr.json",
+    "init": ""
+   },
+   "optim": {
+    "steps": 16000,
+    "batch": 1,
+    "lr": 1e-05,
+    "wd": 0.0,
+    "warmup": 500,
+    "warmup_start": 0.1,
+    "sched": "cosine",
+    "lr_min": 0.0,
+    "clip": 0.0,
+    "accum": 1
+   },
+   "run": {
+    "seed": 0,
+    "workers": 4,
+    "save_every": 2000,
+    "save_at": [],
+    "save_zero": true,
+    "limit": 0,
+    "split": "val+test"
+   },
+   "pseudo": {
+    "labels": "runs/E1/extra/labels_gt.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "w_coarse": 1.0,
+    "w_fine": 1.0
+   }
+  },
+  "config": {
+   "method": "anymatch_loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  }
+ }
+]

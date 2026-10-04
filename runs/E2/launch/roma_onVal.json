@@ -1,0 +1,72 @@
+[
+ {
+  "start": "2026-10-04 14:40:31 +0800",
+  "end": "2026-10-04 17:21:09 +0800",
+  "status": "ok",
+  "commit": "6547e07e2fc0ea760b714d6a9a4a32e1029fb562",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/overfit-cross",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "scripts/finetune/run.py",
+   "runs/E2"
+  ],
+  "entry": "scripts/finetune/run.py",
+  "config_file": "runs/E2/configs/roma_onVal.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "init": "",
+    "train_vgg": true
+   },
+   "optim": {
+    "steps": 12000,
+    "batch": 1,
+    "lr": 1e-05,
+    "wd": 0.01,
+    "warmup": 500,
+    "warmup_start": 0.1,
+    "sched": "cosine",
+    "lr_min": 0.0,
+    "clip": 0.0,
+    "accum": 1
+   },
+   "run": {
+    "seed": 0,
+    "workers": 4,
+    "save_every": 2000,
+    "save_at": [],
+    "save_zero": false,
+    "limit": 0,
+    "split": "val",
+    "select": "last"
+   },
+   "pseudo": {
+    "labels": "runs/E1/extra/labels_gt.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "swap": 0.5
+   }
+  },
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  }
+ }
+]

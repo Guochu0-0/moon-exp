@@ -1,0 +1,15 @@
+# 标注点最小二乘拟合的仿射当标签（与 E1 同一份），从 AnyMatch-LoFTR zero-shot 起步，LoFTR 原损失，不加扰动；
+# 只在一个 split 上训练，取最后一步，不用评测集选存档。
+[model]
+name = "loftr"
+
+[optim]
+steps = 8000
+lr = 5e-5
+
+[run]
+save_every = 2000
+select = "last"
+
+[pseudo]
+labels = "runs/E1/extra/labels_gt.jsonl"

@@ -108,11 +108,12 @@ class Job:
             if online and not (self.sw / "neg" / f"step{st}.jsonl").exists():
                 self.sh([PY, "-m", "finetune.negpairs", self.infer, "--split", "val", "--n", "200",
                          "--weights", f"step{st}={c}", "--out", self.sw / "neg"], "neg.log")
-        st = self.peak()
+        last = self.cfg["run"]["select"] == "last"   # 在 Test 上训练时不能按 Val 选（#98）
+        st = max(int(c.stem[5:]) for c in ck.glob("ckpt_*.pt")) if last else self.peak()
         log(f"TEST {m} step{st}")
         self.evaluate("test", st)
         s = self.metrics()[f"step{st}"]
-        (self.sw / "peak.json").write_text(json.dumps({"step": st, "metric": "val auc@5",
+        (self.sw / "peak.json").write_text(json.dumps({"step": st, "metric": "last" if last else "val auc@5",
                                                        "val": s["val"]["summary"], "test": s["test"]["summary"]},
                                                       indent=1) + "\n", encoding="utf-8")
         dst = R / "preds" / m   # 选中的 step 即这个方法的正式结果

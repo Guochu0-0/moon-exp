@@ -1,0 +1,4 @@
+base = "_loftr"
+
+[run]
+split = "val"

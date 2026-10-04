@@ -1,0 +1,16 @@
+id = "E2"
+title = "交叉训练：Test 上用标注训练评 Val、Val 上训练评 Test"
+parent = "E1"
+date = "2026-10-04"
+
+[methods.loftr_onTest]
+name = "AnyMatch-LoFTR 在 Test 标注上训练（只看 Val 结果）"
+
+[methods.loftr_onVal]
+name = "AnyMatch-LoFTR 在 Val 标注上训练（只看 Test 结果）"
+
+[methods.roma_onTest]
+name = "AnyMatch-RoMa 在 Test 标注上训练（只看 Val 结果）"
+
+[methods.roma_onVal]
+name = "AnyMatch-RoMa 在 Val 标注上训练（只看 Test 结果）"

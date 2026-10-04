@@ -48,7 +48,9 @@ RUN = {
     "save_zero": True,      # 训练前存 ckpt_0
     "limit": 0,             # 只用 Train 的 N 对（均匀取样，调试用）；0 = 全部
     "split": "train",       # 训练用的 split，可用 + 连接；val / test 只用于有标注的上限参考（#96）
+    "select": "val_peak",   # 驱动怎么选正式结果的 ckpt：val_peak 按 Val AUC@5 峰值 / last 最后一个（在 Test 上训练时用，#98）
 }
+SELECT = ("val_peak", "last")
 SPLITS = ("train", "val", "test")
 TOP = ("base", "model", "optim", "run")
 
@@ -121,6 +123,8 @@ def expand(raw: dict) -> dict:
     bad = [x for x in out["run"]["split"].split("+") if x not in SPLITS]
     if bad:
         raise ConfigError(f"[run] split 只能由 {SPLITS} 用 + 连接，得到 {out['run']['split']!r}")
+    if out["run"]["select"] not in SELECT:
+        raise ConfigError(f"[run] select 可选 {SELECT}，得到 {out['run']['select']!r}")
     for name, part in PARTS.items():      # 按登记顺序：每步也按这个顺序算损失
         if name not in raw:
             continue

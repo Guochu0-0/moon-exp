@@ -1,0 +1,14 @@
+# 同 _loftr，底座换成 AnyMatch-RoMa（minmax 输入），RoMa 原损失，训 decoder + VGG。
+[model]
+name = "roma"
+train_vgg = true
+
+[optim]
+steps = 12000
+
+[run]
+save_every = 2000
+select = "last"
+
+[pseudo]
+labels = "runs/E1/extra/labels_gt.jsonl"

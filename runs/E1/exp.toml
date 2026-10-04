@@ -1,0 +1,19 @@
+id = "E1"
+title = "精度上限参考：用 Val+Test 标注过拟合 LoFTR / RoMa 再原地评测"
+parent = "B0"
+date = "2026-10-04"
+
+[methods.gtfit]
+name = "标注点最小二乘自拟合的仿射（参照）"
+
+[methods.loftr]
+name = "AnyMatch-LoFTR 在 Val+Test 标注上过拟合（lr 1e-5）"
+
+[methods.loftr_lr5e5]
+name = "AnyMatch-LoFTR 在 Val+Test 标注上过拟合（lr 5e-5）"
+
+[methods.roma]
+name = "AnyMatch-RoMa 在 Val+Test 标注上过拟合（只训 decoder）"
+
+[methods.roma_vgg]
+name = "AnyMatch-RoMa 在 Val+Test 标注上过拟合（decoder + VGG）"

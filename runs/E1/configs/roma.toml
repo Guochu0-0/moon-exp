@@ -1,0 +1,13 @@
+# 标注点自拟合的仿射当标签，在 Val+Test 有标注的对上过拟合；从 AnyMatch-RoMa（minmax 输入）zero-shot 起步，RoMa 原损失，只训 decoder。
+[model]
+name = "roma"
+
+[optim]
+steps = 16000
+
+[run]
+split = "val+test"
+save_every = 2000
+
+[pseudo]
+labels = "runs/E1/extra/labels_gt.jsonl"

@@ -336,7 +336,7 @@ def main():
 
 def box(ax, data, labels, title):
     data = [np.asarray(d)[np.isfinite(d)] for d in data]
-    ax.boxplot(data, labels=labels, showfliers=False)
+    ax.boxplot(data, tick_labels=labels, showfliers=False)
     ax.set_title(title, fontsize=9)
     ax.tick_params(axis="x", labelsize=7, rotation=30)
 
@@ -388,8 +388,9 @@ def figures(names, D, contrast, dwx, agree, props, cps, err, pairs):
                 meds.append(np.mean(e[sel]))
             ax.plot(mids, meds, "r-o", ms=3)
             ax.set_yscale("log")
-            from_stats = spearman(dw, e)
-            ax.set_title(f"{MODELS[m]['name']}｜{SRC_ZH[s]}\nρ={from_stats['rho']:.2f} n={from_stats['n']}", fontsize=8)
+            r0, r1 = spearman(dw, e), partial_spearman(dw, e, du)
+            ax.set_title(f"{MODELS[m]['name']}｜{SRC_ZH[s]}\nρ={r0['rho']:.2f}，控制均匀距离后 {r1['rho']:.2f}（n={r0['n']}）",
+                         fontsize=8)
             if j == 0:
                 ax.set_ylabel("该对误差 (px)")
             if i == len(sources) - 1:

@@ -6,6 +6,8 @@
     /opt/envs/loftr/bin/python runs/E3/code/error_nature.py analyse
     # 3) 自动挑出的示意对（要读影像）
     /opt/envs/loftr/bin/python runs/E3/code/error_nature.py examples
+    # 4) 仿射误差三段分解：模型仿射 → 局部对应拟合的仿射 → 标注拟合的仿射 → 标注（只读 1) 的产物）
+    /opt/envs/loftr/bin/python runs/E3/code/error_nature.py split
 
 坐标全部是评测口径（原 512 网格、角点原点，与 A 和标注相同）。每个模型、每个有标注的 pair、每个标注点记：
 - 仿射位置 A·o；
@@ -556,9 +558,89 @@ def examples(args):
         plt.close(fig)
 
 
+# ---------------------------------------------------------------- 仿射误差三段分解
+
+def split_pair(v, local):
+    """一对上、有局部对应的点（同 per_pair 的筛选）：模型仿射 a、局部对应拟合的仿射 f、标注拟合的仿射 g。
+    a − s = (a − f) + (f − g) + (g − s)；f、g 是同一组点上的最小二乘，g − s 与前两段正交。点 < 4 返回 None。"""
+    o, s, a, loc = v[:, 0:2], v[:, 2:4], v[:, 4:6], v[:, LOCAL_COL[local]]
+    if not np.isfinite(a).all():
+        return None
+    e = loc - s
+    ok = np.isfinite(e).all(1)
+    ok[ok] = np.linalg.norm(e[ok], axis=1) < SANE
+    o, s, a, loc = o[ok], s[ok], a[ok], loc[ok]
+    n = len(o)
+    if n < 4 or np.abs((a - s).mean(0)).max() >= SANE:
+        return None
+    f, g = apply(lsq_affine(o, loc), o), apply(lsq_affine(o, s), o)
+    f_loo, g_loo = np.full_like(o, np.nan), np.full_like(o, np.nan)
+    if n >= 5:
+        for i in range(n):
+            k = np.arange(n) != i
+            f_loo[i] = apply(lsq_affine(o[k], loc[k]), o[i:i + 1])[0]
+            g_loo[i] = apply(lsq_affine(o[k], s[k]), o[i:i + 1])[0]
+    return {"s": s, "a": a, "l": loc, "f": f, "g": g, "f_loo": f_loo, "g_loo": g_loo}
+
+
+def affine_split(args):
+    plt = setup_plt()
+    keys = list(MODELS)
+    nrm = lambda x: np.linalg.norm(x, axis=1)
+    med = lambda x: float(np.nanmedian(x))
+    out = {"note": "每对只用有局部对应的点（离标注 < SANE），至少 4 点；仿射整体偏移 >= SANE 的对不计。"
+                   "a 模型仿射，f 局部对应拟合的仿射，g 标注拟合的仿射；_loo 为留一。", "models": {}}
+    for k in keys:
+        rows = [r for r in (split_pair(v, MAIN_LOCAL[k]) for v in read_points(k).values()) if r is not None]
+        cat = lambda key: np.concatenate([r[key] for r in rows])
+        s = cat("s")
+        P = {m: cat(m) for m in ("a", "f", "g", "l", "f_loo", "g_loo")}
+        err = {m: P[m] - s for m in P}
+        seg = {"1_model_vs_localfit": P["a"] - P["f"], "2_localfit_vs_labelfit": P["f"] - P["g"],
+               "3_labelfit_vs_label": P["g"] - s}
+        ms = lambda x: float(np.mean(x ** 2))
+        res = {"n_pairs": len(rows), "n_points": int(len(s)),
+               "err_median_x": {m: med(np.abs(err[m][:, 0])) for m in err},
+               "err_median": {m: med(nrm(err[m])) for m in err},
+               "seg_median_x": {q: med(np.abs(x[:, 0])) for q, x in seg.items()},
+               "seg_median": {q: med(nrm(x)) for q, x in seg.items()}}
+        # x 向均方误差：总 = (①+②) + ③ 严格成立；① ② 不正交，另给交叉项
+        s1, s2, s3 = (seg[q][:, 0] for q in seg)
+        res["ms_x"] = {"total": ms(err["a"][:, 0]), "seg1": ms(s1), "seg2": ms(s2), "cross12": float(2 * np.mean(s1 * s2)),
+                       "seg3": ms(s3), "localfit_total": ms(err["f"][:, 0])}
+        # 每对误差（这些点上到标注的平均距离）
+        pe = {m: np.array([nrm(r[m] - r["s"]).mean() for r in rows]) for m in ("a", "f", "g")}
+        res["pair_err"] = {m: {"median": med(x), "lt3": float((x < 3).mean()), "lt5": float((x < 5).mean())}
+                           for m, x in pe.items()}
+        out["models"][k] = res
+        print(k, json.dumps(res, ensure_ascii=False), flush=True)
+    (OUT / "affine_split.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    fig, axs = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
+    bars = [("a", "模型的仿射"), ("f", "局部对应拟合的仿射"), ("g", "标注拟合的仿射（样本内）"),
+            ("g_loo", "标注拟合的仿射（留一）"), ("l", "局部对应本身")]
+    w = 0.8 / len(bars)
+    ms_key = {"a": "total", "f": "localfit_total", "g": "seg3"}     # g 在样本内的误差就是第三段
+    for ax, stat, ylab in ((axs[0], lambda r, m: r["err_median_x"][m], "x 向误差中位数（px）"),
+                           (axs[1], lambda r, m: np.sqrt(r["ms_x"][ms_key[m]]) if m in ms_key else np.nan,
+                            "x 向误差均方根（px）")):
+        for j, (m, lab) in enumerate(bars):
+            ax.bar(np.arange(len(keys)) + (j - (len(bars) - 1) / 2) * w,
+                   [stat(out["models"][k], m) for k in keys], w, label=lab)
+        ax.set_ylabel(ylab)
+    axs[0].set_ylim(0, 4.2)
+    axs[0].legend(fontsize=8, ncol=3, loc="upper center")
+    axs[1].set_xticks(np.arange(len(keys)))
+    axs[1].set_xticklabels([MODELS[k]["name"] for k in keys], fontsize=9)
+    axs[1].set_title("均方根只算了前三种（留一与局部对应本身未算）", fontsize=9)
+    fig.tight_layout()
+    fig.savefig(OUT / "affine_split_x.png", dpi=120)
+    plt.close(fig)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["collect", "analyse", "sar-cache", "examples"])
+    ap.add_argument("cmd", choices=["collect", "analyse", "sar-cache", "examples", "split"])
     ap.add_argument("--data", default=os.environ.get("MOON_DATA", str(YGC / "dataset/Moon")))
     ap.add_argument("--models", nargs="*", default=list(MODELS))
     ap.add_argument("--limit", type=int, default=0, help="只跑前若干对（试跑）")
@@ -566,7 +648,8 @@ def main():
     args = ap.parse_args()
     if args.cmd == "collect" and os.environ.get("GPU"):
         os.environ["CUDA_VISIBLE_DEVICES"] = os.environ["GPU"]
-    {"collect": collect, "analyse": analyse, "sar-cache": sar_cache, "examples": examples}[args.cmd](args)
+    {"collect": collect, "analyse": analyse, "sar-cache": sar_cache, "examples": examples,
+     "split": affine_split}[args.cmd](args)
 
 
 if __name__ == "__main__":

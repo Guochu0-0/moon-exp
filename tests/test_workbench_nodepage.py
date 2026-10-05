@@ -134,3 +134,22 @@ def test_detail_launch(api, tree):
     (tree / "B0" / "launch" / "gone.json").write_text(json.dumps(rec), encoding="utf-8")   # 没有这个方法：不列
     assert detail(api, "B0")["launch"] == {"loftr": rec}
     assert detail(api, "E1")["launch"] == {}
+
+
+def test_analysis_detail_and_card(api, runs):
+    """分析：无父、无方法；extra/ 有文件即点亮，卡片带附件数；启动记录列出 launch/ 下全部文件。"""
+    import json
+    d = write_exp(runs, "A1", 'kind = "analysis"\n')
+    a = api.exps()["A1"]
+    assert a["analysis"] and not a["lit"] and a["n_extra"] == 0 and a["methods"] == []
+    (d / "extra").mkdir()
+    (d / "extra" / "fig.png").write_bytes(b"x")
+    (d / "launch").mkdir()
+    (d / "launch" / "main.json").write_text(json.dumps([{"commit": "abc", "cmd": ["python", "x.py"]}]), encoding="utf-8")
+    a = api.exps()["A1"]
+    assert a["lit"] and a["n_extra"] == 1
+    x = detail(api, "A1")
+    assert x["analysis"] and x["lit"] and x["parent"] is None and x["methods"] == []
+    assert x["launch"] == {"main": [{"commit": "abc", "cmd": ["python", "x.py"]}]}
+    write_exp(runs, "E1")
+    assert not api.exps()["E1"]["analysis"] and "n_extra" not in api.exps()["E1"]

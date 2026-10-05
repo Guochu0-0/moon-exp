@@ -4,7 +4,7 @@
 
 ## 流程
 
-1. 建目录：`python -m workbench new E3 --parent E2 [--init E2/main] --title "一句话标题"`。编号取下一个未用的 `E<n>`；用户已在画布上建好的直接用。
+1. 建目录：`python -m workbench new E3 --parent E2 [--init E2/main] --title "一句话标题"`。编号取下一个未用的 `E<n>`；用户已在画布上建好的直接用。不训练、只研究已有结果的，建成**分析**，写法见下文「分析」。
 2. 跑实验（先提交代码，见 `docs/agents/experiments.md`）。微调时每个方法写一份 `configs/<方法>.toml`（格式见 `finetune/README.md`），用 `scripts/finetune/run.py runs/<id>` 跑，它按下文「训练产物」写好全部记录；自己写的用 `PredWriter` 写预测，需要时用 `InterWriter` 写中间结果、按下文约定写 TB 日志。产物全部放在 `runs/<id>/` 里，不要写到别处。
 3. 按下文「notes.md」一节起草 `runs/<id>/notes.md`：实验目的、实验方法、实验结果、实验结论都写。
 4. 可选：`python -m workbench eval <id>` 生成 `metrics.json`；`python -m workbench check` 检查记录。
@@ -34,7 +34,7 @@ runs/<id>/
   extra/                               附件
 ```
 
-- **点亮**是派生状态：任一方法有任一 split 的 `preds/<method>/<split>.jsonl` 就算点亮，不需要手填。
+- **点亮**是派生状态：任一方法有任一 split 的 `preds/<method>/<split>.jsonl` 就算点亮，不需要手填。分析以 `extra/` 下有文件为准。
 - 方法按 `preds/<method>/` 自动发现。普通实验只有一个方法，命名为 `main`；基线实验（如 B0）可以挂多个。变体方法命名为 `<方法>__<变体>`（如 `loftr__minmax`）。
 - split 为 `train` / `val` / `test`。
 
@@ -44,6 +44,7 @@ runs/<id>/
 |---|---|
 | `id` | 必填，与目录名一致 |
 | `title` | 必填，一句话标题 |
+| `kind` | 只有分析写，取 `"analysis"`；普通实验整行省略 |
 | `parent` | 父实验 id；根节点整行省略 |
 | `init` | 可选，写成 `<实验>/<方法>`（如 `B0/roma`），表示从父实验的哪个方法起步 |
 | `baseline` | 可选，默认 `false`。基线实验（不训练、作比较起点）写 `true` |
@@ -126,6 +127,25 @@ runs/<id>/
 
 这种做法能提高精度：Val AUC@5 从 0.220 升到 0.272，Test 从 0.188 升到 0.233；换两个种子后 Test 为 0.233 和 0.229，结果一致。提升几乎全部发生在前 1000 步，接着训、提高学习率、重新生成伪标签都不再上涨。
 ```
+
+## 分析
+
+只研究已有模型或结果、不训练也不产出逐 pair 预测的实验，建成分析。每研究一个新问题就开一个分析，结论写进 Notes，不为它专门设计页面。节点页上只有实验信息、启动记录和 Notes，没有指标表、方法列表、可视化结果和训练图表；画布上的卡片标「分析」，显示附件数。
+
+```
+runs/<id>/
+  exp.toml           kind = "analysis"
+  notes.md           结论全部写在这里
+  code/              分析脚本（进 git，先提交再跑）
+  launch/main.json   启动记录：分析代码的 commit、主机、命令
+  extra/             Notes 引用的图，和它们的数据（csv、json 等，可放在 extra/data/ 下）
+```
+
+- 建目录：`python -m workbench new E5 --analysis --title "一句话标题"`。`parent` 可以留空，涉及哪些实验在 Notes 里写明；没有 `init`。
+- 不写 `preds/`、`inter/`、`tb/`、`metrics.json`。`check` 发现分析下有 preds 会报错，`eval` 跳过分析。
+- `extra/` 下有任何文件即点亮。
+- 用 `workbench.launch` 启动，方法名写 `main`：`python -m workbench.launch begin runs/<id> main -- python runs/<id>/code/<脚本>.py …`，跑完 `python -m workbench.launch end runs/<id> main ok`。节点页列出 `launch/` 下的全部记录，分析的 commit 只看这里。
+- Notes 按上文「notes.md」一节写。「实验方法」写分析用了哪些模型的哪些结果（按它们做了什么来称呼）、在哪个 split 上、算了哪些统计量；「实验结果」以统计量配图为主，图用 `![](extra/<名字>.png)` 嵌入。节点页上没有任何指标，结论用到的数字都写在 Notes 里。
 
 ## 预测：preds
 

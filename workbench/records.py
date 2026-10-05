@@ -3,7 +3,7 @@
 一个实验一个目录 runs/<id>/，格式（记录格式 v2）见 workbench/README.md：
 
     runs/<id>/
-      exp.toml                              元数据：id、title、parent、init、baseline、date、[methods.<m>]
+      exp.toml                              元数据：id、title、kind、parent、init、baseline、date、[methods.<m>]
       notes.md                              可选：实验唯一的自由文本
       preds/<method>/<split>.jsonl          每个 pair 一行：估计仿射（光学 → SAR，2×3）或失败原因
       preds/<method>/<split>.meta.json      写入时的 commit 与 dirty
@@ -12,7 +12,8 @@
       inter/<method>/<name>/<split>.npz     中间结果数据（scalar / points / flow），不进 git
       inter/<method>/<name>/<split>/*.png   中间结果数据（image），不进 git
       tb/<method>/                          TensorBoard 日志，不进 git
-      extra/                               附件，Notes 引用时才显示
+      launch/<method>.json                  启动记录（分析不分方法，列出全部）
+      extra/                               附件，Notes 引用时才显示；分析以它点亮
       metrics.json                          派生物：`python -m workbench eval` 写出，勿手改
 """
 from __future__ import annotations
@@ -33,7 +34,8 @@ import numpy as np
 
 SPLITS = ("val", "test")
 MAIN_METHOD = "main"
-FIELDS = ("id", "title", "parent", "init", "baseline", "date", "methods")
+FIELDS = ("id", "title", "kind", "parent", "init", "baseline", "date", "methods")
+ANALYSIS = "analysis"   # kind 的唯一取值；不写即普通实验
 METHOD_FIELDS = ("name", "caveat")
 LEGACY_FIELDS = ("status", "commit", "hypothesis", "change", "verdict", "next")
 MATCHES_CAP = 2000   # 每个 pair 的点对最多存多少个点（按 conf 取前若干）
@@ -81,8 +83,15 @@ class Run:
         return self.meta.get("date") or None
 
     @property
+    def analysis(self) -> bool:
+        """分析：不训练、不产出预测，只有 Notes 和附件。"""
+        return self.meta.get("kind") == ANALYSIS
+
+    @property
     def lit(self) -> bool:
-        """点亮：任一方法有任一 split 的 preds。"""
+        """点亮：普通实验看任一方法有任一 split 的 preds，分析看 extra/ 下有没有文件。"""
+        if self.analysis:
+            return bool(self.extras())
         return any(self._has(m, s) for m in self.methods for s in SPLITS)
 
     @property
@@ -140,11 +149,12 @@ class Run:
                 "methods": methods}
 
     def launches(self) -> dict[str, list[dict]]:
-        """{方法: 启动记录列表}，来自 launch/<method>.json（进 git）。只列有记录的方法；
+        """{方法: 启动记录列表}，来自 launch/<method>.json（进 git）。只列有记录的方法；分析没有方法，列出全部文件。
         事后补记的记录带 backfilled 字段（格式见 RECORDS.md「启动记录」）。"""
         d = self.dir / "launch"
+        names = sorted(p.stem for p in d.glob("*.json")) if self.analysis and d.is_dir() else self.methods
         out = {}
-        for m in self.methods:
+        for m in names:
             p = d / f"{m}.json"
             if p.exists():
                 items = json.loads(p.read_text(encoding="utf-8"))
@@ -261,6 +271,10 @@ def check_runs(runs: dict[str, Run]) -> tuple[list[str], list[str]]:
             problems.append(f"{r.id}: exp.toml 里 id={m['id']!r} 与目录名不一致")
         if "baseline" in m and not isinstance(m["baseline"], bool):
             problems.append(f"{r.id}: baseline 应为 true / false，现为 {m['baseline']!r}")
+        if "kind" in m and m["kind"] != ANALYSIS:
+            problems.append(f"{r.id}: kind 只能是 {ANALYSIS!r}（普通实验不写），现为 {m['kind']!r}")
+        if r.analysis and r.methods:
+            problems.append(f"{r.id}: 分析不应有预测，preds/ 下有 {', '.join(r.methods)}")
         if r.parent and r.parent not in runs:
             problems.append(f"{r.id}: 父实验 {r.parent} 不存在")
         if r.init:
@@ -287,7 +301,7 @@ ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
 
 EXP_TEMPLATE = """id = {id}
 title = {title}
-{links}date = "{date}"
+{kind}{links}date = "{date}"
 """
 
 
@@ -318,20 +332,24 @@ def next_id(root: Path) -> str:
 
 
 def create_experiment(root: Path, rid: str, title: str = "", parent: str | None = None,
-                      init: str | None = None) -> Path:
-    """新建未点亮实验：只写 runs/<id>/exp.toml。"""
+                      init: str | None = None, analysis: bool = False) -> Path:
+    """新建未点亮实验：只写 runs/<id>/exp.toml。analysis 为真时建分析（kind = "analysis"，没有 init）。"""
     root = Path(root)
     if not ID_RE.fullmatch(rid or ""):
         raise EditError(f"编号 {rid!r} 不合法：只能用字母、数字、_ . -，且以字母或数字开头")
     d = root / rid
     if d.exists():
         raise EditError(f"{rid} 已存在")
+    if analysis and init:
+        raise EditError("分析不训练，没有起点方法（init）")
     if parent or init:
         _check_link(load_runs(root), rid, parent, init)
     links = (f"parent = {_q(parent)}\n" if parent else "") + \
-        (f"init = {_q(init)}\n" if init else '# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步\n')
+        (f"init = {_q(init)}\n" if init else "" if analysis else
+         '# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步\n')
     d.mkdir(parents=True)
     (d / "exp.toml").write_text(EXP_TEMPLATE.format(id=_q(rid), title=_q(title), links=links,
+                                                    kind=f"kind = {_q(ANALYSIS)}\n" if analysis else "",
                                                     date=datetime.date.today().isoformat()),
                                 encoding="utf-8", newline="\n")
     return d

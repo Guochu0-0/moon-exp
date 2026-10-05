@@ -536,7 +536,7 @@ def examples(args):
             a.imshow(sar, cmap="gray", extent=(0, sar.shape[1], sar.shape[0], 0))
             for p1, c in ((aff, "r"), (loc, "c")):
                 for i in range(len(s)):
-                    if np.isfinite(p1[i]).all() and np.linalg.norm(p1[i] - s[i]) < SANE:
+                    if np.isfinite(p1[i]).all() and (c == "r" or np.linalg.norm(p1[i] - s[i]) < SANE):   # 误匹配只滤局部对应
                         a.annotate("", xy=s[i] + G * (p1[i] - s[i]), xytext=s[i],
                                    arrowprops=dict(arrowstyle="->", color=c, lw=1.3))
             a.scatter(s[:, 0], s[:, 1], s=16, c="lime", zorder=3)

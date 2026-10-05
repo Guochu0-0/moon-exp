@@ -1,3 +1,4 @@
 id = "E4"
 title = "误差分析：模型看图上的什么地方（注意力、certainty、遮挡敏感性）"
+kind = "analysis"
 date = "2026-10-05"

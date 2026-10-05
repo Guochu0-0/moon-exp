@@ -1,0 +1,36 @@
+[
+ {
+  "start": "2026-10-05 21:35:58 +0800",
+  "end": "2026-10-05 21:36:33 +0800",
+  "status": "ok",
+  "commit": "a2aa1006db4f63c6d1c840669effc2e53528ffb3",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-e3-affine-split",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E3/code/error_nature.py",
+   "split"
+  ]
+ },
+ {
+  "start": "2026-10-05 21:39:40 +0800",
+  "end": "2026-10-05 21:40:02 +0800",
+  "status": "ok",
+  "commit": "ff9a68fea8c72d354b17608578ff86c7c6adb32f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-e3-affine-split",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E3/code/error_nature.py",
+   "split"
+  ]
+ }
+]

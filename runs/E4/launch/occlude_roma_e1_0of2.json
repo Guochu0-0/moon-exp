@@ -1,0 +1,28 @@
+[
+ {
+  "start": "2026-10-05 04:54:42 +0800",
+  "end": "2026-10-05 07:13:38 +0800",
+  "status": "ok",
+  "commit": "86efd165cdd274031009dc65c492640fd8c20443",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-attention-101/runs/E4/code",
+  "cuda_visible_devices": "4",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "occlude.py",
+   "roma_e1",
+   "--part",
+   "0/2"
+  ],
+  "entry": "runs/E4/code/occlude.py",
+  "model": {
+   "family": "roma",
+   "config": "configs/baselines/anymatch_roma__minmax.json",
+   "ckpt": "runs/E1/ckpt/roma_vgg/ckpt_16000.pt",
+   "ref": "E1/roma_vgg",
+   "name": "RoMa 标注过拟合"
+  }
+ }
+]

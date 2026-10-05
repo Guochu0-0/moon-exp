@@ -1,0 +1,26 @@
+[
+ {
+  "start": "2026-10-05 17:49:44 +0800",
+  "end": "2026-10-05 17:58:25 +0800",
+  "status": "ok",
+  "commit": "13f1bc19e68dfbbcaace05db169ffb2273503812",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-attention-101/runs/E4/code",
+  "cuda_visible_devices": "2",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "infer.py",
+   "roma_e1"
+  ],
+  "entry": "runs/E4/code/infer.py",
+  "model": {
+   "family": "roma",
+   "config": "configs/baselines/anymatch_roma__minmax.json",
+   "ckpt": "runs/E1/ckpt/roma_vgg/ckpt_16000.pt",
+   "ref": "E1/roma_vgg",
+   "name": "RoMa 标注过拟合"
+  }
+ }
+]

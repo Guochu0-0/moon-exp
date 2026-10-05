@@ -1,0 +1,28 @@
+[
+ {
+  "start": "2026-10-05 04:44:25 +0800",
+  "end": "2026-10-05 07:13:55 +0800",
+  "status": "ok",
+  "commit": "13f1bc19e68dfbbcaace05db169ffb2273503812",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-attention-101/runs/E4/code",
+  "cuda_visible_devices": "3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "occlude.py",
+   "roma_zs",
+   "--part",
+   "0/2"
+  ],
+  "entry": "runs/E4/code/occlude.py",
+  "model": {
+   "family": "roma",
+   "config": "configs/baselines/anymatch_roma__minmax.json",
+   "ckpt": null,
+   "ref": "B0m/anymatch_roma__minmax",
+   "name": "RoMa zero-shot"
+  }
+ }
+]

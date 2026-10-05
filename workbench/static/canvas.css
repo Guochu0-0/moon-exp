@@ -59,8 +59,14 @@
 .node .port.out { right: -6px; cursor: crosshair; }
 .node .port.out:hover { transform: scale(1.35); }
 .fam-roma { background: #64A8F5; } .fam-loftr { background: #F0B541; } .fam-other { background: #B79EE0; } .fam-none { background: #9A9CA3; }
+/* 分析：青色标题带与标签，主体只有一行附件数 */
+.node.ana { border-color: #35504C; }
+.node.ana .hdr { background: #1A2422; border-bottom-color: #2D403C; }
+.node .chip.ana { color: #7FC4B8; border-color: #2F5A53; }
+.node .ana-body { display: flex; justify-content: space-between; margin: 3px 14px 10px; padding: 0 10px; height: 26px; line-height: 26px; border-radius: 5px; background: #1B1C1F; color: #A9C9C3; font-size: 12px; }
+.node .ana-body .num { font: 11.5px/26px var(--mono); color: #C9CBD0; }
 .node.off { background: #1F2023; border-style: dashed; }
-.node.off .hdr { background: #1B1C1F; } .node.off .nid, .node.off .ttl { color: #8B8D94; }
+.node.off .hdr, .node.off.ana .hdr { background: #1B1C1F; } .node.off .nid, .node.off .ttl { color: #8B8D94; }
 .node.off .st { background: none; border: 1.5px solid #6B6E76; box-shadow: none; }
 .node.off .port { border-color: #1F2023; }
 .node:hover { border-color: #5A5D65; }

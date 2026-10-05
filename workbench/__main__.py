@@ -32,6 +32,9 @@ def cmd_eval(args):
     ds = Dataset(_data_root(args))
     runs = load_runs(Path(args.runs))
     for rid in args.ids or list(runs):
+        if runs[rid].analysis:
+            print(f"{rid}: 分析没有预测，跳过")
+            continue
         m = evaluate_run(ds, runs[rid])
         path = write_metrics(runs[rid], m)
         main = m["protocol"]["main"]
@@ -58,7 +61,7 @@ def cmd_new(args):
     from .records import EditError, create_experiment
 
     try:
-        d = create_experiment(Path(args.runs), args.id, args.title, args.parent, args.init)
+        d = create_experiment(Path(args.runs), args.id, args.title, args.parent, args.init, args.analysis)
     except EditError as e:
         sys.exit(str(e))
     print(f"已建 {d}/exp.toml")
@@ -99,6 +102,7 @@ def main(argv=None):
     p.add_argument("--parent")
     p.add_argument("--init", help="<父实验>/<方法>")
     p.add_argument("--title", default="")
+    p.add_argument("--analysis", action="store_true", help="建分析：不训练、没有预测，只有 Notes 和附件")
     p.set_defaults(fn=cmd_new)
 
     p = sub.add_parser("sync", help="从服务器按实验拉回点对、中间结果、TB 日志（ckpt 永不拉）")

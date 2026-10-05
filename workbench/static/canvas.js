@@ -104,7 +104,9 @@ export function mountCanvas(root, { onOpen }) {
   // ---------------- 渲染 ----------------
   function nodeHTML(e) {
     let body;
-    if (e.lit) {
+    if (e.analysis) {   // 分析：没有方法和指标，只有 Notes 与附件
+      body = e.lit ? `<div class="ana-body"><span>Notes 与附件</span><span class="num">${e.n_extra} 个附件</span></div>` : '<div class="empty">尚无附件</div>';
+    } else if (e.lit) {
       const ms = e.methods;
       let show = S.expanded.has(e.id) ? ms : ms.slice(0, SHOWN);
       const used = new Set(kids(e.id).map(initMethod).filter(Boolean));   // 被子实验用作 init 的方法总是显示，好接线
@@ -116,9 +118,9 @@ export function mountCanvas(root, { onOpen }) {
         + (ms.length > show.length ? `<div class="more">▸ 另外 ${ms.length - show.length} 个方法</div>`
           : S.expanded.has(e.id) && ms.length > SHOWN ? '<div class="more">▾ 收起</div>' : '<div class="rows-end"></div>');
     } else body = '<div class="empty">尚无结果</div>';
-    return `<div class="node${e.lit ? '' : ' off'}${S.sel.has(ek(e.id)) ? ' sel' : ''}${S.fresh === e.id ? ' new' : ''}" data-id="${esc(e.id)}">
-      <div class="hdr"><span class="nid">${esc(e.id)}</span><span class="ttl" title="${esc(e.title)}">${esc(e.title)}</span>${e.baseline ? '<span class="chip">基线</span>' : ''}<span class="st" title="${e.lit ? '已点亮' : '未点亮'}"></span></div>
-      <div class="io"><span class="port in"></span><span>父实验</span><span>${e.lit ? 'AUC@10（Val）' : ''}</span><span>子实验</span><span class="port out fam-none" data-m="_" title="拖出：拖到实验上改它的父实验，拖到空白处派生新实验"></span></div>
+    return `<div class="node${e.lit ? '' : ' off'}${e.analysis ? ' ana' : ''}${S.sel.has(ek(e.id)) ? ' sel' : ''}${S.fresh === e.id ? ' new' : ''}" data-id="${esc(e.id)}">
+      <div class="hdr"><span class="nid">${esc(e.id)}</span><span class="ttl" title="${esc(e.title)}">${esc(e.title)}</span>${e.baseline ? '<span class="chip">基线</span>' : ''}${e.analysis ? '<span class="chip ana">分析</span>' : ''}<span class="st" title="${e.lit ? '已点亮' : '未点亮'}"></span></div>
+      <div class="io"><span class="port in"></span><span>父实验</span><span>${e.lit && !e.analysis ? 'AUC@10（Val）' : ''}</span><span>子实验</span><span class="port out fam-none" data-m="_" title="拖出：拖到实验上改它的父实验，拖到空白处派生新实验"></span></div>
       ${body}</div>`;
   }
   const groupHTML = g => `<div class="grp ${esc(g.color)}" data-g="${esc(g.id)}" style="left:${g.x}px;top:${g.y}px;width:${g.w}px;height:${g.h}px">

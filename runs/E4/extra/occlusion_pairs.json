@@ -1,0 +1,79 @@
+{
+ "groups": {
+  "small": [
+   "ROI_035/patch_21",
+   "ROI_035/patch_49",
+   "ROI_035/patch_67",
+   "ROI_049/patch_16",
+   "ROI_049/patch_46",
+   "ROI_049/patch_57",
+   "ROI_070/patch_122",
+   "ROI_070/patch_31",
+   "ROI_070/patch_37",
+   "ROI_070/patch_52",
+   "ROI_071/patch_17",
+   "ROI_071/patch_19",
+   "ROI_071/patch_29",
+   "ROI_075/patch_60",
+   "ROI_075/patch_90",
+   "ROI_080/patch_102",
+   "ROI_080/patch_11",
+   "ROI_080/patch_83",
+   "ROI_080/patch_89",
+   "ROI_080/patch_90"
+  ],
+  "medium": [
+   "ROI_035/patch_17",
+   "ROI_035/patch_181",
+   "ROI_035/patch_4",
+   "ROI_035/patch_71",
+   "ROI_049/patch_69",
+   "ROI_049/patch_77",
+   "ROI_049/patch_83",
+   "ROI_070/patch_112",
+   "ROI_070/patch_40",
+   "ROI_075/patch_141",
+   "ROI_075/patch_18",
+   "ROI_075/patch_24",
+   "ROI_075/patch_3",
+   "ROI_075/patch_66",
+   "ROI_075/patch_89",
+   "ROI_080/patch_63",
+   "ROI_080/patch_71",
+   "ROI_080/patch_78",
+   "ROI_080/patch_80",
+   "ROI_080/patch_92"
+  ],
+  "large_same_sign": [
+   "ROI_035/patch_118",
+   "ROI_035/patch_165",
+   "ROI_035/patch_187",
+   "ROI_035/patch_207",
+   "ROI_035/patch_37",
+   "ROI_075/patch_104",
+   "ROI_075/patch_123",
+   "ROI_075/patch_129",
+   "ROI_075/patch_166",
+   "ROI_080/patch_91"
+  ],
+  "large_opposite_sign": [
+   "ROI_035/patch_162",
+   "ROI_049/patch_105",
+   "ROI_049/patch_73",
+   "ROI_070/patch_102",
+   "ROI_070/patch_106",
+   "ROI_070/patch_167",
+   "ROI_070/patch_67",
+   "ROI_070/patch_92",
+   "ROI_070/patch_96",
+   "ROI_075/patch_175"
+  ]
+ },
+ "thresholds_px": [
+  1.4072820096117264,
+  3.3480192166464575
+ ],
+ "n_candidates": 652,
+ "n_large_same": 163,
+ "n_large_opposite": 54
+}

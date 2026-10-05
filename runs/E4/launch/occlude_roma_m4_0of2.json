@@ -1,0 +1,28 @@
+[
+ {
+  "start": "2026-10-05 17:56:54 +0800",
+  "end": "2026-10-05 19:38:32 +0800",
+  "status": "ok",
+  "commit": "13f1bc19e68dfbbcaace05db169ffb2273503812",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-attention-101/runs/E4/code",
+  "cuda_visible_devices": "3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "occlude.py",
+   "roma_m4",
+   "--part",
+   "0/2"
+  ],
+  "entry": "runs/E4/code/occlude.py",
+  "model": {
+   "family": "roma",
+   "config": "configs/baselines/anymatch_roma__minmax.json",
+   "ckpt": "runs/M/ckpt/M4/ckpt_2000.pt",
+   "ref": "M/M4",
+   "name": "RoMa 自训练"
+  }
+ }
+]

@@ -1,0 +1,26 @@
+[
+ {
+  "start": "2026-10-05 04:42:04 +0800",
+  "end": "2026-10-05 04:44:13 +0800",
+  "status": "ok",
+  "commit": "13f1bc19e68dfbbcaace05db169ffb2273503812",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-attention-101/runs/E4/code",
+  "cuda_visible_devices": "5",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "infer.py",
+   "loftr_e1"
+  ],
+  "entry": "runs/E4/code/infer.py",
+  "model": {
+   "family": "loftr",
+   "config": "configs/baselines/anymatch_loftr.json",
+   "ckpt": "runs/E1/ckpt/loftr_lr5e5/ckpt_14000.pt",
+   "ref": "E1/loftr_lr5e5",
+   "name": "LoFTR 标注过拟合"
+  }
+ }
+]

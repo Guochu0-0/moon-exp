@@ -40,7 +40,7 @@ def main():
             for i, p in enumerate(pairs):
                 t = time.time()
                 opt, sar = r.load_pair(p)
-                A, inl, imp, n = r(opt, sar)
+                A, inl, imp, n, _ = r(opt, sar)
                 k = key(p)
                 store[f"A__{k}"] = np.full((2, 3), np.nan) if A is None else A
                 store[f"inl__{k}"] = inl

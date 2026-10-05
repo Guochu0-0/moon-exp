@@ -172,7 +172,11 @@ def load_occlusion(name):
         res["opt"][p] = norm(m)
         res["sar"][p] = norm(warp_to_sar(m, z["G"][i]))
         info[p] = {"noise_floor": floor, "max_delta": float(np.nanmax(z["delta"][i])) if (~fails).any() else None,
-                   "n_fail_blocks": int(fails.sum()), "median_delta": float(np.nanmedian(z["delta"][i]))}
+                   "n_fail_blocks": int(fails.sum()), "median_delta": float(np.nanmedian(z["delta"][i])),
+                   "noise_floor_ransac": float(np.nanmean(z["noise_ransac"][i])),
+                   "median_delta_ransac": float(np.nanmedian(z["delta_ransac"][i])),
+                   "max_delta_ransac": float(np.nanmax(z["delta_ransac"][i])),
+                   "share_blocks_above_noise": float(np.mean(d > 2 * floor))}
     return res, info
 
 
@@ -226,7 +230,8 @@ def main():
         info = D[m]["occl_info"]
         if info:
             stats["occlusion"][m] = {k: summ([v[k] for v in info.values() if v[k] is not None])
-                                     for k in ("noise_floor", "max_delta", "median_delta", "n_fail_blocks")}
+                                     for k in ("noise_floor", "max_delta", "median_delta", "n_fail_blocks", "noise_floor_ransac",
+                                               "median_delta_ransac", "max_delta_ransac", "share_blocks_above_noise")}
 
     # 1a. 集中程度
     for m in names:

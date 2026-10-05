@@ -157,12 +157,15 @@ class Runner:
                 b = [x.reshape(n, n) for x in self._buf]
                 imp = np.stack([np.stack([b[2 * l], b[2 * l + 1]]) if t == "self" else
                                 np.stack([b[2 * l + 1], b[2 * l]]) for l, t in enumerate(LAYERS)]).astype(np.float16)
+            dense = None
         else:
-            kp0, kp1, conf, imp = self._roma(opt, sar)
+            kp0, kp1, conf, imp, dense = self._roma(opt, sar)
         M = np.c_[kp0, kp1, conf].astype(np.float32) if len(kp0) else np.zeros((0, 5), np.float32)
         A, inl, _ = fit_affine(M, 3.0)
         pts = (M[inl, :4].astype(np.float64) + 0.5) if inl is not None else np.zeros((0, 4))
-        return A, pts.astype(np.float32), imp, len(M)
+        # 供 refit 用的对应：LoFTR 为全部匹配（权重 1）；RoMa 为稠密对应（光学侧每 4 个 864 网格像素取一个，权重 certainty）
+        corr = dense if dense is not None else (M[:, :2] + 0.5, M[:, 2:4] + 0.5, np.ones(len(M)))
+        return A, pts.astype(np.float32), imp, len(M), corr
 
     def _roma(self, opt, sar):
         import cv2
@@ -178,13 +181,30 @@ class Runner:
             k0, k1 = ad.model.to_pixel_coordinates(m, g0[2], g0[3], g1[2], g1[3])
         kp0 = to_original(k0.float().cpu().numpy() - 0.5, *g0)
         kp1 = to_original(k1.float().cpu().numpy() - 0.5, *g1)
+        c = cert.float().cpu().numpy()
+        w = c.shape[1] // 2
         imp = None
         if self.record:
-            c = cert.float().cpu().numpy()
-            w = c.shape[1] // 2
             imp = np.stack([cv2.resize(c[:, :w], (64, 64), interpolation=cv2.INTER_AREA),
                             cv2.resize(c[:, w:], (64, 64), interpolation=cv2.INTER_AREA)]).astype(np.float16)
-        return kp0, kp1, conf.float().cpu().numpy(), imp
+        # 稠密对应：光学侧像素 → SAR，归一化坐标 x_n 换成原网格角点约定 u = 256·(x_n + 1)
+        wa = warp[:, :w][::4, ::4].float().cpu().numpy().reshape(-1, 4)
+        dense = (HW / 2 * (wa[:, :2] + 1), HW / 2 * (wa[:, 2:] + 1), c[:, :w][::4, ::4].reshape(-1).astype(np.float64))
+        return kp0, kp1, conf.float().cpu().numpy(), imp, dense
+
+
+def refit(corr, A0, it=3, thr=3.0):
+    """以 A0 为起点：取残差 < thr 的对应做（加权）最小二乘，迭代 it 次。不随机抽样，结果随输入连续变化。
+    遮挡实验里用它代替 RANSAC：RANSAC 在相近的内点集合之间跳动，微小噪声就能让仿射变 1–3 px，盖过遮挡的效果。"""
+    src, dst, w = corr
+    A = np.asarray(A0, np.float64)
+    for _ in range(it):
+        m = (np.linalg.norm(apply(A, src) - dst, axis=1) < thr) & (w > 0)
+        if m.sum() < 3:
+            return None
+        sw = np.sqrt(w[m])[:, None]
+        A = np.linalg.lstsq(np.c_[src[m], np.ones(m.sum())] * sw, dst[m] * sw, rcond=None)[0].T
+    return A
 
 
 # ---- 遮挡实验的 60 对 ----

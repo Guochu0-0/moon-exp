@@ -147,7 +147,7 @@ class Workbench:
                 methods.append({"id": m, **r.method_info(m), "ref": reference.default_ref(r, m, runs, score),
                                 "base": base, "delta": delta, "results": {k: _public(x) for k, x in res.items()}})
             return jsonable({"id": rid, "title": r.title, "parent": r.parent, "init": r.init,
-                             "baseline": r.baseline, "date": r.date, "lit": r.lit, "methods": methods,
+                             "baseline": r.baseline, "analysis": r.analysis, "date": r.date, "lit": r.lit, "methods": methods,
                              "children": [k for k, x in runs.items() if x.parent == rid],
                              "commit": r.commit(), "launch": r.launches(), "delta_key": DELTA, "warnings": r.warnings,
                              "notes": r.notes, "tb": self._tb_methods(r),
@@ -364,7 +364,9 @@ class Workbench:
                 ms = [{"id": m, **r.method_info(m), "auc": self._card_auc(r, m)} for m in r.methods]
                 ms.sort(key=lambda x: (x["auc"] is None, -(x["auc"] or 0)))
                 exps[rid] = {"id": rid, "title": r.title, "parent": r.parent, "init": r.init, "baseline": r.baseline,
-                             "date": r.date, "lit": r.lit, "methods": ms, "warnings": r.warnings}
+                             "analysis": r.analysis, "date": r.date, "lit": r.lit, "methods": ms, "warnings": r.warnings}
+                if r.analysis:
+                    exps[rid]["n_extra"] = len(r.extras())
             pos = canvas.place({k: {"parent": e["parent"], "h": self._height(e, exps)} for k, e in exps.items()},
                                c["experiments"])
             for k, e in exps.items():

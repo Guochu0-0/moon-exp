@@ -53,8 +53,8 @@ export function mountNodePage(root, { onBack }) {
       D = d; Object.assign(S, { method: d.methods[0]?.id ?? null, ref: undefined, split: 'val' });
       CMP = null; TB = null; VFIGS = 0;
       page();
-      if (D.tb.length) loadScalars(d.id);
-      if (D.lit) await compare();
+      if (D.tb.length && !D.analysis) loadScalars(d.id);
+      if (D.lit && !D.analysis) await compare();
     } catch (err) {
       if (my !== seq) return;
       $('.content').innerHTML = `<p>${err.status === 404 ? `没有实验 ${esc(id)}。` : `读取失败：${esc(err.message)}`}</p>`;
@@ -83,8 +83,10 @@ export function mountNodePage(root, { onBack }) {
     });
   }
   function page() {
-    const secs = [['info', '实验信息'], ...(Object.keys(D.launch).length ? [['launch', '启动记录']] : []), ['results', '结果'], ...(D.lit ? [['visual', '可视化结果']] : []),
-      ...(D.tb.length ? [['train', '训练图表']] : []), ['notes', 'Notes']];
+    // 分析没有方法和预测：只有实验信息、启动记录（记分析代码的 commit）和 Notes
+    const secs = D.analysis ? [['info', '实验信息'], ['launch', '启动记录'], ['notes', 'Notes']]
+      : [['info', '实验信息'], ...(Object.keys(D.launch).length ? [['launch', '启动记录']] : []), ['results', '结果'], ...(D.lit ? [['visual', '可视化结果']] : []),
+        ...(D.tb.length ? [['train', '训练图表']] : []), ['notes', 'Notes']];
     root.innerHTML = `<div class="layout">
       <nav class="nav" aria-label="章节">${backLink()}<ol>${secs.map(([k, t]) => `<li><a href="#sec-${k}" data-sec="${k}">${t}</a></li>`).join('')}</ol></nav>
       <div class="content">${secs.map(([k, t]) => `<section class="sec" id="sec-${k}">${k === 'info' ? '' : `<h2>${t}</h2>`}<div class="body"></div></section>`).join('')}</div></div>`;
@@ -117,16 +119,17 @@ export function mountNodePage(root, { onBack }) {
   function info() {
     const p = D.parent, rows = [
       ['父实验', p ? link(p) : '无'],
-      ['起点方法', D.init ? `<span class="mono">${esc(D.init)}</span>` : '无'],
+      ...(D.analysis ? [] : [['起点方法', D.init ? `<span class="mono">${esc(D.init)}</span>` : '无']]),
       ['子实验', D.children.length ? D.children.map(link).join('，') : '无'],
-      ['状态', (D.lit ? '已点亮' : '未点亮') + (D.baseline ? '，基线' : '')],
+      ['状态', (D.lit ? '已点亮' : '未点亮') + (D.baseline ? '，基线' : '') + (D.analysis ? '，分析' : '')],
       ['日期', esc(D.date || '—')],
-      ['commit', commitText(D.commit)]];
+      ...(D.analysis ? [] : [['commit', commitText(D.commit)]])];   // 分析的 commit 看启动记录
     if (multi()) rows.splice(3, 0, ['方法数', `<span class="num">${D.methods.length}</span>`]);
+    const scored = D.lit && !D.analysis;
     $('#sec-info .body').innerHTML = `<h1><span class="id">${esc(D.id)}</span>${esc(D.title)}</h1>
       <dl class="meta">${rows.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>
-      ${D.lit ? settings() : ''}`;
-    if (!D.lit) return;
+      ${scored ? settings() : ''}`;
+    if (!scored) return;
     $('#selM')?.addEventListener('change', ev => pickMethod(ev.target.value));
     $('#selR').addEventListener('change', ev => { const v = ev.target.value; S.ref = v === '' ? null : v; compare(); });
     root.querySelectorAll('.radio button').forEach(b => b.addEventListener('click', () => { S.split = b.dataset.split; compare(); }));
@@ -156,8 +159,8 @@ export function mountNodePage(root, { onBack }) {
   function launch() {
     const body = $('#sec-launch .body');
     if (!body) return;
-    const m = cur(), items = D.launch[m?.id];
-    const who = multi() ? `方法 ${esc(m.name)}（<span class="mono">${esc(m.id)}</span>）` : '本实验';
+    const m = cur(), items = D.analysis ? Object.values(D.launch).flat() : D.launch[m?.id];
+    const who = D.analysis ? '本分析' : multi() ? `方法 ${esc(m.name)}（<span class="mono">${esc(m.id)}</span>）` : '本实验';
     if (!items?.length) { body.innerHTML = `<p>${who}没有启动记录。</p>`; return; }
     body.innerHTML = (items.length > 1 ? `<p class="muted">${who}共 <span class="num">${items.length}</span> 次启动。</p>` : '') +
       items.map((x, i) => launchItem(x, i, items.length)).join('');
@@ -195,6 +198,7 @@ export function mountNodePage(root, { onBack }) {
   // ---------------- 结果 ----------------
   function results() {
     const body = $('#sec-results .body');
+    if (!body) return;
     if (!D.lit) { body.innerHTML = '<p>尚无结果。</p>'; return; }
     if (!CMP) { body.innerHTML = '<p class="muted">计算中…</p>'; return; }
     if (CMP.error) { body.innerHTML = `<p>读取比较结果失败：${esc(CMP.error)}</p>`; return; }

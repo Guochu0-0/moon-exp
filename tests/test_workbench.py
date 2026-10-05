@@ -331,3 +331,55 @@ def test_cli_new_with_init_and_rejects_bad_parent(tmp_path, capsys):
     with pytest.raises(SystemExit) as e:
         cli.main(["--runs", str(runs), "new", "E2", "--parent", "Y"])
     assert "Y" in str(e.value.code) and not (runs / "E2").exists()
+
+
+def test_analysis_lit_by_extra_and_launches_all_files(tmp_path):
+    """分析：extra/ 下有文件即点亮（不看 preds）；启动记录不分方法，列出 launch/ 下全部文件。"""
+    runs = tmp_path / "runs"
+    d = write_exp(runs, "A1", 'kind = "analysis"\n')
+    assert load_runs(runs)["A1"].analysis and not load_runs(runs)["A1"].lit
+    (d / "extra" / "data").mkdir(parents=True)
+    assert not load_runs(runs)["A1"].lit                       # 只有空目录不算
+    (d / "extra" / "data" / "x.csv").write_text("1\n", encoding="utf-8")
+    (d / "launch").mkdir()
+    (d / "launch" / "main.json").write_text(json.dumps([{"commit": "abc"}]), encoding="utf-8")
+    a1 = load_runs(runs)["A1"]
+    assert a1.lit and a1.methods == [] and a1.launches() == {"main": [{"commit": "abc"}]}
+    write_exp(runs, "E1")
+    (runs / "E1" / "extra").mkdir()
+    (runs / "E1" / "extra" / "a.png").write_bytes(b"x")
+    e1 = load_runs(runs)["E1"]
+    assert not e1.lit and not e1.analysis                      # 普通实验仍以预测为准
+    assert check_runs(load_runs(runs)) == ([], [])
+
+
+def test_check_analysis_rules(tmp_path):
+    runs = tmp_path / "runs"
+    write_exp(runs, "A1", 'kind = "analyse"\n')                                        # 拼错
+    write_exp(runs, "A2", 'kind = "analysis"\n')
+    with PredWriter(runs / "A2", "main", "val", repo=tmp_path):                       # 分析不应有预测
+        pass
+    problems, _ = check_runs(load_runs(runs))
+    assert any(p.startswith("A1") and "kind" in p for p in problems)
+    assert any(p.startswith("A2") and "预测" in p for p in problems)
+
+
+def test_cli_new_analysis(tmp_path):
+    runs = tmp_path / "runs"
+    write_exp(runs, "B0", "baseline = true\n")
+    cli.main(["--runs", str(runs), "new", "E1", "--analysis", "--title", "误差的性质"])
+    cli.main(["--runs", str(runs), "new", "E2", "--analysis", "--parent", "B0"])
+    text = (runs / "E1" / "exp.toml").read_text(encoding="utf-8")
+    e1 = tomllib.loads(text)
+    assert set(e1) == {"id", "title", "kind", "date"} and e1["kind"] == "analysis" and "init" not in text
+    assert tomllib.loads((runs / "E2" / "exp.toml").read_text(encoding="utf-8"))["parent"] == "B0"
+    with pytest.raises(SystemExit) as e:
+        cli.main(["--runs", str(runs), "new", "E3", "--analysis", "--parent", "B0", "--init", "B0/roma"])
+    assert "init" in str(e.value.code) and not (runs / "E3").exists()
+
+
+def test_cli_eval_skips_analysis(dataset, tmp_path, capsys):
+    runs = tmp_path / "runs"
+    write_exp(runs, "A1", 'kind = "analysis"\n')
+    cli.main(["--runs", str(runs), "--data", str(dataset.root), "eval", "A1"])
+    assert "跳过" in capsys.readouterr().out and not (runs / "A1" / "metrics.json").exists()

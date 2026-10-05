@@ -1,7 +1,9 @@
 """遮挡敏感性：在 60 对上，把光学图 16×16 网格（每块 32 px）逐块遮住，SAR 图同时遮住这块经标注拟合仿射映射后的位置，
 看估出的仿射变化多少。
 
-    GPU=1 /opt/envs/loftr/bin/python runs/E4/code/occlude.py loftr_zs [--limit N]
+    GPU=1 /opt/envs/loftr/bin/python runs/E4/code/occlude.py loftr_zs [--part k/n] [--limit N]
+
+--part k/n 只跑 60 对中的第 k 份（pairs[k::n]），产物写成 occl_<k>of<n>.npz（RoMa 一个模型约 5 小时，拆成两份）。
 
 - 遮挡值：该图（已按模型的输入映射到 [0,1]）的均值。SAR 侧遮的是一个平行四边形（块的四个角经仿射映射）。
 - 变化量：遮挡前后两个仿射在整张 patch 上（17×17 网格点）映射结果的平均距离（common.affine_change）；遮后失败记 nan。
@@ -52,17 +54,20 @@ def occlude(opt, sar, G, bx, by):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("model", choices=sorted(MODELS))
+    ap.add_argument("--part", default="0/1")
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
     os.environ.setdefault("CUDA_DEVICE_ORDER", "PCI_BUS_ID")
-    tag = f"occlude_{a.model}"
-    begin(RUN, tag, ["occlude.py", a.model] + (["--limit", str(a.limit)] if a.limit else []),
+    k, n = map(int, a.part.split("/"))
+    suffix = "" if n == 1 else f"_{k}of{n}"
+    tag = f"occlude_{a.model}{suffix}"
+    begin(RUN, tag, ["occlude.py", a.model, "--part", a.part] + (["--limit", str(a.limit)] if a.limit else []),
           entry="runs/E4/code/occlude.py", model=MODELS[a.model])
     status = "fail"
     try:
         out = RUN / "raw" / a.model
         out.mkdir(parents=True, exist_ok=True)
-        pairs = selection()[: a.limit or None]
+        pairs = selection()[k::n][: a.limit or None]
         r = Runner(a.model, record=False)
         P = len(pairs)
         delta, delta_r = (np.full((P, NB, NB), np.nan, np.float32) for _ in range(2))
@@ -93,7 +98,7 @@ def main():
                 for bx in range(NB):
                     delta[i, by, bx], delta_r[i, by, bx] = change(*occlude(opt, sar, G, bx, by))
             print(f"{a.model} {i + 1}/{P} {time.time() - t0:.0f}s", flush=True)
-            np.savez(out / "occl.npz", pairs=np.array(pairs), delta=delta, delta_ransac=delta_r, noise=noise,
+            np.savez(out / f"occl{suffix}.npz", pairs=np.array(pairs), delta=delta, delta_ransac=delta_r, noise=noise,
                      noise_ransac=noise_r, A0=A0s, B0=B0s, G=Gs, done=i + 1)
         status = "ok"
     finally:

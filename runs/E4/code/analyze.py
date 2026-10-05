@@ -155,11 +155,13 @@ def load_model(name, pairs):
 
 
 def load_occlusion(name):
-    f = RUN / "raw" / name / "occl.npz"
-    if not f.exists():
-        return {f: {} for f in FRAMES}, {}
-    z = np.load(f)
     res, info = {fr: {} for fr in FRAMES}, {}
+    for f in sorted((RUN / "raw" / name).glob("occl*.npz")):     # 整份 occl.npz，或分份 occl_<k>of<n>.npz
+        _occl_file(np.load(f), res, info)
+    return res, info
+
+
+def _occl_file(z, res, info):
     for i, p in enumerate(z["pairs"].tolist()):
         if i >= int(z["done"]) or np.isnan(z["A0"][i]).any():
             continue
@@ -177,7 +179,6 @@ def load_occlusion(name):
                    "median_delta_ransac": float(np.nanmedian(z["delta_ransac"][i])),
                    "max_delta_ransac": float(np.nanmax(z["delta_ransac"][i])),
                    "share_blocks_above_noise": float(np.mean(d > 2 * floor))}
-    return res, info
 
 
 def region(m):

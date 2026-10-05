@@ -27,6 +27,7 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
+from baselines.data import Data          # noqa: E402
 from workbench.dataset import Dataset   # noqa: E402
 
 EXP = REPO / "runs" / "E3"
@@ -103,12 +104,12 @@ class RomaDense:
         self.map_sar = inputs.get("sar", cfg["input"]["sar"])
         self.seed, self.device = int(cfg.get("seed", 0)), device
 
-    def __call__(self, ds, pair, o):
+    def __call__(self, img, pair, o):
         import torch
         import torch.nn.functional as F
         from baselines.match import seed_all
 
-        opt, sar = self.map_opt(ds.optical(SPLIT, pair)), self.map_sar(ds.sar(SPLIT, pair))
+        opt, sar = self.map_opt(img.optical(SPLIT, pair)), self.map_sar(img.sar(SPLIT, pair))
         p0, g0 = self.ad._pil(opt)
         p1, g1 = self.ad._pil(sar)
         seed_all(self.seed)
@@ -136,7 +137,7 @@ class RomaDense:
 def collect(args):
     from moonlib.ransac import fit_affine
 
-    ds = Dataset(args.data)
+    ds, img = Dataset(args.data), Data(args.data)      # 影像用推理同一个读取器（不依赖 tifffile）
     pairs = ds.labelled(SPLIT)[: args.limit or None]
     DATA.mkdir(parents=True, exist_ok=True)
     check = {}
@@ -159,7 +160,7 @@ def collect(args):
                 loc, cnt = local_nb(M, o)
                 dd, dc = np.full_like(o, np.nan), np.full(len(o), np.nan)
                 if dense is not None:
-                    dd, dc, Ms = dense(ds, pair, o)
+                    dd, dc, Ms = dense(img, pair, o)
                     if j < args.selfcheck:
                         Ad, _, _ = fit_affine(Ms, 3.0)
                         if A is not None and Ad is not None:
@@ -470,7 +471,7 @@ def examples(args):
     pts = {k: read_points(k) for k in keys}
     G = 10.0                                     # 误差向量放大倍数
     for tag, (pair, sc) in pick.items():
-        sar = inputs.sar_p2p98(ds.sar(SPLIT, pair))
+        sar = inputs.sar_p2p98(Data(args.data).sar(SPLIT, pair))
         fig, axs = plt.subplots(2, 3, figsize=(13, 9))
         for a, k in zip(axs.flat, keys):
             v = pts[k][pair]

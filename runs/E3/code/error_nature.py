@@ -184,7 +184,14 @@ def collect(args):
     path.write_text(json.dumps(old, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+
+
 # ---------------------------------------------------------------- 统计
+
+LOCAL_COL = {"nb": slice(6, 8), "dense": slice(9, 11)}
+MAIN_LOCAL = {k: "dense" if v["base"] == "roma" else "nb" for k, v in MODELS.items()}
+LOCAL_NAME = {"nb": "邻近匹配", "dense": "稠密对应"}
+
 
 def read_points(key):
     with open(DATA / f"points_{key}.csv", encoding="utf-8") as f:
@@ -195,16 +202,6 @@ def read_points(key):
     return {p: np.array(v) for p, v in by.items()}
 
 
-def rank(x):
-    r = np.empty(len(x))
-    r[np.argsort(x, kind="stable")] = np.arange(len(x))
-    return r
-
-
-def spearman(x, y):
-    return float(np.corrcoef(rank(x), rank(y))[0, 1])
-
-
 def ols(x, y):
     """y = a + b·x 的斜率与 95% 区间（pair 级 bootstrap 1000 次）。"""
     rng = np.random.default_rng(0)
@@ -213,47 +210,76 @@ def ols(x, y):
     return float(b), [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))]
 
 
+def lsq_affine(o, s):
+    return np.linalg.lstsq(np.c_[o, np.ones(len(o))], s, rcond=None)[0].T
+
+
+def label_fit_residuals(o, s):
+    """标注点自拟合仿射在各点的残差（标注 − 拟合）：样本内，以及留一（拟合不含该点）。点太少时为 nan。"""
+    n = len(o)
+    g_in = s - apply(lsq_affine(o, s), o) if n >= 4 else np.full_like(o, np.nan)
+    g_loo = np.full_like(o, np.nan)
+    if n >= 5:
+        for i in range(n):
+            keep = np.arange(n) != i
+            g_loo[i] = s[i] - apply(lsq_affine(o[keep], s[keep]), o[i:i + 1])[0]
+    return g_in, g_loo
+
+
 def per_pair(pts, local="nb", cert_min=None):
-    """每对：整体偏移 b、剩余部分大小、误差；局部对应的整体偏移 b_loc（只用有局部对应的点）。"""
+    """每对：仿射误差的整体偏移 b、剩余部分、误差；局部对应在同一批点上的整体偏移 b_loc 与逐点误差。
+    局部对应离标注超过 SANE 的点视为误匹配，不用。"""
     out = {}
     for p, v in pts.items():
-        o, s, a = v[:, 0:2], v[:, 2:4], v[:, 4:6]
-        loc = v[:, 6:8] if local == "nb" else v[:, 9:11]
+        o, s, a, loc = v[:, 0:2], v[:, 2:4], v[:, 4:6], v[:, LOCAL_COL[local]]
         if not np.isfinite(a).all():
             out[p] = None
             continue
         d = a - s
         b = d.mean(0)
-        ok = np.isfinite(loc).all(1)
+        rec = {"b": b, "rem": float(np.linalg.norm(d - b, axis=1).mean()), "err": float(np.linalg.norm(d, axis=1).mean()),
+               "msd": float((np.linalg.norm(d, axis=1) ** 2).mean()), "n": len(v)}
+        e = loc - s
+        ok = np.isfinite(e).all(1)
+        ok[ok] = np.linalg.norm(e[ok], axis=1) < SANE
         if cert_min is not None:
             ok &= v[:, 11] >= cert_min
-        rec = {"b": b, "rem": float(np.linalg.norm(d - b, axis=1).mean()), "err": float(np.linalg.norm(d, axis=1).mean()),
-               "msd": float((np.linalg.norm(d, axis=1) ** 2).mean()), "n": len(v), "n_loc": int(ok.sum())}
+        rec["n_loc"] = int(ok.sum())
         if ok.sum() >= 2:
-            e = loc[ok] - s[ok]
-            rec.update(b_loc=e.mean(0), b_aff_sub=d[ok].mean(0),
-                       e_loc=np.linalg.norm(e, axis=1), e_aff=np.linalg.norm(d[ok], axis=1))
+            g_in, g_loo = label_fit_residuals(o, s)
+            rec.update(b_loc=e[ok].mean(0), b_aff_sub=d[ok].mean(0), e=e[ok], d=d[ok], g_in=g_in[ok], g_loo=g_loo[ok])
         out[p] = rec
     return out
 
 
+def usable(pp):
+    return [r for r in pp.values() if r is not None and "b_loc" in r and np.abs(r["b_aff_sub"]).max() < SANE]
+
+
 def source_test(pp):
-    """局部对应的整体偏移跟着仿射的整体偏移走多少：b_loc 对 b（同一批点上的仿射整体偏移）回归。"""
-    rows = [r for r in pp.values() if r is not None and "b_loc" in r and np.abs(r["b_aff_sub"]).max() < SANE]
+    """来源检验。逐点：局部对应、仿射、标注自拟合仿射在标注点处的误差；逐对：局部对应的整体偏移
+    跟着仿射的整体偏移走多少（b_loc 对 b 回归，b 只取有局部对应的点）。"""
+    rows = usable(pp)
     B = np.array([r["b_aff_sub"] for r in rows])
     L = np.array([r["b_loc"] for r in rows])
-    ea = np.concatenate([r["e_aff"] for r in rows])
-    el = np.concatenate([r["e_loc"] for r in rows])
-    nb, nl = np.linalg.norm(B, axis=1), np.linalg.norm(L, axis=1)
+    E, D = np.concatenate([r["e"] for r in rows]), np.concatenate([r["d"] for r in rows])
+    Gi, Gl = np.concatenate([r["g_in"] for r in rows]), np.concatenate([r["g_loo"] for r in rows])
+    nrm = lambda x: np.linalg.norm(x, axis=1)
+    med = lambda x: float(np.nanmedian(x))
+    n_all = sum(len(r["e"]) for r in rows)
+    res = {"n_pairs": len(rows), "n_points": int(n_all),
+           "point_median": {"local": med(nrm(E)), "affine": med(nrm(D)), "label_fit_in": med(nrm(Gi)),
+                            "label_fit_loo": med(nrm(Gl))},
+           "point_median_x": {"local": med(np.abs(E[:, 0])), "affine": med(np.abs(D[:, 0])),
+                              "label_fit_in": med(np.abs(Gi[:, 0])), "label_fit_loo": med(np.abs(Gl[:, 0]))},
+           "point_median_y": {"local": med(np.abs(E[:, 1])), "affine": med(np.abs(D[:, 1])),
+                              "label_fit_in": med(np.abs(Gi[:, 1])), "label_fit_loo": med(np.abs(Gl[:, 1]))},
+           "frac_local_closer": float((nrm(E) < nrm(D)).mean()),
+           "offset_median": {"affine": med(nrm(B)), "local": med(nrm(L))}}
+    nb, nl = nrm(B), nrm(L)
     big = nb >= np.percentile(nb, 75)
-    res = {"n_pairs": len(rows), "n_points": int(len(ea)),
-           "median_point_err_affine": float(np.median(ea)), "median_point_err_local": float(np.median(el)),
-           "median_offset_affine": float(np.median(nb)), "median_offset_local": float(np.median(nl)),
-           "big_quarter": {"thr": float(np.percentile(nb, 75)),
-                           "median_offset_affine": float(np.median(nb[big])),
-                           "median_offset_local": float(np.median(nl[big])),
-                           "frac_local_lt_half": float((nl[big] < nb[big] / 2).mean()),
-                           "frac_same_dir": float(((B[big] * L[big]).sum(1) > 0).mean())}}
+    res["big_quarter"] = {"thr": float(np.percentile(nb, 75)), "offset_affine": med(nb[big]), "offset_local": med(nl[big]),
+                          "frac_local_lt_half": float((nl[big] < nb[big] / 2).mean())}
     for ax, c in (("x", 0), ("y", 1)):
         slope, ci = ols(B[:, c], L[:, c])
         res[f"follow_{ax}"] = {"slope": slope, "ci95": ci, "pearson": float(np.corrcoef(B[:, c], L[:, c])[0, 1]),
@@ -261,244 +287,276 @@ def source_test(pp):
     return res, B, L
 
 
-def analyse(args):
+def corr_matrix(V, keys, both_gt=1.0):
+    """V[k]: 每对的值（nan = 缺）。返回相关矩阵、同号率（两者绝对值都 > both_gt 的对）、对数。"""
+    n = len(keys)
+    C, S, N = np.eye(n), np.full((n, n), np.nan), np.zeros((n, n), int)
+    for i, ki in enumerate(keys):
+        for j, kj in enumerate(keys):
+            if i == j:
+                continue
+            ok = np.isfinite(V[ki]) & np.isfinite(V[kj])
+            xi, xj = V[ki][ok], V[kj][ok]
+            C[i, j] = np.corrcoef(xi, xj)[0, 1]
+            both = (np.abs(xi) > both_gt) & (np.abs(xj) > both_gt)
+            N[i, j] = both.sum()
+            if both.any():
+                S[i, j] = (np.sign(xi[both]) == np.sign(xj[both])).mean()
+    return C, S, N
+
+
+def setup_plt():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "WenQuanYi Micro Hei", "SimHei", "Microsoft YaHei", "DejaVu Sans"]
+    plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Noto Sans CJK SC", "WenQuanYi Micro Hei", "DejaVu Sans"]
     plt.rcParams["axes.unicode_minus"] = False
+    return plt
 
+
+def analyse(args):
+    plt = setup_plt()
     keys = list(MODELS)
+    names = [MODELS[k]["name"] for k in keys]
     pts = {k: read_points(k) for k in keys}
     pairs = sorted(set.intersection(*(set(v) for v in pts.values())))
     summary = {"n_pairs": len(pairs), "radius_px": R_NB, "min_neighbours": MIN_NB, "sane_px": SANE,
-               "describe": {}, "agree": {}, "source": {}}
+               "main_local": MAIN_LOCAL, "describe": {}, "agree": {}, "source": {}}
 
     # 1. 整体偏移 + 剩余部分
-    PP = {k: per_pair(pts[k]) for k in keys}
-    Bx = {}
+    PP = {k: per_pair(pts[k], MAIN_LOCAL[k]) for k in keys}
+    Bv = {}
     for k in keys:
-        recs = [PP[k][p] for p in pairs]
-        okr = [r for r in recs if r is not None]
+        okr = [PP[k][p] for p in pairs if PP[k][p] is not None]
         b = np.array([r["b"] for r in okr])
         sane = np.abs(b).max(1) < SANE
+        msd = np.array([r["msd"] for r in okr])
         summary["describe"][k] = {
-            "n": len(recs), "n_fail": sum(r is None for r in recs), "n_gross": int((~sane).sum()),
+            "n": len(pairs), "n_fail": len(pairs) - len(okr), "n_gross": int((~sane).sum()),
             "median_err": float(np.median([r["err"] for r in okr])),
-            "median_offset": float(np.median(np.linalg.norm(b, axis=1))),
-            "median_rem": float(np.median([r["rem"] for r in okr])),
-            "share_sq_offset": float((np.linalg.norm(b[sane], axis=1) ** 2).sum()
-                                     / np.sum([r["msd"] for r, ok in zip(okr, sane) if ok])),
+            "median_offset": float(np.median(np.linalg.norm(b[sane], axis=1))),
+            "median_rem": float(np.median(np.array([r["rem"] for r in okr])[sane])),
+            "share_sq_offset": float((np.linalg.norm(b[sane], axis=1) ** 2).sum() / msd[sane].sum()),
             "std_bx": float(b[sane, 0].std()), "std_by": float(b[sane, 1].std()),
             "median_abs_bx": float(np.median(np.abs(b[sane, 0]))), "median_abs_by": float(np.median(np.abs(b[sane, 1]))),
         }
-        Bx[k] = np.array([PP[k][p]["b"] if PP[k][p] is not None else [np.nan, np.nan] for p in pairs])
+        B = np.array([PP[k][p]["b"] if PP[k][p] is not None else [np.nan, np.nan] for p in pairs])
+        B[~(np.abs(B).max(1) < SANE)] = np.nan
+        Bv[k] = B
 
-    # 2. 6 个模型之间：x / y 整体偏移的相关与同号率
-    allsane = np.all([np.isfinite(Bx[k]).all(1) & (np.abs(Bx[k]).max(1) < SANE) for k in keys], axis=0)
-    summary["agree"]["n_pairs_all_sane"] = int(allsane.sum())
+    # 2. 6 个模型之间：整体偏移的相关与同号率；局部对应整体偏移的相关
     for c, ax in ((0, "x"), (1, "y")):
-        C = np.zeros((6, 6))
-        S = np.full((6, 6), np.nan)
-        N = np.zeros((6, 6), int)
-        for i, ki in enumerate(keys):
-            for j, kj in enumerate(keys):
-                xi, xj = Bx[ki][allsane, c], Bx[kj][allsane, c]
-                C[i, j] = np.corrcoef(xi, xj)[0, 1]
-                both = (np.abs(xi) > 1) & (np.abs(xj) > 1)
-                N[i, j] = both.sum()
-                if i != j and both.any():
-                    S[i, j] = (np.sign(xi[both]) == np.sign(xj[both])).mean()
+        C, S, N = corr_matrix({k: Bv[k][:, c] for k in keys}, keys)
         summary["agree"][ax] = {"pearson": C.round(3).tolist(), "same_sign_gt1px": np.round(S, 3).tolist(),
                                 "n_both_gt1px": N.tolist()}
-    # 「整体偏移」能否被 6 个模型的均值解释：每个模型的 bx 与其余 5 个均值的相关
-    mean_bx = np.mean([Bx[k][allsane, 0] for k in keys], 0)
-    summary["agree"]["x_vs_mean_of_others"] = {
-        k: float(np.corrcoef(Bx[k][allsane, 0], (mean_bx * 6 - Bx[k][allsane, 0]) / 5)[0, 1]) for k in keys}
+    off = np.array([[np.nanmean(Bv[k][:, 0]) for k in keys]])
+    summary["agree"]["mean_bx"] = dict(zip(keys, off[0].round(3).tolist()))
+    Lx = {}
+    for k in keys:
+        Lx[k] = np.array([PP[k][p]["b_loc"][0] if PP[k][p] is not None and "b_loc" in PP[k][p]
+                          and np.abs(PP[k][p]["b_aff_sub"]).max() < SANE else np.nan for p in pairs])
+    C, S, N = corr_matrix(Lx, keys)
+    summary["agree"]["local_x"] = {"pearson": C.round(3).tolist(), "same_sign_gt1px": np.round(S, 3).tolist(),
+                                   "n_both_gt1px": N.tolist()}
 
     # 3. 来源检验
     srcB, srcL = {}, {}
     for k in keys:
-        res, B, L = source_test(PP[k])
-        summary["source"][k] = {"neighbour": res}
-        srcB[k], srcL[k] = B, L
+        summary["source"][k] = {}
+        for loc in (("nb", "dense") if MODELS[k]["base"] == "roma" else ("nb",)):
+            pp = PP[k] if loc == MAIN_LOCAL[k] else per_pair(pts[k], loc)
+            res, B, L = source_test(pp)
+            summary["source"][k][loc] = res
+            if loc == MAIN_LOCAL[k]:
+                srcB[k], srcL[k] = B, L
         if MODELS[k]["base"] == "roma":
-            ppd = per_pair(pts[k], local="dense")
-            res_d, Bd, Ld = source_test(ppd)
-            cert = np.concatenate([v[:, 11] for v in pts[k].values()])
-            cm = float(np.nanmedian(cert))
-            res_c, _, _ = source_test(per_pair(pts[k], local="dense", cert_min=cm))
+            cm = float(np.nanmedian(np.concatenate([v[:, 11] for v in pts[k].values()])))
+            res_c, _, _ = source_test(per_pair(pts[k], "dense", cert_min=cm))
             res_c["cert_min"] = cm
-            summary["source"][k].update(dense=res_d, dense_high_cert=res_c)
-            srcB[k], srcL[k] = Bd, Ld          # RoMa 的图用稠密对应
+            summary["source"][k]["dense_high_cert"] = res_c
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    names = [MODELS[k]["name"] for k in keys]
-    # 图 1：各模型整体偏移 (bx, by)
+    # 图：各模型整体偏移 (bx, by)
     fig, axs = plt.subplots(2, 3, figsize=(12, 8), sharex=True, sharey=True)
     for a, k in zip(axs.flat, keys):
-        b = Bx[k][allsane]
+        b = Bv[k]
         a.scatter(b[:, 0], b[:, 1], s=4, alpha=0.4)
         a.axhline(0, c="k", lw=0.5)
         a.axvline(0, c="k", lw=0.5)
         d = summary["describe"][k]
-        a.set_title(f"{MODELS[k]['name']}\nstd x {d['std_bx']:.2f}, y {d['std_by']:.2f} px", fontsize=10)
-        a.set_xlim(-10, 10)
-        a.set_ylim(-10, 10)
+        a.set_title(f"{MODELS[k]['name']}\n标准差 x {d['std_bx']:.2f} px，y {d['std_by']:.2f} px", fontsize=10)
+        a.set_xlim(-12, 12)
+        a.set_ylim(-12, 12)
         a.set_aspect("equal")
     for a in axs[1]:
         a.set_xlabel("整体偏移 x (px)")
     for a in axs[:, 0]:
         a.set_ylabel("整体偏移 y (px)")
     fig.tight_layout()
-    fig.savefig(OUT / "offset_xy.png", dpi=130)
+    fig.savefig(OUT / "offset_xy.png", dpi=120)
     plt.close(fig)
 
-    # 图 2：误差中整体偏移与剩余部分
-    fig, a = plt.subplots(figsize=(8, 4))
+    # 图：误差中整体偏移与剩余部分
+    fig, a = plt.subplots(figsize=(9, 4))
     x = np.arange(6)
-    off = [summary["describe"][k]["median_offset"] for k in keys]
-    rem = [summary["describe"][k]["median_rem"] for k in keys]
-    a.bar(x - 0.2, off, 0.4, label="整体偏移大小（中位数）")
-    a.bar(x + 0.2, rem, 0.4, label="剩余部分大小（中位数）")
+    o_ = [summary["describe"][k]["median_offset"] for k in keys]
+    r_ = [summary["describe"][k]["median_rem"] for k in keys]
+    a.bar(x - 0.2, o_, 0.4, label="整体偏移的大小")
+    a.bar(x + 0.2, r_, 0.4, label="剩余部分的大小（各点到整体偏移的平均距离）")
     for i, k in enumerate(keys):
-        a.text(i, max(off[i], rem[i]) + 0.05, f"{summary['describe'][k]['share_sq_offset']:.0%}", ha="center", fontsize=9)
-    a.set_xticks(x, names, rotation=20, fontsize=9)
-    a.set_ylabel("px")
-    a.legend(fontsize=9)
-    a.set_title("柱上数字：整体偏移占均方误差的比例", fontsize=10)
+        a.text(i - 0.2, o_[i] + 0.05, f"{summary['describe'][k]['share_sq_offset']:.0%}", ha="center", fontsize=9)
+    a.set_xticks(x, names, rotation=15, fontsize=9)
+    a.set_ylabel("各对的中位数 (px)")
+    a.legend(fontsize=9, loc="upper right")
+    a.set_ylim(0, max(r_) * 1.35)
+    a.set_title("百分数：整体偏移占均方误差的比例（全部对合计）", fontsize=10)
     fig.tight_layout()
-    fig.savefig(OUT / "offset_vs_rest.png", dpi=130)
+    fig.savefig(OUT / "offset_vs_rest.png", dpi=120)
     plt.close(fig)
 
-    # 图 3：模型之间 x 向整体偏移的相关（上三角）与同号率（下三角）
-    fig, a = plt.subplots(figsize=(7, 6))
-    C = np.array(summary["agree"]["x"]["pearson"])
-    S = np.array(summary["agree"]["x"]["same_sign_gt1px"], dtype=float)
-    M = np.where(np.triu(np.ones((6, 6)), 1) > 0, C, np.where(np.tril(np.ones((6, 6)), -1) > 0, S, np.nan))
-    im = a.imshow(M, vmin=0, vmax=1, cmap="viridis")
-    for i in range(6):
-        for j in range(6):
-            if i != j:
-                a.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center", color="w" if M[i, j] < 0.6 else "k", fontsize=9)
-    a.set_xticks(range(6), names, rotation=30, ha="right", fontsize=8)
-    a.set_yticks(range(6), names, fontsize=8)
-    a.set_title("x 向整体偏移：右上为相关系数，左下为同号率（两者都超过 1 px 的对）", fontsize=9)
-    fig.colorbar(im, fraction=0.046)
+    # 图：模型之间 x 向整体偏移的相关（右上）与同号率（左下）；仿射与局部对应各一张
+    fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+    for a, key, title in ((axs[0], "x", "仿射"), (axs[1], "local_x", "局部对应")):
+        C = np.array(summary["agree"][key]["pearson"])
+        S = np.array(summary["agree"][key]["same_sign_gt1px"], dtype=float)
+        up = np.triu(np.ones((6, 6)), 1) > 0
+        lo = np.tril(np.ones((6, 6)), -1) > 0
+        M = np.where(up, C, np.where(lo, S, np.nan))
+        a.imshow(M, vmin=0, vmax=1, cmap="viridis")
+        for i in range(6):
+            for j in range(6):
+                if i != j:
+                    a.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center",
+                           color="w" if M[i, j] < 0.6 else "k", fontsize=9)
+        a.set_xticks(range(6), names, rotation=30, ha="right", fontsize=8)
+        a.set_yticks(range(6), names, fontsize=8)
+        a.set_title(f"{title}的 x 向整体偏移\n右上：相关系数；左下：同号率（两者都超过 1 px 的对）", fontsize=10)
     fig.tight_layout()
-    fig.savefig(OUT / "offset_agree_x.png", dpi=130)
+    fig.savefig(OUT / "offset_agree_x.png", dpi=120)
     plt.close(fig)
 
-    # 图 4：局部对应的整体偏移 vs 仿射的整体偏移（x）
+    # 图：局部对应的整体偏移 vs 仿射的整体偏移（x）
     fig, axs = plt.subplots(2, 3, figsize=(12, 8), sharex=True, sharey=True)
+    lim = 10
     for a, k in zip(axs.flat, keys):
         B, L = srcB[k], srcL[k]
         a.scatter(B[:, 0], L[:, 0], s=4, alpha=0.4)
-        lim = 8
-        a.plot([-lim, lim], [-lim, lim], "r--", lw=0.8, label="局部完全跟随仿射")
-        a.axhline(0, c="g", ls="--", lw=0.8, label="局部与标注一致")
-        src = summary["source"][k]["dense" if MODELS[k]["base"] == "roma" else "neighbour"]["follow_x"]
-        a.set_title(f"{MODELS[k]['name']}（{'稠密对应' if MODELS[k]['base'] == 'roma' else '邻近匹配'}）\n"
-                    f"斜率 {src['slope']:.2f} [{src['ci95'][0]:.2f}, {src['ci95'][1]:.2f}]", fontsize=10)
+        a.plot([-lim, lim], [-lim, lim], "r--", lw=0.8, label="局部对应完全跟随仿射（来源 2）")
+        a.axhline(0, c="g", ls="--", lw=0.8, label="局部对应与标注一致（来源 1）")
+        f = summary["source"][k][MAIN_LOCAL[k]]["follow_x"]
+        a.set_title(f"{MODELS[k]['name']}（{LOCAL_NAME[MAIN_LOCAL[k]]}）\n"
+                    f"斜率 {f['slope']:.2f}，95% 区间 [{f['ci95'][0]:.2f}, {f['ci95'][1]:.2f}]", fontsize=10)
         a.set_xlim(-lim, lim)
         a.set_ylim(-lim, lim)
         a.set_aspect("equal")
-    axs[0, 0].legend(fontsize=8, loc="upper left")
+    axs[0, 0].legend(fontsize=7, loc="upper left")
     for a in axs[1]:
-        a.set_xlabel("仿射在标注点处的 x 向整体偏移 (px)")
+        a.set_xlabel("仿射的 x 向整体偏移 (px)")
     for a in axs[:, 0]:
         a.set_ylabel("局部对应的 x 向整体偏移 (px)")
     fig.tight_layout()
-    fig.savefig(OUT / "local_vs_affine_x.png", dpi=130)
+    fig.savefig(OUT / "local_vs_affine_x.png", dpi=120)
     plt.close(fig)
 
-    # 图 5：逐点误差，按仿射整体偏移大小分四档
-    fig, axs = plt.subplots(2, 3, figsize=(12, 7), sharey=True)
+    # 图：标注点处 x 向误差（中位数），按该对仿射整体偏移大小分四档
+    fig, axs = plt.subplots(2, 3, figsize=(13, 7), sharey=True)
     for a, k in zip(axs.flat, keys):
-        pp = per_pair(pts[k], local="dense" if MODELS[k]["base"] == "roma" else "nb")
-        rows = [r for r in pp.values() if r is not None and "b_loc" in r and np.abs(r["b_aff_sub"]).max() < SANE]
-        nb = np.array([np.linalg.norm(r["b_aff_sub"]) for r in rows])
+        rows = usable(PP[k])
+        nb = np.array([abs(r["b_aff_sub"][0]) for r in rows])
         edges = np.percentile(nb, [0, 25, 50, 75, 100])
-        ma, ml, lab = [], [], []
+        bars = {"仿射": [], "局部对应": [], "标注自拟合仿射（样本内）": []}
+        lab = []
         for q in range(4):
             sel = [r for r, v in zip(rows, nb) if edges[q] <= v <= edges[q + 1]]
-            ma.append(np.median(np.concatenate([r["e_aff"] for r in sel])))
-            ml.append(np.median(np.concatenate([r["e_loc"] for r in sel])))
+            bars["仿射"].append(np.median(np.abs(np.concatenate([r["d"][:, 0] for r in sel]))))
+            bars["局部对应"].append(np.median(np.abs(np.concatenate([r["e"][:, 0] for r in sel]))))
+            bars["标注自拟合仿射（样本内）"].append(np.nanmedian(np.abs(np.concatenate([r["g_in"][:, 0] for r in sel]))))
             lab.append(f"{edges[q]:.1f}–{edges[q + 1]:.1f}")
         x = np.arange(4)
-        a.bar(x - 0.2, ma, 0.4, label="仿射")
-        a.bar(x + 0.2, ml, 0.4, label="局部对应")
+        for i, (t, v) in enumerate(bars.items()):
+            a.bar(x + (i - 1) * 0.27, v, 0.27, label=t)
         a.set_xticks(x, lab, fontsize=8)
         a.set_title(MODELS[k]["name"], fontsize=10)
     axs[0, 0].legend(fontsize=8)
     for a in axs[1]:
-        a.set_xlabel("该对仿射整体偏移大小分档 (px)")
+        a.set_xlabel("该对仿射 x 向整体偏移的绝对值，按四分位分档 (px)")
     for a in axs[:, 0]:
-        a.set_ylabel("标注点处误差中位数 (px)")
+        a.set_ylabel("标注点处 x 向误差绝对值的中位数 (px)")
     fig.tight_layout()
-    fig.savefig(OUT / "point_err_by_offset.png", dpi=130)
+    fig.savefig(OUT / "point_err_x_by_offset.png", dpi=120)
     plt.close(fig)
 
-    # 示意对：按 6 个模型平均的「仿射整体偏移 − 局部整体偏移」挑最高、中位、最低
+    # 示意对：6 个模型平均的「仿射整体偏移 − 局部整体偏移」（大小，px），取最高、中位、最低
     score = {}
     for p in pairs:
         v = []
         for k in keys:
-            pp = PP[k][p]
-            if pp is None or "b_loc" not in pp:
+            r = PP[k][p]
+            if r is None or "b_loc" not in r or np.abs(r["b_aff_sub"]).max() >= SANE or r["n_loc"] < 4:
                 break
-            v.append(np.linalg.norm(pp["b_aff_sub"]) - np.linalg.norm(pp["b_loc"]))
+            v.append(np.linalg.norm(r["b_aff_sub"]) - np.linalg.norm(r["b_loc"]))
         if len(v) == 6:
             score[p] = float(np.mean(v))
     order = sorted(score, key=score.get)
-    pick = {"最高": order[-1], "中位": order[len(order) // 2], "最低": order[0]}
-    (DATA / "examples.json").write_text(json.dumps({t: [p, score[p]] for t, p in pick.items()}, ensure_ascii=False,
-                                                   indent=1), encoding="utf-8")
-    print(json.dumps(summary["describe"], ensure_ascii=False, indent=1))
-    print(json.dumps({k: v["neighbour"]["follow_x"] for k, v in summary["source"].items()}, ensure_ascii=False))
+    pick = {"high": order[-1], "median": order[len(order) // 2], "low": order[0]}
+    summary["examples"] = {t: {"pair": p, "score": score[p]} for t, p in pick.items()}
+    summary["examples_n_candidates"] = len(score)
+    (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(json.dumps({k: {"describe": summary["describe"][k], "source": summary["source"][k][MAIN_LOCAL[k]]}
+                      for k in keys}, ensure_ascii=False, indent=1))
+    print(json.dumps(summary["examples"], ensure_ascii=False))
+
+
+def sar_cache(args):
+    """服务器上：把示意对的 SAR（主表映射 p2p98）存成 8 位 png，供本地画图。"""
+    from PIL import Image
+    from moonlib import inputs
+
+    img = Data(args.data)
+    ex = json.loads((OUT / "summary.json").read_text(encoding="utf-8"))["examples"]
+    for t, e in ex.items():
+        sar = inputs.sar_p2p98(img.sar(SPLIT, e["pair"]))
+        Image.fromarray((sar * 255).astype(np.uint8)).save(DATA / f"sar_{e['pair'].replace('/', '__')}.png")
 
 
 def examples(args):
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    from moonlib import inputs
-    plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "WenQuanYi Micro Hei", "SimHei", "DejaVu Sans"]
-
-    ds = Dataset(args.data)
-    pick = json.loads((DATA / "examples.json").read_text(encoding="utf-8"))
+    from PIL import Image
+    plt = setup_plt()
+    ex = json.loads((OUT / "summary.json").read_text(encoding="utf-8"))["examples"]
     keys = list(MODELS)
     pts = {k: read_points(k) for k in keys}
     G = 10.0                                     # 误差向量放大倍数
-    for tag, (pair, sc) in pick.items():
-        sar = inputs.sar_p2p98(Data(args.data).sar(SPLIT, pair))
-        fig, axs = plt.subplots(2, 3, figsize=(13, 9))
+    for tag, e in ex.items():
+        pair = e["pair"]
+        sar = np.asarray(Image.open(DATA / f"sar_{pair.replace('/', '__')}.png"))
+        fig, axs = plt.subplots(2, 3, figsize=(13, 9.2))
         for a, k in zip(axs.flat, keys):
             v = pts[k][pair]
-            s, aff = v[:, 2:4], v[:, 4:6]
-            loc = v[:, 9:11] if MODELS[k]["base"] == "roma" else v[:, 6:8]
+            s, aff, loc = v[:, 2:4], v[:, 4:6], v[:, LOCAL_COL[MAIN_LOCAL[k]]]
             a.imshow(sar, cmap="gray", extent=(0, sar.shape[1], sar.shape[0], 0))
-            a.scatter(s[:, 0], s[:, 1], s=14, c="lime", label="标注")
-            for (p0, p1, c) in ((s, aff, "r"), (s, loc, "c")):
+            for p1, c in ((aff, "r"), (loc, "c")):
                 for i in range(len(s)):
-                    if np.isfinite(p1[i]).all():
-                        a.annotate("", xy=p0[i] + G * (p1[i] - p0[i]), xytext=p0[i],
-                                   arrowprops=dict(arrowstyle="->", color=c, lw=1.2))
-            a.set_title(MODELS[k]["name"], fontsize=10)
+                    if np.isfinite(p1[i]).all() and np.linalg.norm(p1[i] - s[i]) < SANE:
+                        a.annotate("", xy=s[i] + G * (p1[i] - s[i]), xytext=s[i],
+                                   arrowprops=dict(arrowstyle="->", color=c, lw=1.3))
+            a.scatter(s[:, 0], s[:, 1], s=16, c="lime", zorder=3)
+            a.set_xlim(0, sar.shape[1])
+            a.set_ylim(sar.shape[0], 0)
+            a.set_title(f"{MODELS[k]['name']}（局部：{LOCAL_NAME[MAIN_LOCAL[k]]}）", fontsize=10)
             a.axis("off")
-        axs[0, 0].plot([], [], "r", label="仿射误差 ×10")
-        axs[0, 0].plot([], [], "c", label="局部对应误差 ×10")
+        axs[0, 0].scatter([], [], s=16, c="lime", label="标注点")
+        axs[0, 0].plot([], [], "r", label="仿射的误差（放大 10 倍）")
+        axs[0, 0].plot([], [], "c", label="局部对应的误差（放大 10 倍）")
         axs[0, 0].legend(fontsize=8, loc="lower left")
-        fig.suptitle(f"{pair}（SAR）：仿射整体偏移比局部整体偏移大 {sc:.2f} px（6 个模型平均）", fontsize=11)
+        fig.suptitle(f"SAR 影像；6 个模型平均，仿射整体偏移比局部对应整体偏移大 {e['score']:.2f} px", fontsize=11)
         fig.tight_layout()
-        name = {"最高": "high", "中位": "median", "最低": "low"}[tag]
-        fig.savefig(OUT / f"example_{name}.png", dpi=110)
+        fig.savefig(OUT / f"example_{tag}.png", dpi=100)
         plt.close(fig)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["collect", "analyse", "examples"])
+    ap.add_argument("cmd", choices=["collect", "analyse", "sar-cache", "examples"])
     ap.add_argument("--data", default=os.environ.get("MOON_DATA", str(YGC / "dataset/Moon")))
     ap.add_argument("--models", nargs="*", default=list(MODELS))
     ap.add_argument("--limit", type=int, default=0, help="只跑前若干对（试跑）")
@@ -506,7 +564,7 @@ def main():
     args = ap.parse_args()
     if args.cmd == "collect" and os.environ.get("GPU"):
         os.environ["CUDA_VISIBLE_DEVICES"] = os.environ["GPU"]
-    {"collect": collect, "analyse": analyse, "examples": examples}[args.cmd](args)
+    {"collect": collect, "analyse": analyse, "sar-cache": sar_cache, "examples": examples}[args.cmd](args)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 """读 infer.py / occlude.py 的产物，算三项统计、画图，写 extra/stats.json 与 extra/*.png。
 
-    /opt/envs/wb/bin/python runs/E4/code/analyze.py
+    /opt/envs/loftr/bin/python runs/E4/code/analyze.py      （工作台环境没有 matplotlib；只用 CPU）
 
 所有重要性图统一成 32×32 格（每格 16 px）、和为 1，分光学、SAR 两个坐标系：
 - 主要来源：LoFTR 为 4 个 cross 层「被关注总量」的平均；RoMa 为 certainty。
@@ -24,7 +24,12 @@ from common import (COUPLES, HW, LAYERS, MODELS, RUN, Data, DATA, apply, checkpo
                     val_pairs)
 from moonlib import inputs  # noqa: E402
 
-plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "WenQuanYi Zen Hei", "SimHei", "DejaVu Sans"]
+FONT = "/remote-home/xufang/YGC/fonts/simhei.ttf"      # 服务器上没有中文字体，放了一份在 gpfs
+try:
+    matplotlib.font_manager.fontManager.addfont(FONT)
+except (OSError, FileNotFoundError):
+    pass
+plt.rcParams["font.sans-serif"] = ["SimHei", "Noto Sans CJK SC", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 N = 32
 CELL = HW // N

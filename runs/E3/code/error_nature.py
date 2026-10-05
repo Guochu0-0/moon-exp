@@ -525,10 +525,12 @@ def examples(args):
     ex = json.loads((OUT / "summary.json").read_text(encoding="utf-8"))["examples"]
     keys = list(MODELS)
     pts = {k: read_points(k) for k in keys}
-    G = 10.0                                     # 误差向量放大倍数
     for tag, e in ex.items():
         pair = e["pair"]
         sar = np.asarray(Image.open(DATA / f"sar_{pair.replace('/', '__')}.png"))
+        # 误差向量放大倍数：最多 10 倍，最长的箭头不超过 150 px
+        big = max(np.nanmax(np.linalg.norm(pts[k][pair][:, 4:6] - pts[k][pair][:, 2:4], axis=1)) for k in keys)
+        G = float(max(1, min(10, int(150 / big))))
         fig, axs = plt.subplots(2, 3, figsize=(13, 9.2))
         for a, k in zip(axs.flat, keys):
             v = pts[k][pair]
@@ -545,8 +547,8 @@ def examples(args):
             a.set_title(f"{MODELS[k]['name']}（局部：{LOCAL_NAME[MAIN_LOCAL[k]]}）", fontsize=10)
             a.axis("off")
         axs[0, 0].scatter([], [], s=16, c="lime", label="标注点")
-        axs[0, 0].plot([], [], "r", label="仿射的误差（放大 10 倍）")
-        axs[0, 0].plot([], [], "c", label="局部对应的误差（放大 10 倍）")
+        axs[0, 0].plot([], [], "r", label=f"仿射的误差（放大 {G:.0f} 倍）")
+        axs[0, 0].plot([], [], "c", label=f"局部对应的误差（放大 {G:.0f} 倍）")
         axs[0, 0].legend(fontsize=8, loc="lower left")
         fig.suptitle(f"SAR 影像；仿射整体偏移比局部对应整体偏移大（6 个模型的中位数） {e['score']:.2f} px", fontsize=11)
         fig.tight_layout()

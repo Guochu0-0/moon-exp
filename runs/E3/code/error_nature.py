@@ -616,17 +616,23 @@ def affine_split(args):
         print(k, json.dumps(res, ensure_ascii=False), flush=True)
     (OUT / "affine_split.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    fig, ax = plt.subplots(figsize=(11, 4.5))
+    fig, axs = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
     bars = [("a", "模型的仿射"), ("f", "局部对应拟合的仿射"), ("g", "标注拟合的仿射（样本内）"),
             ("g_loo", "标注拟合的仿射（留一）"), ("l", "局部对应本身")]
     w = 0.8 / len(bars)
-    for j, (m, lab) in enumerate(bars):
-        ax.bar(np.arange(len(keys)) + (j - (len(bars) - 1) / 2) * w,
-               [out["models"][k]["err_median_x"][m] for k in keys], w, label=lab)
-    ax.set_xticks(np.arange(len(keys)))
-    ax.set_xticklabels([MODELS[k]["name"] for k in keys], fontsize=9)
-    ax.set_ylabel("标注点处 x 向误差中位数（px）")
-    ax.legend(fontsize=8, ncol=3)
+    ms_key = {"a": "total", "f": "localfit_total", "g": "seg3"}     # g 在样本内的误差就是第三段
+    for ax, stat, ylab in ((axs[0], lambda r, m: r["err_median_x"][m], "x 向误差中位数（px）"),
+                           (axs[1], lambda r, m: np.sqrt(r["ms_x"][ms_key[m]]) if m in ms_key else np.nan,
+                            "x 向误差均方根（px）")):
+        for j, (m, lab) in enumerate(bars):
+            ax.bar(np.arange(len(keys)) + (j - (len(bars) - 1) / 2) * w,
+                   [stat(out["models"][k], m) for k in keys], w, label=lab)
+        ax.set_ylabel(ylab)
+    axs[0].set_ylim(0, 4.2)
+    axs[0].legend(fontsize=8, ncol=3, loc="upper center")
+    axs[1].set_xticks(np.arange(len(keys)))
+    axs[1].set_xticklabels([MODELS[k]["name"] for k in keys], fontsize=9)
+    axs[1].set_title("均方根只算了前三种（留一与局部对应本身未算）", fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "affine_split_x.png", dpi=120)
     plt.close(fig)

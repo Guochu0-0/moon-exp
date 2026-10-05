@@ -362,7 +362,7 @@ def figures(names, D, contrast, dwx, agree, props, cps, err, pairs):
         for i, f in enumerate(FRAMES):
             for j, pr in enumerate(PROP_ZH):
                 box(axs[i, j], [contrast[(m, s, f, pr)] for m in names], zh,
-                    f"{FR_ZH[f]}：{PROP_ZH[pr]}（重要区域 − 其余{'，对数比' if pr == 'texture' else ''}）")
+                    f"{FR_ZH[f]}：{PROP_ZH[pr]}（重要区域减其余{'，对数比' if pr == 'texture' else ''}）")
                 axs[i, j].axhline(0, color="gray", lw=0.6, ls="--")
         fig.suptitle(f"重要性来源：{SRC_ZH[s]}")
         fig.tight_layout()

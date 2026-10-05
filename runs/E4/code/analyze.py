@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 from common import (COUPLES, HW, LAYERS, MODELS, RUN, Data, DATA, apply, checkpoints, fit_gt, key,  # noqa: E402
-                    val_pairs)
+                    ref_preds, val_pairs)
 from moonlib import inputs  # noqa: E402
 
 FONT = "/remote-home/xufang/YGC/fonts/simhei.ttf"      # 服务器上没有中文字体，放了一份在 gpfs
@@ -38,7 +38,7 @@ OUT = RUN / "extra"
 FRAMES = ("opt", "sar")
 FR_ZH = {"opt": "光学", "sar": "SAR"}
 SRC_ZH = {"primary": "注意力 / certainty", "inliers": "内点分布", "occlusion": "遮挡敏感性"}
-PROP_ZH = {"bright": "亮度", "shadow": "阴影占比", "texture": "纹理强弱"}
+PROP_ZH = {"bright": "亮度", "dark": "暗区占比", "texture": "纹理强弱"}
 RNG = np.random.default_rng(0)
 EN = {"最高": "high", "中位": "mid", "最低": "low"}
 
@@ -66,6 +66,22 @@ def spearman(x, y):
     rho = float(np.corrcoef(rank(x), rank(y))[0, 1])
     t = rho * math.sqrt((n - 2) / max(1e-12, 1 - rho ** 2))
     return {"rho": rho, "p": float(math.erfc(abs(t) / math.sqrt(2))), "n": n}   # 正态近似，n 大时足够
+
+
+def partial_spearman(x, y, z):
+    """控制 z 后 x 与 y 的秩偏相关（由三个 Spearman 系数算出），p 用 n−3 自由度的正态近似。"""
+    a, b, c = spearman(x, y), spearman(x, z), spearman(y, z)
+    rxy, rxz, ryz, n = a["rho"], b["rho"], c["rho"], a["n"]
+    if not (np.isfinite(rxy) and np.isfinite(rxz) and np.isfinite(ryz)) or n < 5:
+        return {"rho": float("nan"), "p": float("nan"), "n": n}
+    r = (rxy - rxz * ryz) / math.sqrt(max(1e-12, (1 - rxz ** 2) * (1 - ryz ** 2)))
+    t = r * math.sqrt((n - 3) / max(1e-12, 1 - r ** 2))
+    return {"rho": float(r), "p": float(math.erfc(abs(t) / math.sqrt(2))), "n": n}
+
+
+def auc5(e):
+    e = np.asarray(e, float)
+    return float(np.clip(1.0 - e / 5.0, 0.0, None).mean())      # 同 workbench.protocol.auc，∞ 记 0
 
 
 def wilcoxon(d):
@@ -108,8 +124,10 @@ def properties(pair):
         m = np.hypot(cv2.Sobel(g, cv2.CV_32F, 1, 0), cv2.Sobel(g, cv2.CV_32F, 0, 1))
         return m / max(m.mean(), 1e-9)
 
-    return {"opt": {"bright": to_grid(opt), "shadow": to_grid(opt < 0.4 * np.median(opt)), "texture": to_grid(tex(opt))},
-            "sar": {"bright": to_grid(sar), "shadow": to_grid(db < np.median(db) - 6.0), "texture": to_grid(tex(sar))}}
+    # 暗区：低于该图自身第 10 百分位的像素。光学 patch 对比度很低，几乎没有真正的阴影（低于中位数 0.7 倍的像素不到万分之一），
+    # 所以用相对定义；SAR 按 dB 同样处理。
+    return {"opt": {"bright": to_grid(opt), "dark": to_grid(opt < np.percentile(opt, 10)), "texture": to_grid(tex(opt))},
+            "sar": {"bright": to_grid(sar), "dark": to_grid(db < np.percentile(db, 10)), "texture": to_grid(tex(sar))}}
 
 
 def images(pair):
@@ -230,7 +248,10 @@ def main():
     for m in names:
         rows = [json.loads(l) for l in (RUN / "raw" / m / "val.jsonl").read_text(encoding="utf-8").splitlines()]
         dv = np.array([r["diff_vs_ref_px"] for r in rows], float)
-        stats["sanity"][m] = {"diff_vs_ref_px": summ(dv), "share_below_0.1px": float(np.mean(dv[np.isfinite(dv)] < 0.1)),
+        ref = ref_preds(m)
+        stats["sanity"][m] = {"auc5_rerun": auc5([err[m][p] for p in pairs]),
+                              "auc5_recorded": auc5([pair_error(ref.get(p), *cps[p]) for p in pairs]),
+                              "diff_vs_ref_px": summ(dv), "share_below_0.1px": float(np.mean(dv[np.isfinite(dv)] < 0.1)),
                               "fails": int(sum(r["fail"] for r in rows)), "ref_fails": int(sum(r["ref_fail"] for r in rows)),
                               "sec_per_pair": float(np.mean([r["sec"] for r in rows]))}
         info = D[m]["occl_info"]
@@ -281,6 +302,7 @@ def main():
             stats["distance"][f"{m}/{s}"] = {"weighted": summ(dw), "uniform": summ(du), "ratio": summ(dw / du),
                                              "rho_weighted_vs_error": spearman(dw, e),
                                              "rho_uniform_vs_error": spearman(du, e),
+                                             "rho_weighted_vs_error_given_uniform": partial_spearman(dw, e, du),
                                              "rho_excess_vs_error": spearman(dw - du, e),
                                              "rho_ratio_vs_error": spearman(dw / du, e)}
 

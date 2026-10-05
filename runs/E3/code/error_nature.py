@@ -486,7 +486,7 @@ def analyse(args):
     fig.savefig(OUT / "point_err_x_by_offset.png", dpi=120)
     plt.close(fig)
 
-    # 示意对：6 个模型平均的「仿射整体偏移 − 局部整体偏移」（大小，px），取最高、中位、最低
+    # 示意对：6 个模型中位数的「仿射整体偏移 − 局部整体偏移」（大小，px），取最高、中位、最低
     score = {}
     for p in pairs:
         v = []
@@ -496,7 +496,7 @@ def analyse(args):
                 break
             v.append(np.linalg.norm(r["b_aff_sub"]) - np.linalg.norm(r["b_loc"]))
         if len(v) == 6:
-            score[p] = float(np.mean(v))
+            score[p] = float(np.median(v))
     order = sorted(score, key=score.get)
     pick = {"high": order[-1], "median": order[len(order) // 2], "low": order[0]}
     summary["examples"] = {t: {"pair": p, "score": score[p]} for t, p in pick.items()}
@@ -548,7 +548,7 @@ def examples(args):
         axs[0, 0].plot([], [], "r", label="仿射的误差（放大 10 倍）")
         axs[0, 0].plot([], [], "c", label="局部对应的误差（放大 10 倍）")
         axs[0, 0].legend(fontsize=8, loc="lower left")
-        fig.suptitle(f"SAR 影像；6 个模型平均，仿射整体偏移比局部对应整体偏移大 {e['score']:.2f} px", fontsize=11)
+        fig.suptitle(f"SAR 影像；仿射整体偏移比局部对应整体偏移大（6 个模型的中位数） {e['score']:.2f} px", fontsize=11)
         fig.tight_layout()
         fig.savefig(OUT / f"example_{tag}.png", dpi=100)
         plt.close(fig)

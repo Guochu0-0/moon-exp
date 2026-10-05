@@ -33,6 +33,7 @@ EXP = REPO / "runs" / "E3"
 OUT = EXP / "extra"
 DATA = OUT / "data"
 YGC = Path("/remote-home/xufang/YGC")
+MAIN = YGC / "moon-exp"         # 不进 git 的点对与 ckpt 只在 gpfs 主 checkout
 SPLIT = "val"
 R_NB, MIN_NB = 12.0, 3          # 邻近匹配：半径（px）与最少点数
 SANE = 20.0                     # 整体偏移超过它视为粗错，不进相关与回归
@@ -43,18 +44,18 @@ MODELS = {
                      preds="runs/B0/preds/anymatch_loftr",
                      raw=YGC / "results/baselines/anymatch_loftr"),
     "loftr_q4": dict(name="LoFTR 无标注在线训练", base="loftr",
-                     preds="runs/Q/preds/Q4", raw=REPO / "runs/Q/sweep/Q4/match/step1500"),
+                     preds="runs/Q/preds/Q4", raw=MAIN / "runs/Q/sweep/Q4/match/step1500"),
     "loftr_e1": dict(name="LoFTR 标注过拟合", base="loftr",
-                     preds="runs/E1/preds/loftr_lr5e5", raw=REPO / "runs/E1/sweep/loftr_lr5e5/match/step14000"),
+                     preds="runs/E1/preds/loftr_lr5e5", raw=MAIN / "runs/E1/sweep/loftr_lr5e5/match/step14000"),
     "roma_zs": dict(name="RoMa zero-shot", base="roma",
                     preds="runs/B0m/preds/anymatch_roma__minmax",
                     raw=YGC / "results/baselines_ablation/anymatch_roma__minmax", ckpt=None),
     "roma_m4": dict(name="RoMa 无标注自训练", base="roma",
-                    preds="runs/M/preds/M4", raw=REPO / "runs/M/sweep/M4/match/step2000",
-                    ckpt=REPO / "runs/M/ckpt/M4/ckpt_2000.pt"),
+                    preds="runs/M/preds/M4", raw=MAIN / "runs/M/sweep/M4/match/step2000",
+                    ckpt=MAIN / "runs/M/ckpt/M4/ckpt_2000.pt"),
     "roma_e1": dict(name="RoMa 标注过拟合", base="roma",
-                    preds="runs/E1/preds/roma_vgg", raw=REPO / "runs/E1/sweep/roma_vgg/match/step16000",
-                    ckpt=REPO / "runs/E1/ckpt/roma_vgg/ckpt_16000.pt"),
+                    preds="runs/E1/preds/roma_vgg", raw=MAIN / "runs/E1/sweep/roma_vgg/match/step16000",
+                    ckpt=MAIN / "runs/E1/ckpt/roma_vgg/ckpt_16000.pt"),
 }
 FIELDS = ["pair", "k", "ox", "oy", "sx", "sy", "ax", "ay", "lx", "ly", "ln", "dx", "dy", "dc"]
 
@@ -136,7 +137,7 @@ def collect(args):
     from moonlib.ransac import fit_affine
 
     ds = Dataset(args.data)
-    pairs = ds.labelled(SPLIT)
+    pairs = ds.labelled(SPLIT)[: args.limit or None]
     DATA.mkdir(parents=True, exist_ok=True)
     check = {}
     for key in args.models:
@@ -499,6 +500,7 @@ def main():
     ap.add_argument("cmd", choices=["collect", "analyse", "examples"])
     ap.add_argument("--data", default=os.environ.get("MOON_DATA", str(YGC / "dataset/Moon")))
     ap.add_argument("--models", nargs="*", default=list(MODELS))
+    ap.add_argument("--limit", type=int, default=0, help="只跑前若干对（试跑）")
     ap.add_argument("--selfcheck", type=int, default=30, help="RoMa：前多少对用稠密采样 + RANSAC 复现已存仿射")
     args = ap.parse_args()
     if args.cmd == "collect" and os.environ.get("GPU"):

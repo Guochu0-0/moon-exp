@@ -1,0 +1,40 @@
+[
+ {
+  "start": "2026-10-06 17:08:27 +0800",
+  "end": "2026-10-06 17:13:50 +0800",
+  "status": "ok",
+  "commit": "4753f98577d982931618f0aa241e4d6a309d3412",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-ring-fit-114",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E6/code/rings.py",
+   "--workers",
+   "16"
+  ]
+ },
+ {
+  "start": "2026-10-06 17:48:01 +0800",
+  "end": "2026-10-06 17:52:03 +0800",
+  "status": "ok",
+  "commit": "30b2a1e9c6ca8c88a3a5ed50bd3ebc48d88842fe",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-ring-fit-114",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E6/code/rings.py",
+   "--fit",
+   "lsq",
+   "--workers",
+   "16"
+  ]
+ }
+]

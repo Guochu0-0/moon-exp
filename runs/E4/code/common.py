@@ -47,7 +47,7 @@ MODELS = {
     "roma_zs": dict(family="roma", config="configs/baselines/anymatch_roma__minmax.json", ckpt=None,
                     ref="B0m/anymatch_roma__minmax", name="RoMa zero-shot"),
     "roma_m4": dict(family="roma", config="configs/baselines/anymatch_roma__minmax.json",
-                    ckpt="runs/M/ckpt/M4/ckpt_2000.pt", ref="M/M4", name="RoMa 自训练"),
+                    ckpt="runs/M/ckpt/M4/ckpt_2000.pt", ref="M/M4", name="RoMa 无标注训练"),
     "roma_e1": dict(family="roma", config="configs/baselines/anymatch_roma__minmax.json",
                     ckpt="runs/E1/ckpt/roma_vgg/ckpt_16000.pt", ref="E1/roma_vgg", name="RoMa 标注过拟合"),
 }

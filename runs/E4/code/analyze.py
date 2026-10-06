@@ -40,7 +40,6 @@ FR_ZH = {"opt": "光学", "sar": "SAR"}
 SRC_ZH = {"primary": "注意力 / certainty", "inliers": "内点分布", "occlusion": "遮挡敏感性"}
 PROP_ZH = {"bright": "亮度", "dark": "暗区占比", "texture": "纹理强弱"}
 RNG = np.random.default_rng(0)
-EN = {"最高": "high", "中位": "mid", "最低": "low"}
 
 
 # ---------- 统计小工具（不依赖 scipy） ----------
@@ -128,11 +127,6 @@ def properties(pair):
     # 所以用相对定义；SAR 按 dB 同样处理。
     return {"opt": {"bright": to_grid(opt), "dark": to_grid(opt < np.percentile(opt, 10)), "texture": to_grid(tex(opt))},
             "sar": {"bright": to_grid(sar), "dark": to_grid(db < np.percentile(db, 10)), "texture": to_grid(tex(sar))}}
-
-
-def images(pair):
-    d = Data(DATA)
-    return {"opt": inputs.optical_div255(d.optical("val", pair)), "sar": inputs.sar_p2p98(d.sar("val", pair))}
 
 
 # ---------- 重要性图 ----------
@@ -418,78 +412,6 @@ def figures(names, D, contrast, dwx, agree, props, cps, err, pairs):
     fig.tight_layout()
     fig.savefig(OUT / "agreement.png", dpi=130)
     plt.close(fig)
-
-    examples(names, D, props, cps, err, pairs, dwx, agree)
-
-
-def overlay(ax, img, m, pts=None, title=""):
-    ax.imshow(img, cmap="gray", vmin=0, vmax=1)
-    if m is not None:
-        big = cv2.resize(np.asarray(m, np.float32), (HW, HW), interpolation=cv2.INTER_LINEAR)
-        ax.imshow(big, cmap="inferno", alpha=0.5, extent=(0, HW, HW, 0))
-    if pts is not None:
-        ax.scatter(pts[:, 0], pts[:, 1], s=14, facecolors="none", edgecolors="cyan", lw=0.8)
-    ax.set_title(title, fontsize=7)
-    ax.axis("off")
-
-
-def pick3(score: dict):
-    ps = sorted((v, p) for p, v in score.items() if np.isfinite(v))
-    if not ps:
-        return []
-    return [("最高", ps[-1][1]), ("中位", ps[len(ps) // 2][1]), ("最低", ps[0][1])]
-
-
-def example_grid(pair, names, D, props, cps, err, src, path, head):
-    fig, axs = plt.subplots(2, len(names), figsize=(2.6 * len(names), 5.6), squeeze=False)
-    img = images(pair)
-    for j, m in enumerate(names):
-        for i, f in enumerate(FRAMES):
-            x = D[m][src][f].get(pair)
-            reg = f"，一半重要性占 {region(x)[1]:.0%} 面积" if x is not None else ""
-            overlay(axs[i, j], img[f], x, cps[pair][i],
-                    f"{MODELS[m]['name']}（{FR_ZH[f]}）\n误差 {err[m][pair]:.1f} px{reg}" if i == 0 else f"{FR_ZH[f]}{reg}")
-    fig.suptitle(f"{head}｜{SRC_ZH[src]}；青色圈为标注点", fontsize=9)
-    fig.tight_layout()
-    fig.savefig(path, dpi=110)
-    plt.close(fig)
-
-
-def examples(names, D, props, cps, err, pairs, dwx, agree):
-    ex = OUT / "examples"
-    ex.mkdir(exist_ok=True)
-    picked = {}
-    # 第 1 项：主要来源的集中程度（6 个模型平均）
-    sc = {p: np.mean([region(D[m]["primary"]["opt"][p])[1] for m in names if D[m]["primary"]["opt"].get(p) is not None])
-          for p in pairs}
-    for lab, p in pick3(sc):
-        f = f"concentration_{EN[lab]}.png"
-        example_grid(p, names, D, props, cps, err, "primary", ex / f, f"集中程度{lab}（面积比例均值 {sc[p]:.2f}）：{p}")
-        picked[f] = p
-    # 第 2 项：加权距离相对均匀分布的比值（6 个模型平均）
-    rat = {}
-    for m in names:
-        ps, dw, du, _ = dwx[(m, "primary")]
-        for p, a, b in zip(ps, dw, du):
-            rat.setdefault(p, []).append(a / b)
-    sc = {p: float(np.mean(v)) for p, v in rat.items()}
-    for lab, p in pick3(sc):
-        f = f"distance_{EN[lab]}.png"
-        example_grid(p, names, D, props, cps, err, "primary", ex / f,
-                     f"加权距离 / 均匀分布距离{lab}（{sc[p]:.2f}）：{p}")
-        picked[f] = p
-    # 第 3 项：LoFTR 与 RoMa 内点分布的相关（三组配对平均）
-    acc = {}
-    for (a, b, s, fr), (ps, same, _) in agree.items():
-        if s == "inliers" and fr == "opt":
-            for p, v in zip(ps, same):
-                acc.setdefault(p, []).append(v)
-    sc = {p: float(np.mean(v)) for p, v in acc.items()}
-    for lab, p in pick3(sc):
-        f = f"agreement_{EN[lab]}.png"
-        example_grid(p, names, D, props, cps, err, "inliers", ex / f, f"LoFTR 与 RoMa 内点分布相关{lab}（{sc[p]:.2f}）：{p}")
-        picked[f] = p
-    (ex / "picked.json").write_text(json.dumps(picked, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

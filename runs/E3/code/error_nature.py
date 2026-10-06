@@ -46,14 +46,14 @@ MODELS = {
     "loftr_zs": dict(name="LoFTR zero-shot", base="loftr",
                      preds="runs/B0/preds/anymatch_loftr",
                      raw=YGC / "results/baselines/anymatch_loftr"),
-    "loftr_q4": dict(name="LoFTR 无标注在线训练", base="loftr",
+    "loftr_q4": dict(name="LoFTR 无标注训练", base="loftr",
                      preds="runs/Q/preds/Q4", raw=MAIN / "runs/Q/sweep/Q4/match/step1500"),
     "loftr_e1": dict(name="LoFTR 标注过拟合", base="loftr",
                      preds="runs/E1/preds/loftr_lr5e5", raw=MAIN / "runs/E1/sweep/loftr_lr5e5/match/step14000"),
     "roma_zs": dict(name="RoMa zero-shot", base="roma",
                     preds="runs/B0m/preds/anymatch_roma__minmax",
                     raw=YGC / "results/baselines_ablation/anymatch_roma__minmax", ckpt=None),
-    "roma_m4": dict(name="RoMa 无标注自训练", base="roma",
+    "roma_m4": dict(name="RoMa 无标注训练", base="roma",
                     preds="runs/M/preds/M4", raw=MAIN / "runs/M/sweep/M4/match/step2000",
                     ckpt=MAIN / "runs/M/ckpt/M4/ckpt_2000.pt"),
     "roma_e1": dict(name="RoMa 标注过拟合", base="roma",
@@ -228,6 +228,18 @@ def label_fit_residuals(o, s):
     return g_in, g_loo
 
 
+def local_fit_residuals(o, t, s):
+    """局部对应拟合的仿射（光学点 o → 局部对应 t 的最小二乘）在各点的误差（标注 s − 拟合）：样本内与留一。点太少时为 nan。"""
+    n = len(o)
+    f_in = s - apply(lsq_affine(o, t), o) if n >= 4 else np.full_like(o, np.nan)
+    f_loo = np.full_like(o, np.nan)
+    if n >= 5:
+        for i in range(n):
+            keep = np.arange(n) != i
+            f_loo[i] = s[i] - apply(lsq_affine(o[keep], t[keep]), o[i:i + 1])[0]
+    return f_in, f_loo
+
+
 def per_pair(pts, local="nb", cert_min=None):
     """每对：仿射误差的整体偏移 b、剩余部分、误差；局部对应在同一批点上的整体偏移 b_loc 与逐点误差。
     局部对应离标注超过 SANE 的点视为误匹配，不用。"""
@@ -249,7 +261,9 @@ def per_pair(pts, local="nb", cert_min=None):
         rec["n_loc"] = int(ok.sum())
         if ok.sum() >= 2:
             g_in, g_loo = label_fit_residuals(o, s)
-            rec.update(b_loc=e[ok].mean(0), b_aff_sub=d[ok].mean(0), e=e[ok], d=d[ok], g_in=g_in[ok], g_loo=g_loo[ok])
+            f_in, f_loo = local_fit_residuals(o[ok], loc[ok], s[ok])
+            rec.update(b_loc=e[ok].mean(0), b_aff_sub=d[ok].mean(0), e=e[ok], d=d[ok], g_in=g_in[ok], g_loo=g_loo[ok],
+                       f_in=f_in, f_loo=f_loo)
         out[p] = rec
     return out
 
@@ -266,6 +280,7 @@ def source_test(pp):
     L = np.array([r["b_loc"] for r in rows])
     E, D = np.concatenate([r["e"] for r in rows]), np.concatenate([r["d"] for r in rows])
     Gi, Gl = np.concatenate([r["g_in"] for r in rows]), np.concatenate([r["g_loo"] for r in rows])
+    Fi, Fl = np.concatenate([r["f_in"] for r in rows]), np.concatenate([r["f_loo"] for r in rows])
     nrm = lambda x: np.linalg.norm(x, axis=1)
     med = lambda x: float(np.nanmedian(x))
     n_all = sum(len(r["e"]) for r in rows)
@@ -273,7 +288,8 @@ def source_test(pp):
            "point_median": {"local": med(nrm(E)), "affine": med(nrm(D)), "label_fit_in": med(nrm(Gi)),
                             "label_fit_loo": med(nrm(Gl))},
            "point_median_x": {"local": med(np.abs(E[:, 0])), "affine": med(np.abs(D[:, 0])),
-                              "label_fit_in": med(np.abs(Gi[:, 0])), "label_fit_loo": med(np.abs(Gl[:, 0]))},
+                              "label_fit_in": med(np.abs(Gi[:, 0])), "label_fit_loo": med(np.abs(Gl[:, 0])),
+                              "local_fit_in": med(np.abs(Fi[:, 0])), "local_fit_loo": med(np.abs(Fl[:, 0]))},
            "point_median_y": {"local": med(np.abs(E[:, 1])), "affine": med(np.abs(D[:, 1])),
                               "label_fit_in": med(np.abs(Gi[:, 1])), "label_fit_loo": med(np.abs(Gl[:, 1]))},
            "frac_local_closer": float((nrm(E) < nrm(D)).mean()),
@@ -378,47 +394,9 @@ def analyse(args):
             summary["source"][k]["dense_high_cert"] = res_c
     (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    # 图：各模型整体偏移 (bx, by)
-    fig, axs = plt.subplots(2, 3, figsize=(12, 8), sharex=True, sharey=True)
-    for a, k in zip(axs.flat, keys):
-        b = Bv[k]
-        a.scatter(b[:, 0], b[:, 1], s=4, alpha=0.4)
-        a.axhline(0, c="k", lw=0.5)
-        a.axvline(0, c="k", lw=0.5)
-        d = summary["describe"][k]
-        a.set_title(f"{MODELS[k]['name']}\n标准差 x {d['std_bx']:.2f} px，y {d['std_by']:.2f} px", fontsize=10)
-        a.set_xlim(-12, 12)
-        a.set_ylim(-12, 12)
-        a.set_aspect("equal")
-    for a in axs[1]:
-        a.set_xlabel("整体偏移 x (px)")
-    for a in axs[:, 0]:
-        a.set_ylabel("整体偏移 y (px)")
-    fig.tight_layout()
-    fig.savefig(OUT / "offset_xy.png", dpi=120)
-    plt.close(fig)
-
-    # 图：误差中整体偏移与剩余部分
-    fig, a = plt.subplots(figsize=(9, 4))
-    x = np.arange(6)
-    o_ = [summary["describe"][k]["median_offset"] for k in keys]
-    r_ = [summary["describe"][k]["median_rem"] for k in keys]
-    a.bar(x - 0.2, o_, 0.4, label="整体偏移的大小")
-    a.bar(x + 0.2, r_, 0.4, label="剩余部分的大小（各点到整体偏移的平均距离）")
-    for i, k in enumerate(keys):
-        a.text(i - 0.2, o_[i] + 0.05, f"{summary['describe'][k]['share_sq_offset']:.0%}", ha="center", fontsize=9)
-    a.set_xticks(x, names, rotation=15, fontsize=9)
-    a.set_ylabel("各对的中位数 (px)")
-    a.legend(fontsize=9, loc="upper right")
-    a.set_ylim(0, max(r_) * 1.35)
-    a.set_title("百分数：整体偏移占均方误差的比例（全部对合计）", fontsize=10)
-    fig.tight_layout()
-    fig.savefig(OUT / "offset_vs_rest.png", dpi=120)
-    plt.close(fig)
-
-    # 图：模型之间 x 向整体偏移的相关（右上）与同号率（左下）；仿射与局部对应各一张
-    fig, axs = plt.subplots(1, 2, figsize=(14, 6))
-    for a, key, title in ((axs[0], "x", "仿射"), (axs[1], "local_x", "局部对应")):
+    # 图：模型之间仿射 x 向平均偏移的相关（右上）与同号率（左下）
+    fig, a = plt.subplots(figsize=(7.5, 6.2))
+    for key in ("x",):
         C = np.array(summary["agree"][key]["pearson"])
         S = np.array(summary["agree"][key]["same_sign_gt1px"], dtype=float)
         up = np.triu(np.ones((6, 6)), 1) > 0
@@ -432,7 +410,7 @@ def analyse(args):
                            color="w" if M[i, j] < 0.6 else "k", fontsize=9)
         a.set_xticks(range(6), names, rotation=30, ha="right", fontsize=8)
         a.set_yticks(range(6), names, fontsize=8)
-        a.set_title(f"{title}的 x 向整体偏移\n右上：相关系数；左下：同号率（两者都超过 1 px 的对）", fontsize=10)
+        a.set_title(f"6 个模型两两之间，模型仿射的 x 向平均偏移\n右上：相关系数；左下：同号率（两者都超过 1 px 的对）", fontsize=10)
     fig.tight_layout()
     fig.savefig(OUT / "offset_agree_x.png", dpi=120)
     plt.close(fig)
@@ -560,15 +538,23 @@ def examples(args):
 
 # ---------------------------------------------------------------- 仿射误差三段分解
 
-def split_pair(v, local):
-    """一对上、有局部对应的点（同 per_pair 的筛选）：模型仿射 a、局部对应拟合的仿射 f、标注拟合的仿射 g。
-    a − s = (a − f) + (f − g) + (g − s)；f、g 是同一组点上的最小二乘，g − s 与前两段正交。点 < 4 返回 None。"""
+def local_ok(v, local):
+    """有局部对应、且离标注 < SANE 的点。"""
+    e = v[:, LOCAL_COL[local]] - v[:, 2:4]
+    ok = np.isfinite(e).all(1)
+    ok[ok] = np.linalg.norm(e[ok], axis=1) < SANE
+    return ok
+
+
+def split_pair(v, local, keep=None):
+    """一对上、有局部对应的点（同 per_pair 的筛选；keep 给出时再与之取交）：模型仿射 a、局部对应拟合的仿射 f、
+    标注拟合的仿射 g。a − s = (a − f) + (f − g) + (g − s)；f、g 是同一组点上的最小二乘，g − s 与前两段正交。点 < 4 返回 None。"""
     o, s, a, loc = v[:, 0:2], v[:, 2:4], v[:, 4:6], v[:, LOCAL_COL[local]]
     if not np.isfinite(a).all():
         return None
-    e = loc - s
-    ok = np.isfinite(e).all(1)
-    ok[ok] = np.linalg.norm(e[ok], axis=1) < SANE
+    ok = local_ok(v, local)
+    if keep is not None:
+        ok &= keep
     o, s, a, loc = o[ok], s[ok], a[ok], loc[ok]
     n = len(o)
     if n < 4 or np.abs((a - s).mean(0)).max() >= SANE:
@@ -589,9 +575,19 @@ def affine_split(args):
     nrm = lambda x: np.linalg.norm(x, axis=1)
     med = lambda x: float(np.nanmedian(x))
     out = {"note": "每对只用有局部对应的点（离标注 < SANE），至少 4 点；仿射整体偏移 >= SANE 的对不计。"
-                   "a 模型仿射，f 局部对应拟合的仿射，g 标注拟合的仿射；_loo 为留一。", "models": {}}
-    for k in keys:
-        rows = [r for r in (split_pair(v, MAIN_LOCAL[k]) for v in read_points(k).values()) if r is not None]
+                   "a 模型仿射，f 局部对应拟合的仿射，g 标注拟合的仿射；_loo 为留一。"
+                   "models 为各模型自己的点集；common 为 6 个模型都有局部对应的公共点集（各模型都满足上述条件的对）。",
+           "models": {}, "common": {}}
+    pts = {k: read_points(k) for k in keys}
+    common = {k: [] for k in keys}
+    for p in sorted(set.intersection(*(set(v) for v in pts.values()))):
+        keep = np.all([local_ok(pts[k][p], MAIN_LOCAL[k]) for k in keys], 0)
+        rs = [split_pair(pts[k][p], MAIN_LOCAL[k], keep) for k in keys]
+        if all(r is not None for r in rs):
+            for k, r in zip(keys, rs):
+                common[k].append(r)
+    for where, k, rows in [("models", k, [r for r in (split_pair(v, MAIN_LOCAL[k]) for v in pts[k].values())
+                                          if r is not None]) for k in keys] + [("common", k, common[k]) for k in keys]:
         cat = lambda key: np.concatenate([r[key] for r in rows])
         s = cat("s")
         P = {m: cat(m) for m in ("a", "f", "g", "l", "f_loo", "g_loo")}
@@ -607,32 +603,36 @@ def affine_split(args):
         # x 向均方误差：总 = (①+②) + ③ 严格成立；① ② 不正交，另给交叉项
         s1, s2, s3 = (seg[q][:, 0] for q in seg)
         res["ms_x"] = {"total": ms(err["a"][:, 0]), "seg1": ms(s1), "seg2": ms(s2), "cross12": float(2 * np.mean(s1 * s2)),
-                       "seg3": ms(s3), "localfit_total": ms(err["f"][:, 0])}
+                       "seg3": ms(s3), "localfit_total": ms(err["f"][:, 0]), "local": ms(err["l"][:, 0])}
         # 每对误差（这些点上到标注的平均距离）
         pe = {m: np.array([nrm(r[m] - r["s"]).mean() for r in rows]) for m in ("a", "f", "g")}
         res["pair_err"] = {m: {"median": med(x), "lt3": float((x < 3).mean()), "lt5": float((x < 5).mean())}
                            for m, x in pe.items()}
-        out["models"][k] = res
-        print(k, json.dumps(res, ensure_ascii=False), flush=True)
+        out[where][k] = res
+        print(where, k, json.dumps(res, ensure_ascii=False), flush=True)
     (OUT / "affine_split.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    fig, axs = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
-    bars = [("a", "模型的仿射"), ("f", "局部对应拟合的仿射"), ("g", "标注拟合的仿射（样本内）"),
-            ("g_loo", "标注拟合的仿射（留一）"), ("l", "局部对应本身")]
-    w = 0.8 / len(bars)
-    ms_key = {"a": "total", "f": "localfit_total", "g": "seg3"}     # g 在样本内的误差就是第三段
-    for ax, stat, ylab in ((axs[0], lambda r, m: r["err_median_x"][m], "x 向误差中位数（px）"),
-                           (axs[1], lambda r, m: np.sqrt(r["ms_x"][ms_key[m]]) if m in ms_key else np.nan,
-                            "x 向误差均方根（px）")):
-        for j, (m, lab) in enumerate(bars):
-            ax.bar(np.arange(len(keys)) + (j - (len(bars) - 1) / 2) * w,
-                   [stat(out["models"][k], m) for k in keys], w, label=lab)
-        ax.set_ylabel(ylab)
-    axs[0].set_ylim(0, 4.2)
-    axs[0].legend(fontsize=8, ncol=3, loc="upper center")
-    axs[1].set_xticks(np.arange(len(keys)))
-    axs[1].set_xticklabels([MODELS[k]["name"] for k in keys], fontsize=9)
-    axs[1].set_title("均方根只算了前三种（留一与局部对应本身未算）", fontsize=9)
+    # 水平条（公共点集，行间可比）：每个模型一行，沿均方误差轴依次是 最佳仿射 → 局部对应拟合的仿射 → 模型仿射（同示意图）；
+    # 菱形为局部对应本身
+    fig, ax = plt.subplots(figsize=(10, 4.8))
+    y = np.arange(len(keys))[::-1]
+    for yi, k in zip(y, keys):
+        m = out["common"][k]["ms_x"]
+        g, f, a = m["seg3"], m["localfit_total"], m["total"]
+        ax.barh(yi, g, color="#7f7f7f", height=0.55, label="第三段：任何仿射都去不掉" if yi == y[0] else None)
+        ax.barh(yi, f - g, left=g, color="#ff7f0e", height=0.55, label="第二段：局部对应不准" if yi == y[0] else None)
+        ax.barh(yi, a - f, left=f, color="#d62728", height=0.55, label="第一段：仿射在别处拟合" if yi == y[0] else None)
+        ax.plot(m["local"], yi, "D", color="#17becf", ms=7, mec="k", mew=0.5, label="局部对应本身" if yi == y[0] else None)
+        for x in (g, f, a):
+            ax.text(x, yi + 0.33, f"{x:.1f}", ha="center", va="bottom", fontsize=8)
+        if yi == y[0]:      # 第一行标出每个位置是哪个误差
+            for x, name, ha in ((g, "最佳仿射", "right"), (f, "局部对应拟合的仿射", "left"), (a, "模型仿射", "center")):
+                ax.annotate(name, (x, yi + 0.55), (x, yi + 0.95), ha=ha, va="bottom", fontsize=9,
+                            arrowprops=dict(arrowstyle="-", color="0.4", lw=0.8))
+    ax.set_yticks(y, [MODELS[k]["name"] for k in keys], fontsize=9)
+    ax.set_xlabel("标注点上的 x 向均方误差（px²）")
+    ax.set_ylim(-0.6, len(keys) + 0.35)
+    ax.legend(fontsize=8, loc="lower right")
     fig.tight_layout()
     fig.savefig(OUT / "affine_split_x.png", dpi=120)
     plt.close(fig)

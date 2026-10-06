@@ -4,6 +4,7 @@
 import { api } from './api.js';
 import { mountVisual } from './visual.js';
 import { mountNotes } from './notes.js';
+import { mountNotes as mountNotesVditor } from './notes-vditor.proto.js';   // 原型：地址带 ?editor=vditor 时试用 Vditor IR
 
 const BINS = [5, 20];          // 误差分档：≤5、5–20、>20 px（错配）、失败
 const CDF_MAX = 30;            // 累积分布横轴上限（px）
@@ -365,7 +366,7 @@ export function mountNodePage(root, { onBack }) {
   // ---------------- Notes ----------------
   function notes() {
     const id = D.id;
-    NOTES = mountNotes($('#sec-notes .body'), {
+    NOTES = (new URLSearchParams(location.search).get('editor') === 'vditor' ? mountNotesVditor : mountNotes)($('#sec-notes .body'), {
       text: D.notes, base: `/runs/${encodeURIComponent(id)}/`, path: `runs/${id}/notes.md`,
       save: async text => { await api.saveNotes(id, text); if (D?.id === id) D.notes = text; },
     });

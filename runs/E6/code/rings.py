@@ -84,12 +84,17 @@ class Pair:
 
 # ---------------------------------------------------------------- 拟合
 
+FIT = "ransac"                                      # --fit lsq：不做 RANSAC，全部点直接最小二乘
+
+
 def fit(src, dst, seed):
-    """RANSAC（3 px，不细化）→ 内点上普通最小二乘。返回 (A 或 None, 内点率)。"""
+    """RANSAC（3 px，不细化）→ 内点上普通最小二乘；FIT 为 lsq 时全部点直接最小二乘。返回 (A 或 None, 内点率)。"""
     import cv2
 
     if len(src) < 3:
         return None, 0.0
+    if FIT == "lsq":
+        return np.linalg.lstsq(np.c_[src, np.ones(len(src))], dst, rcond=None)[0].T, 1.0
     cv2.setRNGSeed(seed)
     A, inl = cv2.estimateAffine2D(src, dst, method=cv2.RANSAC, ransacReprojThreshold=THR,
                                   maxIters=10000, confidence=0.99999, refineIters=0)
@@ -324,9 +329,9 @@ def analyse_model(model, recs):
     return res
 
 
-def write_csv(model, recs):
+def write_csv(model, recs, sfx=""):
     (OUT / "data").mkdir(parents=True, exist_ok=True)
-    with open(OUT / "data" / f"rings_{model}.csv", "w", newline="", encoding="utf-8") as f:
+    with open(OUT / "data" / f"rings{sfx}_{model}.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["pair", "variant", "ring", "ok", "n_cand", "gross", "inlier", "ms_x", "ms_2d"])
         for r in recs:
@@ -416,22 +421,29 @@ def main():
     ap.add_argument("--models", nargs="*", default=ORDER)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--workers", type=int, default=16)
+    ap.add_argument("--fit", choices=["ransac", "lsq"], default="ransac",
+                    help="lsq：各圈、全图随机 40 点、全图全部对应都不做 RANSAC，直接最小二乘；产物加后缀 _lsq，不画图")
     a = ap.parse_args()
+    global FIT
+    FIT = a.fit                                     # 在建进程池之前设置，子进程随 fork 继承
+    sfx = "" if FIT == "ransac" else "_lsq"
     OUT.mkdir(parents=True, exist_ok=True)
     summary = {"settings": {"rings_px": [[lo, None if np.isinf(hi) else hi] for lo, hi in RINGS], "n_fit": N_FIT,
-                            "draws": DRAWS, "ransac_px": THR, "sane_px": SANE, "variants": VARIANTS},
+                            "draws": DRAWS, "fit": FIT, "ransac_px": THR if FIT == "ransac" else None,
+                            "sane_px": SANE, "variants": VARIANTS},
                "models": {}}
     for m in a.models:
         pairs = json.loads((RAW / m / "pairs.json").read_text(encoding="utf-8"))[: a.limit or None]
         A = np.load(RAW / m / "A.npy")
         with Pool(a.workers) as pool:
             recs = pool.map(one_pair, [(m, i, p, A[i]) for i, p in enumerate(pairs)], chunksize=4)
-        write_csv(m, recs)
+        write_csv(m, recs, sfx)
         summary["models"][m] = analyse_model(m, recs)
         print(m, json.dumps({v: [round(r["ms_x"], 2) for r in summary["models"][m][v]["rings"]] for v in VARIANTS}),
               {k: round(v["ms_x"], 2) for k, v in summary["models"][m]["nearest"]["refs"].items()}, flush=True)
-    (OUT / "rings.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
-    plot(summary)
+    (OUT / f"rings{sfx}.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
+    if FIT == "ransac":
+        plot(summary)
 
 
 if __name__ == "__main__":

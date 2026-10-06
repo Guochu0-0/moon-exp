@@ -62,13 +62,37 @@ python -m workbench sync B0 B0m [--extra certainty] [--tb all]   # 从服务器�
   - 中间结果视图（方法写了**中间结果**时出现，列在「中间结果」之后，按名称，悬停显示说明）：只给写了它的一侧出面板，画在 frame 指定的原图坐标系里，分辨率任意，拉伸到 patch 大小。标量图画成热力图叠加（viridis，按该 pair 自身的最小、最大值映射，附色标和不透明度滑杆）；点集画成按取值着色的点，不超过 60 个点时在旁边标出取值；位移场画成 warp：另一模态按位移摆到 frame 坐标后与 frame 原图做卷帘；图片原样显示。切换的视图在翻看 pair 时保持。某个 pair 没有该中间结果时显示「此 pair 没有该中间结果」；本地没有数据（但有 meta.json）时给出可直接复制的 `python -m workbench sync <id> --extra <name>`。
   - 点对视图（本地有点对时出现）：点对连线（全部点，内点 / 外点由估计的仿射按 3 px 残差重新判定后着色）与残差点图（光学图上的匹配点，颜色为到估计仿射的残差）。conf 过滤按分位数取值，方法没有 conf 时隐藏，conf 全部相同时注明不起作用；0 个点的 pair 照常显示；方法的 caveat 显示在视图旁。本地没有点对时给出可直接复制的 `python -m workbench sync <id>`。
 - **训练图表**（`runs/<id>/tb/` 的日志里有 scalar 时出现，未点亮的实验也有）：读各方法 `tb/<method>/` 的 TensorBoard scalars，每个 tag 一张小图，横轴 step、纵轴取值，用真实坐标轴。`tb/<method>/` 下每个含 events 文件的目录各是一个 TensorBoard run（按相对路径命名）：不同的 `version_N` 分开画、不拼接，`add_scalars` 建的子目录也各是一个；`media/` 不读。同一目录里的多个 events 文件按文件名时间戳排序，逐个 tag 丢掉旧文件中 step ≥ 新文件里该 tag 起始 step 的点（续训重叠；必须按 tag 做，因为有的 tag 用 epoch 当 step）。点数超过 2000 的曲线按序号分桶，只画每桶最小、最大值和首尾点，图注会写明。「在 TensorBoard 中打开」由工作台起子进程 `python -m tensorboard.main --logdir runs/<id>/tb --host 127.0.0.1 --port <空闲端口>`，每个 logdir 复用一个实例，工作台退出时统一结束（被强杀时也会：Windows 上用 job，Linux 上用 PDEATHSIG）。解析器在 `tb.py`，调研见 `docs/research/tensorboard-logs.md`。
-- **Notes**：所见即所得，渲染结果本身就是编辑区，点进去直接改。输入 Markdown 语法当场变成格式：行首 `# `、`- `、`1. `、`> `，行内 `**粗**`、`*斜*`、`` `码` ``；单独一行 ```` ``` ````、`---`、`| a | b |` 回车后分别成为代码块、分隔线、表格（表格里回车到下一行、Tab 到下一格，走出最后一行时加一行）。粘贴只取纯文本，按 Markdown 并入。Ctrl+Z / Ctrl+Y 撤销重做；「撤销改动」回到上次保存的内容；「源码」切到 Markdown 原文编辑（表格增删列、图片、代码块语言在这里改）。保存要手动（按钮或 Ctrl+S），保存到 `runs/<id>/notes.md`（UTF-8、LF，第一次保存时才创建）；有未保存的改动时离开页面会先确认。在所见即所得里保存时，文件由页面内容重新生成，写法会规整（如 `*` 列表写成 `-`、`#####` 写成 `####`），渲染结果不变。支持的子集：标题、段落、列表（不嵌套）、引用、代码块、分隔线、GFM 表格（含对齐），行内代码、粗体、斜体、链接、图片；相对路径按实验目录解析，所以 `![](extra/offset/offset_val.png)` 能显示附件；Ctrl+单击打开链接；不放行原始 HTML。
+- **Notes**：编辑器是 [Vditor](https://github.com/Vanessa219/vditor) 4.0.0 的 IR 模式，行为对齐 Typora：显示为渲染结果，光标进入某个元素时露出它的 Markdown 源码；块级元素里的回车、退格按 Vditor 的行为，列表项里任何位置按 Tab / Shift+Tab 都缩进 / 反缩进。Vditor 只放了运行时用到的部分（`static/vendor/vditor-4.0.0/`，含 Lute 解析器、KaTeX、中文语言包），第一次打开 Notes 时加载，不访问外网。语法：标题、段落、列表（可嵌套）、任务列表、引用、代码块、分隔线、GFM 表格（含对齐）、数学公式（`$…$`、`$$…$$`，KaTeX；`$` 后紧跟数字不算公式），行内代码、粗体、斜体、删除线、链接、图片；原始 HTML 原样写进文件，显示时做 XSS 过滤。段内换行照源码分行显示。`#` 标题显示时降两级；相对路径按实验目录解析，所以 `![](extra/offset/offset_val.png)` 能显示附件；单击只放光标，Ctrl+单击才打开链接。保存要手动（按钮或 Ctrl+S），保存到 `runs/<id>/notes.md`（UTF-8、LF，第一次保存时才创建）；「撤销改动」回到上次保存的内容；「源码」（或 Ctrl+/）切到 Markdown 原文编辑；有未保存的改动时离开页面会先确认。保存时文件由编辑器重新生成，写法会规整：表格按列宽补齐空格、表格前加空行，无序列表统一写成 `-`，任务项写成 `- [ ]  `，嵌套列表的父项和子列表之间加空行（GitHub 上段距变宽）；其余几种在 GitHub 上渲染不变。
+
+  快捷键（Windows，按 Typora；Vditor 自带的快捷键全部停用，和 Typora 不同的 Ctrl+U / G / J / O / ; / H 拦下不做事）：
+
+  | 按键 | 作用 |
+  |---|---|
+  | Ctrl+B / Ctrl+I | 粗体 / 斜体 |
+  | Ctrl+Shift+` | 行内代码 |
+  | Alt+Shift+5 | 删除线 |
+  | Ctrl+K | 链接 |
+  | Ctrl+1…6 / Ctrl+0 | 标题 1–6 / 变回段落 |
+  | Ctrl+= / Ctrl+- | 标题升 / 降一级；表格里是在下方加行 / 删除当前行 |
+  | Ctrl+Shift+K / Ctrl+Shift+M / Ctrl+Shift+Q | 代码块 / 公式块 / 引用 |
+  | Ctrl+Shift+[ / Ctrl+Shift+] | 有序 / 无序列表 |
+  | Ctrl+Alt+X | 任务列表（Typora 没有，自定） |
+  | Tab / Shift+Tab，Ctrl+[ / Ctrl+] | 列表缩进 / 反缩进（表格和代码块里的 Tab 交给 Vditor） |
+  | Ctrl+Alt+T | 表格（Typora 的 Ctrl+T 浏览器拦不住） |
+  | Ctrl+Enter / Ctrl+Shift+Backspace | 表格里：在下方加行 / 删除当前行 |
+  | Ctrl+L / Ctrl+D | 选中当前段 / 当前词 |
+  | Ctrl+/ | 源码模式 |
+  | Ctrl+Z / Ctrl+Y | 撤销 / 重做 |
+  | Ctrl+S | 保存 |
+  | Ctrl+单击 | 打开链接 |
+
+  图片（Typora 的 Ctrl+Shift+I 是浏览器开发者工具的键）、清除格式等不设快捷键。
 - **未点亮的实验**：只有实验信息、「尚无结果。」和 Notes。
 - **分析**：只有实验信息（不列起点方法和 commit，状态另标「分析」）、启动记录（列出 `launch/` 下的全部记录，没有时写「本分析没有启动记录。」）和 Notes。
 
 ### API
 
-见 `server.py` 顶部。训练产物冒烟：`python scripts/smoke_training.py --python <装了 tensorboard 的 python>`（合成一个写了 scalar 中间结果和 TB scalars 的实验，起工作台子进程，检查热力图图层可切换、训练图表按 tag 出图、「在 TensorBoard 中打开」能打开、强行结束工作台后 TensorBoard 随之结束）。前端冒烟（画布与节点页）：`python scripts/smoke_canvas.py`（需要 Chrome / Edge 和 websocket-client；在临时目录里复制 B0 / B0m，不动仓库的 `runs/`）。点对视图那几步要 B0 的点对：先 `python -m workbench sync B0`；在 worktree 里跑时用 `--matches-from <主工作区>/runs` 指过去。
+见 `server.py` 顶部。训练产物冒烟：`python scripts/smoke_training.py --python <装了 tensorboard 的 python>`（合成一个写了 scalar 中间结果和 TB scalars 的实验，起工作台子进程，检查热力图图层可切换、训练图表按 tag 出图、「在 TensorBoard 中打开」能打开、强行结束工作台后 TensorBoard 随之结束）。前端冒烟（画布与节点页）：`python scripts/smoke_canvas.py`（需要 Chrome / Edge 和 websocket-client；在临时目录里复制 B0 / B0m，不动仓库的 `runs/`）。点对视图那几步要 B0 的点对：先 `python -m workbench sync B0`；在 worktree 里跑时用 `--matches-from <主工作区>/runs` 指过去。Notes 编辑器回归：`python scripts/smoke_notes.py [--runs <runs 目录>] [--gh-render]`（每份 notes.md 在编辑器里打开后取出保存会写入的内容，和原文去空白逐行比；`--gh-render` 再用 GitHub 的 Markdown 接口比较两者的渲染；另查附件图片、标题降级、Ctrl+单击、段内换行、输入法组字和一部分快捷键；不需要数据集）。
 
 ## 记录格式（v2）
 

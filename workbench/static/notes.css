@@ -1,0 +1,23 @@
+/* Notes 编辑器（Vditor IR）的样式，见 notes.js；在 Vditor 自己的样式之后加载 */
+
+/* 编辑区：去掉 Vditor 的边框和底色，字体、行距跟随节点页 */
+.np .notes-vd .vditor { border: 1px solid var(--rule); border-radius: 2px; }
+.np .notes-vd .vditor:focus-within { border-color: var(--me); box-shadow: 0 0 0 1px var(--me); }
+.np .notes-vd .vditor-ir, .np .notes-vd .vditor-content { background: var(--paper); }
+.np .notes-vd .vditor-reset { font-family: inherit; font-size: inherit; line-height: 1.85; color: inherit; padding: 10px 14px !important; }
+.np .notes-vd .vditor-reset p { margin: .5em 0; }
+/* `#` 标题显示时降两级：h1 画成 h3 的样子……h4 及以下同 h6 */
+.np .notes-vd .vditor-reset h1, .np .notes-vd .vditor-reset h2, .np .notes-vd .vditor-reset h3,
+.np .notes-vd .vditor-reset h4, .np .notes-vd .vditor-reset h5, .np .notes-vd .vditor-reset h6 {
+  font-size: 16px; font-weight: 600; margin: 1.2em 0 .3em; padding: 0; border: 0; }
+.np .notes-vd .vditor-reset img { max-width: 100%; }
+/* 字体、三线表跟随节点页（Vditor 的选择器更具体，只能 !important） */
+.np .notes-vd .vditor-reset, .np .notes-vd .vditor-reset p, .np .notes-vd .vditor-reset li { font-family: var(--serif) !important; font-size: 15.5px !important; color: var(--ink) !important; }
+.np .notes-vd .vditor-reset table { display: table; border-collapse: collapse; margin: .8em 0; border: 0; font-size: 14px; line-height: 1.6; }
+.np .notes-vd .vditor-reset table thead { border-top: 1.5px solid var(--strong); }
+.np .notes-vd .vditor-reset table tbody { border-bottom: 1.5px solid var(--strong); }
+.np .notes-vd .vditor-reset table th, .np .notes-vd .vditor-reset table td { border: 0; background: none; text-align: left; padding: 3px 9px; }
+.np .notes-vd .vditor-reset table th { font-weight: 600; padding: 5px 9px; border-bottom: 1px solid var(--strong); }
+.np .notes-vd .vditor-reset table tr { background: none; border: 0; }
+.np .notes-vd .vditor-reset table [align="right"] { text-align: right; }
+.np .notes-vd .vditor-reset table [align="center"] { text-align: center; }

@@ -479,10 +479,10 @@ def main():
         canvas = lambda: json.loads((runs / "canvas.json").read_text(encoding="utf-8"))["experiments"]
         until(lambda: canvas().get("B0") != before_b0, "B0 的坐标写回 canvas.json")
         pos = canvas()["B0"]
-        p.cmd("Page.reload")
-        p.wait(f"document.querySelector('{node('B0')}')", 10)
-        assert p.js(f"[parseFloat(document.querySelector('{node('B0')}').style.left), "
-                    f"parseFloat(document.querySelector('{node('B0')}').style.top)]") == [pos["x"], pos["y"]]
+        p.cmd("Page.reload")   # 等的条件要直接含位置：只等 B0 出现的话，旧页面上就已满足
+        p.wait(f"""(() => {{ const el = document.querySelector('{node('B0')}');
+                   return el && parseFloat(el.style.left) === {pos['x']} && parseFloat(el.style.top) === {pos['y']}; }})()""",
+               10, "刷新后 B0 位置保持")
         step("08-拖动后刷新")
 
         # 终端直接写 exp.toml，几秒内出现在画布上
@@ -664,7 +664,7 @@ def main():
         p.wait("location.hash === '#/exp/E1' && document.querySelector('#page .back')", what="进入节点页")
         # 未点亮实验：只有实验信息、「尚无结果。」和 Notes
         # 第一次打开节点页时，参考方法候选要把 B0 / B0m 全部方法的指标（含 bootstrap）算一遍，本机约 8 s
-        p.wait("document.querySelector('#page #sec-notes .edit')", 30, what="节点页渲染")
+        p.wait("document.querySelector('#page #sec-notes .vditor-ir')", 30, what="节点页渲染")
         assert p.js("[...document.querySelectorAll('#page .nav a[data-sec]')].map(a => a.textContent)") == \
             ["实验信息", "结果", "Notes"]
         assert p.js("document.querySelector('#page #sec-results .body').textContent.trim()") == "尚无结果。"
@@ -680,13 +680,15 @@ def main():
 
         # 编辑并保存 Notes：首次保存才创建 notes.md（UTF-8、LF）
         assert not (runs / "E1" / "notes.md").exists()
-        p.click(*p.center("#page #sec-notes .edit"))
-        p.wait("document.activeElement && document.activeElement.matches('#page textarea.notes-edit')", what="进入编辑")
+        p.click(*p.center("#page #sec-notes .notes-foot .mode"))     # 「源码」里直接写 Markdown
+        p.wait("document.activeElement && document.activeElement.matches('#page textarea.notes-src')", what="进入源码")
         p.type("## 计划\n\n先跑 **Val**。")
         p.key("s", "KeyS", mods=CTRL)            # Ctrl+S
-        until(lambda: (runs / "E1" / "notes.md").read_bytes() == "## 计划\n\n先跑 **Val**。".encode("utf-8"),
+        # 空 Notes 在编辑器里取值是一个换行，光标在它前面，所以文件以换行结尾
+        until(lambda: (runs / "E1" / "notes.md").read_bytes() == "## 计划\n\n先跑 **Val**。\n".encode("utf-8"),
               "notes.md 写入")
-        p.wait("document.querySelector('#page #sec-notes .md strong')?.textContent === 'Val'", what="Notes 按 Markdown 渲染")
+        p.click(*p.center("#page #sec-notes .notes-foot .mode"))
+        p.wait("document.querySelector('#page #sec-notes .vditor-ir strong')?.textContent === 'Val'", what="Notes 按 Markdown 渲染")
         step("21b-保存Notes")
         p.click(*p.center("#page .back"))
         p.wait(f"""(() => {{ const el = document.querySelector('{node('E1')}.sel'); if (!el || location.hash !== '#/') return false;

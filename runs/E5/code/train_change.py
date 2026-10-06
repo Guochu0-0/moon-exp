@@ -8,6 +8,8 @@
   三段：同 E3，在 6 个模型都有局部对应的公共点集上，比较模型仿射、局部对应拟合的仿射、局部对应本身的 x 向均方误差。
 - 实验二（看的地方）读 E4 的原始推理 runs/E4/raw/<模型>/（注意力 / certainty、内点、遮挡），用 E4 的读法与定义
   （32×32 格、和为 1、重要区域、集中程度、纹理对数比、加权距离）。误差按 E4 那次推理的仿射计算。
+  实验二已由 regions.py 取代（来源换成 LoFTR 的内点与遮挡、RoMa 的 certainty 与内点，内点点数对齐，加跨网络对照）；
+  Notes 不再引用这里的 stats.json["exp2"] 与 map_similarity.png。
 产物：runs/E5/extra/stats.json 与图。
 """
 from __future__ import annotations

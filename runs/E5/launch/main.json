@@ -30,5 +30,37 @@
    "/opt/envs/loftr/bin/python",
    "runs/E5/code/train_change.py"
   ]
+ },
+ {
+  "start": "2026-10-06 18:09:02 +0800",
+  "end": "2026-10-06 18:12:52 +0800",
+  "status": "ok",
+  "commit": "31409e4dd56108e3448298168c403e8acefac665",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-analysis-e5-regions",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E5/code/regions.py"
+  ]
+ },
+ {
+  "start": "2026-10-06 18:15:01 +0800",
+  "end": "2026-10-06 18:18:34 +0800",
+  "status": "ok",
+  "commit": "843a65ff625e0e09f769981d2b5e34f83a77fa71",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-analysis-e5-regions",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E5/code/regions.py"
+  ]
  }
 ]

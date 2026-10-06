@@ -1,0 +1,26 @@
+[
+ {
+  "start": "2026-10-06 17:05:30 +0800",
+  "end": "2026-10-06 17:07:47 +0800",
+  "status": "ok",
+  "commit": "4753f98577d982931618f0aa241e4d6a309d3412",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-ring-fit-114/runs/E6/code",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "infer.py",
+   "loftr_q4"
+  ],
+  "entry": "runs/E6/code/infer.py",
+  "model": {
+   "family": "loftr",
+   "config": "configs/baselines/anymatch_loftr.json",
+   "ckpt": "runs/Q/ckpt/Q4/ckpt_1500.pt",
+   "ref": "Q/Q4",
+   "name": "LoFTR 无标注训练"
+  }
+ }
+]

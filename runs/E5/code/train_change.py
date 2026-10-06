@@ -93,6 +93,12 @@ def pair_terms(v):
             "rem": float(np.linalg.norm(r, axis=1).mean())}
 
 
+def resid(y, x):
+    """y 对 x 做一元线性回归后的残差。"""
+    y, x = np.asarray(y, float), np.asarray(x, float)
+    return y - np.polyval(np.polyfit(x, y, 1), x)
+
+
 def lsq_affine(o, s):
     return np.linalg.lstsq(np.c_[o, np.ones(len(o))], s, rcond=None)[0].T
 
@@ -149,30 +155,34 @@ def exp1():
         r["_pairs"] = ok
         res["trans"][f"{z}>{t}"] = r
 
-    # 有标注与无标注改变的是否同一批对、同一方向（只用两者及 zero-shot 都正常的对）
+    # 两个训练后的模型是否朝同一方向变：各自对自己的 zero-shot 回归、取残差（训练带来的、zero-shot 预测不了的部分），
+    # 再算两份残差的相关。直接拿「训练后 − zero-shot」相关会因共用同一个 zero-shot 项而虚高。
+    # 对照：LoFTR 与 RoMa 两个无标注训练（起点不同），反映与训练方式无关、只因这对图像本身而共有的变化。
     res["same_change"] = {}
-    for f, un, lab in (("loftr", "loftr_q4", "loftr_e1"), ("roma", "roma_m4", "roma_e1")):
-        z = f"{f}_zs"
-        ok = [p for p in pairs if all(T[m][p] is not None for m in (z, un, lab))]
-        db = lambda m: np.array([T[m][p]["b"][0] - T[z][p]["b"][0] for p in ok])
-        de = lambda m: np.array([T[m][p]["err"] - T[z][p]["err"] for p in ok])
-        res["same_change"][f] = {"n_pairs": len(ok), "offset_x_change_pearson": float(np.corrcoef(db(un), db(lab))[0, 1]),
-                                 "err_change_spearman": spearman(de(un), de(lab)),
-                                 "offset_x_after_pearson": float(np.corrcoef([T[un][p]["b"][0] for p in ok],
-                                                                             [T[lab][p]["b"][0] for p in ok])[0, 1])}
-    # 跨网络：LoFTR 与 RoMa 无标注训练的平均偏移变化是否一致
-    ok = [p for p in pairs if all(T[m][p] is not None for m in ("loftr_zs", "loftr_q4", "roma_zs", "roma_m4"))]
-    dL = np.array([T["loftr_q4"][p]["b"][0] - T["loftr_zs"][p]["b"][0] for p in ok])
-    dR = np.array([T["roma_m4"][p]["b"][0] - T["roma_zs"][p]["b"][0] for p in ok])
-    res["same_change"]["loftr~roma_unlabelled"] = {"n_pairs": len(ok), "offset_x_change_pearson": float(np.corrcoef(dL, dR)[0, 1])}
+    for lab_, (z1, t1), (z2, t2) in (("loftr", ("loftr_zs", "loftr_q4"), ("loftr_zs", "loftr_e1")),
+                                     ("roma", ("roma_zs", "roma_m4"), ("roma_zs", "roma_e1")),
+                                     ("loftr~roma_unlabelled", ("loftr_zs", "loftr_q4"), ("roma_zs", "roma_m4")),
+                                     ("loftr~roma_labelled", ("loftr_zs", "loftr_e1"), ("roma_zs", "roma_e1"))):
+        ok = [p for p in pairs if all(T[m][p] is not None for m in (z1, t1, z2, t2))]
+        # 误差取对数（偏态）；平均偏移取原值
+        v = lambda m, k: np.array([T[m][p]["b"][0] if k == "bx" else math.log(T[m][p][k]) for p in ok])
+        r = {"n_pairs": len(ok)}
+        for k in ("bx", "err"):
+            r1, r2 = resid(v(t1, k), v(z1, k)), resid(v(t2, k), v(z2, k))
+            r[f"{k}_resid_pearson"] = float(np.corrcoef(r1, r2)[0, 1])
+            r[f"{k}_after_pearson"] = float(np.corrcoef(v(t1, k), v(t2, k))[0, 1])
+            r[f"{k}_before_pearson"] = float(np.corrcoef(v(z1, k), v(z2, k))[0, 1])
+        res["same_change"][lab_] = r
 
-    # 三段：6 个模型都有局部对应的公共点集（同 E3），x 向均方误差
+    # 三段：6 个模型都有局部对应的公共点集，x 向均方误差。筛选同 E3：至少 4 个公共点，
+    # 每个模型的仿射有效、且在这些点上的平均偏移两轴都小于 SANE
     rows = {m: [] for m in keys}
     for p in pairs:
         keep = np.all([local_ok(pts[m][p], m) for m in keys], 0)
         if keep.sum() < 4:
             continue
-        if any(T[m][p] is None for m in keys):
+        if any(not np.isfinite(pts[m][p][:, 4:6]).all() or
+               np.abs((pts[m][p][keep, 4:6] - pts[m][p][keep, 2:4]).mean(0)).max() >= SANE for m in keys):
             continue
         for m in keys:
             v = pts[m][p][keep]
@@ -196,7 +206,7 @@ def exp1():
 
 
 def fig_offset(res):
-    fig, axs = plt.subplots(1, 4, figsize=(16, 4.4), sharex=True, sharey=True)
+    fig, axs = plt.subplots(1, 4, figsize=(16, 5.2), sharex=True, sharey=True)
     for a, (z, t) in zip(axs, TRANS):
         r = res["trans"][f"{z}>{t}"]
         bz, bt = r["_bx"]
@@ -215,7 +225,7 @@ def fig_offset(res):
         a.set_xlabel(f"{NAME[z]} 的 x 向平均偏移（px）", fontsize=9)
     axs[0].set_ylabel("训练后的 x 向平均偏移（px）", fontsize=9)
     fig.suptitle("同一对图像在训练前后的 x 向平均偏移（虚线：不变；红线：最小二乘拟合）", fontsize=11)
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
     fig.savefig(OUT / "offset_before_after_x.png", dpi=120)
     plt.close(fig)
 
@@ -280,14 +290,17 @@ def exp2():
                 continue
             common = [p for p in ps if p in base]
             res["agreement"][f"{a}~{b}/{s}"] = paired([base[p] for p in common], [v[p] for p in common])
-    # 有标注与无标注训练让重要性图朝同一方向变吗：同一对上两张变化图的秩相关，对照不同对
+    # 有标注与无标注训练让重要性图朝同一方向变吗：每张训练后的图（取秩）对同一对的 zero-shot 图（取秩）回归取残差，
+    # 即训练带来的、zero-shot 预测不了的部分；同一对上两份残差的相关，对照不同对。
+    rk = lambda m: e4.rank(m.ravel())
     for f, un, lab in (("loftr", "loftr_q4", "loftr_e1"), ("roma", "roma_m4", "roma_e1")):
         z = f"{f}_zs"
         for s in ("primary", "inliers"):
             ps = [p for p in pairs if all(D[m][s]["opt"].get(p) is not None for m in (z, un, lab))]
-            ch = lambda m, p: D[m][s]["opt"][p] - D[z][s]["opt"][p]
-            same = np.array([corr(ch(un, p), ch(lab, p)) for p in ps])
-            other = np.array([corr(ch(un, p), ch(lab, ps[j])) for i, p in enumerate(ps)
+            ch = {(m, p): resid(rk(D[m][s]["opt"][p]), rk(D[z][s]["opt"][p])) for m in (un, lab) for p in ps}
+            pc = lambda a, b: float(np.corrcoef(a, b)[0, 1])
+            same = np.array([pc(ch[(un, p)], ch[(lab, p)]) for p in ps])
+            other = np.array([pc(ch[(un, p)], ch[(lab, ps[j])]) for i, p in enumerate(ps)
                               for j in RNG.choice([j for j in range(len(ps)) if j != i], 5, replace=False)])
             res["same_change"][f"{f}/{s}"] = {"n_pairs": len(ps), "same_pair": summ(same), "different_pair": summ(other),
                                               "share_same_above_diff_median": float(np.mean(same > np.median(other)))}
@@ -303,7 +316,8 @@ def fig_similarity(sim):
                patch_artist=True, boxprops=dict(facecolor="#9ecae1"))
     ax.boxplot([sim[k][1][np.isfinite(sim[k][1])] for k in keys], positions=x + 0.18, widths=0.3, showfliers=False,
                patch_artist=True, boxprops=dict(facecolor="#d9d9d9"))
-    ax.set_xticks(x, [f"{NAME[t]}\n{SRC[s]}" for z, t, s in keys], fontsize=8)
+    src = lambda z, s: ("注意力" if fam(z) == "loftr" else "certainty") if s == "primary" else SRC[s]
+    ax.set_xticks(x, [f"{NAME[t]}\n{src(z, s)}" for z, t, s in keys], fontsize=8)
     ax.axhline(0, c="k", lw=0.4)
     ax.set_ylabel("训练前后两张重要性图的秩相关")
     ax.legend([plt.Rectangle((0, 0), 1, 1, fc="#9ecae1"), plt.Rectangle((0, 0), 1, 1, fc="#d9d9d9")],

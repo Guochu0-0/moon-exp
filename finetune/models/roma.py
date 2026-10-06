@@ -25,7 +25,10 @@ from ..geom import HW
 REPO = Path(__file__).resolve().parents[2]
 PARAMS = {"config": "configs/baselines/anymatch_roma__minmax.json",
           "init": "",            # 起点 ckpt（{'model': ...}）；空 = 推理配置里的底座权重
-          "train_vgg": False}    # 解冻 VGG（encoder.cnn）
+          "train_vgg": False,    # 解冻 VGG（encoder.cnn）
+          "train_decoder": True, # 训 decoder；false 时只训 VGG（#120）
+          "vgg_lr": 1.0,         # VGG 的学习率 = 这一倍数 × [optim] lr（#120；RoMa 原训练为 1/20）
+          "vgg_dropout": 0.0}    # 训练前向时对 VGG 各尺度特征做 channel dropout 的概率（#120，UniMatch V2 式特征扰动）
 OPTIM = {"wd": 0.01}             # romatch 原配置
 RUN = {"save_zero": False}
 TORCH_HOME = "/remote-home/xufang/YGC/weights/torch_home"   # DINOv2 缓存
@@ -56,9 +59,19 @@ class Model:
         for mod in self.model.modules():
             if isinstance(mod, torch.nn.modules.batchnorm._BatchNorm):
                 mod.eval()
+        dec, vgg = [], []
         for name, p in self.model.named_parameters():
-            p.requires_grad_(name.startswith("decoder.") or (m["train_vgg"] and name.startswith("encoder.cnn")))
-        self.params = [p for p in self.model.parameters() if p.requires_grad]
+            on_dec = m["train_decoder"] and name.startswith("decoder.")
+            on_vgg = m["train_vgg"] and name.startswith("encoder.cnn")
+            p.requires_grad_(on_dec or on_vgg)
+            (dec if on_dec else vgg if on_vgg else []).append(p)
+        self.params = dec + vgg
+        self.groups = [g for g in ({"params": dec, "lr_scale": 1.0}, {"params": vgg, "lr_scale": m["vgg_lr"]})
+                       if g["params"]]
+        if m["vgg_dropout"] > 0:   # 只在训练用的这个包装里挂钩子，存下的权重和评测链路不受影响
+            p_drop = m["vgg_dropout"]
+            self.model.encoder.cnn.register_forward_hook(
+                lambda mod, inp, out: {k: torch.nn.functional.dropout2d(v, p_drop, training=True) for k, v in out.items()})
 
     def resize(self, img: np.ndarray) -> np.ndarray:
         """原网格 float [0,1] → 560² float [0,1]，逐步照适配器 + romatch match() 的预处理（含 uint8 量化）。"""

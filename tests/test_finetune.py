@@ -230,3 +230,112 @@ def test_load_labels_top(tmp_path):
     assert sum(v is not None for v in load_labels(f).values()) == 4
     top = load_labels(f, 0.5)
     assert [k for k, v in top.items() if v is not None] == ["R/3", "R/4"]
+
+
+# ---------- #120 第一批新增的训练选项 ----------
+
+def test_soft_anchor_target():
+    import torch
+    from finetune.parts.pseudo import grid, soft_anchor_target
+
+    r = 8
+    G = grid(r, r, "cpu")                                   # 锚点中心，G[y, x]
+    t = soft_anchor_target(G[3, 5][None, None, None], r)    # 正好落在第 (y=3, x=5) 个锚点上
+    assert t.shape == (1, r * r, 1, 1) and torch.isclose(t[0, 3 * r + 5, 0, 0], torch.tensor(1.0))
+    mid = ((G[3, 5] + G[4, 6]) / 2)[None, None, None]       # 四个锚点正中：各 1/4
+    t = soft_anchor_target(mid, r)[0, :, 0, 0]
+    assert torch.allclose(t[[3 * r + 5, 3 * r + 6, 4 * r + 5, 4 * r + 6]], torch.full((4,), 0.25))
+    edge = torch.tensor([[[[0.999, -0.999]]]])              # 网格外缘：并到最近的锚点，总和仍为 1
+    t = soft_anchor_target(edge, r)[0, :, 0, 0]
+    assert torch.isclose(t.sum(), torch.tensor(1.0)) and torch.isclose(t[r - 1], torch.tensor(1.0))
+
+
+def test_drop_largest():
+    import torch
+    from finetune.parts.pseudo import drop_largest
+
+    epe = torch.arange(20.0).reshape(1, 4, 5)
+    m = torch.ones(1, 4, 5, dtype=torch.bool)
+    m[0, 0, 0] = False
+    out = drop_largest(epe, m, 0.1)                         # 19 个像素去掉最大的 1 个
+    assert int(out.sum()) == 18 and not out[0, 3, 4] and not out[0, 0, 0]
+
+
+def test_occluded_follows_label_and_swap():
+    import torch
+    from finetune.parts.pseudo import affine_norm, occluded
+
+    mask = torch.zeros(1, 1, 512, 512)
+    mask[..., :, 256:] = 1                                  # SAR 右半被遮
+    An = torch.from_numpy(affine_norm(np.c_[np.eye(2), [-256.0, 0]])[None]).float()   # 光学 x → SAR x − 256
+    assert not occluded((mask, torch.tensor([False])), An, 4, 4)[0].any()   # 光学点都落到 SAR 左半或图外
+    o = occluded((mask, torch.tensor([True])), An, 4, 4)[0]                 # 交换后查询图就是 SAR：右半被遮
+    assert o[:, 2:].all() and not o[:, :2].any()
+
+
+def test_roma_loss_new_options_change_loss():
+    import torch
+    from finetune.parts.pseudo import roma_loss
+
+    An = torch.tensor([[[1.0, 0, 0], [0, 1.0, 0]]])
+    flow = torch.randn(1, 2, 8, 8, requires_grad=True)
+    cert = torch.zeros(1, 1, 8, 8, requires_grad=True)
+    cls = torch.randn(1, 16, 8, 8, requires_grad=True)
+    c = lambda: {16: {"flow": flow, "certainty": cert, "gm_cls": cls, "gm_certainty": cert}}
+    l0, _ = roma_loss(c(), An)
+    for kw in ({"cls_soft": True}, {"drop_top": 0.1}, {"occ": (torch.ones(1, 1, 512, 512), torch.tensor([False]))}):
+        l1, _ = roma_loss(c(), An, **kw)
+        assert torch.isfinite(l1) and float(l1) != float(l0), kw
+
+
+def test_erase_area():
+    from finetune import augment
+
+    rng = np.random.default_rng(0)
+    img = rng.random((512, 512)).astype(np.float32)
+    for _ in range(20):
+        out, m = augment.erase(img, rng)
+        assert 0.0 < m.mean() <= 0.25 + 1e-3
+        assert np.allclose(out[m > 0], img.mean()) and np.array_equal(out[m == 0], img[m == 0])
+
+
+def test_optim_lr_scale_groups():
+    import torch
+    from finetune import config as C
+    from finetune.optim import Optim
+
+    a, b = torch.nn.Parameter(torch.zeros(1)), torch.nn.Parameter(torch.zeros(1))
+    o = {**C.OPTIM, "warmup": 0, "sched": "const", "lr": 1e-3}
+    opt = Optim([a, b], o, amp=False, groups=[{"params": [a], "lr_scale": 1.0}, {"params": [b], "lr_scale": 0.1}])
+    (a + b).sum().backward()
+    opt.step(1)
+    assert [g["lr"] for g in opt.opt.param_groups] == pytest.approx([1e-3, 1e-4])
+
+
+def test_config_new_options(tmp_path):
+    from finetune import config as C
+
+    c = C.load(_write(tmp_path, "t", '[model]\nname = "roma"\ntrain_vgg = true\nvgg_lr = 3.0\n[optim]\nema = 0.999\n'
+                                     '[pseudo]\nlabels = "l.jsonl"\ncls_soft = true\ndrop_top = 0.1\n[aug]\ngeo = false\n'
+                                     'photo = false\nerase = true\n'))
+    assert c["model"]["vgg_lr"] == 3.0 and c["optim"]["ema"] == 0.999 and c["pseudo"]["cls_soft"] is True
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n'))
+    assert d["optim"]["ema"] == 0.0 and d["model"]["vgg_dropout"] == 0.0 and d["model"]["train_decoder"] is True
+    with pytest.raises(C.ConfigError):                      # 擦除只配合 RoMa 的伪标签
+        C.load(_write(tmp_path, "e", '[model]\nname = "roma"\n[aug]\nerase = true\n'))
+
+
+def test_merge_average_and_wise():
+    import importlib.util
+    import torch
+
+    spec = importlib.util.spec_from_file_location("merge", REPO / "scripts/finetune/merge.py")
+    mg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mg)
+    a = {"w": torch.zeros(2), "n": torch.tensor(3)}
+    b = {"w": torch.ones(2), "n": torch.tensor(5)}
+    avg = mg.average([a, b])
+    assert torch.allclose(avg["w"], torch.full((2,), 0.5)) and int(avg["n"]) == 3
+    zero = {"w": torch.zeros(2), "dino": torch.ones(1)}
+    out, extra = mg.wise(zero, {"w": torch.full((2,), 4.0), "x": torch.ones(1)}, 0.25)
+    assert torch.allclose(out["w"], torch.ones(2)) and extra == ["x"] and "dino" not in out

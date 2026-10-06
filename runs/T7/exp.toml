@@ -1,0 +1,5 @@
+id = "T7"
+title = "参照配方中 VGG 与解码器用不同学习率或只训 VGG，能否超过参照"
+parent = "M"
+init = "M/M15"
+date = "2026-10-06"

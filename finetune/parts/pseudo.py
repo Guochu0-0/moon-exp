@@ -32,7 +32,9 @@ PARAMS = {"labels": "",         # finetune.label 格式的离线伪仿射（json
           "top": 1.0,           # 只用 keep 的对里内点数最多的前这一比例
           "weight": 1.0}
 MODELS = {"loftr": {"w_coarse": 1.0, "w_fine": 1.0},
-          "roma": {"swap": 0.5}}
+          "roma": {"swap": 0.5,
+                   "cls_soft": False,   # 粗级锚点分类的目标：一热（原损失）/ 双线性分到相邻 4 个锚点（#120，自拟）
+                   "drop_top": 0.0}}    # 每对每个尺度的回归项去掉相对伪仿射残差最大的这一比例像素（#120，DCFlow 2509.24423 §3.3）
 
 FOCAL_ALPHA, FOCAL_GAMMA = 0.25, 2.0   # 上游 LoFTR default.py 的 LOSS.FOCAL_ALPHA / FOCAL_GAMMA
 FINE_CORRECT_THR = 1.0                 # 上游 LOSS.FINE_CORRECT_THR：归一化窗口坐标
@@ -74,7 +76,9 @@ class Term:
         a, b = torch.where(m, i1, i0), torch.where(m, i0, i1)
         An = torch.from_numpy(np.stack([affine_norm(inv_affine(A) if s else A) for A, s in zip(As, sw)])
                               ).float().to(i0.device)
-        loss, stats = roma_loss(self.model.forward(a, b), An)
+        occ = (st.batch["occ"].to(i0.device), m[:, 0, 0, 0]) if "occ" in st.batch else None
+        loss, stats = roma_loss(self.model.forward(a, b), An, cls_soft=self.p["cls_soft"],
+                                drop_top=self.p["drop_top"], occ=occ)
         return self.p["weight"] * loss, stats, True
 
 
@@ -177,14 +181,57 @@ def affine_gt(An, h, w):
     return x2, (x2.abs() < 1).all(-1).float()
 
 
-def roma_loss(corresps, An):
-    """RoMa 原损失，GT 换成仿射。An: (B,2,3) 归一化。"""
+def drop_largest(epe, m, frac):
+    """m 中每对去掉 epe 最大的 frac 比例像素（按 detach 的 epe 排序），返回新掩码。"""
+    out = m.clone()
+    e = epe.detach()
+    for b in range(len(e)):
+        n = int(m[b].sum())
+        k = int(n * frac)
+        if k:
+            thr = e[b][m[b]].kthvalue(n - k).values
+            out[b] &= e[b] <= thr
+    return out
+
+
+def soft_anchor_target(x2, r):
+    """x2: (B,h,w,2) 归一化坐标 → (B,r²,h,w)：按双线性权重分到相邻 4 个锚点（锚点中心同 grid(r, r)，行优先）。
+    落在锚点网格外缘的点并到最近的锚点上。"""
+    B, h, w, _ = x2.shape
+    g = ((x2 + 1) * r / 2 - 0.5).clamp(0, r - 1)               # 连续的锚点索引
+    g0 = g.floor().clamp(max=r - 2) if r > 1 else g.floor()
+    f = g - g0
+    g0 = g0.long()
+    out = x2.new_zeros(B, r * r, h * w)
+    for dx in (0, 1):
+        for dy in (0, 1):
+            wgt = (f[..., 0] if dx else 1 - f[..., 0]) * (f[..., 1] if dy else 1 - f[..., 1])
+            idx = (g0[..., 1] + dy) * r + (g0[..., 0] + dx)
+            out.scatter_add_(1, idx.reshape(B, 1, -1), wgt.reshape(B, 1, -1))
+    return out.reshape(B, r * r, h, w)
+
+
+def occluded(occ, An, h, w):
+    """occ = (mask (B,1,H,W) SAR 原网格上被遮的为 1, swapped (B,) bool)。返回 (B,h,w) bool：查询像素对应的 SAR 位置被遮。
+    未交换时查询图是光学，SAR 位置 = 伪仿射落点；交换时查询图就是 SAR，位置 = 像素自己。"""
+    mask, sw = occ
+    g = grid(h, w, An.device)
+    x2, _ = affine_gt(An, h, w)
+    xy = torch.where(sw[:, None, None, None], g[None].expand_as(x2), x2)
+    return F.grid_sample(mask.float(), xy, mode="nearest", align_corners=False)[:, 0] > 0.5
+
+
+def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None):
+    """RoMa 原损失，GT 换成仿射。An: (B,2,3) 归一化。#120 新增（默认关）：cls_soft 粗级双线性软目标；
+    drop_top 每对去掉回归残差最大的这一比例像素；occ 遮挡扰动，被遮处 prob = 0（不监督位置、certainty 目标为 0）。"""
     tot, st, prev_epe = 0.0, {}, None
     for s in sorted(corresps, reverse=True):          # 16, 8, 4, 2, 1
         c = corresps[s]
         flow, cert = c["flow"], c["certainty"]
         h, w = flow.shape[-2:]
         x2, prob = affine_gt(An, h, w)
+        if occ is not None:
+            prob = prob * ~occluded(occ, An, h, w)
         if s <= 8 and prev_epe is not None:
             prob = prob * (F.interpolate(prev_epe[:, None], size=(h, w), mode="nearest-exact")[:, 0]
                            < (2 / 512) * LOCAL_DIST[s] * s)
@@ -194,17 +241,21 @@ def roma_loss(corresps, An):
             K = cls.shape[1]
             r = round(math.sqrt(K))
             with torch.no_grad():
-                G = grid(r, r, cls.device).reshape(K, 2)
-                tgt = torch.cdist(x2.reshape(len(x2), -1, 2), G[None].expand(len(x2), -1, -1)).argmin(-1)
-                tgt = tgt.reshape(x2.shape[:3])
-            ce = F.cross_entropy(cls, tgt, reduction="none")[m]
+                if cls_soft:
+                    tgt = soft_anchor_target(x2, r)
+                else:
+                    G = grid(r, r, cls.device).reshape(K, 2)
+                    tgt = torch.cdist(x2.reshape(len(x2), -1, 2), G[None].expand(len(x2), -1, -1)).argmin(-1)
+                    tgt = tgt.reshape(x2.shape[:3])
+            ce = (-(tgt * F.log_softmax(cls, 1)).sum(1) if cls_soft else F.cross_entropy(cls, tgt, reduction="none"))[m]
             l_cls = ce.mean() if ce.numel() else cls.sum() * 0
             l_gc = F.binary_cross_entropy_with_logits(c["gm_certainty"][:, 0].float(), prob)
             tot = tot + l_cls + CE_WEIGHT * l_gc
             st[f"cls{s}"] = round(float(l_cls), 5)
         epe = (flow.permute(0, 2, 3, 1).float() - x2).norm(dim=-1)
         cs = C * s
-        x = epe[m]
+        mr = drop_largest(epe, m, drop_top) if drop_top > 0 else m
+        x = epe[mr]
         l_reg = (cs ** ALPHA * ((x / cs) ** 2 + 1) ** (ALPHA / 2)).mean() if x.numel() else flow.sum() * 0
         l_ce = F.binary_cross_entropy_with_logits(cert[:, 0].float(), prob)
         tot = tot + l_reg + CE_WEIGHT * l_ce

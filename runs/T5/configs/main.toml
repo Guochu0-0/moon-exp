@@ -1,0 +1,12 @@
+# 参照配方 = M15（RoMa 自己的标签前 50%、训 VGG、lr 3e-5、8000 步） + 粗级锚点分类用双线性软目标
+[model]
+name = "roma"
+train_vgg = true
+
+[optim]
+lr = 3e-5
+
+[pseudo]
+labels = "/remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl"
+top = 0.5
+cls_soft = true

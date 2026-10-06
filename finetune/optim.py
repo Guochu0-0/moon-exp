@@ -19,9 +19,13 @@ def lr_at(step, total, lr, warmup=0, warmup_start=0.1, sched="const", lr_min=0.0
 
 
 class Optim:
-    def __init__(self, params, o: dict, amp: bool):
+    def __init__(self, params, o: dict, amp: bool, groups=None):
+        """groups：可选，[{"params": [...], "lr_scale": x}, ...]，每组的 lr = 调度出的 lr × lr_scale（#120 分模块学习率）；
+        不给时全部参数一组。"""
         self.params, self.o = params, o
-        self.opt = torch.optim.AdamW(params, lr=o["lr"], weight_decay=o["wd"])
+        groups = groups or [{"params": params, "lr_scale": 1.0}]
+        self.opt = torch.optim.AdamW([{"params": g["params"], "lr_scale": g["lr_scale"]} for g in groups],
+                                     lr=o["lr"], weight_decay=o["wd"])
         self.scaler = torch.cuda.amp.GradScaler() if amp else None
 
     def backward(self, loss):
@@ -36,7 +40,7 @@ class Optim:
         if any(p.grad is not None for p in self.params):
             lr = lr_at(step, o["steps"], o["lr"], o["warmup"], o["warmup_start"], o["sched"], o["lr_min"])
             for g in self.opt.param_groups:
-                g["lr"] = lr
+                g["lr"] = lr * g["lr_scale"]
             if self.scaler:
                 self.scaler.unscale_(self.opt)
             gn = torch.nn.utils.clip_grad_norm_(self.params, o["clip"] if o["clip"] > 0 else float("inf"))

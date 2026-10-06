@@ -1,0 +1,16 @@
+# 参照配方 = M15（RoMa 自己的标签前 50%、训 VGG、lr 3e-5、8000 步） + SAR 随机擦除 1–3 块（共 10–25% 面积），被遮处不监督位置、certainty 目标为 0
+[model]
+name = "roma"
+train_vgg = true
+
+[optim]
+lr = 3e-5
+
+[pseudo]
+labels = "/remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl"
+top = 0.5
+
+[aug]
+geo = false
+photo = false
+erase = true

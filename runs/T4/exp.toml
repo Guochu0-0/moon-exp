@@ -1,0 +1,5 @@
+id = "T4"
+title = "参照配方加权重 EMA，能否超过参照"
+parent = "M"
+init = "M/M15"
+date = "2026-10-06"

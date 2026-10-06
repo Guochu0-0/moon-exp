@@ -6,7 +6,7 @@
 - 实验一（误差）读 E3 的逐点数据 runs/E3/extra/data/points_<模型>.csv（评测记录的仿射、标注、局部对应）。
   一对的误差 d = A·o − s；平均偏移 b = mean(d)；均方误差 mean|d|² = |b|² + mean|d − b|²（平均偏移 + 平移以外）。
   三段：同 E3，在 6 个模型都有局部对应的公共点集上，比较模型仿射、局部对应拟合的仿射、局部对应本身的 x 向均方误差。
-- 实验二（看的地方）读 E4 的原始推理 runs/E4/raw/<模型>/（注意力 / certainty、内点、遮挡），用 E4 的读法与定义
+- 实验二（依赖的区域）读 E4 的原始推理 runs/E4/raw/<模型>/（注意力 / certainty、内点、遮挡），用 E4 的读法与定义
   （32×32 格、和为 1、重要区域、集中程度、纹理对数比、加权距离）。误差按 E4 那次推理的仿射计算。
   实验二已由 regions.py 取代（来源换成 LoFTR 的内点与遮挡、RoMa 的 certainty 与内点，内点点数对齐，加跨网络对照）；
   Notes 不再引用这里的 stats.json["exp2"] 与 map_similarity.png。
@@ -232,7 +232,7 @@ def fig_offset(res):
     plt.close(fig)
 
 
-# ======================================================================== 实验二：看的地方
+# ======================================================================== 实验二：依赖的区域
 
 def exp2():
     pairs = val_pairs()
@@ -324,7 +324,7 @@ def fig_similarity(sim):
     ax.set_ylabel("训练前后两张重要性图的秩相关")
     ax.legend([plt.Rectangle((0, 0), 1, 1, fc="#9ecae1"), plt.Rectangle((0, 0), 1, 1, fc="#d9d9d9")],
               ["同一对：zero-shot 与训练后", "不同对：zero-shot 的这一对与训练后的另一对"], fontsize=8, loc="lower left")
-    ax.set_title("训练后的模型看的地方与 zero-shot 有多像（光学坐标系，32×32 格）", fontsize=11)
+    ax.set_title("训练后的模型依赖的区域与 zero-shot 有多像（光学坐标系，32×32 格）", fontsize=11)
     fig.tight_layout()
     fig.savefig(OUT / "map_similarity.png", dpi=120)
     plt.close(fig)

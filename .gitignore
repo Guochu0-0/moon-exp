@@ -10,3 +10,4 @@ runs/*/sweep/*/match/
 runs/*/sweep/*/neg/
 runs/*/sweep/*/S/preds/
 runs/canvas.json
+runs/*/raw/

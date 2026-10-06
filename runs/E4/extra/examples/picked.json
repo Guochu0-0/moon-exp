@@ -1,0 +1,11 @@
+{
+ "concentration_high.png": "ROI_070/patch_5",
+ "concentration_mid.png": "ROI_075/patch_76",
+ "concentration_low.png": "ROI_075/patch_117",
+ "distance_high.png": "ROI_071/patch_9",
+ "distance_mid.png": "ROI_049/patch_41",
+ "distance_low.png": "ROI_035/patch_87",
+ "agreement_high.png": "ROI_075/patch_37",
+ "agreement_mid.png": "ROI_070/patch_127",
+ "agreement_low.png": "ROI_035/patch_155"
+}

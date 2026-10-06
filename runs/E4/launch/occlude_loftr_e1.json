@@ -1,0 +1,28 @@
+[
+ {
+  "start": "2026-10-05 07:13:53 +0800",
+  "end": "2026-10-05 07:43:32 +0800",
+  "status": "ok",
+  "commit": "51175d8846265f004bf648ffb42d261d64649d17",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-attention-101/runs/E4/code",
+  "cuda_visible_devices": "4",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "occlude.py",
+   "loftr_e1",
+   "--part",
+   "0/1"
+  ],
+  "entry": "runs/E4/code/occlude.py",
+  "model": {
+   "family": "loftr",
+   "config": "configs/baselines/anymatch_loftr.json",
+   "ckpt": "runs/E1/ckpt/loftr_lr5e5/ckpt_14000.pt",
+   "ref": "E1/loftr_lr5e5",
+   "name": "LoFTR 标注过拟合"
+  }
+ }
+]

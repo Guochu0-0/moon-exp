@@ -1,0 +1,26 @@
+[
+ {
+  "start": "2026-10-05 04:41:26 +0800",
+  "end": "2026-10-05 04:44:06 +0800",
+  "status": "ok",
+  "commit": "13f1bc19e68dfbbcaace05db169ffb2273503812",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/analysis-attention-101/runs/E4/code",
+  "cuda_visible_devices": "3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "infer.py",
+   "loftr_q4"
+  ],
+  "entry": "runs/E4/code/infer.py",
+  "model": {
+   "family": "loftr",
+   "config": "configs/baselines/anymatch_loftr.json",
+   "ckpt": "runs/Q/ckpt/Q4/ckpt_1500.pt",
+   "ref": "Q/Q4",
+   "name": "LoFTR 无标注训练"
+  }
+ }
+]

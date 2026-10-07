@@ -3,3 +3,12 @@ title = "在 DINOv2 上加 LoRA 一起训（可加 L2-SP 锚回 zero-shot），�
 parent = "M"
 init = "M/M15"
 date = "2026-10-07"
+
+[methods.main]
+name = "DINOv2 LoRA r 8（第 5000 步）"
+
+[methods.main__l2sp]
+name = "DINOv2 LoRA r 8 + L2-SP（第 6000 步）"
+
+[methods.main__s1]
+name = "DINOv2 LoRA r 8，种子 1（第 8000 步）"

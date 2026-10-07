@@ -1,0 +1,8 @@
+id = "T9"
+title = "参照配方在 SAR 上加随机擦除并在被遮处不监督，能否超过参照"
+parent = "M"
+init = "M/M15"
+date = "2026-10-06"
+
+[methods.main]
+name = "参照配方 + SAR 随机擦除（第 6000 步）"

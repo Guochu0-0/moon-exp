@@ -1,0 +1,14 @@
+id = "T2"
+title = "zero-shot 与参照配方的权重插值（WiSE-FT），Val 能否超过参照"
+parent = "M"
+init = "M/M15"
+date = "2026-10-06"
+
+[methods.main__a025]
+name = "WiSE-FT α=0.25"
+
+[methods.main]
+name = "WiSE-FT α=0.5"
+
+[methods.main__a075]
+name = "WiSE-FT α=0.75"

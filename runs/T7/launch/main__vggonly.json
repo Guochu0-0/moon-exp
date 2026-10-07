@@ -1,0 +1,78 @@
+[
+ {
+  "start": "2026-10-07 04:22:08 +0800",
+  "end": "2026-10-07 06:37:40 +0800",
+  "status": "ok",
+  "commit": "6ebd938918d1a0c578af9ff0bd65cc0411c0e93f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-roma-batch1-120",
+  "cuda_visible_devices": "2",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "scripts/finetune/run.py",
+   "runs/T7"
+  ],
+  "entry": "scripts/finetune/run.py",
+  "config_file": "runs/T7/configs/main__vggonly.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": false,
+    "vgg_lr": 1.0,
+    "vgg_dropout": 0.0
+   },
+   "optim": {
+    "steps": 8000,
+    "batch": 1,
+    "lr": 3e-05,
+    "wd": 0.01,
+    "warmup": 500,
+    "warmup_start": 0.1,
+    "sched": "cosine",
+    "lr_min": 0.0,
+    "clip": 0.0,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 4,
+    "save_every": 1000,
+    "save_at": [],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "val_peak"
+   },
+   "pseudo": {
+    "labels": "/remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl",
+    "top": 0.5,
+    "weight": 1.0,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0
+   }
+  },
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  }
+ }
+]

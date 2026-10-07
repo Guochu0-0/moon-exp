@@ -39,6 +39,7 @@ OPTIM = {
     "lr_min": 0.0,
     "clip": 0.0,            # 梯度范数裁剪阈值；0 = 不裁
     "accum": 1,             # 梯度累积：每 accum 步更新一次；步数、存 ckpt 仍按前向步计
+    "ema": 0.0,             # 权重 EMA 的 decay；>0 时 ckpt 存 EMA 权重（#120）；0 = 不用
 }
 RUN = {
     "seed": 0,

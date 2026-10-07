@@ -1,0 +1,12 @@
+# 参照配方 = M15（RoMa 自己的标签前 50%、训 VGG、lr 3e-5、8000 步） + 回归项每对去掉相对伪仿射残差最大的 10% 像素
+[model]
+name = "roma"
+train_vgg = true
+
+[optim]
+lr = 3e-5
+
+[pseudo]
+labels = "/remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl"
+top = 0.5
+drop_top = 0.1

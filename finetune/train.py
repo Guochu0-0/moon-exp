@@ -60,6 +60,27 @@ class Step:
         return self._out
 
 
+class Ema:
+    """权重 EMA（#120；RoMa v2 2511.15706 §3.3 的做法）：每次参数更新后 e ← d·e + (1−d)·θ，只跟踪参与训练的参数；
+    存 ckpt 时存 EMA 权重（其余参数、BN 统计与当前模型相同），评测的就是 EMA 模型。"""
+
+    def __init__(self, model, decay):
+        self.model, self.decay = model, decay
+        self.shadow = {n: p.detach().clone().float() for n, p in model.model.named_parameters() if p.requires_grad}
+
+    @torch.no_grad()
+    def update(self):
+        for n, p in self.model.model.named_parameters():
+            if n in self.shadow:
+                self.shadow[n].mul_(self.decay).add_(p.detach().float(), alpha=1 - self.decay)
+
+    def state_dict(self):
+        sd = self.model.state_dict()
+        for n, e in self.shadow.items():
+            sd["model"][n] = e.to(sd["model"][n].dtype).cpu()
+        return sd
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("config", help="runs/<id>/configs/<方法>.toml")
@@ -92,13 +113,15 @@ def main(argv=None):
     g = torch.Generator().manual_seed(r["seed"])
     dl = torch.utils.data.DataLoader(ds, batch_size=o["batch"], shuffle=True, generator=g, num_workers=r["workers"],
                                      drop_last=True, persistent_workers=r["workers"] > 0)
-    optim = Optim(model.params, o, model.amp)
+    optim = Optim(model.params, o, model.amp, getattr(model, "groups", None))
+    ema = Ema(model, o["ema"]) if o["ema"] > 0 else None
     (out / "args.json").write_text(json.dumps(
         {"config": cfg, "source": str(args.config), "infer_config": model.infer_cfg, "weights": model.weights,
          "n_train": len(ds), "n_params": sum(p.numel() for p in model.params), "commit": git_head(REPO),
          "env": env_info()}, ensure_ascii=False, indent=1), encoding="utf-8")
     if r["save_zero"]:
         torch.save(model.state_dict(), out / "ckpt_0.pt")
+    save = lambda st: torch.save(ema.state_dict() if ema else model.state_dict(), out / f"ckpt_{st}.pt")
 
     rng = np.random.default_rng(r["seed"])   # 打乱分数（placebo）、交换方向（RoMa 伪标签）共用
     neg = "neg" in cfg
@@ -121,6 +144,8 @@ def main(argv=None):
                     optim.backward(loss)
                 step += 1
                 upd = optim.step(step)
+                if ema and upd:
+                    ema.update()
                 rec = {"step": step, "pairs": batch["pair"], "loss": round(float(loss), 5), **stats, **upd,
                        "sec": round(time.time() - t0, 3)}
                 if step == 1 and torch.cuda.is_available():
@@ -134,13 +159,13 @@ def main(argv=None):
                           + " ".join(f"{k}={stats[k]}" for k in PRINT_KEYS if k in stats)
                           + f" elapsed={(time.time() - t_start) / 60:.1f}min", flush=True)
                 if (r["save_every"] and step % r["save_every"] == 0) or step in save_at:
-                    torch.save(model.state_dict(), out / f"ckpt_{step}.pt")
+                    save(step)
                 if step >= total:
                     break
     if tbw:
         tbw.close()
     if r["save_every"] and step % r["save_every"]:
-        torch.save(model.state_dict(), out / f"ckpt_{step}.pt")
+        save(step)
 
 
 if __name__ == "__main__":

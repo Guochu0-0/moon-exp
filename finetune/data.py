@@ -15,13 +15,15 @@ class PairSet(torch.utils.data.Dataset):
     split 可用 + 连接多个（如 "val+test"，过拟合上限参考 #96），pair 标识在各 split 之间不能重名。"""
 
     def __init__(self, root, split, resize, optical="div255", sar="p2p98", limit=0, neg=False, seed=0, aug=(),
-                 aug_shift=12.0, aug_rot=3.0, aug_scale=0.03):
+                 aug_shift=12.0, aug_rot=3.0, aug_scale=0.03, aug_erase=(3, 0.10, 0.25)):
         """neg：每对额外返回一张来自其他 ROI 的 SAR（image1_neg，负样本对，#49）。
         aug：学生侧扰动（finetune/augment.py，#53）。含 "geo" 时 SAR 施加已知随机仿射，另返回 T（原网格角点约定 2×3）；
-        含 "photo" 时两侧加光度扰动。"""
+        含 "photo" 时两侧加光度扰动；含 "erase" 时 SAR 随机擦除（aug_erase = 块数上限、面积下限、上限），
+        另返回 occ（原网格 (1,512,512) uint8，被擦为 1）。"""
         self.data, self.split, self.resize, self.neg = Data(root), split, resize, neg
         self.seed, self.aug = seed, tuple(aug)
         self.aug_kw = {"shift": aug_shift, "rot": aug_rot, "scale": aug_scale}
+        self.erase_kw = dict(zip(("n_max", "a_min", "a_max"), aug_erase))
         self.src = {}                                    # pair → 所在 split
         for sp in split.split("+"):
             for q in self.data.pairs(sp, labelled_only=False):
@@ -49,6 +51,9 @@ class PairSet(torch.utils.data.Dataset):
                 extra["T"] = torch.from_numpy(T)
             if "photo" in self.aug:
                 opt, sar = augment.photometric(opt, rng, sar=False), augment.photometric(sar, rng, sar=True)
+            if "erase" in self.aug:
+                sar, occ = augment.erase(sar, rng, **self.erase_kw)
+                extra["occ"] = torch.from_numpy(occ)[None]
         opt, sar = self.resize(opt), self.resize(sar)
         t = lambda x: torch.from_numpy(np.ascontiguousarray(x, dtype=np.float32))[None]
         out = {"pair": pair, "image0": t(opt), "image1": t(sar), **extra}

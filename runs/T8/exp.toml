@@ -1,0 +1,8 @@
+id = "T8"
+title = "参照配方对 VGG 特征加 channel dropout，能否超过参照"
+parent = "M"
+init = "M/M15"
+date = "2026-10-06"
+
+[methods.main]
+name = "参照配方 + VGG 特征 dropout 0.2（第 5000 步）"

@@ -1,0 +1,4 @@
+id = "S"
+title = "T4/main ckpt sweep"
+# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
+date = "2026-10-07"

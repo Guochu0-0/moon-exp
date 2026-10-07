@@ -46,3 +46,20 @@ def photometric(img, rng, sar):
     if rng.random() < 0.3:
         x = cv2.GaussianBlur(x, (0, 0), rng.uniform(0.3, 1.0))
     return np.clip(x, 0, 1).astype(np.float32)
+
+
+def erase(img, rng, n_max=3, a_min=0.10, a_max=0.25):
+    """随机擦除（#120）：1–n_max 块矩形，总面积约 a_min–a_max（各块等分，长宽比 0.5–2，可能重叠），填 patch 均值。
+    返回 (擦除后的影像, 掩码 uint8，被擦为 1)。"""
+    h, w = img.shape
+    n = int(rng.integers(1, n_max + 1))
+    area = rng.uniform(a_min, a_max) * h * w / n
+    mask = np.zeros((h, w), np.uint8)
+    for _ in range(n):
+        ar = np.exp(rng.uniform(np.log(0.5), np.log(2.0)))
+        bh, bw = min(h, int(round(np.sqrt(area * ar)))), min(w, int(round(np.sqrt(area / ar))))
+        y, x = int(rng.integers(0, h - bh + 1)), int(rng.integers(0, w - bw + 1))
+        mask[y:y + bh, x:x + bw] = 1
+    out = img.copy()
+    out[mask > 0] = img.mean()
+    return out, mask

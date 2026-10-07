@@ -149,9 +149,13 @@ def bipath(c_ij, c_ji, Wm, valid):
         comp = (m_ij + samp - m_ij.detach()).permute(0, 2, 3, 1)
         Wt = _resize(Wm, h, w)
         mask = (_resize(valid[..., None].float(), h, w)[..., 0] > 0.99) & (d.abs() < 1).all(-1)
-        l = robust((comp - Wt).norm(dim=-1)[mask], s, comp)
+        epe = (comp - Wt).norm(dim=-1)[mask]
+        l = robust(epe, s, comp)
         tot = tot + l
         st[f"bip{s}"] = round(float(l), 5)
+        if s == 1 and epe.numel():   # 中位数（原网格 px）与 > 8 px 的比例，看 bipath 误差是普遍偏大还是少数大错
+            st["bip_epe1_px"] = round(float(epe.median() * 256), 3)
+            st["bip_gt8px"] = round(float((epe * 256 > 8).float().mean()), 4)
     return tot, st
 
 

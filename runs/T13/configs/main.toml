@@ -1,0 +1,5 @@
+# 参照配方上：DINOv2 每块 qkv 加 LoRA（r 8、α 16、lr 1e-4），与解码器、VGG 一起训；评测时合并
+base = "_ref"
+
+[model]
+lora_r = 8

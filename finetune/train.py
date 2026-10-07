@@ -106,7 +106,8 @@ def main(argv=None):
     kw = {}
     for n in names:
         kw.update(PARTS[n].data_kw(cfg[n]))
-    ds = PairSet(args.data, r["split"], model.resize, **model.input, seed=r["seed"], **kw)
+    ds = PairSet(args.data, r["split"], model.resize, **model.input, seed=r["seed"],
+                 resize_hi=getattr(model, "resize_hi", None), **kw)
     terms = [(n, PARTS[n].Term(cfg[n], model, ds)) for n in names if PARTS[n].Term is not None]
     if r["limit"]:
         ds.pairs = ds.pairs[:: max(1, len(ds.pairs) // r["limit"])][: r["limit"]]   # 均匀取样，覆盖各 ROI

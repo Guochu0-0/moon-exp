@@ -1,0 +1,5 @@
+id = "T13"
+title = "在 DINOv2 上加 LoRA 一起训（可加 L2-SP 锚回 zero-shot），能否超过参照"
+parent = "M"
+init = "M/M15"
+date = "2026-10-07"

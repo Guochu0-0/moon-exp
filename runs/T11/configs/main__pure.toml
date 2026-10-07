@@ -1,0 +1,7 @@
+# 纯稠密：不设距离门限，老师 certainty ≥ 0.5 的像素都用老师目标
+base = "_ref"
+
+[pseudo]
+dense = "runs/T11/raw/teacher"
+dense_r = 0.0
+dense_cert = 0.5

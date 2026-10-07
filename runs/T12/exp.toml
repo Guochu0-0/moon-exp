@@ -1,0 +1,5 @@
+id = "T12"
+title = "在参照配方上加 WarpC 损失（W-bipath + warp 监督），能否超过参照"
+parent = "M"
+init = "M/M15"
+date = "2026-10-07"

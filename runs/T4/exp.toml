@@ -3,3 +3,6 @@ title = "参照配方加权重 EMA，能否超过参照"
 parent = "M"
 init = "M/M15"
 date = "2026-10-06"
+
+[methods.main]
+name = "参照配方 + 权重 EMA（第 8000 步）"

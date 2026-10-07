@@ -3,3 +3,9 @@ title = "参照配方三个种子的权重逐参数平均，Val 能否超过单�
 parent = "M"
 init = "M/M15"
 date = "2026-10-06"
+
+[methods.main__top2]
+name = "前两个种子的权重平均"
+
+[methods.main]
+name = "三个种子的权重平均"

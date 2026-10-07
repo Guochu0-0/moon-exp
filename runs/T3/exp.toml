@@ -3,3 +3,6 @@ title = "在 Train 上重估参照配方 VGG 的 BN 统计，Val 能否提高"
 parent = "M"
 init = "M/M15"
 date = "2026-10-06"
+
+[methods.main]
+name = "在 Train 上重估 VGG 的 BN 统计"

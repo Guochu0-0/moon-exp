@@ -3,3 +3,15 @@ title = "参照配方中 VGG 与解码器用不同学习率或只训 VGG，能�
 parent = "M"
 init = "M/M15"
 date = "2026-10-06"
+
+[methods.main__ref]
+name = "参照配方，当前代码复现（第 8000 步）"
+
+[methods.main__vgg01]
+name = "VGG 学习率 0.1 倍（第 7000 步）"
+
+[methods.main__vgg3]
+name = "VGG 学习率 3 倍（第 7000 步）"
+
+[methods.main__vggonly]
+name = "只训 VGG（第 7000 步）"

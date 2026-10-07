@@ -1,0 +1,21 @@
+[
+ {
+  "start": "2026-10-07 00:32:28 +0800",
+  "end": "2026-10-07 01:00:39 +0800",
+  "status": "ok",
+  "commit": "6ebd938918d1a0c578af9ff0bd65cc0411c0e93f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-roma-batch1-120",
+  "cuda_visible_devices": "3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "scripts/finetune/eval_ckpt.sh",
+   "runs/T2",
+   "main__a025",
+   "runs/T2/ckpt/main__a025.pt"
+  ]
+ }
+]

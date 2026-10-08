@@ -1,0 +1,6 @@
+# A2：qkv 上 LoRA 秩 8 → 32，α 16 → 64（α/r 保持 2），其余同 LoRA 参照
+base = "_lora"
+
+[model]
+lora_r = 32
+lora_alpha = 64.0

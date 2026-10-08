@@ -1,7 +1,7 @@
 """AnyMatch-RoMa 的训练态包装（「【RoMa】微调代码接入与实测」#64；方案见 research/roma-finetune 分支的 README）。
 
 - 构造与权重加载复用 baselines 的 RomatchAdapter，训练的网络就是评测的网络。DINOv2 不是参数、默认冻结
-  （lora_r > 0 时在 qkv 上加 LoRA，#122）；VGG（encoder.cnn）默认冻结（train_vgg 打开），只训 decoder。
+  （lora_r > 0 时在 qkv 或全部线性层上加 LoRA，#122、#124；dino_unfreeze > 0 时最后几块全参数训练，#124）；VGG（encoder.cnn）默认冻结（train_vgg 打开），只训 decoder。
   前向要 model.train() 才输出 gm_cls，但全部 BN 保持 eval（bs 1–2）。
 - 输入：与适配器同口径（原网格 → cv2 双线性长边 640 → uint8 → PIL bicubic 560 → /255 → ImageNet 归一化），
   灰度复制成 3 通道。默认只训 560 一遍（同 RoMa 原训练），评测照旧 560 → 864、symmetric；
@@ -38,6 +38,8 @@ PARAMS = {"config": "configs/baselines/anymatch_roma__minmax.json",
           "lora_r": 0,           # DINOv2 每块 attn.qkv 上的 LoRA 秩（#122，2106.09685）；0 = DINOv2 冻结
           "lora_alpha": 16.0,    # LoRA 缩放 = alpha / r
           "lora_lr": 1e-4,       # LoRA 参数的学习率（绝对值，不随 [optim] lr 缩放）
+          "lora_targets": "qkv", # LoRA 挂在哪些层（#124）：qkv 只挂 attn.qkv / all 每块全部线性层（qkv、attn.proj、mlp.fc1、mlp.fc2）
+          "dino_unfreeze": 0,    # DINOv2 最后几块全参数训练（#124），lr 同 [optim] lr；这几块不挂 LoRA
           "dino_ckpt": False}    # DINOv2 各块用梯度检查点（省显存，lora_r > 0 时才有意义）
 OPTIM = {"wd": 0.01}             # romatch 原配置
 RUN = {"save_zero": False}
@@ -45,6 +47,7 @@ TORCH_HOME = "/remote-home/xufang/YGC/weights/torch_home"   # DINOv2 缓存
 RES = 560
 RES_HI = 864                     # 推理的上采样分辨率（romatch roma_outdoor 的 upsample_res）
 TRAIN_RES = ("560", "864", "both")
+LORA_TARGETS = {"qkv": ("attn.qkv",), "all": ("attn.qkv", "attn.proj", "mlp.fc1", "mlp.fc2")}
 MEAN = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
 STD = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
 
@@ -101,27 +104,49 @@ class Model:
             on_vgg = m["train_vgg"] and name.startswith("encoder.cnn")
             p.requires_grad_(on_dec or on_vgg)
             (dec if on_dec else vgg if on_vgg else []).append(p)
-        self.lora = self._add_lora(m) if m["lora_r"] > 0 else {}
+        self.lora, self.dino_blocks = ({}, {}) if m["lora_r"] <= 0 and m["dino_unfreeze"] <= 0 else self._open_dino(m)
         lora = [p for l in self.lora.values() for p in (l.A, l.B)]
-        self.params = dec + vgg + lora
+        dino = [p for b in self.dino_blocks.values() for p in b.parameters()]
+        self.params = dec + vgg + lora + dino
         self.groups = [g for g in ({"params": dec, "lr_scale": 1.0}, {"params": vgg, "lr_scale": m["vgg_lr"]},
-                                   {"params": lora, "lr_scale": m["lora_lr"] / cfg["optim"]["lr"]})
+                                   {"params": lora, "lr_scale": m["lora_lr"] / cfg["optim"]["lr"]},
+                                   {"params": dino, "lr_scale": 1.0})
                        if g["params"]]
         if m["vgg_dropout"] > 0:   # 只在训练用的这个包装里挂钩子，存下的权重和评测链路不受影响
             p_drop = m["vgg_dropout"]
             self.model.encoder.cnn.register_forward_hook(
                 lambda mod, inp, out: {k: torch.nn.functional.dropout2d(v, p_drop, training=True) for k, v in out.items()})
 
-    def _add_lora(self, m) -> dict:
-        """DINOv2 每块的 attn.qkv 换成 LoRA，并替换 encoder.forward：原实现在 no_grad 里算 DINOv2，这里放开梯度。
-        DINOv2 先按原实现搬到 GPU、转 fp16，再挂 LoRA（之后不再整体 .to()，A、B 保持 fp32）。"""
+    def _open_dino(self, m) -> tuple[dict, dict]:
+        """让 DINOv2 参与训练，并替换 encoder.forward：原实现在 no_grad 里算 DINOv2，这里放开梯度。
+        DINOv2 先按原实现搬到 GPU、转 fp16。前面各块在 lora_targets 指定的层上挂 LoRA（之后不再整体 .to()，
+        A、B 保持 fp32）；最后 dino_unfreeze 块转成 fp32 主权重、全部参数可训，前向在 fp16 autocast 里算、
+        输出转回 fp16（与其余块衔接）。返回 (LoRA 模块名 → LoRA, 块名 → 全参数训练的块)。"""
         enc = self.model.encoder
         dv = enc.dinov2_vitl14[0].to(self.device).to(enc.amp_dtype)
         enc.dinov2_vitl14[0] = dv
-        out = {}
+        dv.requires_grad_(False)   # 原权重不求梯度（#124 起；之前它们也不在优化器里，只是白算一份梯度）
+        if m["lora_targets"] not in LORA_TARGETS:
+            raise ValueError(f"[model] lora_targets 可选 {tuple(LORA_TARGETS)}，得到 {m['lora_targets']!r}")
+        n_full = m["dino_unfreeze"]
+        if not 0 <= n_full <= len(dv.blocks):
+            raise ValueError(f"[model] dino_unfreeze 应在 0…{len(dv.blocks)}，得到 {n_full}")
+        lora, full = {}, {}
         for i, blk in enumerate(dv.blocks):
-            blk.attn.qkv = LoRA(blk.attn.qkv, m["lora_r"], m["lora_alpha"])
-            out[f"blocks.{i}.attn.qkv"] = blk.attn.qkv
+            if i >= len(dv.blocks) - n_full:
+                blk.float().requires_grad_(True)
+                full[f"blocks.{i}"] = blk
+                f = blk.forward
+
+                def fwd(x, f=f, dt=enc.amp_dtype):
+                    with torch.autocast("cuda", dtype=dt):
+                        return f(x).to(dt)
+                blk.forward = fwd
+            elif m["lora_r"] > 0:
+                for name in LORA_TARGETS[m["lora_targets"]]:
+                    parent, attr = blk.get_submodule(name.rsplit(".", 1)[0]), name.rsplit(".", 1)[1]
+                    setattr(parent, attr, LoRA(getattr(parent, attr), m["lora_r"], m["lora_alpha"]))
+                    lora[f"blocks.{i}.{name}"] = getattr(parent, attr)
             if m["dino_ckpt"]:
                 f = blk.forward
                 blk.forward = lambda x, f=f: torch.utils.checkpoint.checkpoint(f, x, use_reentrant=False)
@@ -135,7 +160,7 @@ class Model:
             return fp
 
         enc.forward = forward
-        return out
+        return lora, full
 
     def resize(self, img: np.ndarray, res: int = RES) -> np.ndarray:
         """原网格 float [0,1] → res² float [0,1]，逐步照适配器 + romatch match() 的预处理（含 uint8 量化）。
@@ -163,9 +188,13 @@ class Model:
 
     def state_dict(self):
         """{'model': ...}，RomatchAdapter(weights_key='model') 直接能读；有 LoRA 时另存 'dinov2_lora'
-        （每层 A、B、scale），适配器加载时合并进 DINOv2 的 qkv 权重，推理结构不变。"""
+        （每层 A、B、scale），适配器加载时合并进 DINOv2 对应层的权重；有全参数训练的块时另存 'dinov2_blocks'
+        （块内参数，fp32），适配器加载时覆盖进 DINOv2。推理结构不变。"""
         sd = {"model": {k: v.detach().cpu() for k, v in self.model.state_dict().items()}}
         if self.lora:
             sd["dinov2_lora"] = {k: {"A": l.A.detach().cpu(), "B": l.B.detach().cpu(), "scale": l.scale}
                                  for k, l in self.lora.items()}
+        if self.dino_blocks:
+            sd["dinov2_blocks"] = {f"{b}.{k}": v.detach().cpu() for b, blk in self.dino_blocks.items()
+                                   for k, v in blk.state_dict().items()}
         return sd

@@ -1,0 +1,5 @@
+id = "T14"
+title = "扩大 DINOv2 能动的范围（LoRA 学习率、秩、层，或解冻最后几块），能否超过 LoRA 参照"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-08"

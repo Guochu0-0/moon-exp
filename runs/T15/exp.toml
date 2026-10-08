@@ -1,0 +1,5 @@
+id = "T15"
+title = "在 DINOv2 LoRA 上叠加 560 与 864 两遍都训，能否超过 LoRA 参照"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-08"

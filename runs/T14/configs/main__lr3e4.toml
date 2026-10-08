@@ -1,0 +1,5 @@
+# A3：LoRA 学习率 1e-4 → 3e-4，其余同 LoRA 参照
+base = "_lora"
+
+[model]
+lora_lr = 3e-4

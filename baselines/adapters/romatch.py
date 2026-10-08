@@ -31,8 +31,13 @@ class RomatchAdapter:
         sd = ckpt[weights_key] if weights_key else ckpt
         self.model = roma_outdoor(device=device, weights=sd)
         lora = ckpt.get("dinov2_lora") if weights_key else None
-        if lora:   # 训练时在 DINOv2 qkv 上加的 LoRA（#122，finetune/models/roma.py），合并后结构与原模型相同
+        if lora:   # 训练时在 DINOv2 上加的 LoRA（#122、#124，finetune/models/roma.py），合并后结构与原模型相同
             merge_lora(self.model.encoder.dinov2_vitl14[0], lora)
+        blocks = ckpt.get("dinov2_blocks") if weights_key else None
+        if blocks:   # 训练时全参数训练的 DINOv2 块（#124），按原 dtype 覆盖
+            bad = self.model.encoder.dinov2_vitl14[0].load_state_dict(blocks, strict=False).unexpected_keys
+            if bad:
+                raise KeyError(f"dinov2_blocks 里有 DINOv2 没有的键：{bad[:5]}")
         self.model.eval()
         self.device, self.long_side = device, long_side
         self.notes = (f"long_side={long_side}, uint8 PIL at 640 grid (official match() only takes PIL RGB), "

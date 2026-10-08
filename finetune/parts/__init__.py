@@ -8,6 +8,6 @@
 
 登记顺序就是每步计算损失的顺序。
 """
-from . import aug, cexp, neg, pseudo
+from . import aug, cexp, l2sp, neg, pseudo, warpc
 
-PARTS = {"pseudo": pseudo, "cexp": cexp, "neg": neg, "aug": aug}
+PARTS = {"pseudo": pseudo, "cexp": cexp, "neg": neg, "aug": aug, "warpc": warpc, "l2sp": l2sp}

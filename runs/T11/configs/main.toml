@@ -1,0 +1,7 @@
+# 参照配方上：老师（T7/main__ref 第 8000 步）的稠密落点与伪仿射相差 < 8 px（560 网格）且 certainty ≥ 0.5 的像素用老师目标
+base = "_ref"
+
+[pseudo]
+dense = "runs/T11/raw/teacher"
+dense_r = 8.0
+dense_cert = 0.5

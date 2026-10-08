@@ -19,6 +19,7 @@ A = [L|t]（原网格角点约定，光学 → SAR）⇒ 归一化坐标下 A_n 
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -34,7 +35,10 @@ PARAMS = {"labels": "",         # finetune.label 格式的离线伪仿射（json
 MODELS = {"loftr": {"w_coarse": 1.0, "w_fine": 1.0},
           "roma": {"swap": 0.5,
                    "cls_soft": False,   # 粗级锚点分类的目标：一热（原损失）/ 双线性分到相邻 4 个锚点（#120，自拟）
-                   "drop_top": 0.0}}    # 每对每个尺度的回归项去掉相对伪仿射残差最大的这一比例像素（#120，DCFlow 2509.24423 §3.3）
+                   "drop_top": 0.0,     # 每对每个尺度的回归项去掉相对伪仿射残差最大的这一比例像素（#120，DCFlow 2509.24423 §3.3）
+                   "dense": "",         # 稠密自标签（#122）：finetune.dense_label 写出的老师 warp 目录；空 = 只用伪仿射
+                   "dense_r": 8.0,      # 老师落点与伪仿射落点相差小于这么多（560 网格 px）的像素才用老师目标；≤ 0 = 不设门限
+                   "dense_cert": 0.5}}  # 老师 certainty 低于此的像素退回伪仿射
 
 FOCAL_ALPHA, FOCAL_GAMMA = 0.25, 2.0   # 上游 LoFTR default.py 的 LOSS.FOCAL_ALPHA / FOCAL_GAMMA
 FINE_CORRECT_THR = 1.0                 # 上游 LOSS.FINE_CORRECT_THR：归一化窗口坐标
@@ -49,6 +53,8 @@ def fill(p):
 def check(cfg):
     if not cfg["pseudo"]["labels"]:
         raise ConfigError("[pseudo] labels 必填")
+    if cfg["pseudo"].get("dense") and "aug" in cfg and cfg["aug"]["geo"]:
+        raise ConfigError("[pseudo] dense 不配合 [aug] geo（老师 warp 按未扰动的影像算）")
     if cfg["model"]["name"] == "loftr" and "neg" in cfg:
         raise ConfigError("LoFTR 上 [neg] 不配合 [pseudo]（负样本对并入同一次前向，伪标签不监督它们）")
 
@@ -62,6 +68,16 @@ class Term:
         self.p, self.model = p, model
         self.labels = load_labels(p["labels"], p["top"])
         ds.pairs = [q for q in ds.pairs if self.labels.get(q) is not None]
+        self.dense = Path(p["dense"]) if p.get("dense") else None
+        if self.dense is not None:
+            miss = [q for q in ds.pairs if not (self.dense / f"{q}.npy").exists()]
+            if miss:
+                raise FileNotFoundError(f"{self.dense} 缺 {len(miss)} 对的老师 warp，如 {miss[:3]}")
+
+    def dense_targets(self, pairs, sw, device):
+        """(B,3,h,w)：查询图上每个像素的老师落点 (x, y)（归一化）与 certainty；交换方向的对取 SAR → 光学那一份。"""
+        D = [np.load(self.dense / f"{q}.npy")[int(s)] for q, s in zip(pairs, sw)]
+        return torch.from_numpy(np.stack(D)).to(device).float()
 
     def __call__(self, st):
         As = [np.asarray(self.labels[q]) for q in st.batch["pair"]]
@@ -77,9 +93,30 @@ class Term:
         An = torch.from_numpy(np.stack([affine_norm(inv_affine(A) if s else A) for A, s in zip(As, sw)])
                               ).float().to(i0.device)
         occ = (st.batch["occ"].to(i0.device), m[:, 0, 0, 0]) if "occ" in st.batch else None
-        loss, stats = roma_loss(self.model.forward(a, b), An, cls_soft=self.p["cls_soft"],
-                                drop_top=self.p["drop_top"], occ=occ)
+        dense = None
+        if self.dense is not None:
+            r = self.p["dense_r"]
+            dense = (self.dense_targets(st.batch["pair"], sw, i0.device),
+                     2 * r / self.model_res() if r > 0 else float("inf"), self.p["dense_cert"])
+        kw = dict(cls_soft=self.p["cls_soft"], drop_top=self.p["drop_top"], occ=occ, dense=dense)
+        tr = getattr(self.model, "train_res", "560")
+        if tr == "864":   # 560 一遍只给初值（#122）
+            with torch.no_grad():
+                c = self.model.forward(a, b)
+            loss, stats = 0.0, {}
+        else:
+            c = self.model.forward(a, b)
+            loss, stats = roma_loss(c, An, **kw)
+        if tr != "560":
+            h0, h1 = st.batch["image0_hi"].to(i0.device), st.batch["image1_hi"].to(i0.device)
+            l_hi, s_hi = roma_loss(self.model.forward_hi(torch.where(m, h1, h0), torch.where(m, h0, h1), c), An, **kw)
+            loss = loss + l_hi
+            stats.update(s_hi if tr == "864" else {f"hi_{k}": v for k, v in s_hi.items()})
         return self.p["weight"] * loss, stats, True
+
+    def model_res(self):
+        from ..models.roma import RES
+        return RES
 
 
 # ---------- LoFTR ----------
@@ -221,15 +258,37 @@ def occluded(occ, An, h, w):
     return F.grid_sample(mask.float(), xy, mode="nearest", align_corners=False)[:, 0] > 0.5
 
 
-def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None):
+def mix_dense(x2, dense, h, w):
+    """x2 (B,h,w,2) 伪仿射落点 → 过门限的像素换成老师落点。返回 (新 x2, 换掉的比例)。"""
+    D, r, c_thr = dense
+    d = F.interpolate(D, size=(h, w), mode="bilinear", align_corners=False)
+    xd, cd = d[:, :2].permute(0, 2, 3, 1), d[:, 2]
+    use = (cd >= c_thr) & ((xd - x2).norm(dim=-1) < r)
+    return torch.where(use[..., None], xd, x2), float(use.float().mean())
+
+
+def robust(x, s, like):
+    """RoMa 的鲁棒回归项（robust_loss.py）：x 为该尺度被监督像素的 EPE（归一化）。没有像素时返回带梯度的 0。"""
+    cs = C * s
+    return (cs ** ALPHA * ((x / cs) ** 2 + 1) ** (ALPHA / 2)).mean() if x.numel() else like.sum() * 0
+
+
+def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, gt=None):
     """RoMa 原损失，GT 换成仿射。An: (B,2,3) 归一化。#120 新增（默认关）：cls_soft 粗级双线性软目标；
-    drop_top 每对去掉回归残差最大的这一比例像素；occ 遮挡扰动，被遮处 prob = 0（不监督位置、certainty 目标为 0）。"""
+    drop_top 每对去掉回归残差最大的这一比例像素；occ 遮挡扰动，被遮处 prob = 0（不监督位置、certainty 目标为 0）。
+    #122：dense = (老师 (B,3,H,W)，距离门限（归一化）, certainty 门限)：两个门限都过的像素把落点目标换成老师的
+    （粗级分类与细化回归都用换过的目标；prob 仍按伪仿射是否落在图内）。各尺度只看 corresps 里有的（864 那一遍是 8…1）。
+    gt：可选，gt(h, w) → (x2 (B,h,w,2), prob (B,h,w))，代替伪仿射给出目标（WarpC 的 warp 监督，parts/warpc.py）。"""
     tot, st, prev_epe = 0.0, {}, None
     for s in sorted(corresps, reverse=True):          # 16, 8, 4, 2, 1
         c = corresps[s]
         flow, cert = c["flow"], c["certainty"]
         h, w = flow.shape[-2:]
-        x2, prob = affine_gt(An, h, w)
+        x2, prob = gt(h, w) if gt is not None else affine_gt(An, h, w)
+        if dense is not None:
+            x2, frac = mix_dense(x2, dense, h, w)
+            if s == 1:
+                st["dense_frac"] = round(frac, 4)
         if occ is not None:
             prob = prob * ~occluded(occ, An, h, w)
         if s <= 8 and prev_epe is not None:
@@ -253,10 +312,8 @@ def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None):
             tot = tot + l_cls + CE_WEIGHT * l_gc
             st[f"cls{s}"] = round(float(l_cls), 5)
         epe = (flow.permute(0, 2, 3, 1).float() - x2).norm(dim=-1)
-        cs = C * s
         mr = drop_largest(epe, m, drop_top) if drop_top > 0 else m
-        x = epe[mr]
-        l_reg = (cs ** ALPHA * ((x / cs) ** 2 + 1) ** (ALPHA / 2)).mean() if x.numel() else flow.sum() * 0
+        l_reg = robust(epe[mr], s, flow)
         l_ce = F.binary_cross_entropy_with_logits(cert[:, 0].float(), prob)
         tot = tot + l_reg + CE_WEIGHT * l_ce
         st[f"reg{s}"] = round(float(l_reg), 5)

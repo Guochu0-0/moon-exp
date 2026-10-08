@@ -1,0 +1,11 @@
+id = "T10"
+title = "训练推理时才用的 864 上采样那一遍，能否超过参照"
+parent = "M"
+init = "M/M15"
+date = "2026-10-07"
+
+[methods.main]
+name = "只训 864 那一遍（第 8000 步）"
+
+[methods.main__both]
+name = "560 与 864 两遍都训（第 8000 步）"

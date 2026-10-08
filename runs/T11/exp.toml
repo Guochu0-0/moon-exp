@@ -1,0 +1,11 @@
+id = "T11"
+title = "用参照模型自己的稠密 warp 替换部分仿射目标（稠密自标签），能否超过参照"
+parent = "M"
+init = "M/M15"
+date = "2026-10-07"
+
+[methods.main]
+name = "稠密自标签，8 px 与 certainty 门限（第 7000 步）"
+
+[methods.main__pure]
+name = "稠密自标签，只设 certainty 门限（第 7000 步）"

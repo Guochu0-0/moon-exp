@@ -27,10 +27,12 @@ class RomatchAdapter:
         sys.path.insert(0, str(repo))
         from romatch import roma_outdoor
 
-        sd = load_ckpt(weights)
-        if weights_key:
-            sd = sd[weights_key]
+        ckpt = load_ckpt(weights)
+        sd = ckpt[weights_key] if weights_key else ckpt
         self.model = roma_outdoor(device=device, weights=sd)
+        lora = ckpt.get("dinov2_lora") if weights_key else None
+        if lora:   # 训练时在 DINOv2 qkv 上加的 LoRA（#122，finetune/models/roma.py），合并后结构与原模型相同
+            merge_lora(self.model.encoder.dinov2_vitl14[0], lora)
         self.model.eval()
         self.device, self.long_side = device, long_side
         self.notes = (f"long_side={long_side}, uint8 PIL at 640 grid (official match() only takes PIL RGB), "
@@ -59,3 +61,15 @@ class RomatchAdapter:
         kp0 = to_original(k0.float().cpu().numpy() - 0.5, *g0)
         kp1 = to_original(k1.float().cpu().numpy() - 0.5, *g1)
         return kp0, kp1, conf.float().cpu().numpy()
+
+
+def merge_lora(dinov2, lora: dict):
+    """W ← W + scale·B A（2106.09685 §4.1），在 fp32 里算再转回 W 的 dtype。lora：模块名 → {A, B, scale}。"""
+    import torch
+
+    mods = dict(dinov2.named_modules())
+    with torch.no_grad():
+        for name, d in lora.items():
+            lin = mods[name]
+            delta = d["scale"] * (d["B"].float() @ d["A"].float())
+            lin.weight.copy_((lin.weight.float() + delta.to(lin.weight.device)).to(lin.weight.dtype))

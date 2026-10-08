@@ -1,0 +1,6 @@
+# main 上加 L2-SP：decoder / VGG 锚回 zero-shot，LoRA 增量锚到 0。
+# λ = 2e-3：由 code/l2sp_lambda.py 按 main 的第 2000 步存档算出 1.77e-3（d² = 90.5，平均损失 1.45，正则项约占 10%），取整
+base = "main"
+
+[l2sp]
+weight = 2e-3

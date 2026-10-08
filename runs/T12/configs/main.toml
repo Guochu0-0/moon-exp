@@ -1,0 +1,4 @@
+# 参照配方上加 WarpC（W-bipath + warp 监督，自动平衡，原文第一阶段的 warp 采样），与伪标签损失相加
+base = "_ref"
+
+[warpc]

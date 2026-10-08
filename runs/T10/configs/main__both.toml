@@ -1,0 +1,5 @@
+# 参照配方上：560 与 864 两遍都训，损失相加
+base = "_ref"
+
+[model]
+train_res = "both"

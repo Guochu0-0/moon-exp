@@ -3,3 +3,6 @@ title = "在 DINOv2 LoRA 上叠加 560 与 864 两遍都训，能否超过 LoRA 
 parent = "T13"
 init = "T13/main"
 date = "2026-10-08"
+
+[methods.main]
+name = "DINOv2 LoRA + 560 与 864 两遍都训（第 7000 步）"

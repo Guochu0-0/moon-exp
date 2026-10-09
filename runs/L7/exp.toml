@@ -1,0 +1,5 @@
+id = "L7"
+title = "LoRA 参照上，回归目标逐步向 EMA 老师的预测过渡，能否超过参照"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-09"

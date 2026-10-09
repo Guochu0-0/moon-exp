@@ -1,0 +1,5 @@
+# 同 main__qw（对全用、按内点率加权），LoRA 挂到每块全部线性层（同 T14/main__all）：检验大容量下处理标签噪声的提高是否更大
+base = "main__qw"
+
+[model]
+lora_targets = "all"

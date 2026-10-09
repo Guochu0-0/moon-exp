@@ -410,6 +410,22 @@ def test_matchable_mask():
     assert not mk[:, : S // 2].any()
 
 
+def test_roma_loss_ema_target_mix():
+    import torch
+    from finetune.parts.pseudo import affine_gt, roma_loss
+
+    An = torch.tensor([[[1.0, 0, 0], [0, 1.0, 0]]])
+    x2, prob = affine_gt(An, 8, 8)
+    flow = torch.randn(1, 2, 8, 8) * 0.1
+    t = (x2 + 0.05).permute(0, 3, 1, 2)                     # 老师落点
+    cert = torch.zeros(1, 1, 8, 8)
+    c = {1: {"flow": flow, "certainty": cert}}
+    mixed = (0.5 * x2 + 0.5 * (x2 + 0.05), prob)
+    l_ema, _ = roma_loss(c, An, ema=({1: t}, 0.5))
+    l_gt, _ = roma_loss(c, An, gt=lambda h, w: mixed)
+    assert float(l_ema) == pytest.approx(float(l_gt))
+
+
 def test_mixlap_nll_prefers_wide_component_for_outliers():
     import torch
     from finetune.parts.pseudo import affine_gt, mixlap_nll

@@ -45,7 +45,11 @@ MODELS = {"loftr": {"w_coarse": 1.0, "w_fine": 1.0},
                    "match_dir": "",     # 可匹配掩码（#127）：finetune.dense_label 写出的老师 warp 目录；空 = certainty 照旧学「是否在重叠区」
                    "match_r": 3.0,      # 老师落点与伪仿射落点、正反往返回到原处，两者都差小于这么多（原网格 px）才算可匹配
                    "reg_loss": "robust",  # 回归损失（#127）：robust RoMa 原鲁棒项 / mixlap 两分量拉普拉斯混合（SEA-RAFT 2405.14793 §3.2），要 [model] unc_head
-                   "mixlap_w": 1.0}}    # mixlap 的权重    # [a, b]：4、2、1 层的全部损失项乘一个第 a 步起从 0 线性升到第 b 步为 1 的系数（#127，尺度课程）；空 = 不用
+                   "mixlap_w": 1.0,     # mixlap 的权重
+                   "ema_target": 0.0,   # EMA 老师的 decay（#127，Self-Adaptive Training 2002.10319 的目标修正，换成权重 EMA 老师为自拟）：
+                                        # 目标 = (1−α)·伪仿射目标 + α·EMA 老师在同一对上的预测；0 = 不用
+                   "ema_alpha": 0.5,    # α 的终值
+                   "ema_ramp": [2000, 4000]}}  # α 从第 a 步的 0 线性升到第 b 步的 ema_alpha，之后保持    # [a, b]：4、2、1 层的全部损失项乘一个第 a 步起从 0 线性升到第 b 步为 1 的系数（#127，尺度课程）；空 = 不用
 
 FOCAL_ALPHA, FOCAL_GAMMA = 0.25, 2.0   # 上游 LoFTR default.py 的 LOSS.FOCAL_ALPHA / FOCAL_GAMMA
 FINE_CORRECT_THR = 1.0                 # 上游 LOSS.FINE_CORRECT_THR：归一化窗口坐标
@@ -76,6 +80,9 @@ def check(cfg):
         raise ConfigError("[pseudo] reg_loss = mixlap 要 [model] unc_head = true")
     if p.get("match_dir") and "aug" in cfg and cfg["aug"]["geo"]:
         raise ConfigError("[pseudo] match_dir 不配合 [aug] geo（老师 warp 按未扰动的影像算）")
+    er = p.get("ema_ramp", [2000, 4000])
+    if p.get("ema_target", 0.0) > 0 and not (len(er) == 2 and 0 <= er[0] <= er[1] and 0 < p["ema_target"] < 1):
+        raise ConfigError(f"[pseudo] ema_target 应在 (0, 1)、ema_ramp 为 [a, b]、0 ≤ a ≤ b，得到 {p['ema_target']!r}、{er!r}")
     if cfg["model"]["name"] == "loftr" and "neg" in cfg:
         raise ConfigError("LoFTR 上 [neg] 不配合 [pseudo]（负样本对并入同一次前向，伪标签不监督它们）")
 
@@ -95,7 +102,10 @@ class Term:
             if miss:
                 raise FileNotFoundError(f"{self.match} 缺 {len(miss)} 对的老师 warp，如 {miss[:3]}")
         self.pw = pair_weights(p["labels"], ds.pairs, p["pair_weight"]) if p["pair_weight"] else None
-        self.n = 0   # 已调用的步数（尺度课程用）
+        self.n = 0   # 已调用的步数（尺度课程、EMA 老师用）
+        self.shadow = None
+        if p.get("ema_target", 0.0) > 0:   # 只跟踪可训练参数（含 LoRA）；其余参数、BN 统计与学生相同
+            self.shadow = [q.detach().clone().float() for q in model.params]
         self.dense = Path(p["dense"]) if p.get("dense") else None
         if self.dense is not None:
             miss = [q for q in ds.pairs if not (self.dense / f"{q}.npy").exists()]
@@ -114,6 +124,30 @@ class Term:
             return 1.0
         a, b = fr
         return float(self.n >= a) if b == a else min(max((self.n - a) / (b - a), 0.0), 1.0)
+
+    def ema_alpha(self):
+        a, b = self.p["ema_ramp"]
+        r = float(self.n >= a) if b == a else min(max((self.n - a) / (b - a), 0.0), 1.0)
+        return self.p["ema_alpha"] * r
+
+    @torch.no_grad()
+    def ema_predict(self, a, b):
+        """先把 EMA 往当前参数（已完成 n−1 次更新）走一步，再把 EMA 权重临时换进模型做一次前向，换回。"""
+        d = self.p["ema_target"]
+        for e, q in zip(self.shadow, self.model.params):
+            e.mul_(d).add_(q.detach().float(), alpha=1 - d)
+        alpha = self.ema_alpha()
+        if alpha <= 0:
+            return None
+        keep = [q.detach().clone() for q in self.model.params]
+        for e, q in zip(self.shadow, self.model.params):
+            q.copy_(e.to(q.dtype))
+        try:
+            c = self.model.forward(a, b)
+        finally:
+            for k, q in zip(keep, self.model.params):
+                q.copy_(k)
+        return {s: v["flow"].detach().float() for s, v in c.items()}, alpha
 
     def __call__(self, st):
         self.n += 1
@@ -141,9 +175,10 @@ class Term:
             D = [np.load(self.match / f"{q}.npy") for q in st.batch["pair"]]
             f = lambda k: torch.from_numpy(np.stack([d[k(int(s))] for d, s in zip(D, sw)])).to(i0.device).float()
             match = (f(lambda s: s), f(lambda s: 1 - s), self.p["match_r"] * 2 / HW)
+        ema = self.ema_predict(a, b) if self.shadow is not None else None
         kw = dict(cls_soft=self.p["cls_soft"], drop_top=self.p["drop_top"], occ=occ, dense=dense,
                   reg_tol=self.p["reg_tol"] * 2 / HW, fine_w=self.fine_w(), match=match,
-                  mixlap=self.p["mixlap_w"] if self.p["reg_loss"] == "mixlap" else 0.0)
+                  mixlap=self.p["mixlap_w"] if self.p["reg_loss"] == "mixlap" else 0.0, ema=ema)
         tr = getattr(self.model, "train_res", "560")
         if tr == "864":   # 560 一遍只给初值（#122）
             with torch.no_grad():
@@ -161,6 +196,8 @@ class Term:
             stats["pair_w"] = round(w, 4)
         if self.p["fine_ramp"]:
             stats["fine_w"] = round(kw["fine_w"], 4)
+        if self.shadow is not None:
+            stats["ema_alpha"] = round(ema[1], 4) if ema else 0.0
         return self.p["weight"] * w * loss, stats, True
 
     def model_res(self):
@@ -345,7 +382,7 @@ def robust(x, s, like):
 
 
 def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, gt=None, reg_tol=0.0, fine_w=1.0,
-              match=None, mixlap=0.0):
+              match=None, mixlap=0.0, ema=None):
     """RoMa 原损失，GT 换成仿射。An: (B,2,3) 归一化。#120 新增（默认关）：cls_soft 粗级双线性软目标；
     drop_top 每对去掉回归残差最大的这一比例像素；occ 遮挡扰动，被遮处 prob = 0（不监督位置、certainty 目标为 0）。
     #122：dense = (老师 (B,3,H,W)，距离门限（归一化）, certainty 门限)：两个门限都过的像素把落点目标换成老师的
@@ -353,7 +390,8 @@ def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, 
     gt：可选，gt(h, w) → (x2 (B,h,w,2), prob (B,h,w))，代替伪仿射给出目标（WarpC 的 warp 监督，parts/warpc.py）。
     #127：reg_tol（归一化）1、2 两层回归用 max(EPE − reg_tol, 0)；fine_w 乘在 4、2、1 层的回归与 certainty 项上；
     match 给出时 certainty（含粗级 gm_certainty）的目标乘上可匹配掩码（matchable），回归照旧；
-    mixlap > 0 时有 unc 输出的尺度（细化层）回归改为 mixlap × 两分量拉普拉斯混合 NLL（mixlap_nll）。"""
+    mixlap > 0 时有 unc 输出的尺度（细化层）回归改为 mixlap × 两分量拉普拉斯混合 NLL（mixlap_nll）；
+    ema = ({尺度: EMA 老师 flow (B,2,h,w)}, α) 给出时，落点目标换成 (1−α)·伪仿射落点 + α·老师落点（粗级分类与回归都用），prob 不变。"""
     tot, st, prev_epe = 0.0, {}, None
     for s in sorted(corresps, reverse=True):          # 16, 8, 4, 2, 1
         c = corresps[s]
@@ -364,6 +402,8 @@ def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, 
             x2, frac = mix_dense(x2, dense, h, w)
             if s == 1:
                 st["dense_frac"] = round(frac, 4)
+        if ema is not None and s in ema[0]:
+            x2 = (1 - ema[1]) * x2 + ema[1] * ema[0][s].permute(0, 2, 3, 1)
         if occ is not None:
             prob = prob * ~occluded(occ, An, h, w)
         if s <= 8 and prev_epe is not None:

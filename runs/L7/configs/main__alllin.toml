@@ -1,0 +1,5 @@
+# 同 main（目标向 EMA 老师过渡），LoRA 挂到每块全部线性层（同 T14/main__all）：检验大容量下处理标签噪声的提高是否更大
+base = "main"
+
+[model]
+lora_targets = "all"

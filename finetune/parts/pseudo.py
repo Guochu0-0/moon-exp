@@ -41,7 +41,11 @@ MODELS = {"loftr": {"w_coarse": 1.0, "w_fine": 1.0},
                    "dense_r": 8.0,      # 老师落点与伪仿射落点相差小于这么多（560 网格 px）的像素才用老师目标；≤ 0 = 不设门限
                    "dense_cert": 0.5,   # 老师 certainty 低于此的像素退回伪仿射
                    "reg_tol": 0.0,      # 1、2 两层的回归误差先减去这么多（原网格 px）再截到 0，即小于它不罚（#127，STLD 2404.04556 式）
-                   "fine_ramp": []}}    # [a, b]：4、2、1 层的全部损失项乘一个第 a 步起从 0 线性升到第 b 步为 1 的系数（#127，尺度课程）；空 = 不用
+                   "fine_ramp": [],
+                   "match_dir": "",     # 可匹配掩码（#127）：finetune.dense_label 写出的老师 warp 目录；空 = certainty 照旧学「是否在重叠区」
+                   "match_r": 3.0,      # 老师落点与伪仿射落点、正反往返回到原处，两者都差小于这么多（原网格 px）才算可匹配
+                   "reg_loss": "robust",  # 回归损失（#127）：robust RoMa 原鲁棒项 / mixlap 两分量拉普拉斯混合（SEA-RAFT 2405.14793 §3.2），要 [model] unc_head
+                   "mixlap_w": 1.0}}    # mixlap 的权重    # [a, b]：4、2、1 层的全部损失项乘一个第 a 步起从 0 线性升到第 b 步为 1 的系数（#127，尺度课程）；空 = 不用
 
 FOCAL_ALPHA, FOCAL_GAMMA = 0.25, 2.0   # 上游 LoFTR default.py 的 LOSS.FOCAL_ALPHA / FOCAL_GAMMA
 FINE_CORRECT_THR = 1.0                 # 上游 LOSS.FINE_CORRECT_THR：归一化窗口坐标
@@ -66,6 +70,12 @@ def check(cfg):
     fr = p.get("fine_ramp", [])
     if fr and not (len(fr) == 2 and 0 <= fr[0] <= fr[1]):
         raise ConfigError(f"[pseudo] fine_ramp 应为 [a, b]、0 ≤ a ≤ b，得到 {fr!r}")
+    if p.get("reg_loss", "robust") not in ("robust", "mixlap"):
+        raise ConfigError(f"[pseudo] reg_loss 可选 robust / mixlap，得到 {p['reg_loss']!r}")
+    if p.get("reg_loss") == "mixlap" and not cfg["model"].get("unc_head"):
+        raise ConfigError("[pseudo] reg_loss = mixlap 要 [model] unc_head = true")
+    if p.get("match_dir") and "aug" in cfg and cfg["aug"]["geo"]:
+        raise ConfigError("[pseudo] match_dir 不配合 [aug] geo（老师 warp 按未扰动的影像算）")
     if cfg["model"]["name"] == "loftr" and "neg" in cfg:
         raise ConfigError("LoFTR 上 [neg] 不配合 [pseudo]（负样本对并入同一次前向，伪标签不监督它们）")
 
@@ -79,6 +89,11 @@ class Term:
         self.p, self.model = p, model
         self.labels = load_labels(p["labels"], p["top"])
         ds.pairs = [q for q in ds.pairs if self.labels.get(q) is not None]
+        self.match = Path(p["match_dir"]) if p.get("match_dir") else None
+        if self.match is not None:
+            miss = [q for q in ds.pairs if not (self.match / f"{q}.npy").exists()]
+            if miss:
+                raise FileNotFoundError(f"{self.match} 缺 {len(miss)} 对的老师 warp，如 {miss[:3]}")
         self.pw = pair_weights(p["labels"], ds.pairs, p["pair_weight"]) if p["pair_weight"] else None
         self.n = 0   # 已调用的步数（尺度课程用）
         self.dense = Path(p["dense"]) if p.get("dense") else None
@@ -121,8 +136,14 @@ class Term:
             r = self.p["dense_r"]
             dense = (self.dense_targets(st.batch["pair"], sw, i0.device),
                      2 * r / self.model_res() if r > 0 else float("inf"), self.p["dense_cert"])
+        match = None
+        if self.match is not None:   # 查询方向与反方向的老师落点
+            D = [np.load(self.match / f"{q}.npy") for q in st.batch["pair"]]
+            f = lambda k: torch.from_numpy(np.stack([d[k(int(s))] for d, s in zip(D, sw)])).to(i0.device).float()
+            match = (f(lambda s: s), f(lambda s: 1 - s), self.p["match_r"] * 2 / HW)
         kw = dict(cls_soft=self.p["cls_soft"], drop_top=self.p["drop_top"], occ=occ, dense=dense,
-                  reg_tol=self.p["reg_tol"] * 2 / HW, fine_w=self.fine_w())
+                  reg_tol=self.p["reg_tol"] * 2 / HW, fine_w=self.fine_w(), match=match,
+                  mixlap=self.p["mixlap_w"] if self.p["reg_loss"] == "mixlap" else 0.0)
         tr = getattr(self.model, "train_res", "560")
         if tr == "864":   # 560 一遍只给初值（#122）
             with torch.no_grad():
@@ -295,19 +316,44 @@ def mix_dense(x2, dense, h, w):
     return torch.where(use[..., None], xd, x2), float(use.float().mean())
 
 
+def matchable(match, x2, h, w):
+    """可匹配掩码（#127）：match = (查询方向老师 (B,3,S,S)，反方向老师 (B,3,S,S)，r 归一化)。
+    像素可匹配 ⇔ 老师落点与伪仿射落点相差 < r，且从老师落点按反方向老师走回来、离原像素 < r。返回 (B,h,w) float。"""
+    Dq, Dr, r = match
+    xd = F.interpolate(Dq[:, :2], size=(h, w), mode="bilinear", align_corners=False).permute(0, 2, 3, 1)
+    back = F.grid_sample(Dr[:, :2], xd, mode="bilinear", align_corners=False).permute(0, 2, 3, 1)
+    g = grid(h, w, xd.device)[None]
+    return (((xd - x2).norm(dim=-1) < r) & ((back - g).norm(dim=-1) < r)).float()
+
+
+def mixlap_nll(flow, x2, unc, m):
+    """两分量拉普拉斯混合的负对数似然（SEA-RAFT 2405.14793 §3.2，#127）：残差按原网格 px、x / y 各算再相加；
+    一个分量尺度固定为 1 px（即普通 L1），另一个尺度 e^β、β ∈ [0, 10]；unc (B,2,h,w) = (混合权重 logit, β)。"""
+    d = (flow.permute(0, 2, 3, 1).float() - x2).abs() * (HW / 2)            # (B,h,w,2)
+    a = unc[:, 0].float()[..., None]
+    beta = unc[:, 1].float().clamp(0, 10)[..., None]
+    l1 = F.logsigmoid(a) - d - math.log(2)
+    l2 = F.logsigmoid(-a) - beta - d / beta.exp() - math.log(2)
+    nll = -torch.logaddexp(l1, l2).sum(-1)
+    return nll[m].mean() if bool(m.any()) else (flow.sum() + unc.sum()) * 0
+
+
 def robust(x, s, like):
     """RoMa 的鲁棒回归项（robust_loss.py）：x 为该尺度被监督像素的 EPE（归一化）。没有像素时返回带梯度的 0。"""
     cs = C * s
     return (cs ** ALPHA * ((x / cs) ** 2 + 1) ** (ALPHA / 2)).mean() if x.numel() else like.sum() * 0
 
 
-def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, gt=None, reg_tol=0.0, fine_w=1.0):
+def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, gt=None, reg_tol=0.0, fine_w=1.0,
+              match=None, mixlap=0.0):
     """RoMa 原损失，GT 换成仿射。An: (B,2,3) 归一化。#120 新增（默认关）：cls_soft 粗级双线性软目标；
     drop_top 每对去掉回归残差最大的这一比例像素；occ 遮挡扰动，被遮处 prob = 0（不监督位置、certainty 目标为 0）。
     #122：dense = (老师 (B,3,H,W)，距离门限（归一化）, certainty 门限)：两个门限都过的像素把落点目标换成老师的
     （粗级分类与细化回归都用换过的目标；prob 仍按伪仿射是否落在图内）。各尺度只看 corresps 里有的（864 那一遍是 8…1）。
     gt：可选，gt(h, w) → (x2 (B,h,w,2), prob (B,h,w))，代替伪仿射给出目标（WarpC 的 warp 监督，parts/warpc.py）。
-    #127：reg_tol（归一化）1、2 两层回归用 max(EPE − reg_tol, 0)；fine_w 乘在 4、2、1 层的回归与 certainty 项上。"""
+    #127：reg_tol（归一化）1、2 两层回归用 max(EPE − reg_tol, 0)；fine_w 乘在 4、2、1 层的回归与 certainty 项上；
+    match 给出时 certainty（含粗级 gm_certainty）的目标乘上可匹配掩码（matchable），回归照旧；
+    mixlap > 0 时有 unc 输出的尺度（细化层）回归改为 mixlap × 两分量拉普拉斯混合 NLL（mixlap_nll）。"""
     tot, st, prev_epe = 0.0, {}, None
     for s in sorted(corresps, reverse=True):          # 16, 8, 4, 2, 1
         c = corresps[s]
@@ -324,6 +370,12 @@ def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, 
             prob = prob * (F.interpolate(prev_epe[:, None], size=(h, w), mode="nearest-exact")[:, 0]
                            < (2 / 512) * LOCAL_DIST[s] * s)
         m = prob > 0.99
+        pc = prob
+        if match is not None:
+            mk = matchable(match, x2, h, w)
+            pc = prob * mk
+            if s == 1:
+                st["match_frac"] = round(float(mk[m].mean()), 4) if m.any() else None
         if "gm_cls" in c:
             cls = c["gm_cls"].float()
             K = cls.shape[1]
@@ -337,14 +389,14 @@ def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, 
                     tgt = tgt.reshape(x2.shape[:3])
             ce = (-(tgt * F.log_softmax(cls, 1)).sum(1) if cls_soft else F.cross_entropy(cls, tgt, reduction="none"))[m]
             l_cls = ce.mean() if ce.numel() else cls.sum() * 0
-            l_gc = F.binary_cross_entropy_with_logits(c["gm_certainty"][:, 0].float(), prob)
+            l_gc = F.binary_cross_entropy_with_logits(c["gm_certainty"][:, 0].float(), pc)
             tot = tot + l_cls + CE_WEIGHT * l_gc
             st[f"cls{s}"] = round(float(l_cls), 5)
         epe = (flow.permute(0, 2, 3, 1).float() - x2).norm(dim=-1)
         mr = drop_largest(epe, m, drop_top) if drop_top > 0 else m
         e = (epe - reg_tol).clamp_min(0) if reg_tol > 0 and s <= 2 else epe
-        l_reg = robust(e[mr], s, flow)
-        l_ce = F.binary_cross_entropy_with_logits(cert[:, 0].float(), prob)
+        l_reg = mixlap * mixlap_nll(flow, x2, c["unc"], mr) if mixlap > 0 and "unc" in c else robust(e[mr], s, flow)
+        l_ce = F.binary_cross_entropy_with_logits(cert[:, 0].float(), pc)
         tot = tot + (fine_w if s <= 4 else 1.0) * (l_reg + CE_WEIGHT * l_ce)
         st[f"reg{s}"] = round(float(l_reg), 5)
         if s == 1:

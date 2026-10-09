@@ -1,0 +1,10 @@
+# 各细化层加只在训练时用的不确定度头，回归换成两分量拉普拉斯混合（一个分量固定 1 px，即 L1），其余同 LoRA 参照（SEA-RAFT 2405.14793 §3.2）
+# 权重 0.03：误差 1–4 px 时，每 px 的梯度与 RoMa 原鲁棒项（约 0.016–0.03）相当
+base = "_lora"
+
+[model]
+unc_head = true
+
+[pseudo]
+reg_loss = "mixlap"
+mixlap_w = 0.03

@@ -1,0 +1,5 @@
+id = "L6"
+title = "LoRA 参照上，certainty 改学老师给出的可匹配掩码，能否超过参照"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-09"

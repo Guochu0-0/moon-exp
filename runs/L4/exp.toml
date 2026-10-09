@@ -1,0 +1,5 @@
+id = "L4"
+title = "LoRA 参照上，分块遮挡一张图、被遮处仍监督，能否超过参照"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-09"

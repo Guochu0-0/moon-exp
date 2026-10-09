@@ -1,0 +1,5 @@
+id = "L2"
+title = "LoRA 参照上，最细两层回归误差小于 1 px 不罚，能否超过参照"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-09"

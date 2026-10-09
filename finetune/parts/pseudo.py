@@ -27,18 +27,21 @@ import torch.nn.functional as F
 
 from ..config import ConfigError
 from ..geom import HW, apply_affine, compose, in_to_orig, inv_affine, orig_to_in
-from ..label import load_labels
+from ..label import load_labels, pair_weights
 
 PARAMS = {"labels": "",         # finetune.label 格式的离线伪仿射（jsonl）
           "top": 1.0,           # 只用 keep 的对里内点数最多的前这一比例
-          "weight": 1.0}
+          "weight": 1.0,
+          "pair_weight": ""}    # 每对损失乘的质量权重（#127）：空 = 不加权 / inlier_ratio 内点率，归一化到均值 1；要求 batch 1
 MODELS = {"loftr": {"w_coarse": 1.0, "w_fine": 1.0},
           "roma": {"swap": 0.5,
                    "cls_soft": False,   # 粗级锚点分类的目标：一热（原损失）/ 双线性分到相邻 4 个锚点（#120，自拟）
                    "drop_top": 0.0,     # 每对每个尺度的回归项去掉相对伪仿射残差最大的这一比例像素（#120，DCFlow 2509.24423 §3.3）
                    "dense": "",         # 稠密自标签（#122）：finetune.dense_label 写出的老师 warp 目录；空 = 只用伪仿射
                    "dense_r": 8.0,      # 老师落点与伪仿射落点相差小于这么多（560 网格 px）的像素才用老师目标；≤ 0 = 不设门限
-                   "dense_cert": 0.5}}  # 老师 certainty 低于此的像素退回伪仿射
+                   "dense_cert": 0.5,   # 老师 certainty 低于此的像素退回伪仿射
+                   "reg_tol": 0.0,      # 1、2 两层的回归误差先减去这么多（原网格 px）再截到 0，即小于它不罚（#127，STLD 2404.04556 式）
+                   "fine_ramp": []}}    # [a, b]：4、2、1 层的全部损失项乘一个第 a 步起从 0 线性升到第 b 步为 1 的系数（#127，尺度课程）；空 = 不用
 
 FOCAL_ALPHA, FOCAL_GAMMA = 0.25, 2.0   # 上游 LoFTR default.py 的 LOSS.FOCAL_ALPHA / FOCAL_GAMMA
 FINE_CORRECT_THR = 1.0                 # 上游 LOSS.FINE_CORRECT_THR：归一化窗口坐标
@@ -55,6 +58,14 @@ def check(cfg):
         raise ConfigError("[pseudo] labels 必填")
     if cfg["pseudo"].get("dense") and "aug" in cfg and cfg["aug"]["geo"]:
         raise ConfigError("[pseudo] dense 不配合 [aug] geo（老师 warp 按未扰动的影像算）")
+    p = cfg["pseudo"]
+    if p["pair_weight"] not in ("", "inlier_ratio"):
+        raise ConfigError(f"[pseudo] pair_weight 可选 '' / 'inlier_ratio'，得到 {p['pair_weight']!r}")
+    if p["pair_weight"] and cfg["optim"]["batch"] != 1:
+        raise ConfigError("[pseudo] pair_weight 目前只支持 batch 1（权重乘在整步损失上）")
+    fr = p.get("fine_ramp", [])
+    if fr and not (len(fr) == 2 and 0 <= fr[0] <= fr[1]):
+        raise ConfigError(f"[pseudo] fine_ramp 应为 [a, b]、0 ≤ a ≤ b，得到 {fr!r}")
     if cfg["model"]["name"] == "loftr" and "neg" in cfg:
         raise ConfigError("LoFTR 上 [neg] 不配合 [pseudo]（负样本对并入同一次前向，伪标签不监督它们）")
 
@@ -68,6 +79,8 @@ class Term:
         self.p, self.model = p, model
         self.labels = load_labels(p["labels"], p["top"])
         ds.pairs = [q for q in ds.pairs if self.labels.get(q) is not None]
+        self.pw = pair_weights(p["labels"], ds.pairs, p["pair_weight"]) if p["pair_weight"] else None
+        self.n = 0   # 已调用的步数（尺度课程用）
         self.dense = Path(p["dense"]) if p.get("dense") else None
         if self.dense is not None:
             miss = [q for q in ds.pairs if not (self.dense / f"{q}.npy").exists()]
@@ -79,13 +92,23 @@ class Term:
         D = [np.load(self.dense / f"{q}.npy")[int(s)] for q, s in zip(pairs, sw)]
         return torch.from_numpy(np.stack(D)).to(device).float()
 
+    def fine_w(self):
+        """尺度课程（fine_ramp）在当前步的系数。"""
+        fr = self.p.get("fine_ramp", [])
+        if not fr:
+            return 1.0
+        a, b = fr
+        return float(self.n >= a) if b == a else min(max((self.n - a) / (b - a), 0.0), 1.0)
+
     def __call__(self, st):
+        self.n += 1
+        w = self.pw[st.batch["pair"][0]] if self.pw else 1.0
         As = [np.asarray(self.labels[q]) for q in st.batch["pair"]]
         if "T" in st.batch:   # SAR 被已知 T warp 过：标签精确变为 T∘A
             As = [compose(T.numpy(), A) for T, A in zip(st.batch["T"], As)]
         if st.model_name == "loftr":
             loss, stats = loftr_loss(st.out, self.model.s, As, self.p["w_coarse"], self.p["w_fine"])
-            return self.p["weight"] * loss, stats, stats["pairs_used"] > 0
+            return self.p["weight"] * w * loss, stats, stats["pairs_used"] > 0
         i0, i1 = st.images()
         sw = st.rng.random(st.B) < self.p["swap"]
         m = torch.from_numpy(sw)[:, None, None, None].to(i0.device)
@@ -98,7 +121,8 @@ class Term:
             r = self.p["dense_r"]
             dense = (self.dense_targets(st.batch["pair"], sw, i0.device),
                      2 * r / self.model_res() if r > 0 else float("inf"), self.p["dense_cert"])
-        kw = dict(cls_soft=self.p["cls_soft"], drop_top=self.p["drop_top"], occ=occ, dense=dense)
+        kw = dict(cls_soft=self.p["cls_soft"], drop_top=self.p["drop_top"], occ=occ, dense=dense,
+                  reg_tol=self.p["reg_tol"] * 2 / HW, fine_w=self.fine_w())
         tr = getattr(self.model, "train_res", "560")
         if tr == "864":   # 560 一遍只给初值（#122）
             with torch.no_grad():
@@ -112,7 +136,11 @@ class Term:
             l_hi, s_hi = roma_loss(self.model.forward_hi(torch.where(m, h1, h0), torch.where(m, h0, h1), c), An, **kw)
             loss = loss + l_hi
             stats.update(s_hi if tr == "864" else {f"hi_{k}": v for k, v in s_hi.items()})
-        return self.p["weight"] * loss, stats, True
+        if self.pw:
+            stats["pair_w"] = round(w, 4)
+        if self.p["fine_ramp"]:
+            stats["fine_w"] = round(kw["fine_w"], 4)
+        return self.p["weight"] * w * loss, stats, True
 
     def model_res(self):
         from ..models.roma import RES
@@ -273,12 +301,13 @@ def robust(x, s, like):
     return (cs ** ALPHA * ((x / cs) ** 2 + 1) ** (ALPHA / 2)).mean() if x.numel() else like.sum() * 0
 
 
-def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, gt=None):
+def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, gt=None, reg_tol=0.0, fine_w=1.0):
     """RoMa 原损失，GT 换成仿射。An: (B,2,3) 归一化。#120 新增（默认关）：cls_soft 粗级双线性软目标；
     drop_top 每对去掉回归残差最大的这一比例像素；occ 遮挡扰动，被遮处 prob = 0（不监督位置、certainty 目标为 0）。
     #122：dense = (老师 (B,3,H,W)，距离门限（归一化）, certainty 门限)：两个门限都过的像素把落点目标换成老师的
     （粗级分类与细化回归都用换过的目标；prob 仍按伪仿射是否落在图内）。各尺度只看 corresps 里有的（864 那一遍是 8…1）。
-    gt：可选，gt(h, w) → (x2 (B,h,w,2), prob (B,h,w))，代替伪仿射给出目标（WarpC 的 warp 监督，parts/warpc.py）。"""
+    gt：可选，gt(h, w) → (x2 (B,h,w,2), prob (B,h,w))，代替伪仿射给出目标（WarpC 的 warp 监督，parts/warpc.py）。
+    #127：reg_tol（归一化）1、2 两层回归用 max(EPE − reg_tol, 0)；fine_w 乘在 4、2、1 层的回归与 certainty 项上。"""
     tot, st, prev_epe = 0.0, {}, None
     for s in sorted(corresps, reverse=True):          # 16, 8, 4, 2, 1
         c = corresps[s]
@@ -313,9 +342,10 @@ def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, 
             st[f"cls{s}"] = round(float(l_cls), 5)
         epe = (flow.permute(0, 2, 3, 1).float() - x2).norm(dim=-1)
         mr = drop_largest(epe, m, drop_top) if drop_top > 0 else m
-        l_reg = robust(epe[mr], s, flow)
+        e = (epe - reg_tol).clamp_min(0) if reg_tol > 0 and s <= 2 else epe
+        l_reg = robust(e[mr], s, flow)
         l_ce = F.binary_cross_entropy_with_logits(cert[:, 0].float(), prob)
-        tot = tot + l_reg + CE_WEIGHT * l_ce
+        tot = tot + (fine_w if s <= 4 else 1.0) * (l_reg + CE_WEIGHT * l_ce)
         st[f"reg{s}"] = round(float(l_reg), 5)
         if s == 1:
             st["epe1_px"] = round(float(epe[m].median() * HW / 2), 3) if m.any() else None

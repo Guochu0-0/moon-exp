@@ -339,3 +339,50 @@ def test_merge_average_and_wise():
     zero = {"w": torch.zeros(2), "dino": torch.ones(1)}
     out, extra = mg.wise(zero, {"w": torch.full((2,), 4.0), "x": torch.ones(1)}, 0.25)
     assert torch.allclose(out["w"], torch.ones(2)) and extra == ["x"] and "dino" not in out
+
+
+# ---------- #127 第四批新增的训练选项 ----------
+
+def test_pair_weights_inlier_ratio(tmp_path):
+    from finetune.label import pair_weights
+
+    rows = [{"pair": f"R/{i}", "A": [[1, 0, 0], [0, 1, 0]], "n_match": 100, "n_inliers": 20 * (i + 1), "keep": True}
+            for i in range(3)]
+    f = tmp_path / "l.jsonl"
+    f.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
+    w = pair_weights(f, ["R/0", "R/2"])                     # 内点率 0.2、0.6，只在给定的对上归一化
+    assert w == pytest.approx({"R/0": 0.5, "R/2": 1.5})
+
+
+def test_roma_loss_tol_and_fine_w():
+    import torch
+    from finetune.parts.pseudo import affine_gt, roma_loss
+
+    An = torch.tensor([[[1.0, 0, 0], [0, 1.0, 0]]])
+    x2, _ = affine_gt(An, 8, 8)
+    small = (x2 + 0.5 * 2 / 512).permute(0, 3, 1, 2)       # 处处偏 (0.5, 0.5) 原网格 px，EPE 约 0.71 px
+    cert = torch.zeros(1, 1, 8, 8)
+    c = lambda f: {16: {"flow": f, "certainty": cert}, 1: {"flow": f, "certainty": cert}}
+    l0, _ = roma_loss(c(small), An)
+    l_tol, _ = roma_loss(c(small), An, reg_tol=1.0 * 2 / 512)   # 1 层误差 < 1 px 不罚
+    l_ex, _ = roma_loss({16: c(small)[16], 1: c(x2.permute(0, 3, 1, 2))[1]}, An)
+    assert float(l_tol) < float(l0) and float(l_tol) == pytest.approx(float(l_ex), rel=1e-5)
+    l_off, _ = roma_loss(c(small), An, fine_w=0.0)          # 只剩 16 层
+    l_16, _ = roma_loss({16: c(small)[16]}, An)
+    assert float(l_off) == pytest.approx(float(l_16))
+
+
+def test_blockmask_ratio_and_config(tmp_path):
+    from finetune import augment
+    from finetune import config as C
+
+    rng = np.random.default_rng(0)
+    img = rng.random((512, 512)).astype(np.float32)
+    fr = np.mean([np.mean(augment.blockmask(img, rng, 32, 0.3) != img) for _ in range(50)])
+    assert 0.25 < fr < 0.35
+    c = C.load(_write(tmp_path, "m", '[model]\nname = "roma"\n[pseudo]\nlabels = "l.jsonl"\npair_weight = "inlier_ratio"\n'
+                                     'reg_tol = 1.0\nfine_ramp = [2000, 3000]\n[aug]\ngeo = false\nphoto = false\n'
+                                     'blockmask = true\n'))
+    assert c["aug"]["mask_ratio"] == 0.3 and c["pseudo"]["fine_ramp"] == [2000, 3000]
+    with pytest.raises(C.ConfigError):
+        C.load(_write(tmp_path, "b", '[model]\nname = "roma"\n[pseudo]\nlabels = "l.jsonl"\nfine_ramp = [3000, 2000]\n'))

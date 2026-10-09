@@ -1,0 +1,5 @@
+# A4：DINOv2 最后 4 块全参数训练（lr 3e-5，同 [optim] lr），前 20 块保留 qkv LoRA，其余同 LoRA 参照（自拟）
+base = "_lora"
+
+[model]
+dino_unfreeze = 4

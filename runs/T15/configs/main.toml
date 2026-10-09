@@ -1,0 +1,5 @@
+# B：LoRA 参照上打开 560 与 864 两遍都训，损失相加（同 T10/main__both）
+base = "_lora"
+
+[model]
+train_res = "both"

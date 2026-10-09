@@ -1,0 +1,20 @@
+id = "T14"
+title = "扩大 DINOv2 能动的范围（LoRA 学习率、秩、层，或解冻最后几块），能否超过 LoRA 参照"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-08"
+
+[methods.main__ref]
+name = "DINOv2 qkv LoRA r 8，重跑（第 6000 步）"
+
+[methods.main__lr3e4]
+name = "LoRA 学习率 3e-4（第 5000 步）"
+
+[methods.main__r32]
+name = "qkv LoRA r 32（第 5000 步）"
+
+[methods.main__all]
+name = "全部线性层 LoRA r 8（第 5000 步）"
+
+[methods.main__last4]
+name = "最后 4 块全参数训练（第 6000 步）"

@@ -1,0 +1,5 @@
+# A1：LoRA 挂到每块全部线性层（qkv、attn.proj、mlp.fc1、mlp.fc2），r 8，其余同 LoRA 参照
+base = "_lora"
+
+[model]
+lora_targets = "all"

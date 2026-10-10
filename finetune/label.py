@@ -41,6 +41,18 @@ def load_labels(path, top=1.0):
     return {d["pair"]: d["A"] if d["pair"] in ok else None for d in rows}
 
 
+def pair_weights(path, pairs, kind="inlier_ratio"):
+    """每对的损失权重（#127，DAFormer 2111.14887 式 (4) 的伪标签质量权重，对级）：inlier_ratio = 内点数 / 匹配数，
+    在 pairs 上归一化到均值 1。"""
+    rows = {d["pair"]: d for d in (json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines()
+                                   if line.strip())}
+    if kind != "inlier_ratio":
+        raise ValueError(f"未知的对权重 {kind!r}")
+    w = {q: rows[q]["n_inliers"] / max(rows[q]["n_match"], 1) for q in pairs}
+    m = sum(w.values()) / len(w)
+    return {q: v / m for q, v in w.items()}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("config")

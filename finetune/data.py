@@ -15,17 +15,20 @@ class PairSet(torch.utils.data.Dataset):
     split 可用 + 连接多个（如 "val+test"，过拟合上限参考 #96），pair 标识在各 split 之间不能重名。"""
 
     def __init__(self, root, split, resize, optical="div255", sar="p2p98", limit=0, neg=False, seed=0, aug=(),
-                 aug_shift=12.0, aug_rot=3.0, aug_scale=0.03, aug_erase=(3, 0.10, 0.25), resize_hi=None):
+                 aug_shift=12.0, aug_rot=3.0, aug_scale=0.03, aug_erase=(3, 0.10, 0.25), aug_mask=(32, 0.3),
+                 resize_hi=None):
         """neg：每对额外返回一张来自其他 ROI 的 SAR（image1_neg，负样本对，#49）。
         aug：学生侧扰动（finetune/augment.py，#53）。含 "geo" 时 SAR 施加已知随机仿射，另返回 T（原网格角点约定 2×3）；
         含 "photo" 时两侧加光度扰动；含 "erase" 时 SAR 随机擦除（aug_erase = 块数上限、面积下限、上限），
-        另返回 occ（原网格 (1,512,512) uint8，被擦为 1）。
+        另返回 occ（原网格 (1,512,512) uint8，被擦为 1）；含 "blockmask" 时光学或 SAR 随机一张分块遮挡
+        （aug_mask = 块边长原网格 px、每块遮掉的概率），不返回掩码（#127）。
         resize_hi：给出时另返回 image0_hi / image1_hi（推理上采样那一遍的输入，#122），与 image0/1 同一份扰动后的影像。"""
         self.resize_hi = resize_hi
         self.data, self.split, self.resize, self.neg = Data(root), split, resize, neg
         self.seed, self.aug = seed, tuple(aug)
         self.aug_kw = {"shift": aug_shift, "rot": aug_rot, "scale": aug_scale}
         self.erase_kw = dict(zip(("n_max", "a_min", "a_max"), aug_erase))
+        self.mask_kw = dict(zip(("block", "ratio"), aug_mask))
         self.src = {}                                    # pair → 所在 split
         for sp in split.split("+"):
             for q in self.data.pairs(sp, labelled_only=False):
@@ -56,6 +59,11 @@ class PairSet(torch.utils.data.Dataset):
             if "erase" in self.aug:
                 sar, occ = augment.erase(sar, rng, **self.erase_kw)
                 extra["occ"] = torch.from_numpy(occ)[None]
+            if "blockmask" in self.aug:   # 光学或 SAR 随机选一张；不返回掩码，被遮处照常监督（#127）
+                if rng.random() < 0.5:
+                    opt = augment.blockmask(opt, rng, **self.mask_kw)
+                else:
+                    sar = augment.blockmask(sar, rng, **self.mask_kw)
         t = lambda x: torch.from_numpy(np.ascontiguousarray(x, dtype=np.float32))[None]
         if self.resize_hi is not None:
             extra["image0_hi"], extra["image1_hi"] = t(self.resize_hi(opt)), t(self.resize_hi(sar))

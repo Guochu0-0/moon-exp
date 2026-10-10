@@ -1,0 +1,7 @@
+# 每步光学或 SAR 随机一张按 32 px 分块、每块以 0.3 遮掉（填均值），被遮处照常监督，其余同 LoRA 参照（MIC 2212.01322）
+base = "_lora"
+
+[aug]
+geo = false
+photo = false
+blockmask = true

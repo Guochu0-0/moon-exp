@@ -1,0 +1,6 @@
+# 对全用，每对损失乘内点率（归一化到均值 1），其余同 LoRA 参照（DAFormer 2111.14887 式 (4) 的对级版）
+base = "_lora"
+
+[pseudo]
+top = 1.0
+pair_weight = "inlier_ratio"

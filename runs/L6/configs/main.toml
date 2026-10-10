@@ -1,0 +1,8 @@
+# certainty（含粗级）的目标改为可匹配掩码：零样本 RoMa 的稠密落点与伪仿射相差 < 3 px，且正反往返回到原处 < 3 px；
+# 回归仍在整个重叠区监督，其余同 LoRA 参照（往返一致：2401.00850；用伪仿射一致性定义可匹配为自拟）
+# 老师 warp 由 runs/L6/code/teacher.sh 生成（finetune.dense_label，零样本权重，前 50% 的对）
+base = "_lora"
+
+[pseudo]
+match_dir = "runs/L6/raw/teacher0"
+match_r = 3.0

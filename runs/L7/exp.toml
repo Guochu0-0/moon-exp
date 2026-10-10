@@ -1,0 +1,11 @@
+id = "L7"
+title = "LoRA 参照上，回归目标逐步向 EMA 老师的预测过渡，能否超过参照"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-09"
+
+[methods.main]
+name = "目标向滑动平均模型的预测过渡（第 7000 步）"
+
+[methods.main__alllin]
+name = "目标向滑动平均模型的预测过渡，全部线性层 LoRA（第 7000 步）"

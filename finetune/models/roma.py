@@ -40,7 +40,9 @@ PARAMS = {"config": "configs/baselines/anymatch_roma__minmax.json",
           "lora_lr": 1e-4,       # LoRA 参数的学习率（绝对值，不随 [optim] lr 缩放）
           "lora_targets": "qkv", # LoRA 挂在哪些层（#124）：qkv 只挂 attn.qkv / all 每块全部线性层（qkv、attn.proj、mlp.fc1、mlp.fc2）
           "dino_unfreeze": 0,    # DINOv2 最后几块全参数训练（#124），lr 同 [optim] lr；这几块不挂 LoRA
-          "dino_ckpt": False}    # DINOv2 各块用梯度检查点（省显存，lora_r > 0 时才有意义）
+          "dino_ckpt": False,    # DINOv2 各块用梯度检查点（省显存，lora_r > 0 时才有意义）
+          "unc_head": False}     # 只在训练时用的不确定度头（#127）：每个细化层输出卷积的输入上接 1×1 卷积，出 2 通道
+                                 # （混合权重 logit、β），放进 corresps[s]["unc"]；不进 'model' 权重，推理结构不变
 OPTIM = {"wd": 0.01}             # romatch 原配置
 RUN = {"save_zero": False}
 TORCH_HOME = "/remote-home/xufang/YGC/weights/torch_home"   # DINOv2 缓存
@@ -107,6 +109,17 @@ class Model:
         self.lora, self.dino_blocks = ({}, {}) if m["lora_r"] <= 0 and m["dino_unfreeze"] <= 0 else self._open_dino(m)
         lora = [p for l in self.lora.values() for p in (l.A, l.B)]
         dino = [p for b in self.dino_blocks.values() for p in b.parameters()]
+        self.unc_heads, self._unc = None, {}
+        if m["unc_head"]:
+            self.unc_heads = torch.nn.ModuleDict()
+            for k, ref in self.model.decoder.conv_refiner.items():
+                head = torch.nn.Conv2d(ref.out_conv.in_channels, 2, 1).to(device)
+                torch.nn.init.zeros_(head.weight)
+                torch.nn.init.zeros_(head.bias)      # 起点：两分量各半、β = 0（两个都是 1 px 的拉普拉斯）
+                self.unc_heads[k] = head
+                ref.out_conv.register_forward_hook(
+                    lambda mod, inp, out, k=k: self._unc.__setitem__(int(k), self.unc_heads[k](inp[0])))
+            dec = dec + list(self.unc_heads.parameters())
         self.params = dec + vgg + lora + dino
         self.groups = [g for g in ({"params": dec, "lr_scale": 1.0}, {"params": vgg, "lr_scale": m["vgg_lr"]},
                                    {"params": lora, "lr_scale": m["lora_lr"] / cfg["optim"]["lr"]},
@@ -175,7 +188,16 @@ class Model:
 
     def forward(self, image0, image1):
         """image0/1: (B,1,560,560) float [0,1]。返回 romatch 的 corresps（训练态：含 gm_cls、gm_certainty）。"""
-        return self.model({"im_A": _norm(image0), "im_B": _norm(image1)}, batched=True)
+        return self._attach(self.model({"im_A": _norm(image0), "im_B": _norm(image1)}, batched=True))
+
+    def _attach(self, corresps):
+        """unc_head 打开时把这次前向各尺度的不确定度输出放进 corresps[s]["unc"]。"""
+        if self.unc_heads is not None:
+            for s, u in self._unc.items():
+                if s in corresps:
+                    corresps[s]["unc"] = u
+            self._unc = {}
+        return corresps
 
     def forward_hi(self, image0, image1, corresps):
         """推理上采样那一遍（#122）：image0/1 (B,1,864,864)；corresps = 560 一遍的输出。照 romatch match()：
@@ -183,8 +205,9 @@ class Model:
         初值 detach（推理时这一遍本来就不回传到 560 那一遍）。"""
         c1 = corresps[1]
         init = {"flow": c1["flow"].detach(), "certainty": c1["certainty"].detach()}
-        return self.model({"im_A": _norm(image0), "im_B": _norm(image1), "corresps": init},
-                          batched=True, upsample=True, scale_factor=RES_HI / RES)
+        self._unc = {}
+        return self._attach(self.model({"im_A": _norm(image0), "im_B": _norm(image1), "corresps": init},
+                                       batched=True, upsample=True, scale_factor=RES_HI / RES))
 
     def state_dict(self):
         """{'model': ...}，RomatchAdapter(weights_key='model') 直接能读；有 LoRA 时另存 'dinov2_lora'
@@ -194,6 +217,8 @@ class Model:
         if self.lora:
             sd["dinov2_lora"] = {k: {"A": l.A.detach().cpu(), "B": l.B.detach().cpu(), "scale": l.scale}
                                  for k, l in self.lora.items()}
+        if self.unc_heads is not None:   # 只作记录，评测适配器不读
+            sd["unc_head"] = {k: v.detach().cpu() for k, v in self.unc_heads.state_dict().items()}
         if self.dino_blocks:
             sd["dinov2_blocks"] = {f"{b}.{k}": v.detach().cpu() for b, blk in self.dino_blocks.items()
                                    for k, v in blk.state_dict().items()}

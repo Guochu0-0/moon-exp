@@ -1,0 +1,8 @@
+id = "L3"
+title = "LoRA 参照上，由粗到细的尺度课程（细层晚开），能否超过参照"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-09"
+
+[methods.main]
+name = "先粗后细的尺度课程（第 7000 步）"

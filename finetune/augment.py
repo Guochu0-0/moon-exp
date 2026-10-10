@@ -63,3 +63,13 @@ def erase(img, rng, n_max=3, a_min=0.10, a_max=0.25):
     out = img.copy()
     out[mask > 0] = img.mean()
     return out, mask
+
+
+def blockmask(img, rng, block=32, ratio=0.3):
+    """MIC（2212.01322）式分块遮挡（#127）：把影像按 block × block 切成网格，每块以概率 ratio 遮掉，填 patch 均值。"""
+    h, w = img.shape
+    gh, gw = -(-h // block), -(-w // block)
+    m = np.kron(rng.random((gh, gw)) < ratio, np.ones((block, block), bool))[:h, :w]
+    out = img.copy()
+    out[m] = img.mean()
+    return out

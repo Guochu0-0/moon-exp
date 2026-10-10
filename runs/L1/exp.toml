@@ -3,3 +3,15 @@ title = "LoRA 参照上，伪标签对的筛选改为全用或按内点率加权
 parent = "T13"
 init = "T13/main"
 date = "2026-10-09"
+
+[methods.main__ref]
+name = "DINOv2 qkv LoRA r 8，重跑（第 3000 步）"
+
+[methods.main__allpairs]
+name = "伪标签对全部使用（第 8000 步）"
+
+[methods.main__qw]
+name = "全部使用，按内点比例加权（第 7000 步）"
+
+[methods.main__qw_alllin]
+name = "按内点比例加权，全部线性层 LoRA（第 7000 步）"

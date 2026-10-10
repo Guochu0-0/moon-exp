@@ -3,3 +3,9 @@ title = "LoRA 参照上，最细两层回归误差小于 1 px 不罚，能否超
 parent = "T13"
 init = "T13/main"
 date = "2026-10-09"
+
+[methods.main]
+name = "细层误差 1 px 内不罚（第 6000 步）"
+
+[methods.main__alllin]
+name = "细层误差 1 px 内不罚，全部线性层 LoRA（第 8000 步）"

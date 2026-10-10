@@ -3,3 +3,6 @@ title = "LoRA 参照上，细化层加只在训练时用的不确定度头、回
 parent = "T13"
 init = "T13/main"
 date = "2026-10-09"
+
+[methods.main]
+name = "误差尺度与拉普拉斯混合回归（第 6000 步）"

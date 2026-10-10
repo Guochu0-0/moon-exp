@@ -3,3 +3,6 @@ title = "LoRA 参照上，certainty 改学老师给出的可匹配掩码，能�
 parent = "T13"
 init = "T13/main"
 date = "2026-10-09"
+
+[methods.main]
+name = "certainty 学可匹配标签（第 3000 步）"

@@ -3,3 +3,6 @@ title = "LoRA 参照上，分块遮挡一张图、被遮处仍监督，能否超
 parent = "T13"
 init = "T13/main"
 date = "2026-10-09"
+
+[methods.main]
+name = "分块遮挡，被遮处仍监督（第 7000 步）"

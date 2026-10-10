@@ -1,0 +1,5 @@
+id = "N"
+title = "LoRA 参照上重走 Noisy Student 式两轮自训练（每轮换老师、学生加一种噪声），哪种噪声能让第 2 轮比参照高 0.005 以上"
+parent = "T13"
+init = "T13/main"
+date = "2026-10-10"

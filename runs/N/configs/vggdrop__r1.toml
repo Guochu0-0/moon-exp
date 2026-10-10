@@ -1,0 +1,5 @@
+# 第 1 轮 + VGG 各尺度特征 channel dropout p 0.2（同 T8）；其余同 LoRA 参照
+base = "_lora"
+
+[model]
+vgg_dropout = 0.2

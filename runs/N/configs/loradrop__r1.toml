@@ -1,0 +1,5 @@
+# 第 1 轮 + LoRA 支路输入 dropout 0.1（LoRA 2106.09685 的常用设置）；其余同 LoRA 参照
+base = "_lora"
+
+[model]
+lora_dropout = 0.1

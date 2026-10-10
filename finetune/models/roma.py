@@ -39,6 +39,9 @@ PARAMS = {"config": "configs/baselines/anymatch_roma__minmax.json",
           "lora_alpha": 16.0,    # LoRA 缩放 = alpha / r
           "lora_lr": 1e-4,       # LoRA 参数的学习率（绝对值，不随 [optim] lr 缩放）
           "lora_targets": "qkv", # LoRA 挂在哪些层（#124）：qkv 只挂 attn.qkv / all 每块全部线性层（qkv、attn.proj、mlp.fc1、mlp.fc2）
+          "lora_dropout": 0.0,   # LoRA 支路输入的 dropout 概率（#130，2106.09685 的常用设置），只在训练前向
+          "drop_path": 0.0,      # DINOv2 stochastic depth 的最大丢弃率（#130，Noisy Student 1911.04252 的模型噪声），
+                                 # 按块线性从 0 增到这个值，逐样本丢掉注意力、MLP 残差支路；只在训练前向，lora_r > 0 时可用
           "dino_unfreeze": 0,    # DINOv2 最后几块全参数训练（#124），lr 同 [optim] lr；这几块不挂 LoRA
           "dino_ckpt": False,    # DINOv2 各块用梯度检查点（省显存，lora_r > 0 时才有意义）
           "unc_head": False}     # 只在训练时用的不确定度头（#127）：每个细化层输出卷积的输入上接 1×1 卷积，出 2 通道
@@ -60,18 +63,34 @@ def _norm(x):
 
 class LoRA(torch.nn.Module):
     """y = W x + b + (α/r)·B A x（2106.09685 §4.1）。A 按 kaiming 均匀初始化、B 为 0，起点与原层相同；
-    A、B 用 fp32 存，参与 fp16 的前向时临时转型。合并见 baselines.adapters.romatch.merge_lora。"""
+    A、B 用 fp32 存，参与 fp16 的前向时临时转型。合并见 baselines.adapters.romatch.merge_lora。
+    p > 0 时 LoRA 支路的输入先做 dropout（#130），原层不受影响；这个包装只用于训练，所以恒定打开。"""
 
-    def __init__(self, base: torch.nn.Linear, r: int, alpha: float):
+    def __init__(self, base: torch.nn.Linear, r: int, alpha: float, p: float = 0.0):
         super().__init__()
-        self.base, self.scale = base, alpha / r
+        self.base, self.scale, self.p = base, alpha / r, p
         dev = base.weight.device
         self.A = torch.nn.Parameter(torch.empty(r, base.in_features, device=dev))
         self.B = torch.nn.Parameter(torch.zeros(base.out_features, r, device=dev))
         torch.nn.init.kaiming_uniform_(self.A, a=math.sqrt(5))
 
     def forward(self, x):
-        return self.base(x) + (x @ self.A.t().to(x.dtype)) @ self.B.t().to(x.dtype) * self.scale
+        h = torch.nn.functional.dropout(x, self.p, training=True) if self.p > 0 else x
+        return self.base(x) + (h @ self.A.t().to(x.dtype)) @ self.B.t().to(x.dtype) * self.scale
+
+
+class DropPath(torch.nn.Module):
+    """包住 DINOv2 块的 LayerScale（ls1 / ls2，即残差支路的最后一层）：逐样本以概率 p 把整条支路置 0，留下的除以 1 − p
+    （stochastic depth，1603.09382）。romatch 的 DINOv2 恒为 eval、构造时 drop_path = 0，自带的实现用不上，所以在这里加（#130）。"""
+
+    def __init__(self, ls: torch.nn.Module, p: float):
+        super().__init__()
+        self.ls, self.p = ls, p
+
+    def forward(self, x):
+        y = self.ls(x)
+        keep = torch.rand(y.shape[0], *([1] * (y.dim() - 1)), device=y.device) >= self.p
+        return y * keep.to(y.dtype) / (1 - self.p)
 
 
 class Model:
@@ -81,6 +100,10 @@ class Model:
         from baselines.adapters.romatch import RomatchAdapter
 
         m = cfg["model"]
+        if (m["lora_dropout"] > 0 or m["drop_path"] > 0) and (m["lora_r"] <= 0 or m["dino_unfreeze"] > 0):
+            raise ValueError("[model] lora_dropout、drop_path 要求 lora_r > 0 且 dino_unfreeze = 0")
+        if not 0 <= m["drop_path"] < 1 or not 0 <= m["lora_dropout"] < 1:
+            raise ValueError("[model] lora_dropout、drop_path 应在 [0, 1)")
         self.infer_cfg = json.loads((REPO / m["config"]).read_text(encoding="utf-8"))
         self.weights = m["init"] or str(Path(weights_root) / self.infer_cfg["weights"])
         prm = dict(self.infer_cfg.get("params", {}))
@@ -158,8 +181,11 @@ class Model:
             elif m["lora_r"] > 0:
                 for name in LORA_TARGETS[m["lora_targets"]]:
                     parent, attr = blk.get_submodule(name.rsplit(".", 1)[0]), name.rsplit(".", 1)[1]
-                    setattr(parent, attr, LoRA(getattr(parent, attr), m["lora_r"], m["lora_alpha"]))
+                    setattr(parent, attr, LoRA(getattr(parent, attr), m["lora_r"], m["lora_alpha"], m["lora_dropout"]))
                     lora[f"blocks.{i}.{name}"] = getattr(parent, attr)
+            p_drop = m["drop_path"] * i / (len(dv.blocks) - 1)   # 按块线性从 0 增到 drop_path
+            if p_drop > 0:
+                blk.ls1, blk.ls2 = DropPath(blk.ls1, p_drop), DropPath(blk.ls2, p_drop)
             if m["dino_ckpt"]:
                 f = blk.forward
                 blk.forward = lambda x, f=f: torch.utils.checkpoint.checkpoint(f, x, use_reentrant=False)

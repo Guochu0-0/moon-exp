@@ -56,6 +56,7 @@ def main():
     (OUT / "data/curves.json").write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
 
     import matplotlib
+    import matplotlib.font_manager
     matplotlib.use("Agg")
     if Path(FONT).exists():
         matplotlib.font_manager.fontManager.addfont(FONT)

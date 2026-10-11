@@ -25,9 +25,9 @@ for k in $(seq 0 $((n - 1))); do
 done
 wait
 for k in $(seq 0 $((n - 1))); do
-    /opt/envs/wb/bin/python -m finetune.label_from_raw $out/s$k/train.npz --out $out/s$k.labels.jsonl >> $out/relabel.log
+    /opt/envs/loftr/bin/python -m finetune.label_from_raw $out/s$k/train.npz --out $out/s$k.labels.jsonl >> $out/relabel.log
 done
 cat $(for k in $(seq 0 $((n - 1))); do echo $out/s$k.labels.jsonl; done) > $R/raw/labels_$m.jsonl.tmp
 mv $R/raw/labels_$m.jsonl.tmp $R/raw/labels_$m.jsonl
-/opt/envs/wb/bin/python $R/code/overlap.py $old $R/raw/labels_$m.jsonl --teacher "$m step $step" \
+/opt/envs/loftr/bin/python $R/code/overlap.py $old $R/raw/labels_$m.jsonl --teacher "$m step $step" \
     --json $R/extra/overlap_$m.json | tee -a $out/relabel.log

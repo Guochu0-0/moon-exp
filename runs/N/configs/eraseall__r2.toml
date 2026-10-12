@@ -1,0 +1,6 @@
+# 不做前 50% 筛选的 erase 多轮，第 2 轮：老师换成 eraseall__r1（Val 峰值那一步）重新打的标签，通过基本门槛的对全部使用，
+# SAR 随机擦除，从 zero-shot 重训
+base = "eraseall__r1"
+
+[pseudo]
+labels = "runs/N/raw/labels_eraseall__r1.jsonl"

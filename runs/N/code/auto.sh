@@ -14,7 +14,7 @@
 set -uo pipefail
 Y=/remote-home/xufang/YGC
 R=runs/N
-POOL="1 2 3"
+POOL=${POOL:-"1 2 3"}   # 可用环境变量 POOL、CAP_DAY、CAP_NIGHT 覆盖（用户当天另有指示时）
 PY=/opt/envs/loftr/bin/python
 tag=${1:-r2}
 shift || true
@@ -31,7 +31,7 @@ ours() {   # 我们在本机占着的 GPU
 
 cap() {
     local t=$((10#$(date +%H%M)))
-    if [ $t -ge 2300 ] || [ $t -lt 430 ]; then echo 3; else echo 2; fi
+    if [ $t -ge 2300 ] || [ $t -lt 430 ]; then echo ${CAP_NIGHT:-3}; else echo ${CAP_DAY:-2}; fi
 }
 
 free_gpu() {   # 池里一张不是我们占的、也没有任何进程的卡；没有则输出空

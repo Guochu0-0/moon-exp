@@ -7,6 +7,7 @@
 #   3. 还有没被领走的方法、又有空卡 → 起一个 run.py 队列。
 # 用卡（docs/agents/servers.md）：只用 126 的 GPU 1–3、只用没有任何进程的卡；自己同时最多占 2 张，
 # 23:00–04:30 之间新起的任务可占到 3 张（3–4 小时内跑完，08:00 前让出）。打标失败不重试，记进日志。
+# 环境变量 SHARDS=n：每次打标在同一张卡上并行 n 个分片（推理结果每 50 对整份重存一次，分片后快得多）。
 # 列出的学生全部出结果、且没有未领的方法后退出。
 # 用法（在本票 worktree 根目录，代码已提交；学生的占位要先建好）：
 #   nohup bash runs/N/code/auto.sh <标签> <老师:学生[:旧标签]>… &
@@ -76,7 +77,7 @@ while true; do
             fi
         done
         if [ -n "$todo" ]; then
-            GPUS=$g nohup bash $R/code/relabel.sh $todo $todo_old > $R/raw/relabel_$todo.out 2>&1 < /dev/null &
+            GPUS="$(for _ in $(seq ${SHARDS:-1}); do echo -n "$g "; done)" nohup bash $R/code/relabel.sh $todo $todo_old > $R/raw/relabel_$todo.out 2>&1 < /dev/null &
             started[$todo]=$!
             log "打标 $todo：GPU $g，pid $!"
         elif [ -n "$(unclaimed)" ]; then   # 3. 起队列

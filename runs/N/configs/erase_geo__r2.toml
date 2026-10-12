@@ -1,6 +1,6 @@
-# 两种噪声混合：老师用 erase__r1 重新打的标签（同 erase__r2，内点前 50%），学生同时加 SAR 已知随机仿射（±12 px、±3°、±3%）
-# 和 SAR 随机擦除（先仿射后擦除），从 zero-shot 重训。与 erase__r2、geo__r2 对比
-base = "erase__r2"
+# 噪声组合 erase + geo，第 2 轮：老师换成 erase_geo__r1（Val 峰值那一步）在干净 Train 上重新打的标签（门槛不变、内点前 50%），
+# 同一组噪声，从 zero-shot 重训
+base = "erase_geo__r1"
 
-[aug]
-geo = true
+[pseudo]
+labels = "runs/N/raw/labels_erase_geo__r1.jsonl"

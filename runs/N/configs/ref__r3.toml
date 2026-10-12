@@ -1,5 +1,0 @@
-# 不加噪声的多轮对照，第 3 轮：老师换成 ref__r2（Val 峰值那一步）重新打的标签（门槛不变、内点前 50%），不加噪声，从 zero-shot 重训
-base = "ref"
-
-[pseudo]
-labels = "runs/N/raw/labels_ref__r2.jsonl"

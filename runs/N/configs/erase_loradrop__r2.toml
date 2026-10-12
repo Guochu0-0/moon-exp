@@ -1,0 +1,6 @@
+# 噪声组合 erase + loradrop，第 2 轮：老师换成 erase_loradrop__r1（Val 峰值那一步）在干净 Train 上重新打的标签
+# （门槛不变、内点前 50%），同一组噪声，从 zero-shot 重训
+base = "erase_loradrop__r1"
+
+[pseudo]
+labels = "runs/N/raw/labels_erase_loradrop__r1.jsonl"

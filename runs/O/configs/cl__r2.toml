@@ -1,0 +1,6 @@
+# 逐轮放宽的第 2 轮：老师换成 cl__r1（Val 峰值那一步）在干净 Train 上重新打的标签，按内点数取前 40%
+base = "_erase"
+
+[pseudo]
+labels = "runs/O/raw/labels_cl__r1.jsonl"
+top = 0.4

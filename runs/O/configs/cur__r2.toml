@@ -1,0 +1,8 @@
+# 训完清理（FoundationStereo 2501.09898 §3.5：训完的模型在一个样本上误差大就把它去掉，训练与清理交替两次）的第 2 轮：
+# 第 1 轮是底座的第 1 轮（runs/N 的 erase__r1）。它重新打的标签与它训练时用的标签（发布权重打的）相比，
+# 两个伪仿射把四个角点映到的位置平均相差超过 3 px 的对去掉，其余的对全部使用、用新标签（code/prep.sh）
+base = "_erase"
+
+[pseudo]
+labels = "runs/O/raw/sel_cur__r2.jsonl"
+top = 1.0

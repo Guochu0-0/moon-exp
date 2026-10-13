@@ -1,0 +1,7 @@
+# 训完清理的第 3 轮：老师换成 cur__r2（Val 峰值那一步）重新打的标签；与上一轮的标签（erase__r1 打的）相比角点位置平均相差
+# 超过 3 px 的对去掉，其余的对全部使用、用新标签
+base = "_erase"
+
+[pseudo]
+labels = "runs/O/raw/sel_cur__r3.jsonl"
+top = 1.0

@@ -1,0 +1,7 @@
+# 两阶段（ST++ 2106.05095 §3.3：先用最可信的 50%，重新打标后用全部）的第 2 轮：第 1 轮就是底座的第 1 轮（runs/N 的 erase__r1），
+# 这一轮用它重新打的标签、7907 对全部使用；同一种 SAR 随机擦除，从发布权重重训
+base = "_erase"
+
+[pseudo]
+labels = "/remote-home/xufang/YGC/moon-exp/runs/N/raw/labels_erase__r1.jsonl"
+top = 1.0

@@ -1,0 +1,14 @@
+{
+ "old": "/remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl",
+ "new": "runs/N/raw/labels_geo_loradrop__r1.jsonl",
+ "teacher": "geo_loradrop__r1 step 3000",
+ "top": 0.5,
+ "keep_old": 7907,
+ "keep_new": 7907,
+ "top_old": 3954,
+ "top_new": 3954,
+ "overlap": 2856,
+ "overlap_frac": 0.7223,
+ "corner_diff_px_median": 1.14,
+ "corner_diff_px_mean": 1.733
+}

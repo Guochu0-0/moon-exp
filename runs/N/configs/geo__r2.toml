@@ -1,0 +1,6 @@
+# 第 2 轮：老师换成第 1 轮学生 geo__r1（Val 峰值第 7000 步）在干净 Train 上重新打的标签（门槛不变、内点前 50%，
+# code/relabel.sh），同一种几何噪声，从 zero-shot 重训；其余同 geo__r1
+base = "geo__r1"
+
+[pseudo]
+labels = "runs/N/raw/labels_geo__r1.jsonl"

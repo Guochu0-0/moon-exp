@@ -1,0 +1,7 @@
+# 第 1 轮 + 分块遮挡：光学或 SAR 随机一张按 32 px 分块、每块以 0.3 遮掉，被遮处照常监督（MIC 2212.01322，同 L4）；其余同 LoRA 参照
+base = "_lora"
+
+[aug]
+geo = false
+photo = false
+blockmask = true

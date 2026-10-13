@@ -1,0 +1,2 @@
+# LoRA 参照（T13/main）在本批代码上重跑一次（种子 0）：本批新增的 lora_dropout、drop_path 默认都关，数值应不变
+base = "_lora"

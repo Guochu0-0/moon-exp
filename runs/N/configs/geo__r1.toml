@@ -1,0 +1,5 @@
+# 第 1 轮（zero-shot 标签前 50%）+ 几何噪声：SAR 施加已知随机仿射（±12 px、±3°、±3%），标签同步变为 T∘A；其余同 LoRA 参照
+base = "_lora"
+
+[aug]
+photo = false

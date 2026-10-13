@@ -1,0 +1,6 @@
+# 噪声组合 erase + geo + loradrop，第 1 轮（zero-shot 标签前 50%）：SAR 已知随机仿射、随机擦除，加 LoRA 支路输入 dropout 0.1；
+# 其余同 LoRA 参照
+base = "erase_geo__r1"
+
+[model]
+lora_dropout = 0.1

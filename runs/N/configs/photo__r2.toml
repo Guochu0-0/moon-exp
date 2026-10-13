@@ -1,0 +1,6 @@
+# 第 2 轮：老师换成第 1 轮学生 photo__r1（Val 峰值那一步）在干净 Train 上重新打的标签（门槛不变、内点前 50%，
+# code/relabel.sh），同一种光度噪声，从 zero-shot 重训；其余同 photo__r1
+base = "photo__r1"
+
+[pseudo]
+labels = "runs/N/raw/labels_photo__r1.jsonl"

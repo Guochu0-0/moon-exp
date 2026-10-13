@@ -1,0 +1,5 @@
+# 第 1 轮 + DINOv2 stochastic depth：丢弃率按块线性从 0 增到 0.1（Noisy Student 1911.04252 的模型噪声）；其余同 LoRA 参照
+base = "_lora"
+
+[model]
+drop_path = 0.1

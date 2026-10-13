@@ -11,10 +11,10 @@ PY=/opt/envs/loftr/bin/python
 mkdir -p $R/raw
 case $t in
 erase__r1)   # 训完清理的第 2 轮：新标签（erase__r1 打的）与它训练时用的标签（发布权重打的）角点位置相差超过 3 px 的对去掉
-    $PY $R/code/select.py $N/labels_erase__r1.jsonl --ref $Y/results/finetune/labels_roma0.jsonl --max-diff 3 \
+    $PY $R/code/pick_pairs.py $N/labels_erase__r1.jsonl --ref $Y/results/finetune/labels_roma0.jsonl --max-diff 3 \
         --out $R/raw/sel_cur__r2.jsonl ;;
 cur__r2)     # 训完清理的第 3 轮：新标签（cur__r2 打的）与上一轮的标签（erase__r1 打的）相比
-    $PY $R/code/select.py $R/raw/labels_cur__r2.jsonl --ref $N/labels_erase__r1.jsonl --max-diff 3 \
+    $PY $R/code/pick_pairs.py $R/raw/labels_cur__r2.jsonl --ref $N/labels_erase__r1.jsonl --max-diff 3 \
         --out $R/raw/sel_cur__r3.jsonl ;;
 *) echo "prep: $t 没有要生成的选对结果" ;;
 esac

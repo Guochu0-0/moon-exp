@@ -10,7 +10,7 @@ N=/remote-home/xufang/YGC/moon-exp/runs/N/raw
 mkdir -p $R/raw $R/ckpt $R/.claims
 mkdir $R/raw/start.lock || { echo "已经起过（$R/raw/start.lock 存在）" >&2; exit 1; }
 for s in cl__r2 cl__r3 cur__r3; do
-    mkdir $R/.claims/$s
+    mkdir -p $R/.claims/$s
     echo "等老师的标签，由 code/auto.sh 放行" > $R/.claims/$s/held
 done
 bash $R/code/prep.sh erase__r1 | tee $R/raw/prep_erase__r1.out

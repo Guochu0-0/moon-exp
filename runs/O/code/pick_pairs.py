@@ -1,9 +1,9 @@
 """按规则从一份伪标签里选对，写出同格式的标签文件：没选中的对 keep 改为 false，训练时配 [pseudo] top = 1.0（#131）。
 
     # 与另一份标签相比，角点位置平均相差不超过 3 px 的对才用
-    python runs/O/code/select.py <新标签.jsonl> --ref <旧标签.jsonl> --max-diff 3 --out runs/O/raw/sel_x.jsonl
+    python runs/O/code/pick_pairs.py <新标签.jsonl> --ref <旧标签.jsonl> --max-diff 3 --out runs/O/raw/sel_x.jsonl
     # 按 runs/O0/code/pair_metrics.py 算出的某个度量取最可信的前一半（--sign -1：越小越可信）
-    python runs/O/code/select.py <标签.jsonl> --metrics <度量.jsonl> --by resid_med --sign -1 --top 0.5 --out …
+    python runs/O/code/pick_pairs.py <标签.jsonl> --metrics <度量.jsonl> --by resid_med --sign -1 --top 0.5 --out …
 
 两条规则可以同时给，先按 --ref 去掉，再在剩下的对里按度量取前 --top。角点位置差的定义同 runs/N/code/overlap.py。
 """

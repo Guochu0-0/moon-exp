@@ -3,3 +3,84 @@ title = "LoRA 参照上重走 Noisy Student 式两轮自训练（每轮换老师
 parent = "T13"
 init = "T13/main"
 date = "2026-10-10"
+
+[methods.ref]
+name = "不加噪声，第 1 轮（基准配方重跑）（第 7000 步）"
+
+[methods.ref__r2]
+name = "不加噪声，第 2 轮（第 6000 步）"
+
+[methods.erase__r1]
+name = "SAR 随机擦除，第 1 轮（第 7000 步）"
+
+[methods.erase__r2]
+name = "SAR 随机擦除，第 2 轮（第 8000 步）"
+
+[methods.erase__r3]
+name = "SAR 随机擦除，第 3 轮（第 6000 步）"
+
+[methods.geo__r1]
+name = "SAR 随机仿射，第 1 轮（第 7000 步）"
+
+[methods.geo__r2]
+name = "SAR 随机仿射，第 2 轮（第 5000 步）"
+
+[methods.geo__r3]
+name = "SAR 随机仿射，第 3 轮（第 8000 步）"
+
+[methods.loradrop__r1]
+name = "LoRA dropout，第 1 轮（第 7000 步）"
+
+[methods.loradrop__r2]
+name = "LoRA dropout，第 2 轮（第 7000 步）"
+
+[methods.loradrop__r3]
+name = "LoRA dropout，第 3 轮（第 6000 步）"
+
+[methods.photo__r1]
+name = "光度扰动，第 1 轮（第 7000 步）"
+
+[methods.photo__r2]
+name = "光度扰动，第 2 轮（第 4000 步）"
+
+[methods.vggdrop__r1]
+name = "VGG 特征 dropout，第 1 轮（第 6000 步）"
+
+[methods.vggdrop__r2]
+name = "VGG 特征 dropout，第 2 轮（第 7000 步）"
+
+[methods.blockmask__r1]
+name = "分块遮挡，第 1 轮（第 8000 步）"
+
+[methods.blockmask__r2]
+name = "分块遮挡，第 2 轮（第 8000 步）"
+
+[methods.droppath__r1]
+name = "DINOv2 随机深度，第 1 轮（第 6000 步）"
+
+[methods.droppath__r2]
+name = "DINOv2 随机深度，第 2 轮（第 7000 步）"
+
+[methods.erase_geo__r1]
+name = "擦除 + 仿射，第 1 轮（第 8000 步）"
+
+[methods.erase_geo__r2]
+name = "擦除 + 仿射，第 2 轮（第 7000 步）"
+
+[methods.erase_loradrop__r1]
+name = "擦除 + LoRA dropout，第 1 轮（第 7000 步）"
+
+[methods.erase_loradrop__r2]
+name = "擦除 + LoRA dropout，第 2 轮（第 6000 步）"
+
+[methods.geo_loradrop__r1]
+name = "仿射 + LoRA dropout，第 1 轮（第 3000 步）"
+
+[methods.geo_loradrop__r2]
+name = "仿射 + LoRA dropout，第 2 轮（第 4000 步）"
+
+[methods.erase_geo_loradrop__r1]
+name = "擦除 + 仿射 + LoRA dropout，第 1 轮（第 8000 步）"
+
+[methods.erase_geo_loradrop__r2]
+name = "擦除 + 仿射 + LoRA dropout，第 2 轮（第 5000 步）"

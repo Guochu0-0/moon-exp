@@ -1,0 +1,16 @@
+teacher,teacher_step,compared_with,pairs_passing_threshold,top50_pairs,top50_overlap,top50_overlap_frac,corner_diff_px_median,corner_diff_px_mean
+blockmask__r1,8000,zero-shot,7907,3954,2803,0.7089,1.058,1.626
+droppath__r1,6000,zero-shot,7907,3954,2795,0.7069,1.079,1.618
+erase__r1,7000,zero-shot,7907,3954,2817,0.7124,1.09,1.697
+erase__r2,8000,erase__r1,7907,3954,3523,0.891,0.323,0.581
+erase_geo__r1,8000,zero-shot,7907,3954,2773,0.7013,1.105,1.701
+erase_geo_loradrop__r1,8000,zero-shot,7907,3954,2776,0.7021,1.083,1.698
+erase_loradrop__r1,7000,zero-shot,7907,3954,2811,0.7109,1.07,1.685
+geo__r1,7000,zero-shot,7907,3954,2841,0.7185,1.088,1.708
+geo__r2,5000,geo__r1,7907,3954,3429,0.8672,0.358,0.652
+geo_loradrop__r1,3000,zero-shot,7907,3954,2856,0.7223,1.14,1.733
+loradrop__r1,7000,zero-shot,7907,3954,2841,0.7185,1.055,1.666
+loradrop__r2,7000,loradrop__r1,7907,3954,3427,0.8667,0.333,0.6
+photo__r1,7000,zero-shot,7907,3954,2826,0.7147,1.067,1.642
+ref,7000,zero-shot,7907,3954,2833,0.7165,1.049,1.685
+vggdrop__r1,6000,zero-shot,7907,3954,2822,0.7137,1.078,1.651

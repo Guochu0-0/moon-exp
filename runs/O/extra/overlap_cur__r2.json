@@ -1,0 +1,14 @@
+{
+ "old": "/remote-home/xufang/YGC/moon-exp/runs/N/raw/labels_erase__r1.jsonl",
+ "new": "runs/O/raw/labels_cur__r2.jsonl",
+ "teacher": "cur__r2 step 8000",
+ "top": 0.5,
+ "keep_old": 7907,
+ "keep_new": 7907,
+ "top_old": 3954,
+ "top_new": 3954,
+ "overlap": 3486,
+ "overlap_frac": 0.8816,
+ "corner_diff_px_median": 0.313,
+ "corner_diff_px_mean": 0.571
+}

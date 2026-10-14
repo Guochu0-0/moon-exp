@@ -1,0 +1,42 @@
+[
+ {
+  "start": "2026-10-13 18:27:37 +0800",
+  "end": "2026-10-13 18:32:57 +0800",
+  "status": "ok",
+  "commit": "ae4851fa767d3d4e0507de76555d6d5ab75d53e4",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-pair-selection-131",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "bash",
+   "runs/O0/code/run.sh"
+  ]
+ },
+ {
+  "start": "2026-10-13 19:48:58 +0800",
+  "end": "2026-10-13 19:49:03 +0800",
+  "status": "ok",
+  "commit": "74cdc6fb92d7d673552e33a66f81544be42a3796",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-pair-selection-131",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/O0/code/table.py",
+   "val",
+   "<val_t0|val_t1>.jsonl",
+   "--alt",
+   "gen",
+   "--alt",
+   "swap",
+   "--alt",
+   "res448"
+  ]
+ }
+]

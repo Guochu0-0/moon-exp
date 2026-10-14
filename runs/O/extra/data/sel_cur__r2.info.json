@@ -1,0 +1,16 @@
+{
+ "labels": "/remote-home/xufang/YGC/moon-exp/runs/N/raw/labels_erase__r1.jsonl",
+ "keep_in": 7907,
+ "ref": "/remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl",
+ "max_diff": 3.0,
+ "after_ref": 2933,
+ "diff_median": 5.512,
+ "diff_quantiles": {
+  "25": 1.595,
+  "50": 5.512,
+  "75": 28.756,
+  "90": 154.696,
+  "95": 219.314
+ },
+ "keep_out": 2933
+}

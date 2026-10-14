@@ -13,6 +13,8 @@ python -m workbench sync B0 B0m [--extra certainty] [--tb all]   # 从服务器�
 
 依赖：numpy、tifffile、Pillow，Python ≥ 3.11（用到 tomllib）。不需要 cv2。训练图表和「在 TensorBoard 中打开」另需 `tensorboard`（只用它的 event proto 和命令行，不需要 TF）。页面零构建：Python 标准库 HTTP 服务 + 静态页（`static/`），字体自托管，不访问外网。
 
+没有原数据集的人（课题组其他老师、同学）只看结果时，用约 2 GB 的精简数据集，配置见 [`docs/workbench-setup.md`](../docs/workbench-setup.md)；精简数据集由 `scripts/slim_dataset.py` 生成。
+
 ## 画布
 
 打开 `/` 就是画布。页面每隔几秒、以及窗口重新获得焦点时重拉数据，所以在终端或由 agent 改了 `runs/`（新写的 exp.toml、刚点亮的实验），几秒内就会出现在画布上，不用重启服务。

@@ -1,0 +1,9 @@
+metric,overlap_top20,overlap_top50
+n_inliers,1.0,1.0
+inlier_ratio,1.0,1.0
+conf_mean,0.809,0.7693
+conf_med,0.0987,0.48
+cover,0.8659,0.8204
+resid_med,0.8653,0.8015
+boot_spread,0.8925,0.8867
+diff_gen,0.7476,0.7653

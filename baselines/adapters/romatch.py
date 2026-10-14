@@ -23,13 +23,18 @@ from .base import load_ckpt, long_side_size, to_original
 
 
 class RomatchAdapter:
-    def __init__(self, repo, weights, device="cuda", weights_key=None, long_side=640):
+    def __init__(self, repo, weights, device="cuda", weights_key=None, long_side=640, coarse_res=None,
+                 upsample_res=None, swap=False):
+        """coarse_res / upsample_res：覆盖 roma_outdoor 默认的 560 / 864（须是 14 的倍数）；swap：把 SAR 当第一张图、
+        光学当第二张图送进模型，输出仍按（光学, SAR）的顺序。两者都只用于检验多次打标是否一致（#131），默认不变。"""
         sys.path.insert(0, str(repo))
         from romatch import roma_outdoor
 
         ckpt = load_ckpt(weights)
         sd = ckpt[weights_key] if weights_key else ckpt
-        self.model = roma_outdoor(device=device, weights=sd)
+        res = {k: v for k, v in (("coarse_res", coarse_res), ("upsample_res", upsample_res)) if v is not None}
+        self.model = roma_outdoor(device=device, weights=sd, **res)
+        self.swap = swap
         lora = ckpt.get("dinov2_lora") if weights_key else None
         if lora:   # 训练时在 DINOv2 上加的 LoRA（#122、#124，finetune/models/roma.py），合并后结构与原模型相同
             merge_lora(self.model.encoder.dinov2_vitl14[0], lora)
@@ -41,7 +46,9 @@ class RomatchAdapter:
         self.model.eval()
         self.device, self.long_side = device, long_side
         self.notes = (f"long_side={long_side}, uint8 PIL at 640 grid (official match() only takes PIL RGB), "
-                      f"weights_key={weights_key}, sample num=default(10000)")
+                      f"weights_key={weights_key}, sample num=default(10000)"
+                      + (f", coarse_res={coarse_res}, upsample_res={upsample_res}" if res else "")
+                      + (", swap (SAR as first image)" if swap else ""))
 
     def _pil(self, img):
         import cv2
@@ -60,9 +67,14 @@ class RomatchAdapter:
         p0, g0 = self._pil(opt)
         p1, g1 = self._pil(sar)
         with torch.no_grad():
-            warp, cert = self.model.match(p0, p1, batched=False, device=self.device)
-            m, conf = self.model.sample(warp, cert)
-            k0, k1 = self.model.to_pixel_coordinates(m, g0[2], g0[3], g1[2], g1[3])
+            if self.swap:
+                warp, cert = self.model.match(p1, p0, batched=False, device=self.device)
+                m, conf = self.model.sample(warp, cert)
+                k1, k0 = self.model.to_pixel_coordinates(m, g1[2], g1[3], g0[2], g0[3])
+            else:
+                warp, cert = self.model.match(p0, p1, batched=False, device=self.device)
+                m, conf = self.model.sample(warp, cert)
+                k0, k1 = self.model.to_pixel_coordinates(m, g0[2], g0[3], g1[2], g1[3])
         kp0 = to_original(k0.float().cpu().numpy() - 0.5, *g0)
         kp1 = to_original(k1.float().cpu().numpy() - 0.5, *g1)
         return kp0, kp1, conf.float().cpu().numpy()

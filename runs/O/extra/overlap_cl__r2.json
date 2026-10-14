@@ -1,0 +1,14 @@
+{
+ "old": "runs/O/raw/labels_cl__r1.jsonl",
+ "new": "runs/O/raw/labels_cl__r2.jsonl",
+ "teacher": "cl__r2 step 7000",
+ "top": 0.5,
+ "keep_old": 7907,
+ "keep_new": 7907,
+ "top_old": 3954,
+ "top_new": 3954,
+ "overlap": 3508,
+ "overlap_frac": 0.8872,
+ "corner_diff_px_median": 0.319,
+ "corner_diff_px_mean": 0.549
+}

@@ -1,0 +1,28 @@
+[
+ {
+  "start": "2026-10-15 11:42:45 +0800",
+  "end": "2026-10-15 11:44:41 +0800",
+  "status": "ok",
+  "commit": "59dc64acdf07b5f2b619bad2605436508e9fe2c0",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-loo-crater-139",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "runs/E8/code/loo.py",
+   "--workers",
+   "24"
+  ],
+  "entry": "runs/E8/code/loo.py",
+  "e6_raw": "/remote-home/xufang/YGC/moon-exp/runs/E6/raw",
+  "model": {
+   "family": "roma",
+   "config": "configs/baselines/anymatch_roma__minmax.json",
+   "ckpt": null,
+   "ref": "B0m/anymatch_roma__minmax",
+   "name": "RoMa zero-shot"
+  }
+ }
+]

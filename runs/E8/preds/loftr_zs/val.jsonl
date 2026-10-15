@@ -1,0 +1,652 @@
+{"pair": "ROI_035/patch_0", "A": [[1.091353, -0.04593, -39.609622], [-0.000417, 1.001943, 0.175793]], "n_local": 6}
+{"pair": "ROI_035/patch_1", "A": [[0.923451, 0.081401, -45.405744], [0.000273, 0.999723, 0.929255]], "n_local": 8}
+{"pair": "ROI_035/patch_2", "A": [[1.017909, 0.080827, -88.295532], [-0.02494, 0.981121, 14.775369]], "n_local": 6}
+{"pair": "ROI_035/patch_3", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_4", "A": [[0.97334, -0.051674, -3.499815], [0.006437, 0.990006, 2.162536]], "n_local": 4}
+{"pair": "ROI_035/patch_5", "A": [[1.294036, 0.022419, -79.58731], [0.000171, 1.000513, 0.20275]], "n_local": 5}
+{"pair": "ROI_035/patch_6", "A": [[1.081387, 0.133422, -100.887587], [-0.002555, 0.997883, 2.072777]], "n_local": 6}
+{"pair": "ROI_035/patch_7", "A": [[1.021879, 0.097804, -52.830331], [-0.001101, 0.999791, 0.59804]], "n_local": 7}
+{"pair": "ROI_035/patch_8", "A": [[1.062772, 0.015781, -34.630931], [-0.000741, 0.99767, 0.80753]], "n_local": 9}
+{"pair": "ROI_035/patch_9", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_10", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_11", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_12", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_13", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_14", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_15", "A": [[1.061076, -0.117044, 83.555093], [0.000159, 1.006268, -2.844435]], "n_local": 4}
+{"pair": "ROI_035/patch_16", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_17", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_18", "A": [[1.012969, -0.081167, 39.750137], [-0.002306, 0.995051, 2.6554]], "n_local": 4}
+{"pair": "ROI_035/patch_19", "A": [[1.004685, -0.023375, 28.603904], [-0.000605, 0.995968, 1.057425]], "n_local": 5}
+{"pair": "ROI_035/patch_20", "A": [[0.994625, -0.107742, 48.15289], [8.9e-05, 1.00134, -0.495385]], "n_local": 5}
+{"pair": "ROI_035/patch_21", "A": [[1.008928, 0.035037, 8.593674], [-8e-05, 0.997157, 0.893441]], "n_local": 4}
+{"pair": "ROI_035/patch_22", "A": [[0.968636, 0.003648, 22.340344], [-0.000371, 0.99437, 0.976779]], "n_local": 4}
+{"pair": "ROI_035/patch_23", "A": [[1.050765, 0.02775, -41.924532], [0.001215, 0.997378, 0.529912]], "n_local": 4}
+{"pair": "ROI_035/patch_24", "A": [[1.059846, 0.02128, -25.25417], [-0.001474, 1.000995, 0.728167]], "n_local": 7}
+{"pair": "ROI_035/patch_25", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_26", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_27", "A": [[0.999141, 0.011719, 6.064418], [-0.003287, 1.002807, 1.555216]], "n_local": 5}
+{"pair": "ROI_035/patch_28", "A": [[1.022814, -0.042314, 10.079799], [-0.002524, 1.003575, 0.548862]], "n_local": 4}
+{"pair": "ROI_035/patch_29", "A": [[0.979718, 0.042755, 8.773103], [-0.003139, 0.999807, 0.590154]], "n_local": 6}
+{"pair": "ROI_035/patch_30", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_31", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_32", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_33", "A": [[0.959886, -0.057224, 55.41513], [-0.007214, 0.998257, 2.844176]], "n_local": 4}
+{"pair": "ROI_035/patch_34", "A": [[1.008105, -0.028876, 22.081455], [0.003554, 1.004222, -1.98991]], "n_local": 4}
+{"pair": "ROI_035/patch_35", "A": [[0.995455, -0.004018, 21.433201], [0.000637, 1.0004, -0.427555]], "n_local": 4}
+{"pair": "ROI_035/patch_36", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_37", "A": [[1.001442, 0.013506, 2.384285], [-0.047128, 0.995456, 14.515708]], "n_local": 4}
+{"pair": "ROI_035/patch_38", "A": [[1.015395, 0.010284, 1.461043], [0.002989, 0.999913, -0.29155]], "n_local": 4}
+{"pair": "ROI_035/patch_39", "A": [[1.032953, 0.014516, 5.339989], [-5.4e-05, 1.001758, -0.662541]], "n_local": 5}
+{"pair": "ROI_035/patch_40", "A": [[0.982504, -0.000547, 20.836043], [-0.000301, 1.011181, -5.744905]], "n_local": 4}
+{"pair": "ROI_035/patch_41", "A": [[1.028622, -0.007524, -5.626498], [0.002379, 0.997835, 0.641402]], "n_local": 6}
+{"pair": "ROI_035/patch_42", "A": [[1.011318, 0.016342, 5.78931], [0.000408, 1.003673, -0.231022]], "n_local": 4}
+{"pair": "ROI_035/patch_43", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_44", "A": [[1.0357, 0.006525, -0.837345], [0.000865, 1.004033, -1.350429]], "n_local": 4}
+{"pair": "ROI_035/patch_45", "A": [[1.075945, -0.016681, -22.709084], [0.004558, 1.003846, -2.587039]], "n_local": 4}
+{"pair": "ROI_035/patch_46", "A": [[1.034393, 0.001073, 2.314514], [-0.000925, 1.002877, -0.928717]], "n_local": 5}
+{"pair": "ROI_035/patch_47", "A": [[1.01418, -0.041763, 34.080567], [-0.006472, 0.995235, 2.666432]], "n_local": 4}
+{"pair": "ROI_035/patch_48", "A": [[1.015533, 0.004214, 21.837032], [0.002045, 1.002948, -2.034476]], "n_local": 4}
+{"pair": "ROI_035/patch_49", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_50", "A": [[1.03588, -0.048685, 9.181478], [-0.004429, 0.995594, 1.664324]], "n_local": 6}
+{"pair": "ROI_035/patch_51", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_52", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_53", "A": [[1.104486, -0.018555, -62.447696], [-0.003186, 0.997511, 1.975808]], "n_local": 6}
+{"pair": "ROI_035/patch_54", "A": [[1.018494, -0.03095, -5.699819], [-0.002192, 1.003979, -0.61142]], "n_local": 4}
+{"pair": "ROI_035/patch_55", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_56", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_57", "A": [[1.132828, -0.014095, -59.506891], [4.7e-05, 0.963423, 15.81437]], "n_local": 4}
+{"pair": "ROI_035/patch_58", "A": [[1.087924, 0.041673, -18.677468], [0.002588, 0.99477, 1.669362]], "n_local": 4}
+{"pair": "ROI_035/patch_59", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_60", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_62", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_63", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_64", "A": [[1.114604, -0.011952, 16.667144], [0.002828, 1.000448, -1.674078]], "n_local": 5}
+{"pair": "ROI_035/patch_66", "A": [[1.06654, 0.037895, -3.653609], [-0.002624, 0.999906, 0.952036]], "n_local": 6}
+{"pair": "ROI_035/patch_67", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_68", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_70", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_71", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_72", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_73", "A": [[1.111114, 0.01419, -17.594213], [0.001357, 0.996503, 1.025937]], "n_local": 6}
+{"pair": "ROI_035/patch_74", "A": [[1.019539, -0.081112, 68.413281], [0.024953, 1.012479, -6.241986]], "n_local": 4}
+{"pair": "ROI_035/patch_76", "A": [[0.98349, -0.070523, 79.527883], [-0.011673, 1.018955, -5.297816]], "n_local": 5}
+{"pair": "ROI_035/patch_79", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_81", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_82", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_85", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_87", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_89", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_90", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_93", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_94", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_95", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_96", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_97", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_98", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_99", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_100", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_101", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_102", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_103", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_104", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_105", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_106", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_107", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_109", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_110", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_111", "A": [[0.956232, -0.014542, 45.896043], [-0.031058, 0.986189, 14.835473]], "n_local": 5}
+{"pair": "ROI_035/patch_112", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_113", "A": [[0.975422, -0.057156, 75.765214], [0.01262, 0.992808, -1.594735]], "n_local": 4}
+{"pair": "ROI_035/patch_114", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_115", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_116", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_117", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_118", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_120", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_121", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_122", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_123", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_124", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_125", "A": [[1.154501, -0.096193, 0.651699], [0.008056, 1.002788, -3.52901]], "n_local": 4}
+{"pair": "ROI_035/patch_126", "A": [[0.955491, -0.086373, 43.201086], [-0.000276, 1.001959, -0.90845]], "n_local": 6}
+{"pair": "ROI_035/patch_127", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_128", "A": [[1.063069, -0.003564, -27.602121], [0.006331, 1.00078, -1.665256]], "n_local": 4}
+{"pair": "ROI_035/patch_130", "A": [[1.039144, -0.073817, -20.899521], [-0.008665, 1.01151, 0.90776]], "n_local": 4}
+{"pair": "ROI_035/patch_131", "A": [[1.072292, -0.002725, -77.038838], [-0.00882, 1.003982, 3.641222]], "n_local": 5}
+{"pair": "ROI_035/patch_132", "A": [[1.05426, -0.027573, -28.764894], [-0.000591, 1.003445, -0.34665]], "n_local": 5}
+{"pair": "ROI_035/patch_135", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_136", "A": [[1.052989, 0.046457, -33.203795], [0.001973, 0.998391, 0.509778]], "n_local": 5}
+{"pair": "ROI_035/patch_137", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_138", "A": [[1.069759, -0.146058, -50.090952], [0.010272, 1.018782, -4.363824]], "n_local": 4}
+{"pair": "ROI_035/patch_139", "A": [[1.069894, -0.114306, 1.785497], [0.002201, 0.993667, 1.391396]], "n_local": 5}
+{"pair": "ROI_035/patch_142", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_150", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_152", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_154", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_155", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_156", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_157", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_158", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_160", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_161", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_162", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_164", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_165", "A": [[0.880068, -0.039702, 2.651121], [-0.003112, 0.994157, 3.157271]], "n_local": 5}
+{"pair": "ROI_035/patch_166", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_170", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_171", "A": [[0.985035, 0.018343, 7.421367], [0.005638, 1.008131, -1.430575]], "n_local": 4}
+{"pair": "ROI_035/patch_172", "A": [[0.877392, -0.039473, 14.158002], [0.001265, 0.999927, -0.009811]], "n_local": 6}
+{"pair": "ROI_035/patch_173", "A": [[1.116755, 0.026662, -61.88669], [0.004898, 0.994023, 1.589481]], "n_local": 5}
+{"pair": "ROI_035/patch_175", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_176", "A": [[1.042921, -0.001611, -52.409921], [0.021624, 1.010489, -3.359061]], "n_local": 4}
+{"pair": "ROI_035/patch_177", "A": [[1.054431, -0.040188, -17.502775], [0.007029, 1.001628, -2.917281]], "n_local": 4}
+{"pair": "ROI_035/patch_178", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_179", "A": [[1.021846, 0.034163, -59.883653], [0.001751, 1.000975, 0.034702]], "n_local": 5}
+{"pair": "ROI_035/patch_180", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_181", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_183", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_184", "A": [[0.996804, 0.024684, 2.666254], [-0.014281, 0.993954, 4.978898]], "n_local": 6}
+{"pair": "ROI_035/patch_187", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_188", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_189", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_190", "A": [[1.055087, 0.013726, -20.9434], [-0.000906, 0.998915, 1.219105]], "n_local": 6}
+{"pair": "ROI_035/patch_191", "A": [[1.114133, 0.01499, -4.345147], [0.020604, 0.983499, 0.497289]], "n_local": 5}
+{"pair": "ROI_035/patch_192", "A": [[0.971995, -0.005747, 49.656511], [0.002608, 1.000236, -0.924704]], "n_local": 4}
+{"pair": "ROI_035/patch_194", "A": [[1.061918, -0.018526, -12.627853], [0.00239, 0.998072, -0.057327]], "n_local": 5}
+{"pair": "ROI_035/patch_195", "A": [[1.099379, -0.043986, 19.032151], [-0.003386, 1.003371, -0.318228]], "n_local": 4}
+{"pair": "ROI_035/patch_196", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_197", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_035/patch_198", "A": [[1.053268, -0.081428, -26.71394], [-0.003349, 1.003756, 1.229541]], "n_local": 5}
+{"pair": "ROI_035/patch_199", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_200", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_201", "A": [[1.029518, -0.106475, 60.328964], [0.00201, 1.003479, -2.634669]], "n_local": 5}
+{"pair": "ROI_035/patch_202", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_035/patch_203", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_205", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_207", "A": [[1.021783, -0.011622, -43.869649], [-0.000849, 1.006343, -0.439867]], "n_local": 5}
+{"pair": "ROI_035/patch_208", "A": [[1.080661, -0.068194, -30.45123], [0.001864, 1.000285, -0.413685]], "n_local": 4}
+{"pair": "ROI_035/patch_209", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_035/patch_210", "A": [[1.080261, -0.147738, -61.680743], [0.019914, 1.001654, -4.048708]], "n_local": 4}
+{"pair": "ROI_035/patch_212", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_035/patch_213", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_0", "A": [[0.992357, 0.003654, -2.105155], [0.025123, 1.004954, -11.656176]], "n_local": 6}
+{"pair": "ROI_049/patch_1", "A": [[0.979939, 0.008439, 11.728724], [-0.000181, 0.999279, 0.059119]], "n_local": 5}
+{"pair": "ROI_049/patch_2", "A": [[0.967265, 0.022503, -0.946964], [0.000775, 0.999922, 0.131456]], "n_local": 5}
+{"pair": "ROI_049/patch_3", "A": [[0.959226, -0.008173, 20.258304], [0.00576, 1.003578, -3.312617]], "n_local": 4}
+{"pair": "ROI_049/patch_4", "A": [[0.973912, -0.005563, 5.3584], [0.010941, 0.9926, -0.574273]], "n_local": 7}
+{"pair": "ROI_049/patch_5", "A": [[0.966827, -0.004517, 17.614659], [-0.001194, 1.000281, -0.279631]], "n_local": 5}
+{"pair": "ROI_049/patch_6", "A": [[0.98313, 0.006206, -0.421268], [-0.001762, 1.000199, 0.684891]], "n_local": 5}
+{"pair": "ROI_049/patch_7", "A": [[0.98034, -0.006953, 12.746433], [0.000669, 1.001031, -0.951852]], "n_local": 6}
+{"pair": "ROI_049/patch_8", "A": [[0.985633, 0.008188, -6.605766], [-0.007655, 0.996646, 3.300033]], "n_local": 4}
+{"pair": "ROI_049/patch_10", "A": [[0.974608, -0.001383, 3.454651], [0.007278, 0.999994, -2.218132]], "n_local": 4}
+{"pair": "ROI_049/patch_11", "A": [[0.978447, 0.000769, 9.763624], [0.000231, 0.997217, 0.9145]], "n_local": 6}
+{"pair": "ROI_049/patch_12", "A": [[0.967433, 0.011236, 3.651476], [0.0135, 1.002015, -2.428097]], "n_local": 5}
+{"pair": "ROI_049/patch_13", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_15", "A": [[0.960791, -0.000952, 14.9636], [-0.001578, 0.996372, 2.384528]], "n_local": 6}
+{"pair": "ROI_049/patch_16", "A": [[0.981673, 0.00489, -1.131316], [-8.9e-05, 0.998836, 0.071312]], "n_local": 5}
+{"pair": "ROI_049/patch_17", "A": [[0.962428, 0.026971, 2.860479], [0.000326, 1.011212, -3.791818]], "n_local": 4}
+{"pair": "ROI_049/patch_19", "A": [[0.972943, 0.003513, 9.359234], [0.00589, 0.998739, -1.55852]], "n_local": 6}
+{"pair": "ROI_049/patch_20", "A": [[0.967982, 0.004907, 7.839643], [0.00399, 0.994877, -1.19761]], "n_local": 4}
+{"pair": "ROI_049/patch_21", "A": [[0.965557, 0.006968, 12.916593], [0.001592, 0.99081, 1.051006]], "n_local": 4}
+{"pair": "ROI_049/patch_22", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_23", "A": [[0.963284, -0.002647, 14.840893], [-0.000919, 1.001025, -0.555981]], "n_local": 4}
+{"pair": "ROI_049/patch_24", "A": [[0.965179, -0.006307, 7.584197], [-0.000729, 1.003494, -0.40531]], "n_local": 6}
+{"pair": "ROI_049/patch_26", "A": [[0.961461, -0.004163, 6.988448], [0.000726, 0.998284, 0.076817]], "n_local": 5}
+{"pair": "ROI_049/patch_27", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_28", "A": [[0.964874, -0.01401, 8.379237], [-0.006845, 0.999936, 1.416101]], "n_local": 4}
+{"pair": "ROI_049/patch_29", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_30", "A": [[0.955132, 0.013793, -0.985968], [0.002489, 0.993283, 1.355763]], "n_local": 4}
+{"pair": "ROI_049/patch_31", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_32", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_33", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_34", "A": [[0.984061, 0.010709, -6.213871], [-0.001095, 1.00279, 0.294516]], "n_local": 5}
+{"pair": "ROI_049/patch_35", "A": [[0.985608, 0.001201, 4.783619], [-0.000508, 1.001146, -0.023891]], "n_local": 6}
+{"pair": "ROI_049/patch_36", "A": [[0.984274, 0.005571, -7.706209], [-0.001012, 1.005967, -1.005438]], "n_local": 4}
+{"pair": "ROI_049/patch_37", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_38", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_39", "A": [[0.979882, -0.000621, -6.030983], [0.002646, 0.997718, -0.071207]], "n_local": 4}
+{"pair": "ROI_049/patch_41", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_049/patch_42", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_43", "A": [[0.96681, 0.006186, 2.757951], [-0.000277, 1.003286, -0.880117]], "n_local": 4}
+{"pair": "ROI_049/patch_44", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_46", "A": [[0.968611, -0.002011, 6.256151], [-0.006152, 0.984255, 6.381134]], "n_local": 5}
+{"pair": "ROI_049/patch_47", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_48", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_49", "A": [[0.963823, 6e-06, 8.367544], [0.000124, 0.997801, 0.339621]], "n_local": 4}
+{"pair": "ROI_049/patch_50", "A": [[0.966097, 0.019216, 9.32495], [-0.001056, 0.99633, 1.090512]], "n_local": 6}
+{"pair": "ROI_049/patch_51", "A": [[0.988309, 0.006239, -9.882909], [0.00478, 1.00126, -0.197639]], "n_local": 5}
+{"pair": "ROI_049/patch_53", "A": [[0.979114, 0.010013, 13.059631], [-0.001264, 1.001252, 0.06821]], "n_local": 5}
+{"pair": "ROI_049/patch_54", "A": [[0.974224, 0.004432, -9.144555], [0.00894, 1.01783, -5.769149]], "n_local": 4}
+{"pair": "ROI_049/patch_56", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_57", "A": [[0.9779, 0.014775, -2.833246], [-0.002301, 0.997522, 1.988811]], "n_local": 4}
+{"pair": "ROI_049/patch_59", "A": [[0.987203, 0.012631, -1.830597], [0.006465, 1.009211, -3.098734]], "n_local": 5}
+{"pair": "ROI_049/patch_60", "A": [[0.974081, 0.015809, 8.12466], [-0.001235, 1.00179, -0.617007]], "n_local": 4}
+{"pair": "ROI_049/patch_61", "A": [[0.984358, 0.009649, -1.03837], [-0.000956, 0.999488, 0.389681]], "n_local": 6}
+{"pair": "ROI_049/patch_63", "A": [[0.968155, 0.009214, 4.476386], [-0.000428, 0.998665, 0.840154]], "n_local": 5}
+{"pair": "ROI_049/patch_64", "A": [[0.963152, -0.003769, 15.307976], [0.00793, 1.008236, -2.721098]], "n_local": 6}
+{"pair": "ROI_049/patch_65", "A": [[0.970179, -0.000186, 2.771255], [-0.005388, 0.999988, 3.014767]], "n_local": 4}
+{"pair": "ROI_049/patch_66", "A": [[0.981608, -0.00755, 10.061455], [0.01048, 1.001971, -3.880318]], "n_local": 6}
+{"pair": "ROI_049/patch_67", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_69", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_049/patch_71", "A": [[0.974858, 0.016275, -18.490875], [-0.000459, 0.998888, 0.457214]], "n_local": 4}
+{"pair": "ROI_049/patch_72", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_73", "A": [[1.010511, 0.075723, -29.690508], [0.001431, 0.995936, 1.070942]], "n_local": 5}
+{"pair": "ROI_049/patch_74", "A": [[0.989473, 0.044286, 16.008882], [0.001032, 1.008733, -0.91379]], "n_local": 5}
+{"pair": "ROI_049/patch_75", "A": [[0.939818, -0.021198, 15.056149], [0.000653, 1.001304, -0.296679]], "n_local": 5}
+{"pair": "ROI_049/patch_77", "A": [[0.973175, 0.020397, -10.102608], [-0.002526, 1.001206, 1.095938]], "n_local": 5}
+{"pair": "ROI_049/patch_80", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_82", "A": [[0.965242, -0.004993, -14.517401], [-0.001615, 1.007967, -1.805556]], "n_local": 4}
+{"pair": "ROI_049/patch_83", "A": [[0.940638, -0.012006, -8.048821], [0.00218, 1.000126, 0.346284]], "n_local": 4}
+{"pair": "ROI_049/patch_84", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_85", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_86", "A": [[0.969485, 0.0041, -24.540536], [0.000455, 0.998234, 0.712482]], "n_local": 6}
+{"pair": "ROI_049/patch_88", "A": [[0.972594, 0.003513, -25.866205], [0.001591, 0.99948, 0.514164]], "n_local": 5}
+{"pair": "ROI_049/patch_90", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_91", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_93", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_96", "A": [[1.069745, 0.11966, -12.558608], [-0.003946, 1.038144, -2.267609]], "n_local": 4}
+{"pair": "ROI_049/patch_98", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_049/patch_99", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_049/patch_103", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_049/patch_104", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_105", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_106", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_049/patch_107", "A": [[0.988605, -0.037172, 34.653799], [-0.000282, 1.008275, -0.327409]], "n_local": 7}
+{"pair": "ROI_049/patch_108", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_049/patch_109", "A": [[0.975044, 0.015335, 17.414852], [-0.002979, 1.005351, 0.426409]], "n_local": 5}
+{"pair": "ROI_049/patch_110", "A": [[0.974171, -0.008328, 33.694922], [0.002225, 1.016013, -2.520885]], "n_local": 5}
+{"pair": "ROI_049/patch_111", "A": [[0.994015, 0.009675, 19.502937], [-0.001654, 0.997876, 1.99242]], "n_local": 6}
+{"pair": "ROI_049/patch_112", "A": [[0.998037, 0.027984, 25.929079], [0.000217, 0.991862, 3.906175]], "n_local": 5}
+{"pair": "ROI_070/patch_0", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_1", "A": [[0.928214, 0.05921, 16.654034], [-0.00798, 1.010551, -0.933663]], "n_local": 6}
+{"pair": "ROI_070/patch_2", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_3", "A": [[0.962707, 0.00168, 25.64306], [-0.001482, 0.994179, 0.685622]], "n_local": 5}
+{"pair": "ROI_070/patch_4", "A": [[0.970699, 0.0097, 17.843252], [0.002996, 0.997952, -0.677601]], "n_local": 5}
+{"pair": "ROI_070/patch_5", "A": [[0.974178, 0.010693, 16.75091], [0.002347, 1.000637, -1.1442]], "n_local": 4}
+{"pair": "ROI_070/patch_6", "A": [[0.963335, 0.011285, 19.247928], [-0.016594, 0.994514, 4.717106]], "n_local": 5}
+{"pair": "ROI_070/patch_7", "A": [[0.968046, 0.009241, 18.625792], [-0.00065, 0.996308, 0.747263]], "n_local": 7}
+{"pair": "ROI_070/patch_8", "A": [[0.96184, 0.001366, 21.084153], [-7.1e-05, 1.007151, -2.229505]], "n_local": 5}
+{"pair": "ROI_070/patch_9", "A": [[0.978637, 0.008906, 13.896707], [-0.00521, 1.004775, 1.073183]], "n_local": 4}
+{"pair": "ROI_070/patch_10", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_11", "A": [[0.972146, 0.009589, 9.776195], [0.002147, 0.998442, -0.109173]], "n_local": 6}
+{"pair": "ROI_070/patch_12", "A": [[0.988852, 0.008592, 6.336116], [0.014818, 1.001609, -6.169132]], "n_local": 6}
+{"pair": "ROI_070/patch_13", "A": [[0.976285, 0.011866, 9.736375], [-0.001254, 1.003247, -0.368218]], "n_local": 5}
+{"pair": "ROI_070/patch_14", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_15", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_16", "A": [[0.976772, -0.007866, 13.587194], [0.005302, 0.992543, -0.797963]], "n_local": 6}
+{"pair": "ROI_070/patch_17", "A": [[0.963913, 0.011582, 11.503699], [0.001168, 0.997932, 0.015919]], "n_local": 7}
+{"pair": "ROI_070/patch_18", "A": [[0.981324, -0.004756, 9.610054], [0.002521, 0.995415, 0.450675]], "n_local": 6}
+{"pair": "ROI_070/patch_19", "A": [[0.970798, 0.016423, 8.210152], [-0.004864, 0.985964, 3.372252]], "n_local": 5}
+{"pair": "ROI_070/patch_20", "A": [[0.97111, 0.001955, 8.893377], [0.003787, 1.001657, -2.21512]], "n_local": 7}
+{"pair": "ROI_070/patch_21", "A": [[0.979085, 0.004147, 3.850339], [-0.00152, 1.000944, -0.108827]], "n_local": 6}
+{"pair": "ROI_070/patch_22", "A": [[0.972825, -0.004113, 8.353896], [-0.007256, 0.995341, 2.396047]], "n_local": 5}
+{"pair": "ROI_070/patch_23", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_24", "A": [[0.972562, -0.002958, 3.48067], [0.000659, 0.998423, -0.072614]], "n_local": 6}
+{"pair": "ROI_070/patch_25", "A": [[0.981309, -0.007473, 0.635213], [0.001305, 0.994402, 1.036184]], "n_local": 7}
+{"pair": "ROI_070/patch_26", "A": [[0.971185, -0.00269, 1.398581], [0.001525, 1.001727, -0.375295]], "n_local": 6}
+{"pair": "ROI_070/patch_27", "A": [[0.975987, -0.005153, -1.878601], [-0.000651, 1.001628, 0.137703]], "n_local": 5}
+{"pair": "ROI_070/patch_28", "A": [[0.972959, -0.009095, 2.14206], [-0.002482, 0.998449, 0.759779]], "n_local": 5}
+{"pair": "ROI_070/patch_29", "A": [[0.975292, 0.007166, -6.067263], [-0.002685, 1.001741, -0.168901]], "n_local": 6}
+{"pair": "ROI_070/patch_31", "A": [[0.977235, -0.007844, -5.138584], [0.008904, 0.991214, -0.544872]], "n_local": 7}
+{"pair": "ROI_070/patch_33", "A": [[0.973743, 0.005927, -16.430533], [0.000652, 1.004026, -1.367346]], "n_local": 5}
+{"pair": "ROI_070/patch_35", "A": [[0.976424, -0.006315, -13.386137], [-0.003387, 1.005331, -0.347946]], "n_local": 5}
+{"pair": "ROI_070/patch_36", "A": [[0.966855, -0.004804, -15.543464], [-0.005274, 1.009055, -2.056626]], "n_local": 6}
+{"pair": "ROI_070/patch_37", "A": [[0.966156, 0.001826, -17.487498], [0.0005, 1.002427, -0.684303]], "n_local": 6}
+{"pair": "ROI_070/patch_38", "A": [[0.954945, 0.009616, -17.537876], [-0.002012, 1.001377, -0.088421]], "n_local": 4}
+{"pair": "ROI_070/patch_39", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_40", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_41", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_42", "A": [[0.971696, -0.007064, -22.558423], [-0.0064, 1.006416, -0.617817]], "n_local": 4}
+{"pair": "ROI_070/patch_43", "A": [[0.971958, -0.003395, -26.836131], [0.003177, 0.996794, -1.141311]], "n_local": 6}
+{"pair": "ROI_070/patch_45", "A": [[0.97436, -0.003316, -30.404363], [0.000958, 1.014317, -5.381825]], "n_local": 5}
+{"pair": "ROI_070/patch_46", "A": [[0.993849, -0.003157, -33.95236], [0.002821, 1.000536, -1.086848]], "n_local": 4}
+{"pair": "ROI_070/patch_47", "A": [[0.984438, -0.004274, -33.683677], [-0.001437, 0.999718, -0.791192]], "n_local": 4}
+{"pair": "ROI_070/patch_48", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_070/patch_49", "A": [[0.971592, 0.00206, -34.595534], [0.000169, 0.992814, 1.545266]], "n_local": 4}
+{"pair": "ROI_070/patch_50", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_51", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_52", "A": [[0.952465, -0.004569, -32.996621], [-0.014743, 0.980319, 9.627277]], "n_local": 4}
+{"pair": "ROI_070/patch_53", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_54", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_57", "A": [[0.927662, 0.119784, 32.830015], [0.002136, 1.00505, -0.892549]], "n_local": 4}
+{"pair": "ROI_070/patch_58", "A": [[0.955554, 0.000419, 57.694422], [-0.005374, 0.99594, 2.339511]], "n_local": 4}
+{"pair": "ROI_070/patch_59", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_60", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_61", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_62", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_63", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_66", "A": [[0.901926, -0.121761, 72.051299], [0.001438, 1.006911, -3.398944]], "n_local": 5}
+{"pair": "ROI_070/patch_67", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_070/patch_69", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_70", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_71", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_72", "A": [[0.933487, 0.034443, -22.637761], [-0.002231, 1.002225, -0.079221]], "n_local": 4}
+{"pair": "ROI_070/patch_73", "A": [[0.959736, 0.026374, -38.470823], [0.007332, 1.002891, -3.274123]], "n_local": 5}
+{"pair": "ROI_070/patch_74", "A": [[1.018252, 0.042207, -52.854147], [0.004203, 1.001755, -1.674066]], "n_local": 5}
+{"pair": "ROI_070/patch_77", "A": [[1.015158, 0.00736, -33.470503], [-0.001882, 1.002707, -0.740426]], "n_local": 4}
+{"pair": "ROI_070/patch_78", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_87", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_90", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_070/patch_92", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_070/patch_93", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_96", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_97", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_98", "A": [[0.937599, 0.012262, 4.41955], [-0.004202, 0.999503, 0.594916]], "n_local": 5}
+{"pair": "ROI_070/patch_99", "A": [[1.015163, 0.117281, -34.251812], [0.003271, 0.999054, -0.9406]], "n_local": 5}
+{"pair": "ROI_070/patch_100", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_102", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_103", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_070/patch_105", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_070/patch_106", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_108", "A": [[1.044176, 0.075634, 22.347924], [0.006823, 1.014922, -3.645554]], "n_local": 4}
+{"pair": "ROI_070/patch_109", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_110", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_112", "A": [[0.933105, -0.179136, 65.621331], [0.006153, 1.008514, -5.256776]], "n_local": 4}
+{"pair": "ROI_070/patch_113", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_114", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_115", "A": [[0.970789, 0.023421, -24.489168], [0.000419, 1.003452, -0.966738]], "n_local": 6}
+{"pair": "ROI_070/patch_117", "A": [[0.981222, 0.074204, -28.670196], [0.004624, 1.008358, -4.479723]], "n_local": 6}
+{"pair": "ROI_070/patch_118", "A": [[0.932068, -0.019505, 2.093096], [0.007017, 1.003607, -3.267984]], "n_local": 4}
+{"pair": "ROI_070/patch_120", "A": [[1.006695, 0.032479, -10.128703], [-0.003543, 1.005198, -0.653833]], "n_local": 4}
+{"pair": "ROI_070/patch_121", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_122", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_123", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_125", "A": [[0.910744, 0.028334, -12.399525], [0.014497, 0.951793, 8.611731]], "n_local": 4}
+{"pair": "ROI_070/patch_126", "A": [[1.000032, -0.020719, 2.690998], [0.008819, 0.998702, -1.854203]], "n_local": 5}
+{"pair": "ROI_070/patch_127", "A": [[0.93921, 0.02031, -2.221378], [-0.004257, 1.008734, -3.232842]], "n_local": 4}
+{"pair": "ROI_070/patch_129", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_131", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_133", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_070/patch_135", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_137", "A": [[0.893585, 0.072192, -0.918381], [0.000539, 0.999601, -0.694733]], "n_local": 4}
+{"pair": "ROI_070/patch_151", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_070/patch_152", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_070/patch_155", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_070/patch_157", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_158", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_159", "A": [[0.969526, 0.028706, -6.752682], [-0.001657, 1.001777, -0.263459]], "n_local": 4}
+{"pair": "ROI_070/patch_160", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_070/patch_161", "A": [[0.947748, -0.02706, 27.305683], [-0.00147, 0.997249, 1.253953]], "n_local": 6}
+{"pair": "ROI_070/patch_163", "A": [[0.977781, 0.004676, -5.518976], [-0.002654, 0.999118, 0.640067]], "n_local": 4}
+{"pair": "ROI_070/patch_164", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_070/patch_167", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_071/patch_0", "A": [[0.958155, 0.001047, -2.698438], [0.000421, 1.001987, 0.298528]], "n_local": 6}
+{"pair": "ROI_071/patch_1", "A": [[0.965818, 0.012006, -5.204006], [-0.000566, 1.000401, 1.03202]], "n_local": 4}
+{"pair": "ROI_071/patch_2", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_071/patch_3", "A": [[0.9712, 0.007843, -6.024667], [0.003753, 1.0001, -0.294098]], "n_local": 5}
+{"pair": "ROI_071/patch_4", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_071/patch_5", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_071/patch_6", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_071/patch_7", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_071/patch_8", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_071/patch_9", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_071/patch_15", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_071/patch_16", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_071/patch_17", "A": [[0.946866, -0.030779, 30.757858], [-0.013729, 1.002868, 4.453]], "n_local": 4}
+{"pair": "ROI_071/patch_18", "A": [[0.923863, -0.012694, 31.070321], [0.009353, 0.990566, 0.859035]], "n_local": 6}
+{"pair": "ROI_071/patch_19", "A": [[0.95112, -0.00024, 13.093478], [-0.005952, 0.996608, 2.597755]], "n_local": 7}
+{"pair": "ROI_071/patch_20", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_071/patch_21", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_071/patch_22", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_071/patch_23", "A": [[0.968843, -0.00426, 3.514817], [-0.0034, 1.001399, -0.53767]], "n_local": 6}
+{"pair": "ROI_071/patch_24", "A": [[0.97074, 0.003201, -4.568799], [-0.000573, 0.995187, 1.101718]], "n_local": 6}
+{"pair": "ROI_071/patch_25", "A": [[0.968322, -0.000939, 0.544252], [-0.001071, 1.000179, 0.689506]], "n_local": 4}
+{"pair": "ROI_071/patch_26", "A": [[0.95881, -0.004746, -0.934992], [0.000992, 0.993763, 0.992843]], "n_local": 5}
+{"pair": "ROI_071/patch_27", "A": [[0.974439, -0.002442, -0.797984], [-0.016279, 1.011045, 4.517782]], "n_local": 6}
+{"pair": "ROI_071/patch_28", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_071/patch_29", "A": [[0.976762, 0.016392, -4.028447], [0.001651, 0.997169, 0.130143]], "n_local": 4}
+{"pair": "ROI_071/patch_35", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_071/patch_36", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_071/patch_37", "A": [[0.988542, 0.0182, -3.193256], [-0.00043, 0.999298, -0.326276]], "n_local": 4}
+{"pair": "ROI_071/patch_38", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_071/patch_39", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_0", "A": [[0.995739, 0.001125, -34.191514], [-0.00759, 1.002128, 3.405464]], "n_local": 5}
+{"pair": "ROI_075/patch_1", "A": [[0.986719, -0.010483, -21.364389], [0.003486, 0.997664, -0.119313]], "n_local": 6}
+{"pair": "ROI_075/patch_2", "A": [[0.943091, -0.047412, 6.109412], [0.003411, 1.002985, -1.566835]], "n_local": 7}
+{"pair": "ROI_075/patch_3", "A": [[0.980317, 0.009062, -24.804263], [-0.001812, 0.999408, 1.471267]], "n_local": 6}
+{"pair": "ROI_075/patch_4", "A": [[0.940547, 0.006595, -24.451602], [0.002594, 1.002809, 0.418494]], "n_local": 6}
+{"pair": "ROI_075/patch_5", "A": [[1.11958, -0.003738, -87.995274], [-0.014663, 0.996719, 8.274885]], "n_local": 4}
+{"pair": "ROI_075/patch_6", "A": [[1.041909, 0.068081, -49.027624], [-0.000171, 0.996736, 1.254144]], "n_local": 5}
+{"pair": "ROI_075/patch_7", "A": [[0.924093, 0.063608, -15.9966], [-0.002677, 0.995047, 2.072952]], "n_local": 4}
+{"pair": "ROI_075/patch_8", "A": [[1.030112, 0.099998, -57.882635], [-0.002028, 1.000274, 1.749294]], "n_local": 5}
+{"pair": "ROI_075/patch_10", "A": [[0.979278, -0.01361, -10.661134], [-0.015396, 1.002044, 4.07831]], "n_local": 4}
+{"pair": "ROI_075/patch_11", "A": [[0.967091, -0.040032, -0.797499], [-0.000452, 0.998068, 1.032036]], "n_local": 4}
+{"pair": "ROI_075/patch_12", "A": [[1.008486, -0.035171, -29.068954], [-0.006023, 0.999766, 3.192294]], "n_local": 8}
+{"pair": "ROI_075/patch_13", "A": [[0.94567, -0.01175, -7.868399], [0.00269, 0.997956, 0.38885]], "n_local": 7}
+{"pair": "ROI_075/patch_14", "A": [[1.012143, 0.044509, -39.882348], [-0.011872, 1.023841, 1.276438]], "n_local": 6}
+{"pair": "ROI_075/patch_15", "A": [[0.984851, 0.032156, -39.752444], [0.005382, 0.995425, 1.616179]], "n_local": 7}
+{"pair": "ROI_075/patch_16", "A": [[1.014791, 0.012718, -33.107161], [0.009797, 1.001135, -1.220708]], "n_local": 7}
+{"pair": "ROI_075/patch_17", "A": [[0.96781, 0.061276, -24.7454], [-0.003486, 1.003094, 1.282918]], "n_local": 5}
+{"pair": "ROI_075/patch_18", "A": [[1.006663, 0.005756, -36.462339], [0.000424, 1.001169, 0.45777]], "n_local": 8}
+{"pair": "ROI_075/patch_19", "A": [[0.970115, 0.040105, -16.690955], [-0.001798, 1.006425, -0.19108]], "n_local": 8}
+{"pair": "ROI_075/patch_20", "A": [[1.013697, 0.035087, -24.55671], [0.00052, 0.999837, 0.269691]], "n_local": 4}
+{"pair": "ROI_075/patch_21", "A": [[0.978821, -0.008434, -25.527283], [-0.000715, 0.999055, 1.065061]], "n_local": 5}
+{"pair": "ROI_075/patch_22", "A": [[1.012122, -0.003289, -23.248795], [-0.002042, 1.000474, 1.064006]], "n_local": 8}
+{"pair": "ROI_075/patch_23", "A": [[0.997608, 0.012061, -5.148564], [-0.002075, 0.996667, 1.454244]], "n_local": 6}
+{"pair": "ROI_075/patch_24", "A": [[0.984881, 0.051108, -35.731169], [-0.005476, 0.994279, 4.889675]], "n_local": 7}
+{"pair": "ROI_075/patch_25", "A": [[1.079086, -0.019667, -20.531335], [0.001274, 1.00527, -1.236106]], "n_local": 6}
+{"pair": "ROI_075/patch_26", "A": [[1.012446, 0.055793, -26.199027], [-0.019485, 0.992105, 10.781132]], "n_local": 6}
+{"pair": "ROI_075/patch_27", "A": [[1.024042, -0.061387, -0.977046], [-0.002314, 1.000854, 0.968799]], "n_local": 8}
+{"pair": "ROI_075/patch_28", "A": [[0.978026, 0.019246, -6.601674], [-0.000571, 0.998638, 1.818318]], "n_local": 6}
+{"pair": "ROI_075/patch_29", "A": [[0.9833, 0.002721, 4.043516], [0.001818, 0.997561, -0.202775]], "n_local": 6}
+{"pair": "ROI_075/patch_30", "A": [[1.005762, 0.051601, -27.115846], [0.000872, 0.998828, 0.874209]], "n_local": 6}
+{"pair": "ROI_075/patch_31", "A": [[0.992832, 0.001173, 7.551209], [6.6e-05, 0.999489, 0.359468]], "n_local": 4}
+{"pair": "ROI_075/patch_32", "A": [[1.000067, 0.008178, 12.74403], [0.001001, 1.001977, -1.113385]], "n_local": 7}
+{"pair": "ROI_075/patch_33", "A": [[0.99349, -0.024987, -0.06447], [-0.001239, 1.003184, 0.068582]], "n_local": 7}
+{"pair": "ROI_075/patch_34", "A": [[0.994914, 0.010991, 1.13104], [-0.001853, 1.000739, 0.401673]], "n_local": 7}
+{"pair": "ROI_075/patch_35", "A": [[0.97565, -0.000535, 21.04806], [0.017076, 1.012109, -6.475904]], "n_local": 7}
+{"pair": "ROI_075/patch_36", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_37", "A": [[1.00389, 0.021386, -11.884971], [-0.000122, 0.998487, 0.874847]], "n_local": 8}
+{"pair": "ROI_075/patch_38", "A": [[0.995514, -0.007617, 14.939822], [0.000402, 1.001605, -0.167641]], "n_local": 6}
+{"pair": "ROI_075/patch_39", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_40", "A": [[1.052336, -0.115221, 42.497918], [0.001864, 1.001809, -0.85649]], "n_local": 7}
+{"pair": "ROI_075/patch_41", "A": [[1.015089, 0.032168, 6.218838], [0.001193, 1.000034, -1.067869]], "n_local": 7}
+{"pair": "ROI_075/patch_42", "A": [[0.988797, 0.030153, -49.390268], [-0.006576, 1.006014, 2.493328]], "n_local": 6}
+{"pair": "ROI_075/patch_43", "A": [[1.103816, 0.034207, -45.678742], [0.006107, 1.001674, -0.637002]], "n_local": 5}
+{"pair": "ROI_075/patch_44", "A": [[0.997595, 0.021136, 16.823044], [0.004556, 1.008782, -4.911069]], "n_local": 6}
+{"pair": "ROI_075/patch_45", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_46", "A": [[1.103141, -0.044015, -31.790344], [-0.002624, 0.998992, 1.493056]], "n_local": 7}
+{"pair": "ROI_075/patch_47", "A": [[1.03366, 0.006139, 15.570123], [-0.00158, 1.00132, -0.465252]], "n_local": 5}
+{"pair": "ROI_075/patch_48", "A": [[0.901879, 0.101893, 25.676427], [-0.008017, 1.005657, 0.467287]], "n_local": 7}
+{"pair": "ROI_075/patch_49", "A": [[1.003243, 0.144543, -23.068101], [0.002469, 1.00009, -0.474161]], "n_local": 5}
+{"pair": "ROI_075/patch_50", "A": [[0.994423, 0.061155, 6.601988], [-0.00893, 1.012507, -1.502426]], "n_local": 5}
+{"pair": "ROI_075/patch_51", "A": [[1.035347, 0.014087, 30.215778], [-0.005252, 1.001418, 0.042941]], "n_local": 6}
+{"pair": "ROI_075/patch_52", "A": [[0.968568, 0.033783, 44.181903], [0.005018, 0.998178, -0.481302]], "n_local": 4}
+{"pair": "ROI_075/patch_53", "A": [[1.015416, 0.027396, 36.528703], [0.002238, 0.999386, -1.097898]], "n_local": 4}
+{"pair": "ROI_075/patch_54", "A": [[1.043559, 0.057484, 25.743171], [-0.000755, 0.998297, -0.347714]], "n_local": 5}
+{"pair": "ROI_075/patch_55", "A": [[0.985717, 0.020175, 47.377227], [-0.004213, 0.991545, 2.551962]], "n_local": 4}
+{"pair": "ROI_075/patch_56", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_57", "A": [[1.059822, -0.047539, 43.199242], [-0.004072, 0.997835, 2.025773]], "n_local": 5}
+{"pair": "ROI_075/patch_58", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_59", "A": [[0.960332, -0.004876, 61.10878], [0.001658, 1.000987, -0.953022]], "n_local": 6}
+{"pair": "ROI_075/patch_60", "A": [[0.994515, 0.016142, 45.574416], [0.017386, 1.003061, -4.379553]], "n_local": 5}
+{"pair": "ROI_075/patch_61", "A": [[1.08914, -0.00374, 6.192454], [-0.001973, 0.999966, 0.619794]], "n_local": 7}
+{"pair": "ROI_075/patch_62", "A": [[0.982703, 0.006498, 50.951233], [0.001919, 0.999316, -1.072618]], "n_local": 6}
+{"pair": "ROI_075/patch_63", "A": [[0.986686, 0.015215, 49.480505], [-0.003661, 0.997705, 0.670518]], "n_local": 7}
+{"pair": "ROI_075/patch_64", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_65", "A": [[1.046159, -0.006402, 3.021676], [-0.001511, 1.001634, 0.051541]], "n_local": 8}
+{"pair": "ROI_075/patch_66", "A": [[0.987343, 0.000136, 46.59437], [-0.004446, 1.002629, -0.450953]], "n_local": 7}
+{"pair": "ROI_075/patch_67", "A": [[0.970006, -0.013613, 56.202584], [-0.002512, 1.001871, -0.568357]], "n_local": 8}
+{"pair": "ROI_075/patch_68", "A": [[0.986422, -0.036749, 47.377767], [-0.00556, 0.996795, 2.839798]], "n_local": 4}
+{"pair": "ROI_075/patch_69", "A": [[1.07395, 0.037991, -11.676606], [0.000497, 0.985578, 3.444791]], "n_local": 8}
+{"pair": "ROI_075/patch_70", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_71", "A": [[1.033858, -0.042363, 21.416083], [0.002973, 0.994717, 1.527818]], "n_local": 5}
+{"pair": "ROI_075/patch_72", "A": [[1.000539, 0.013364, 19.445909], [-0.003953, 0.994641, 2.724683]], "n_local": 6}
+{"pair": "ROI_075/patch_73", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_74", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_75", "A": [[0.876724, 0.089595, 33.356095], [0.004702, 0.996219, -0.691974]], "n_local": 6}
+{"pair": "ROI_075/patch_76", "A": [[1.019664, 0.004898, 12.003765], [-0.003158, 0.994123, 1.342295]], "n_local": 7}
+{"pair": "ROI_075/patch_77", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_78", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_79", "A": [[0.982668, 0.037535, 54.865867], [0.002599, 0.997222, -0.328674]], "n_local": 4}
+{"pair": "ROI_075/patch_80", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_81", "A": [[0.960645, 0.004112, 72.672356], [-0.002589, 1.001957, -0.612244]], "n_local": 4}
+{"pair": "ROI_075/patch_82", "A": [[0.976203, 0.002651, 58.371461], [-0.004132, 1.002233, 0.047353]], "n_local": 4}
+{"pair": "ROI_075/patch_83", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_84", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_85", "A": [[0.994926, -0.003517, 58.892681], [-0.007273, 0.998931, 1.528423]], "n_local": 4}
+{"pair": "ROI_075/patch_86", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_87", "A": [[0.992109, -0.017133, 49.415603], [0.002335, 0.996232, -0.312157]], "n_local": 5}
+{"pair": "ROI_075/patch_88", "A": [[1.021698, -0.017505, 49.532267], [0.002344, 1.000896, -1.212274]], "n_local": 5}
+{"pair": "ROI_075/patch_89", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_90", "A": [[0.976489, -0.017049, 52.44865], [0.001981, 0.998565, -0.184906]], "n_local": 4}
+{"pair": "ROI_075/patch_91", "A": [[0.945625, -0.017951, 52.219617], [-0.001509, 1.002144, -0.021694]], "n_local": 6}
+{"pair": "ROI_075/patch_92", "A": [[1.01085, -0.056928, 34.394138], [-0.002724, 1.004895, -0.694214]], "n_local": 4}
+{"pair": "ROI_075/patch_93", "A": [[1.047021, -0.046752, 27.734946], [-0.031636, 1.011838, 2.824688]], "n_local": 4}
+{"pair": "ROI_075/patch_94", "A": [[0.935153, -0.074792, 52.017502], [0.002663, 1.003276, -1.438109]], "n_local": 4}
+{"pair": "ROI_075/patch_95", "A": [[1.032959, -0.073231, 26.76341], [0.000887, 1.00084, -0.22315]], "n_local": 6}
+{"pair": "ROI_075/patch_96", "A": [[0.868688, -0.032912, 47.296686], [-0.018782, 0.993349, 4.459062]], "n_local": 6}
+{"pair": "ROI_075/patch_97", "A": [[0.966452, -0.014716, 27.147051], [-0.001973, 0.99927, 0.66966]], "n_local": 4}
+{"pair": "ROI_075/patch_98", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_99", "A": [[1.023222, -0.01808, -26.557055], [-0.01215, 0.989912, 7.969011]], "n_local": 5}
+{"pair": "ROI_075/patch_101", "A": [[0.998245, -0.010293, 7.233678], [0.001617, 0.998212, 0.935541]], "n_local": 8}
+{"pair": "ROI_075/patch_102", "A": [[0.842948, 0.013653, 18.797219], [-0.004545, 1.000216, 0.953383]], "n_local": 5}
+{"pair": "ROI_075/patch_103", "A": [[1.116144, 0.1161, -67.299203], [-0.009209, 0.987836, 8.083215]], "n_local": 6}
+{"pair": "ROI_075/patch_104", "A": [[0.905517, 0.133609, -18.116211], [0.002556, 0.999068, 0.485305]], "n_local": 5}
+{"pair": "ROI_075/patch_105", "A": [[1.043137, -0.081694, -7.053124], [-0.00024, 1.011384, -1.686824]], "n_local": 4}
+{"pair": "ROI_075/patch_106", "A": [[1.008108, -0.034306, -1.667851], [-0.018994, 1.007321, 5.614335]], "n_local": 7}
+{"pair": "ROI_075/patch_107", "A": [[1.058425, -0.071099, 14.681294], [0.005784, 0.997354, -0.778665]], "n_local": 4}
+{"pair": "ROI_075/patch_108", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_109", "A": [[0.94818, -0.040936, -36.879453], [0.012087, 0.992553, 3.498908]], "n_local": 4}
+{"pair": "ROI_075/patch_110", "A": [[1.056554, -0.068757, -25.44652], [0.0035, 0.999981, 1.723082]], "n_local": 6}
+{"pair": "ROI_075/patch_111", "A": [[1.013359, -0.036549, -3.427121], [-0.005791, 1.005518, 1.74976]], "n_local": 9}
+{"pair": "ROI_075/patch_112", "A": [[0.99101, -0.039303, 23.388775], [-0.000892, 0.99936, 0.806056]], "n_local": 6}
+{"pair": "ROI_075/patch_116", "A": [[0.984582, 0.040186, -0.414593], [-0.001008, 0.999965, 0.872954]], "n_local": 4}
+{"pair": "ROI_075/patch_117", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_118", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_119", "A": [[1.110552, -0.060389, -47.838772], [-0.013254, 1.009964, 2.933636]], "n_local": 6}
+{"pair": "ROI_075/patch_120", "A": [[1.007327, 0.023146, 0.565399], [0.000198, 0.995716, 1.47623]], "n_local": 7}
+{"pair": "ROI_075/patch_121", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_122", "A": [[0.909514, 0.036218, -57.065938], [0.011402, 1.000134, 2.014037]], "n_local": 4}
+{"pair": "ROI_075/patch_123", "A": [[0.987775, -0.046424, -36.780623], [-0.016663, 1.000834, 10.600842]], "n_local": 5}
+{"pair": "ROI_075/patch_124", "A": [[1.079196, -0.089403, -11.449194], [0.006308, 1.005918, -1.505824]], "n_local": 7}
+{"pair": "ROI_075/patch_125", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_075/patch_127", "A": [[0.986768, -0.024392, -59.479928], [-0.001761, 1.006682, 4.198969]], "n_local": 4}
+{"pair": "ROI_075/patch_128", "A": [[1.083562, -0.026375, -73.218342], [0.004826, 1.007875, 0.486323]], "n_local": 7}
+{"pair": "ROI_075/patch_129", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_130", "A": [[1.107469, 0.036751, -148.945067], [0.002504, 0.998466, 5.11642]], "n_local": 4}
+{"pair": "ROI_075/patch_131", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_132", "A": [[1.033616, -0.082128, -69.927691], [-0.00949, 1.010624, 6.401145]], "n_local": 5}
+{"pair": "ROI_075/patch_133", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_134", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_135", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_137", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_075/patch_138", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_139", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_140", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_141", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_142", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_143", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_144", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_145", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_146", "A": [[0.925859, 0.128633, -28.459637], [-0.013877, 0.98239, 9.657957]], "n_local": 5}
+{"pair": "ROI_075/patch_147", "A": [[0.835192, 0.098529, -49.856869], [-0.00558, 0.990649, 8.507531]], "n_local": 4}
+{"pair": "ROI_075/patch_148", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_149", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_150", "A": [[0.96016, 0.015633, 16.992062], [0.003061, 1.000885, -0.194967]], "n_local": 5}
+{"pair": "ROI_075/patch_151", "A": [[1.119332, 0.220368, -92.478257], [-0.049653, 0.953565, 22.052323]], "n_local": 4}
+{"pair": "ROI_075/patch_152", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_153", "A": [[0.938066, -0.020797, 48.738237], [0.003727, 1.000038, -0.703463]], "n_local": 4}
+{"pair": "ROI_075/patch_154", "A": [[0.962911, -0.002792, 25.247643], [-0.013443, 0.995204, 6.011699]], "n_local": 6}
+{"pair": "ROI_075/patch_155", "A": [[0.945913, 0.046722, 15.236833], [-0.004535, 0.998479, 1.545414]], "n_local": 5}
+{"pair": "ROI_075/patch_156", "A": [[0.866444, 0.071526, -12.228148], [0.000912, 0.986257, 5.838259]], "n_local": 5}
+{"pair": "ROI_075/patch_157", "A": [[0.961106, -0.104361, 25.220387], [0.00037, 1.004838, -0.756006]], "n_local": 6}
+{"pair": "ROI_075/patch_158", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_159", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_160", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_161", "A": [[0.914784, 0.030663, -12.161415], [0.019895, 1.003127, -4.363394]], "n_local": 6}
+{"pair": "ROI_075/patch_162", "A": [[0.991968, -0.051969, -24.497376], [-0.01675, 1.019827, 2.385843]], "n_local": 4}
+{"pair": "ROI_075/patch_163", "A": [[1.030025, -0.035133, -23.189878], [-0.028383, 0.983125, 13.311145]], "n_local": 5}
+{"pair": "ROI_075/patch_164", "A": [[0.992949, -0.051936, 0.890897], [0.002254, 1.003917, -1.378483]], "n_local": 4}
+{"pair": "ROI_075/patch_165", "A": [[1.014071, -0.076406, -60.537688], [-0.009888, 1.005825, 6.525829]], "n_local": 4}
+{"pair": "ROI_075/patch_166", "A": [[0.981557, -0.054686, -49.000308], [0.006013, 1.018107, -0.276471]], "n_local": 4}
+{"pair": "ROI_075/patch_167", "A": [[0.938142, -0.007579, -26.254238], [0.001517, 0.9967, 1.823051]], "n_local": 4}
+{"pair": "ROI_075/patch_168", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_169", "A": [[1.010969, -0.019606, -90.739788], [0.000563, 0.994316, 6.418593]], "n_local": 4}
+{"pair": "ROI_075/patch_170", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_171", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_172", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_075/patch_173", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_075/patch_174", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_075/patch_175", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_075/patch_177", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_075/patch_178", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_075/patch_179", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_075/patch_180", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_075/patch_181", "A": null, "fail": "few_local", "n_local": 0}
+{"pair": "ROI_080/patch_1", "A": [[0.980425, 0.014355, 9.461765], [0.001073, 1.00033, -0.129979]], "n_local": 4}
+{"pair": "ROI_080/patch_3", "A": [[0.994665, -0.020364, 9.265656], [-0.001516, 1.013708, -0.841548]], "n_local": 4}
+{"pair": "ROI_080/patch_4", "A": [[0.955628, -0.004864, 20.727891], [0.002057, 0.999284, -0.247235]], "n_local": 4}
+{"pair": "ROI_080/patch_5", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_080/patch_7", "A": [[1.013607, -0.041868, 24.822797], [-0.00885, 1.018455, -3.641737]], "n_local": 8}
+{"pair": "ROI_080/patch_8", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_080/patch_9", "A": [[0.975291, -0.004911, 9.369722], [-0.001159, 1.001427, -0.497373]], "n_local": 5}
+{"pair": "ROI_080/patch_11", "A": [[0.898634, 0.00239, 20.380154], [0.006854, 0.998129, -0.847444]], "n_local": 4}
+{"pair": "ROI_080/patch_14", "A": [[0.942354, -0.005288, 18.170613], [0.025997, 1.011972, -10.970961]], "n_local": 5}
+{"pair": "ROI_080/patch_18", "A": [[0.970579, 0.002092, 14.70846], [-0.000898, 0.997871, 0.883317]], "n_local": 7}
+{"pair": "ROI_080/patch_19", "A": [[0.985065, -0.004304, 15.292967], [0.002986, 1.000151, -0.253141]], "n_local": 6}
+{"pair": "ROI_080/patch_22", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_080/patch_24", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_25", "A": [[0.980809, 0.02298, 16.571916], [0.000884, 0.992138, -0.034651]], "n_local": 5}
+{"pair": "ROI_080/patch_28", "A": [[0.996036, -0.034931, 29.879895], [-0.004403, 1.00062, 0.156534]], "n_local": 5}
+{"pair": "ROI_080/patch_29", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_30", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_080/patch_32", "A": [[0.961163, -0.001908, 9.108394], [0.012137, 1.004823, -3.431757]], "n_local": 4}
+{"pair": "ROI_080/patch_33", "A": [[0.959291, -0.000127, 10.971076], [-0.036447, 1.014338, 1.096519]], "n_local": 8}
+{"pair": "ROI_080/patch_34", "A": [[0.963644, 0.006135, 14.137049], [0.016731, 1.017609, -8.577769]], "n_local": 5}
+{"pair": "ROI_080/patch_35", "A": [[0.981495, -0.03306, -5.891563], [0.001401, 1.00291, -0.431617]], "n_local": 5}
+{"pair": "ROI_080/patch_38", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_39", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_080/patch_44", "A": [[0.990225, -0.053165, 1.193201], [0.01016, 0.99999, -1.313803]], "n_local": 7}
+{"pair": "ROI_080/patch_45", "A": [[0.971102, 0.01475, 1.531222], [-0.002084, 1.009128, -1.183448]], "n_local": 4}
+{"pair": "ROI_080/patch_46", "A": [[0.894378, -0.029941, 22.514743], [0.010073, 0.994973, -0.898995]], "n_local": 4}
+{"pair": "ROI_080/patch_48", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_50", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_080/patch_51", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_52", "A": [[0.978581, 0.050137, -41.289623], [-0.003816, 0.998539, 3.252452]], "n_local": 4}
+{"pair": "ROI_080/patch_53", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_080/patch_54", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_55", "A": null, "fail": "few_local", "n_local": 2}
+{"pair": "ROI_080/patch_57", "A": [[0.927345, 0.060074, -18.388542], [-0.006549, 1.00238, 0.386268]], "n_local": 7}
+{"pair": "ROI_080/patch_58", "A": [[0.952228, -0.000718, -8.104224], [-0.016068, 0.996137, 7.700332]], "n_local": 4}
+{"pair": "ROI_080/patch_59", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_61", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_63", "A": [[0.969579, 0.051345, 15.589913], [-0.000102, 0.999204, -0.908935]], "n_local": 4}
+{"pair": "ROI_080/patch_65", "A": null, "fail": "few_local", "n_local": 1}
+{"pair": "ROI_080/patch_67", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_69", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_70", "A": [[0.99241, 0.017824, 24.15738], [-0.004487, 0.99497, 1.469647]], "n_local": 4}
+{"pair": "ROI_080/patch_71", "A": null, "fail": "few_local", "n_local": 3}
+{"pair": "ROI_080/patch_72", "A": [[0.970163, -0.021669, 21.820163], [-0.001826, 1.001535, 0.312832]], "n_local": 6}
+{"pair": "ROI_080/patch_73", "A": [[1.01499, -0.005942, -4.27544], [0.000138, 1.001543, -0.616686]], "n_local": 7}
+{"pair": "ROI_080/patch_74", "A": [[0.980456, 0.015449, 14.099501], [-0.005483, 1.003102, 0.891554]], "n_local": 5}
+{"pair": "ROI_080/patch_75", "A": [[1.008527, 0.007156, 2.493096], [-0.013364, 1.000981, 0.600123]], "n_local": 7}
+{"pair": "ROI_080/patch_76", "A": [[0.968554, 0.016901, 34.116625], [-0.003024, 0.999779, 0.385944]], "n_local": 7}
+{"pair": "ROI_080/patch_77", "A": [[0.989414, 0.004674, 7.187222], [5.9e-05, 1.001585, -1.081073]], "n_local": 4}
+{"pair": "ROI_080/patch_78", "A": [[0.98898, -0.019875, 24.230794], [0.00312, 1.002297, -2.328427]], "n_local": 4}
+{"pair": "ROI_080/patch_79", "A": [[0.972916, -0.008289, 33.589056], [-0.000221, 1.000265, -1.053672]], "n_local": 6}
+{"pair": "ROI_080/patch_80", "A": [[0.955671, -0.014877, 20.075662], [-0.001769, 1.000723, -0.233217]], "n_local": 7}
+{"pair": "ROI_080/patch_83", "A": [[0.965338, -0.010974, 11.891319], [-0.004158, 1.007562, 0.065685]], "n_local": 7}
+{"pair": "ROI_080/patch_84", "A": [[0.965832, 0.004779, 8.635218], [0.002342, 0.988482, 4.323178]], "n_local": 8}
+{"pair": "ROI_080/patch_85", "A": [[0.971881, 0.015644, 6.519613], [0.007098, 1.003687, -2.088936]], "n_local": 8}
+{"pair": "ROI_080/patch_86", "A": [[0.962891, 0.006785, 10.170181], [-0.00045, 0.999279, 0.666889]], "n_local": 7}
+{"pair": "ROI_080/patch_87", "A": [[0.969123, -0.034717, 23.171577], [0.001754, 1.005081, -2.375314]], "n_local": 6}
+{"pair": "ROI_080/patch_88", "A": [[0.999857, -0.005625, 3.782266], [0.003627, 1.002136, -2.126221]], "n_local": 4}
+{"pair": "ROI_080/patch_89", "A": [[0.943305, 0.004497, 16.391145], [0.007953, 0.996629, -1.767207]], "n_local": 5}
+{"pair": "ROI_080/patch_90", "A": [[0.970891, -0.002482, 7.063286], [-0.00286, 0.998684, 1.366271]], "n_local": 7}
+{"pair": "ROI_080/patch_91", "A": [[0.849998, -0.007813, 38.628581], [-0.003385, 1.006489, -1.035864]], "n_local": 4}
+{"pair": "ROI_080/patch_92", "A": [[1.009224, -0.023257, 12.53624], [0.00105, 0.992037, 1.303654]], "n_local": 4}
+{"pair": "ROI_080/patch_93", "A": [[0.968749, 0.001533, 4.234574], [-0.002121, 0.99544, 1.572469]], "n_local": 6}
+{"pair": "ROI_080/patch_94", "A": [[0.964522, 0.026589, -2.234592], [0.001658, 1.00254, -1.050169]], "n_local": 8}
+{"pair": "ROI_080/patch_95", "A": [[0.97787, 0.015594, -2.01092], [-0.00064, 0.99622, 0.64059]], "n_local": 8}
+{"pair": "ROI_080/patch_96", "A": [[0.964503, 0.009694, 5.467234], [0.000272, 0.998284, 0.019911]], "n_local": 7}
+{"pair": "ROI_080/patch_98", "A": [[0.949253, 0.003249, 13.661053], [-0.000135, 0.999632, -0.200412]], "n_local": 7}
+{"pair": "ROI_080/patch_99", "A": [[0.951925, 0.003674, 16.096658], [0.000539, 0.998456, 0.138512]], "n_local": 7}
+{"pair": "ROI_080/patch_100", "A": [[0.960796, 0.002298, 10.903667], [-0.001507, 1.00079, 0.205675]], "n_local": 8}
+{"pair": "ROI_080/patch_101", "A": [[0.934317, -0.016567, 26.110807], [-0.000116, 0.996949, 0.516599]], "n_local": 7}
+{"pair": "ROI_080/patch_102", "A": [[0.961379, -0.002736, 10.549057], [0.001725, 0.99906, 0.28307]], "n_local": 6}
+{"pair": "ROI_080/patch_103", "A": [[0.968358, -0.006351, 12.808487], [0.000908, 1.001527, -0.958233]], "n_local": 8}
+{"pair": "ROI_080/patch_104", "A": [[0.958285, 0.035034, 12.259908], [-0.002758, 0.999129, 0.470794]], "n_local": 6}
+{"pair": "ROI_080/patch_105", "A": [[0.961145, 0.006717, 11.681099], [0.002598, 0.99733, -0.377395]], "n_local": 5}
+{"pair": "ROI_080/patch_106", "A": [[0.96645, -0.009, 17.453095], [-0.000713, 0.986791, 5.523147]], "n_local": 6}

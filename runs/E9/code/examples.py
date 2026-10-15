@@ -20,9 +20,9 @@ from workbench.dataset import Dataset
 R = Path("runs/E9")
 root = os.environ.get("MOON_DATA", "/remote-home/xufang/YGC/dataset/Moon")
 data, ds = Data(root), Dataset(root)
-MAPS = ["p2p98", "oc", "sc", "mchi_vol", "mchi_odd", "mchi_even", "cpr", "m"]
+MAPS = ["p2p98", "oc", "sc", "mchi_vol", "mchi_odd", "mchi_even", "cpr", "m", "cpr_ml9", "m_ml9"]
 LABEL = {"p2p98": "S1", "oc": "OC", "sc": "SC", "mchi_vol": "m-chi volume", "mchi_odd": "m-chi odd", "mchi_even": "m-chi even",
-         "cpr": "CPR", "m": "m"}   # 服务器没有中文字体，图中用英文
+         "cpr": "CPR", "m": "m", "cpr_ml9": "CPR 9x9 looks", "m_ml9": "m 9x9 looks"}   # 服务器没有中文字体，图中用英文
 pairs = ds.labelled("val")
 
 

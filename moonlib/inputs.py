@@ -62,8 +62,22 @@ def stokes(sar: np.ndarray):
     return b[0] + b[1], b[0] - b[1], 2.0 * b[2], -2.0 * b[3]
 
 
-def polar(sar: np.ndarray) -> dict:
-    """H×W×4 原始波段 → 极化派生量（功率为线性值）。"""
+def _box(x: np.ndarray, k: int) -> np.ndarray:
+    """k×k 均值（边缘反射延拓），沿前两维。"""
+    r = k // 2
+    x = np.pad(x, [(r, r), (r, r)] + [(0, 0)] * (x.ndim - 2), mode="reflect")
+    for ax in (0, 1):
+        c = np.cumsum(x, axis=ax, dtype=np.float64)
+        c = np.concatenate([np.zeros_like(np.take(c, [0], axis=ax)), c], axis=ax)
+        n = x.shape[ax] - 2 * r
+        x = (np.take(c, np.arange(k, k + n), axis=ax) - np.take(c, np.arange(n), axis=ax)) / k
+    return x
+
+
+def polar(sar: np.ndarray, looks: int = 1) -> dict:
+    """H×W×4 原始波段 → 极化派生量（功率为线性值）。looks > 1 时先对 4 个波段做 looks×looks 均值（多视），再求派生量。"""
+    if looks > 1:
+        sar = _box(np.nan_to_num(sar.astype(np.float64), nan=0.0, posinf=0.0, neginf=0.0), looks)
     s1, s2, s3, s4 = stokes(sar)
     with np.errstate(divide="ignore", invalid="ignore"):
         m = np.sqrt(s2 ** 2 + s3 ** 2 + s4 ** 2) / s1
@@ -77,16 +91,18 @@ def _db(p: np.ndarray) -> np.ndarray:
     return 10.0 * np.log10(np.maximum(p, POW_FLOOR))
 
 
-def _pol_db(key: str):
+def _pol_db(key: str, looks: int = 1):
     def f(sar):
-        return _stretch(_db(polar(sar)[key]), 2.0, 98.0).astype(np.float32)
-    f.__doc__ = f"消融（#150）：{key} 取 dB，逐 patch p2–p98 拉伸。"
+        return _stretch(_db(polar(sar, looks)[key]), 2.0, 98.0).astype(np.float32)
+    f.__doc__ = f"消融（#150）：{key}（{looks}×{looks} 多视）取 dB，逐 patch p2–p98 拉伸。"
     return f
 
 
-def sar_m(sar: np.ndarray) -> np.ndarray:
-    """消融（#150）：极化度 m，逐 patch p2–p98 拉伸。"""
-    return _stretch(polar(sar)["m"], 2.0, 98.0).astype(np.float32)
+def _pol_m(looks: int = 1):
+    def f(sar):
+        return _stretch(polar(sar, looks)["m"], 2.0, 98.0).astype(np.float32)
+    f.__doc__ = f"消融（#150）：极化度 m（{looks}×{looks} 多视），逐 patch p2–p98 拉伸。"
+    return f
 
 
 def sar_mchi_rgb(sar: np.ndarray) -> np.ndarray:
@@ -127,7 +143,9 @@ OPTICAL = {"div255": optical_div255,
 SAR = {"p2p98": sar_p2p98, "zscore_2p5": sar_zscore_2p5, "minmax": sar_minmax,
        **{k: _pol_db(k) for k in ("sc", "oc", "cpr")},
        **{f"mchi_{k}": _pol_db(k) for k in ("odd", "even", "vol")},
-       "m": sar_m, "mchi_rgb": sar_mchi_rgb}
+       "m": _pol_m(), "mchi_rgb": sar_mchi_rgb,
+       **{f"cpr_ml{k}": _pol_db("cpr", k) for k in (5, 9)},     # 逐像素的 CPR、m 几乎全是斑点，先多视再求比值
+       **{f"m_ml{k}": _pol_m(k) for k in (5, 9)}}
 
 
 def get(kind: str, name: str):

@@ -75,3 +75,27 @@ name = "AnyMatch-RoMa，光学模糊到 x 约 30 m、y 约 15 m"
 
 [methods.anymatch_roma__fuse_s1_cpr]
 name = "AnyMatch-RoMa，S1 与 CPR 的点对合并"
+
+[methods.anymatch_loftr__cpr_ml5]
+name = "AnyMatch-LoFTR，SAR 用 5×5 多视后的 CPR"
+
+[methods.anymatch_loftr__m_ml5]
+name = "AnyMatch-LoFTR，SAR 用 5×5 多视后的极化度 m"
+
+[methods.anymatch_loftr__cpr_ml9]
+name = "AnyMatch-LoFTR，SAR 用 9×9 多视后的 CPR"
+
+[methods.anymatch_loftr__m_ml9]
+name = "AnyMatch-LoFTR，SAR 用 9×9 多视后的极化度 m"
+
+[methods.anymatch_roma__cpr_ml5]
+name = "AnyMatch-RoMa，SAR 用 5×5 多视后的 CPR"
+
+[methods.anymatch_roma__m_ml5]
+name = "AnyMatch-RoMa，SAR 用 5×5 多视后的极化度 m"
+
+[methods.anymatch_roma__cpr_ml9]
+name = "AnyMatch-RoMa，SAR 用 9×9 多视后的 CPR"
+
+[methods.anymatch_roma__m_ml9]
+name = "AnyMatch-RoMa，SAR 用 9×9 多视后的极化度 m"

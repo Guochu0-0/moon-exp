@@ -76,6 +76,13 @@ def test_polar_identities():
     assert (p["m"] <= 1).all() and min(p[k].min() for k in ("odd", "even", "vol")) >= -1e-9
 
 
+def test_box_mean():
+    x = np.random.default_rng(2).random((20, 30, 4))
+    y = inputs._box(x, 5)
+    assert y.shape == x.shape
+    np.testing.assert_allclose(y[10, 12], x[8:13, 10:15].mean((0, 1)))
+
+
 def test_optical_blur():
     """x 向模糊只沿 x 展宽、保持均值；y 向不动（#150）。"""
     img = np.zeros((32, 32), np.uint8)

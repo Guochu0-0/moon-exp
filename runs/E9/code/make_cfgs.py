@@ -11,7 +11,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 OUT = Path(__file__).resolve().parent / "cfg"
 BASE = {"anymatch_loftr": "anymatch_loftr.json", "anymatch_roma": "anymatch_roma.json"}
-SAR = ["sc", "oc", "cpr", "m", "mchi_odd", "mchi_even", "mchi_vol"]
+SAR = ["sc", "oc", "cpr", "m", "mchi_odd", "mchi_even", "mchi_vol", "cpr_ml5", "cpr_ml9", "m_ml5", "m_ml9"]
 VARIANTS = {   # 变体: (optical, sar)
     "s1": ("div255", "p2p98"),
     **{k: ("div255", k) for k in SAR},

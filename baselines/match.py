@@ -8,6 +8,9 @@
     <split>.jsonl       每 pair 一行：n、sec、error
     <split>.meta.json   配置、权重 sha256、代码 commit、环境版本、机器、起止时间
 
+--perturb runs/<id>/perturb/<变体>：SAR 映射后按该变体每对的已知 T warp（图外补 0），影像不落盘，点对在扰动后的坐标里
+（难版评测 #138，见 moonlib/perturb.py）。
+
 之后在工作台环境里用 baselines.fit 估仿射、写进 runs/<id>/preds/。兼容 py3.8，只依赖 numpy（加上适配器自己的依赖）。
 """
 from __future__ import annotations
@@ -106,6 +109,7 @@ def main(argv=None):
     ap.add_argument("--resume", action="store_true", help="跳过 <split>.jsonl 里已有的 pair")
     ap.add_argument("--weights", help="覆盖配置里的权重路径（如微调产出的 ckpt）")
     ap.add_argument("--name", help="覆盖配置里的 method，决定输出目录名")
+    ap.add_argument("--perturb", help="runs/<id>/perturb/<变体> 目录：SAR 侧叠加已知 T（#138）")
     args = ap.parse_args(argv)
 
     cfg = json.loads(Path(args.config).read_text(encoding="utf-8"))
@@ -129,6 +133,13 @@ def main(argv=None):
     seed = int(cfg.get("seed", 0))
 
     data = Data(args.data)
+    perturb = None
+    if args.perturb:
+        from finetune.augment import warp
+        from moonlib import perturb as P
+
+        pd = Path(args.perturb)
+        perturb = P.load(pd.parent.parent, pd.name, args.split)
     pairs = data.pairs(args.split, labelled_only=args.split != "train")   # Train 无标注，全跑（RoMa 伪标签 #65）
     if args.shard:
         k, n = map(int, args.shard.split("/"))
@@ -151,6 +162,7 @@ def main(argv=None):
         "weights": str(weights) if weights else None,
         "weights_sha256": sha256(weights) if weights else None,
         "commit": git_head(REPO), "repo_commit": git_head(repo) if repo else None,
+        "perturb": str(args.perturb) if args.perturb else None,
         "argv": sys.argv, "started": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
     Adapter = adapters.load(cfg["adapter"])
@@ -174,6 +186,8 @@ def main(argv=None):
             try:
                 opt = map_opt(data.optical(args.split, pair))
                 sar = map_sar(data.sar(args.split, pair))
+                if perturb is not None:
+                    sar = warp(np.ascontiguousarray(sar, np.float32), perturb[pair])
                 seed_all(seed)
                 if use_alarm:
                     signal.alarm(args.timeout)

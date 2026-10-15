@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from . import protocol
+from . import perturb, protocol
 from .dataset import Dataset
 from .records import SPLITS, Pred, Run
 
@@ -41,10 +41,15 @@ def evaluate_preds(ds: Dataset, split: str, preds: dict[str, Pred]) -> dict:
 
 
 def evaluate_run(ds: Dataset, run: Run) -> dict:
+    """扰动变体的方法（workbench/perturb.py）按扰动后的真值评测，另记变体与剔除的 pair、检查点数。"""
     out = {"protocol": protocol.protocol_info(), "methods": {}}
     for m in run.methods:
-        out["methods"][m] = {s: evaluate_preds(ds, s, run.preds(m, s))
+        dm = perturb.dataset_for(ds, run, m)
+        out["methods"][m] = {s: evaluate_preds(dm, s, run.preds(m, s))
                              for s in SPLITS if (run.dir / "preds" / m / f"{s}.jsonl").exists()}
+        if dm is not ds:
+            for s, res in out["methods"][m].items():
+                res["perturb"] = {"variant": perturb.variant(run, m), "dropped": dm.dropped(s)}
     return out
 
 

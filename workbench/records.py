@@ -3,7 +3,8 @@
 一个实验一个目录 runs/<id>/，格式（记录格式 v2）见 workbench/README.md：
 
     runs/<id>/
-      exp.toml                              元数据：id、title、kind、parent、init、baseline、date、[methods.<m>]
+      exp.toml                              元数据：id、title、kind、parent、init、baseline、date、perturb、[methods.<m>]
+      perturb/<variant>/<split>.json        perturb = true 时：方法 <m>__<variant> 的 SAR 侧已知扰动 T（workbench/perturb.py）
       notes.md                              可选：实验唯一的自由文本
       preds/<method>/<split>.jsonl          每个 pair 一行：估计仿射（光学 → SAR，2×3）或失败原因
       preds/<method>/<split>.meta.json      写入时的 commit 与 dirty
@@ -34,7 +35,7 @@ import numpy as np
 
 SPLITS = ("val", "test")
 MAIN_METHOD = "main"
-FIELDS = ("id", "title", "kind", "parent", "init", "baseline", "date", "methods")
+FIELDS = ("id", "title", "kind", "parent", "init", "baseline", "date", "perturb", "methods")
 ANALYSIS = "analysis"   # kind 的唯一取值；不写即普通实验
 METHOD_FIELDS = ("name", "caveat")
 LEGACY_FIELDS = ("status", "commit", "hypothesis", "change", "verdict", "next")
@@ -111,8 +112,10 @@ class Run:
         own = self.meta.get("methods", {}).get(method)
         if own is not None:
             return {"name": own.get("name", method), "caveat": own.get("caveat")}
-        base, sep, variant = method.partition("__")
-        if sep:
+        # 先按最后一个 __ 拆（基础方法名自己带 __ 时，如难版评测的 erase_geo__r2__shift64），再按第一个
+        for base, sep, variant in (method.rpartition("__"), method.partition("__")):
+            if not sep:
+                continue
             for r in self._chain():
                 cfg = r.meta.get("methods", {}).get(base)
                 if cfg is not None:
@@ -275,6 +278,15 @@ def check_runs(runs: dict[str, Run]) -> tuple[list[str], list[str]]:
             problems.append(f"{r.id}: kind 只能是 {ANALYSIS!r}（普通实验不写），现为 {m['kind']!r}")
         if r.analysis and r.methods:
             problems.append(f"{r.id}: 分析不应有预测，preds/ 下有 {', '.join(r.methods)}")
+        if "perturb" in m and not isinstance(m["perturb"], bool):
+            problems.append(f"{r.id}: perturb 应为 true / false，现为 {m['perturb']!r}")
+        if m.get("perturb") is True:
+            for meth in r.methods:
+                v = meth.rpartition("__")[2] if "__" in meth else None
+                if v and (r.dir / "perturb" / v).is_dir():
+                    miss = [s for s in r.splits(meth) if not (r.dir / "perturb" / v / f"{s}.json").exists()]
+                    if miss:
+                        problems.append(f"{r.id}: {meth} 有 {'/'.join(miss)} 预测，但缺 perturb/{v}/ 下对应的 T")
         if r.parent and r.parent not in runs:
             problems.append(f"{r.id}: 父实验 {r.parent} 不存在")
         if r.init:

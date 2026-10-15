@@ -17,7 +17,7 @@ import csv
 import json
 import math
 import os
-import sys
+
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +25,8 @@ from osgeo import gdal, osr
 
 gdal.UseExceptions()
 gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+gdal.SetConfigOption("GDAL_HTTP_MAX_RETRY", "10")
+gdal.SetConfigOption("GDAL_HTTP_RETRY_DELAY", "5")
 
 REPO = Path(__file__).resolve().parents[3]
 EXP = REPO / "runs" / "E9"
@@ -61,7 +63,7 @@ MODELS = {
 DENSE_MODEL = "loftr_zs"
 R_NB, MIN_NB = 12.0, 3          # 局部对应：与 E3 相同
 SANE = 20.0                     # 与 E3 相同：整体偏移超过它的 pair 视为粗错
-DENSE_KEEP = 6.0                # 稠密点对：相对仿射的残差小于它才算（视差最多几 px）
+DENSE_KEEP = float(os.environ.get("E9_DENSE_KEEP", 15.0))  # 稠密点对：相对仿射的残差小于它才算（视差可达十几 px）
 
 FIELDS = ("mean", "plane", "hpA", "hpB")   # 高程基准：patch 均值 / 去平面 / 去 Ortho 网格平滑（两种朝向）后再去平面
 
@@ -102,6 +104,8 @@ def cmd_dem(args):
     src = gdal.Open(SLDEM)
     dem_srs = trad(osr.SpatialReference(wkt=src.GetProjection()))
     for roi, (split, *_rest) in ROIS.items():
+        if args.rois and roi not in args.rois:
+            continue
         dst = RAW / f"dem_{roi}.tif"
         if dst.exists() and not args.force:
             print(roi, "已有", dst.name)
@@ -116,7 +120,16 @@ def cmd_dem(args):
                 xs.append(x)
                 ys.append(y)
         win = [min(xs) - MARGIN, max(ys) + MARGIN, max(xs) + MARGIN, min(ys) - MARGIN]
-        gdal.Translate(str(dst), src, projWin=win, creationOptions=["COMPRESS=DEFLATE"])
+        tmp = dst.with_suffix(".part.tif")
+        for attempt in range(5):        # 网络读到半截时整块重来
+            try:
+                gdal.Translate(str(tmp), src, projWin=win, creationOptions=["COMPRESS=DEFLATE"])
+                break
+            except RuntimeError as e:
+                print(roi, "第", attempt + 1, "次失败：", str(e).splitlines()[0], flush=True)
+        else:
+            raise SystemExit(f"{roi} 下载失败")
+        tmp.replace(dst)
         print(roi, "窗口 km", round((win[2] - win[0]) / 1e3, 1), "×", round((win[1] - win[3]) / 1e3, 1), flush=True)
 
 
@@ -182,7 +195,10 @@ def patch_fields(dem, split, roi, stem, inc):
 
 def load_preds(rel, split):
     out = {}
-    with open(REPO / rel / f"{split}.jsonl", encoding="utf-8") as f:
+    p = REPO / rel / f"{split}.jsonl"
+    if not p.exists():          # RoMa zero-shot（B0m）只有 Val
+        return out
+    with open(p, encoding="utf-8") as f:
         for line in f:
             r = json.loads(line)
             out[r["pair"]] = None if r.get("A") is None else np.array(r["A"], dtype=np.float64)
@@ -224,6 +240,8 @@ def cmd_points(args):
     mats = {s: np.load(main / MODELS[DENSE_MODEL][1] / f"{s}_matches.npz") for s in ("val", "test")}
     rows, dense, meta = [], {k: [] for k in ("roi", "pair", "x", "y", "rx", "ry", *FIELDS)}, {}
     for roi, (split, inc, az) in ROIS.items():
+        if args.rois and roi not in args.rois:
+            continue
         dem = gdal.Open(str(RAW / f"dem_{roi}.tif"))
         n_pair = 0
         for stem in patches(split, roi):
@@ -281,13 +299,313 @@ def cmd_points(args):
     print("标注点", len(rows), "稠密点", sum(len(v) for v in dense["x"]))
 
 
+# ---------------------------------------------------------------- analyse
+
+GROUPS = {"E": "视方位角约 90°", "W": "视方位角约 270°"}
+N_BOOT = 1000
+
+
+def group_of(az):
+    return "E" if az < 180 else "W"
+
+
+def read_labels():
+    with open(DATA_OUT / "labels.csv", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    out = {}
+    for k in rows[0]:
+        try:
+            out[k] = np.array([float(r[k]) if r[k] != "" else np.nan for r in rows])
+        except ValueError:
+            out[k] = np.array([r[k] for r in rows])
+    return out
+
+
+def detrend(ids, X, *vals):
+    """在每个 pair 内把各量投影到 [1, x, y] 的正交补上（去掉仿射能吸收的部分）。点数 < 4 的 pair 置 nan。"""
+    out = [np.full(len(v), np.nan) for v in vals]
+    for p in np.unique(ids):
+        i = np.flatnonzero(ids == p)
+        if len(i) < 4:
+            continue
+        D = np.c_[np.ones(len(i)), X[i]]
+        Q, _ = np.linalg.qr(D)
+        for o, v in zip(out, vals):
+            o[i] = v[i] - Q @ (Q.T @ v[i])
+    return out
+
+
+def fit(ids, m, P, rng):
+    """过原点回归 m ≈ s·P：斜率 s、r²（以 Σm² 为分母，即 s·P 去掉的均方比例）、按 pair 自助的 95% 区间。"""
+    ok = np.isfinite(m) & np.isfinite(P)
+    ids, m, P = ids[ok], m[ok], P[ok]
+    if len(m) < 10:
+        return None
+    s = float((m * P).sum() / (P * P).sum())
+    r2 = 1 - float(((m - s * P) ** 2).sum() / (m * m).sum())
+    up, inv = np.unique(ids, return_inverse=True)
+    mp = np.bincount(inv, m * P, len(up))
+    pp = np.bincount(inv, P * P, len(up))
+    bs = []
+    for _ in range(N_BOOT):
+        c = np.bincount(rng.integers(0, len(up), len(up)), minlength=len(up))
+        bs.append((c * mp).sum() / (c * pp).sum())
+    lo, hi = np.percentile(bs, [2.5, 97.5])
+    return {"slope": round(s, 3), "ci95": [round(float(lo), 3), round(float(hi), 3)], "r2": round(r2, 3),
+            "n_pts": int(len(m)), "n_pairs": int(len(up))}
+
+
+def fit2(ids, m, P_lo, P_hi, rng):
+    """m ≈ a·P_lo + b·P_hi：低频（Ortho 网格尺度以上）与高频视差各自的斜率，按 pair 自助的 95% 区间。
+    若 Ortho 用真实（粗网格）DEM 校正过，低频部分已被去掉，a 应接近 0。"""
+    ok = np.isfinite(m) & np.isfinite(P_lo) & np.isfinite(P_hi)
+    ids, m, Z = ids[ok], m[ok], np.c_[P_lo[ok], P_hi[ok]]
+    up, inv = np.unique(ids, return_inverse=True)
+    ZZ = np.stack([np.bincount(inv, Z[:, i] * Z[:, j], len(up)) for i in range(2) for j in range(2)], 1)
+    Zm = np.stack([np.bincount(inv, Z[:, i] * m, len(up)) for i in range(2)], 1)
+    sol = lambda c: np.linalg.solve((c[:, None] * ZZ).sum(0).reshape(2, 2), (c[:, None] * Zm).sum(0))
+    ab = sol(np.ones(len(up)))
+    bs = np.array([sol(np.bincount(rng.integers(0, len(up), len(up)), minlength=len(up)).astype(float))
+                   for _ in range(N_BOOT)])
+    ci = np.percentile(bs, [2.5, 97.5], axis=0)
+    return {"slope_low": round(float(ab[0]), 3), "ci95_low": [round(float(v), 3) for v in ci[:, 0]],
+            "slope_high": round(float(ab[1]), 3), "ci95_high": [round(float(v), 3) for v in ci[:, 1]],
+            "n_pts": int(len(m)), "n_pairs": int(len(up))}
+
+
+def sane_pairs(L, m):
+    """与 E3 相同：仿射在该 pair 标注点上的平均偏移超过 SANE 的视为粗错。"""
+    ok = np.zeros(len(L["pair"]), bool)
+    ex, ey = L["sx"] - L[f"ax_{m}"], L["sy"] - L[f"ay_{m}"]
+    for p in np.unique(L["pair"]):
+        i = L["pair"] == p
+        b = np.array([np.nanmean(ex[i]), np.nanmean(ey[i])])
+        ok[i] = np.isfinite(b).all() and np.abs(b).max() < SANE
+    return ok
+
+
+def setup_plt():
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Noto Sans CJK SC", "DejaVu Sans"]
+    plt.rcParams["axes.unicode_minus"] = False
+    return plt
+
+
+def cmd_analyse(args):
+    rng = np.random.default_rng(0)
+    L = read_labels()
+    L["grp"] = np.array([group_of(a) for a in L["az"]])
+    X = np.c_[L["ox"], L["oy"]]
+    meta = json.loads((DATA_OUT / "patch_meta.json").read_text(encoding="utf-8"))
+    S = {"note": "斜率：实测残差（SAR 标注 − 仿射映射点，或 − 局部对应点）对预测视差 P（px，不带符号）的过原点回归；"
+                 "r2 为 s·P 去掉的均方比例；detrended 为 pair 内去掉 [1,x,y] 平面后"}
+
+    # 0. 视差有多大：各 ROI 标注点处预测视差（去平面）的均方根与 DEM 起伏
+    S["magnitude"] = {}
+    for roi in ROIS:
+        i = L["roi"] == roi
+        prs = [p for p in meta if p.startswith(roi)]
+        if not i.any():
+            continue
+        S["magnitude"][roi] = {
+            "group": group_of(ROIS[roi][2]), "n_pts": int(i.sum()),
+            "rms_P_mean_px": round(float(np.sqrt(np.mean(L["P_mean"][i] ** 2))), 2),
+            "rms_P_plane_px": round(float(np.sqrt(np.mean(L["P_plane"][i] ** 2))), 2),
+            "p95_abs_P_plane_px": round(float(np.percentile(np.abs(L["P_plane"][i]), 95)), 2),
+            "median_z_std_plane_m": round(float(np.median([meta[p]["z_std_plane"] for p in prs])), 1),
+            "median_gx_m": round(float(np.median([meta[p]["gx"] for p in prs])), 2)}
+
+    # 1. 标注点：各模型、各组、各口径
+    S["labels"] = {}
+    for m in MODELS:
+        ok = sane_pairs(L, m)
+        res = {}
+        for split in ("val", "test"):
+            for g in GROUPS:
+                sel = ok & (L["split"] == split) & (L["grp"] == g)
+                if not sel.any():
+                    continue
+                ids, Xs = L["pair"][sel], X[sel]
+                d = {}
+                for name, mx in (("aff_x", L["sx"] - L[f"ax_{m}"]), ("aff_y", L["sy"] - L[f"ay_{m}"]),
+                                 ("loc_x", L["sx"] - L[f"lx_{m}"]), ("loc_y", L["sy"] - L[f"ly_{m}"])):
+                    mx = mx[sel]
+                    d[name + "_raw"] = fit(ids, mx - np.nanmean(mx), L["P_mean"][sel], rng)   # 票面口径
+                    mt, Pt, Pa, Pb = detrend(ids, Xs, mx, L["P_mean"][sel], L["P_hpA"][sel], L["P_hpB"][sel])
+                    d[name + "_detr"] = fit(ids, mt, Pt, rng)
+                    if name == "aff_x":
+                        for f, hi in (("hpA", Pa), ("hpB", Pb)):
+                            d[f"aff_x_low_high_{f}"] = fit2(ids, mt, Pt - hi, hi, rng)
+                # x 向均方误差的正交分解（只用能去趋势的点）：仿射残差 = 仿射能表达的部分 + 去平面部分，
+                # 去平面部分与模型无关（= 标注自拟合仿射的残差），视差解释它的 r2；
+                # 由此得视差 ŝ·P⊥ 占总 x 均方误差的比例，以及物理斜率 ±1 时的比例
+                ex = (L["sx"] - L[f"ax_{m}"])[sel]
+                et, Pt = detrend(ids, Xs, ex, L["P_mean"][sel])
+                f_ = np.isfinite(et) & np.isfinite(Pt) & np.isfinite(ex)
+                det = d["aff_x_detr"]
+                if det and f_.any():
+                    sh = det["slope"]
+                    tot, nonaff = float(np.mean(ex[f_] ** 2)), float(np.mean(et[f_] ** 2))
+                    d["mse_x"] = round(tot, 3)
+                    d["mse_x_nonaffine"] = round(nonaff, 3)
+                    d["share_parallax_fit"] = round(float(np.mean((sh * Pt[f_]) ** 2)) / tot, 3)
+                    d["share_nonaffine_removed_phys"] = round(
+                        1 - float(np.mean((et[f_] - np.sign(sh) * Pt[f_]) ** 2)) / nonaff, 3)
+                res[f"{split}_{g}"] = d
+        # 逐 ROI 的去趋势斜率（符号检验）
+        res["per_roi"] = {}
+        for roi in ROIS:
+            sel = ok & (L["roi"] == roi)
+            mt, Pt = detrend(L["pair"][sel], X[sel], (L["sx"] - L[f"ax_{m}"])[sel], L["P_mean"][sel])
+            res["per_roi"][roi] = fit(L["pair"][sel], mt, Pt, rng)
+        S["labels"][m] = res
+    chk = np.isfinite(L["lx_check"]) & np.isfinite(L[f"lx_{DENSE_MODEL}"]) & (L["split"] == "val")
+    S["local_check_max_abs_diff_px"] = round(float(np.abs(L["lx_check"] - L[f"lx_{DENSE_MODEL}"])[chk].max()), 4)
+
+    # 2. 稠密点对（LoFTR zero-shot）：完整高程 vs 去 Ortho 网格平滑后的高程
+    D = dict(np.load(RAW / "dense.npz"))
+    roi_names = list(ROIS)
+    D["grp"] = np.array([group_of(ROIS[roi_names[r]][2]) for r in D["roi"]])
+    D["split"] = np.array([ROIS[roi_names[r]][0] for r in D["roi"]])
+    XD = np.c_[D["x"], D["y"]]
+    S["dense"] = {}
+    det_cache = {}
+    for split in ("val", "test"):
+        for g in GROUPS:
+            sel = (D["split"] == split) & (D["grp"] == g)
+            if not sel.any():
+                continue
+            ids = D["pair"][sel]
+            d = {}
+            for f in ("plane", "hpA", "hpB"):
+                rx, ry, Pf = detrend(ids, XD[sel], D["rx"][sel], D["ry"][sel], D[f][sel])
+                d[f"x_{f}"] = fit(ids, rx, Pf, rng)
+                d[f"y_{f}"] = fit(ids, ry, Pf, rng)
+                det_cache[split, g, f] = (ids, rx, ry, Pf, D["roi"][sel])
+            rx = det_cache[split, g, "plane"][1]
+            for f in ("hpA", "hpB"):
+                hi = det_cache[split, g, f][3]
+                d[f"x_low_high_{f}"] = fit2(ids, rx, det_cache[split, g, "plane"][3] - hi, hi, rng)
+            S["dense"][f"{split}_{g}"] = d
+    S["dense_per_roi"] = {}
+    for r, roi in enumerate(roi_names):
+        sel = D["roi"] == r
+        rx, Pf = detrend(D["pair"][sel], XD[sel], D["rx"][sel], D["plane"][sel])
+        S["dense_per_roi"][roi] = fit(D["pair"][sel], rx, Pf, rng)
+    (OUT / "summary.json").write_text(json.dumps(S, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    plt = setup_plt()
+    fig_dense(plt, det_cache)
+    fig_labels(plt, S)
+    fig_examples(plt, D, meta, roi_names)
+    print(json.dumps({k: S[k] for k in ("magnitude", "dense", "dense_per_roi")}, ensure_ascii=False, indent=1))
+
+
+def fig_dense(plt, det_cache):
+    bins = np.linspace(-4, 4, 17)
+    fig, axs = plt.subplots(1, 2, figsize=(11, 4.6), sharey=True)
+    for a, g in zip(axs, GROUPS):
+        for split, ls in (("val", "-"), ("test", "--")):
+            if (split, g, "plane") not in det_cache:
+                continue
+            ids, rx, ry, Pf, rois = det_cache[split, g, "plane"]
+            for r in np.unique(rois):
+                i = (rois == r) & np.isfinite(rx)
+                c = (bins[:-1] + bins[1:]) / 2
+                k = np.digitize(Pf[i], bins) - 1
+                mu = [np.mean(rx[i][k == b]) if (k == b).sum() >= 30 else np.nan for b in range(len(c))]
+                a.plot(c, mu, ls, marker="o", ms=3, label=f"{list(ROIS)[r]}（{'Val' if split == 'val' else 'Test'}）")
+            i = np.isfinite(ry)
+            k = np.digitize(Pf[i], bins) - 1
+            muy = [np.mean(ry[i][k == b]) if (k == b).sum() >= 30 else np.nan for b in range(len(c))]
+            a.plot(c, muy, ls, c="0.6", lw=1, label=f"y 向残差（{'Val' if split == 'val' else 'Test'}）")
+        a.plot(bins, bins, "k:", lw=0.8, label="斜率 +1")
+        a.plot(bins, -bins, "k-.", lw=0.8, label="斜率 −1")
+        a.axhline(0, c="k", lw=0.5)
+        a.set_ylim(-4, 4)
+        a.set_title(GROUPS[g])
+        a.set_xlabel("预测视差 P（px，不带符号，pair 内去平面）")
+        a.legend(fontsize=7, ncol=2)
+    axs[0].set_ylabel("点对 x 向残差（px，pair 内去平面）分箱均值")
+    fig.tight_layout()
+    fig.savefig(OUT / "dense_binned.png", dpi=130)
+    plt.close(fig)
+
+
+def fig_labels(plt, S):
+    keys = list(MODELS)
+    fig, axs = plt.subplots(1, 2, figsize=(12, 4.4), sharey=True)
+    for a, g in zip(axs, GROUPS):
+        w = 0.2
+        for j, (name, lab) in enumerate((("aff_x_detr", "仿射 x 残差"), ("loc_x_detr", "局部对应 x 残差"),
+                                         ("aff_y_detr", "仿射 y 残差"))):
+            v, e = [], []
+            for m in keys:
+                f = S["labels"][m].get(f"val_{g}", {}).get(name)
+                v.append(f["slope"] if f else np.nan)
+                e.append([f["slope"] - f["ci95"][0], f["ci95"][1] - f["slope"]] if f else [0, 0])
+            a.bar(np.arange(len(keys)) + (j - 1) * w, v, w, yerr=np.array(e).T, capsize=2, label=lab)
+        a.axhline(0, c="k", lw=0.6)
+        a.set_xticks(range(len(keys)))
+        a.set_xticklabels([MODELS[m][0] for m in keys], rotation=25, ha="right", fontsize=8)
+        a.set_title(f"Val，{GROUPS[g]}")
+    axs[0].set_ylabel("对预测视差的斜率（pair 内去平面，95% 区间）")
+    axs[0].legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(OUT / "labels_slope.png", dpi=130)
+    plt.close(fig)
+
+
+def fig_examples(plt, D, meta, roi_names, n=3):
+    """起伏最大的几个 patch：光学、SAR、带符号的预测视差场、点对 x 残差（均去平面）。"""
+    pairs = D["pairs"]
+    cand = sorted(meta, key=lambda p: -meta[p]["z_std_plane"])[:n]
+    fig, axs = plt.subplots(n, 4, figsize=(15, 3.9 * n))
+    for row, pair in zip(axs, cand):
+        roi, stem = pair.split("/")
+        split, inc, az = ROIS[roi]
+        g = group_of(az)
+        sg = float(np.sign(json.loads((OUT / "summary.json").read_text(encoding="utf-8"))["dense"]
+                           .get(f"{split}_{g}", {}).get("x_plane", {}).get("slope", 1.0)))
+        dem = gdal.Open(str(RAW / f"dem_{roi}.tif"))
+        F = patch_fields(dem, split, roi, stem, inc)[0]
+        opt = gdal.Open(str(opt_path(split, roi, stem))).ReadAsArray()
+        sds = gdal.Open(str(DATA / SPLIT_DIRS[split] / roi / "SAR" / f"{stem}.tif"))
+        sar = sds.GetRasterBand(2).ReadAsArray()
+        pi = int(np.flatnonzero(pairs == pair)[0])
+        i = D["pair"] == pi
+        rx, Pf = detrend(D["pair"][i], np.c_[D["x"][i], D["y"][i]], D["rx"][i], D["plane"][i])
+        lim = max(1.0, float(np.percentile(np.abs(sg * F["plane"]), 98)))
+        row[0].imshow(opt, cmap="gray")
+        row[1].imshow(sar, cmap="gray", vmin=np.percentile(sar, 1), vmax=np.percentile(sar, 99))
+        im = row[2].imshow(sg * F["plane"], cmap="RdBu_r", vmin=-lim, vmax=lim)
+        row[3].imshow(opt, cmap="gray", alpha=0.5)
+        sc = row[3].scatter(D["x"][i], D["y"][i], c=rx, s=4, cmap="RdBu_r", vmin=-lim, vmax=lim)
+        r = np.corrcoef(rx, Pf)[0, 1] * sg
+        row[0].set_title(f"{pair} 光学（DEM 起伏 {meta[pair]['z_std_plane']:.0f} m）", fontsize=9)
+        row[1].set_title("SAR", fontsize=9)
+        row[2].set_title("预测 x 视差（px，去平面）", fontsize=9)
+        row[3].set_title(f"LoFTR zero-shot 点对 x 残差（去平面），r = {r:.2f}", fontsize=9)
+        for a in row:
+            a.axis("off")
+        fig.colorbar(im, ax=row[2], fraction=0.046)
+        fig.colorbar(sc, ax=row[3], fraction=0.046)
+    fig.tight_layout()
+    fig.savefig(OUT / "relief_examples.png", dpi=110)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("dem")
     p.add_argument("--force", action="store_true")
+    p.add_argument("--rois", nargs="*", help="只下载这些 ROI（可分几个进程并行）")
     p = sub.add_parser("points")
     p.add_argument("--main", default=str(REPO), help="有不进 git 的点对 npz 的 checkout")
+    p.add_argument("--rois", nargs="*", help="只处理这些 ROI（调试用）")
     sub.add_parser("analyse")
     a = ap.parse_args()
-    {"dem": cmd_dem, "points": cmd_points}.get(a.cmd, lambda _: sys.exit("analyse 尚未实现"))(a)
+    {"dem": cmd_dem, "points": cmd_points, "analyse": cmd_analyse}[a.cmd](a)

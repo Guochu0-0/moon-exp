@@ -1,8 +1,9 @@
 """E9 示例图（#150）：几对 Val 的光学与各 SAR 输入并排，写 extra/examples.png。另算各 SAR 输入与光学的梯度幅值相关，写 extra/data/grad_corr.csv。
 
-    python runs/E9/code/examples.py      # 在 worktree 根目录、wb 环境里跑
+    PYTHONPATH=. /opt/envs/loftr/bin/python runs/E9/code/examples.py      # 在 worktree 根目录跑（wb 环境没有 matplotlib）
 
-梯度幅值相关：先按标注自拟合的仿射把 SAR 输入重采样到光学网格，两图各取 Sobel 梯度幅值，在重叠区域内算 Pearson 相关；
+梯度幅值相关：先按标注自拟合的仿射把 SAR 输入重采样到光学网格，两图各做 σ = 2 px 高斯平滑（压掉斑点）后取 Sobel 梯度幅值，
+在重叠区域内算 Pearson 相关；
 每对一个值，报 Val 全部有标注 pair 的中位数。它只描述两图的边缘是否落在同一处，不代表匹配器能否用上。
 """
 import csv
@@ -20,13 +21,13 @@ R = Path("runs/E9")
 root = os.environ.get("MOON_DATA", "/remote-home/xufang/YGC/dataset/Moon")
 data, ds = Data(root), Dataset(root)
 MAPS = ["p2p98", "oc", "sc", "mchi_vol", "mchi_odd", "mchi_even", "cpr", "m"]
-LABEL = {"p2p98": "S1", "oc": "OC", "sc": "SC", "mchi_vol": "m-χ 体散射", "mchi_odd": "m-χ 奇次", "mchi_even": "m-χ 偶次",
-         "cpr": "CPR", "m": "m"}
+LABEL = {"p2p98": "S1", "oc": "OC", "sc": "SC", "mchi_vol": "m-chi volume", "mchi_odd": "m-chi odd", "mchi_even": "m-chi even",
+         "cpr": "CPR", "m": "m"}   # 服务器没有中文字体，图中用英文
 pairs = ds.labelled("val")
 
 
 def gradmag(x):
-    x = x.astype(np.float32)
+    x = cv2.GaussianBlur(x.astype(np.float32), (0, 0), 2.0)
     return np.hypot(cv2.Sobel(x, cv2.CV_32F, 1, 0, ksize=3), cv2.Sobel(x, cv2.CV_32F, 0, 1, ksize=3))
 
 
@@ -60,7 +61,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "WenQuanYi Zen Hei", "SimHei", "DejaVu Sans"]
 ex = pairs[::len(pairs) // 3][:3]
 fig, axes = plt.subplots(len(ex), len(MAPS) + 1, figsize=(2.1 * (len(MAPS) + 1), 2.2 * len(ex)))
 for i, p in enumerate(ex):
@@ -69,7 +69,7 @@ for i, p in enumerate(ex):
     axes[i, 0].set_ylabel(p, fontsize=7)
     for j, k in enumerate(MAPS, 1):
         axes[i, j].imshow(inputs.get("sar", k)(sar), cmap="gray", vmin=0, vmax=1)
-    for j, t in enumerate(["光学"] + [LABEL[k] for k in MAPS]):
+    for j, t in enumerate(["optical"] + [LABEL[k] for k in MAPS]):
         axes[0, j].set_title(t, fontsize=9)
 for a in axes.ravel():
     a.set_xticks([]), a.set_yticks([])

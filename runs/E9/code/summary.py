@@ -1,6 +1,6 @@
 """E9 汇总（#150）：各变体相对同模型参照 <模型>__s1 的逐对配对比较，写 extra/data/summary.csv 与 extra/delta_auc5.png。
 
-    python runs/E9/code/summary.py        # 在 worktree 根目录、wb 环境里跑；先 python -m workbench eval E9
+    PYTHONPATH=. /opt/envs/loftr/bin/python runs/E9/code/summary.py   # 在 worktree 根目录跑（wb 环境没有 matplotlib）；先 workbench eval E9
 
 配对比较：同一批 Val pair 上，ΔAUC@5 = 变体 − 参照，95% CI 按 pair 重采样 2000 次（两方法用同一组下标）。
 「变好 / 变差」= pair 误差减小 / 增大超过 1 px 的对数。x / y 残差 = 检查点经 A 映射后与 SAR 检查点之差，先在 pair 内取均值，
@@ -86,7 +86,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "WenQuanYi Zen Hei", "SimHei", "DejaVu Sans"]
 fig, axes = plt.subplots(1, 2, figsize=(11, 5), sharex=True)
 for ax, model, title in zip(axes, REF, ("AnyMatch-LoFTR", "AnyMatch-RoMa")):
     rs = sorted((r for r in rows if r["model"] == model and r["method"] != REF[model]), key=lambda r: r["d_auc@5"])
@@ -95,8 +94,8 @@ for ax, model, title in zip(axes, REF, ("AnyMatch-LoFTR", "AnyMatch-RoMa")):
                 fmt="o", capsize=3)
     ax.set_yticks(y, [r["variant"] for r in rs])
     ax.axvline(0, color="k", lw=0.8)
-    ax.set_title(f"{title}（参照 S1 AUC@5 = {next(r['auc@5'] for r in rows if r['method'] == REF[model]):.3f}）")
-    ax.set_xlabel("ΔAUC@5（变体 − S1），95% 配对 bootstrap CI")
+    ax.set_title(f"{title} (S1 reference AUC@5 = {next(r['auc@5'] for r in rows if r['method'] == REF[model]):.3f})")
+    ax.set_xlabel("ΔAUC@5 (variant − S1), 95% paired bootstrap CI")   # 服务器没有中文字体
 fig.tight_layout()
 fig.savefig(R / "extra" / "delta_auc5.png", dpi=120)
 print("wrote", out / "summary.csv", R / "extra" / "delta_auc5.png")

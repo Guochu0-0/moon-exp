@@ -20,8 +20,17 @@ def pair_errors(ds: Dataset, split: str, preds: dict[str, Pred]) -> np.ndarray:
     out = []
     for p in ds.labelled(split):
         pr = preds.get(p)
-        out.append(protocol.pair_error(pr.A if pr else None, *ds.checkpoints(split, p)))
+        out.append(pair_error(ds, split, p, pr.A if pr else None))
     return np.array(out)
+
+
+def pair_error(ds, split: str, pair: str, A) -> float | None:
+    """一个 pair 的误差；无标注为 None。扰动变体（workbench/perturb.py）先把 A 换回原 SAR 坐标系，误差按原始像素计。"""
+    if hasattr(ds, "original"):
+        A, cp = ds.original(split, pair, A)
+    else:
+        cp = ds.checkpoints(split, pair)
+    return protocol.pair_error(A, *cp) if cp else None
 
 
 def evaluate_preds(ds: Dataset, split: str, preds: dict[str, Pred]) -> dict:

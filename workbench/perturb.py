@@ -2,6 +2,7 @@
 
 实验在 exp.toml 写 `perturb = true`，T 存在 runs/<id>/perturb/<变体>/<split>.json；方法名的最后一段 `__<变体>`
 对得上这个目录的，就按该变体评测：检查点 SAR 一侧变为 T(q)，落到 SAR 画面外的检查点不计，一个都不剩的 pair 整对不计；
+误差把预测换回原 SAR 坐标系（T⁻¹∘A）再量，单位仍是原始像素（见 PerturbedView.original）；
 逐对视图里的 SAR 影像同样套上 T。其余方法照常。
 """
 from __future__ import annotations
@@ -61,6 +62,22 @@ class PerturbedView:
         w, h = self.ds.size(split, pair, "SAR")
         keep = (q[:, 0] >= 0) & (q[:, 0] < w) & (q[:, 1] >= 0) & (q[:, 1] < h)
         return (opt[keep], q[keep]) if keep.any() else None
+
+    def original(self, split: str, pair: str, A):
+        """评测用：把扰动坐标系里的仿射 A 换回原 SAR 坐标系（T⁻¹∘A），连同留下的检查点（原坐标）一起返回。
+        误差按原 SAR 像素计：缩放变体若在扰动后的网格里量，误差会被放大或缩小 1 ± s 倍，与原协议的阈值不可比。
+        平移、旋转是等距变换，两种量法结果相同。"""
+        cp, T = self.checkpoints(split, pair), self.T(split, pair)
+        if cp is None:
+            return A, None
+        opt, q = cp
+        Li = np.linalg.inv(T[:, :2])
+        Ti = np.c_[Li, -Li @ T[:, 2]]
+        sar = q @ Ti[:, :2].T + Ti[:, 2]
+        if A is not None:
+            H = lambda M: np.r_[np.asarray(M, np.float64).reshape(2, 3), [[0, 0, 1]]]
+            A = (H(Ti) @ H(A))[:2]
+        return A, (opt, sar)
 
     @lru_cache(maxsize=None)
     def labelled(self, split: str) -> list[str]:

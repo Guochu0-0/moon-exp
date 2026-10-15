@@ -77,6 +77,16 @@ def test_eval_uses_perturbed_truth_and_drops_out_of_frame(runs, dataset):
     assert (sar < 16).all() and (sar >= 0).all()
 
 
+def test_scale_error_measured_in_original_pixels(runs, dataset):
+    S = [[1.2, 0.0, -1.6], [0.0, 1.2, -1.6]]                       # 绕 16 px patch 中心放大 20%
+    off = [[1.0, 0.0, 4.0], [0.0, 1.0, -4.0]]                      # 比真值偏 1 px
+    d = setup_perturbed(runs, dataset, T=S)
+    light(runs, dataset, "E7", "m__s", A=compose(S, off))
+    met = evaluate_run(dataset, load_runs(runs)["E7"])["methods"]["m__s"]["val"]
+    assert met["summary"]["median"] == pytest.approx(1.0)
+    assert d.exists()
+
+
 def test_without_flag_suffix_is_ordinary_variant(runs, dataset):
     setup_perturbed(runs, dataset, perturb_flag=False)
     met = evaluate_run(dataset, load_runs(runs)["E7"])["methods"]

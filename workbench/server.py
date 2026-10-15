@@ -47,7 +47,7 @@ import numpy as np
 
 from . import canvas, inter, perturb, protocol, reference, tb
 from .dataset import SPLIT_DIRS, Dataset, to_display
-from .evaluate import IDENTITY, evaluate_preds, jsonable, pair_errors
+from .evaluate import IDENTITY, evaluate_preds, jsonable, pair_error, pair_errors
 from .records import (INTER_META, SPLITS, EditError, NotFound, Pred, Run, create_experiment, delete_experiment, load_runs,
                       next_id, rename_experiment, save_notes, set_parent, set_title)
 
@@ -286,7 +286,6 @@ class Workbench:
 
     def _pair_side(self, key, target, runs, split, p, ds, T_view, points: bool) -> dict:
         """误差按这一侧自己的真值算（ds）；仿射与点对换到画面的坐标系（T_view，方法那一侧的 T）里显示。"""
-        cp = ds.checkpoints(split, p)
         if target == reference.UNREGISTERED:
             out = {"exp": None, "caveat": None, "A": IDENTITY, "fail": None, "extra": {}, "matches": None,
                    "inter": [] if points else None}
@@ -301,7 +300,7 @@ class Workbench:
                    "inter": [{"name": k, **{f: meta[f] for f in INTER_META},
                               **self._inter_state(InterRef(r, m, k, split, p, meta))}
                              for k, meta in r.inters(m).items()] if points else None}
-        error = protocol.pair_error(out["A"], *cp) if cp else None
+        error = pair_error(ds, split, p, out["A"])
         M = _to_view(_T(ds, split, p), T_view)
         if M is not None:
             if out["A"] is not None:

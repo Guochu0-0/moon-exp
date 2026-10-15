@@ -26,11 +26,18 @@ import shutil
 import socket
 import subprocess
 import time
-import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
+
+try:
+    import tomllib
+except ModuleNotFoundError:            # 训练环境是 py3.10（写 preds 的推理脚本在那里跑）
+    try:
+        import tomli as tomllib
+    except ModuleNotFoundError:
+        from pip._vendor import tomli as tomllib
 
 SPLITS = ("val", "test")
 MAIN_METHOD = "main"

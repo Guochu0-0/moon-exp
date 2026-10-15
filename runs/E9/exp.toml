@@ -1,0 +1,77 @@
+id = "E9"
+title = "SAR 信号差异的零样本检验：换 SAR 极化输入、光学 x 向模糊（Val）"
+parent = "B0"
+baseline = true
+date = "2026-10-15"
+
+[methods.anymatch_loftr__s1]
+name = "AnyMatch-LoFTR，SAR 用 S1（参照，同 B0）"
+
+[methods.anymatch_loftr__sc]
+name = "AnyMatch-LoFTR，SAR 用同向圆极化 SC"
+
+[methods.anymatch_loftr__oc]
+name = "AnyMatch-LoFTR，SAR 用反向圆极化 OC"
+
+[methods.anymatch_loftr__cpr]
+name = "AnyMatch-LoFTR，SAR 用圆极化比 CPR"
+
+[methods.anymatch_loftr__m]
+name = "AnyMatch-LoFTR，SAR 用极化度 m"
+
+[methods.anymatch_loftr__mchi_odd]
+name = "AnyMatch-LoFTR，SAR 用 m-χ 奇次散射"
+
+[methods.anymatch_loftr__mchi_even]
+name = "AnyMatch-LoFTR，SAR 用 m-χ 偶次散射"
+
+[methods.anymatch_loftr__mchi_vol]
+name = "AnyMatch-LoFTR，SAR 用 m-χ 体散射"
+
+[methods.anymatch_loftr__optx4]
+name = "AnyMatch-LoFTR，光学 x 向模糊到约 30 m"
+
+[methods.anymatch_loftr__optx4y2]
+name = "AnyMatch-LoFTR，光学模糊到 x 约 30 m、y 约 15 m"
+
+[methods.anymatch_loftr__fuse_s1_cpr]
+name = "AnyMatch-LoFTR，S1 与 CPR 的点对合并"
+
+[methods.anymatch_roma__s1]
+name = "AnyMatch-RoMa，SAR 用 S1（参照，同 B0）"
+
+[methods.anymatch_roma__s1mm]
+name = "AnyMatch-RoMa，SAR 用 S1 min–max（参照，同 B0m）"
+
+[methods.anymatch_roma__sc]
+name = "AnyMatch-RoMa，SAR 用同向圆极化 SC"
+
+[methods.anymatch_roma__oc]
+name = "AnyMatch-RoMa，SAR 用反向圆极化 OC"
+
+[methods.anymatch_roma__cpr]
+name = "AnyMatch-RoMa，SAR 用圆极化比 CPR"
+
+[methods.anymatch_roma__m]
+name = "AnyMatch-RoMa，SAR 用极化度 m"
+
+[methods.anymatch_roma__mchi_odd]
+name = "AnyMatch-RoMa，SAR 用 m-χ 奇次散射"
+
+[methods.anymatch_roma__mchi_even]
+name = "AnyMatch-RoMa，SAR 用 m-χ 偶次散射"
+
+[methods.anymatch_roma__mchi_vol]
+name = "AnyMatch-RoMa，SAR 用 m-χ 体散射"
+
+[methods.anymatch_roma__mchi_rgb]
+name = "AnyMatch-RoMa，SAR 用 m-χ 三通道 RGB"
+
+[methods.anymatch_roma__optx4]
+name = "AnyMatch-RoMa，光学 x 向模糊到约 30 m"
+
+[methods.anymatch_roma__optx4y2]
+name = "AnyMatch-RoMa，光学模糊到 x 约 30 m、y 约 15 m"
+
+[methods.anymatch_roma__fuse_s1_cpr]
+name = "AnyMatch-RoMa，S1 与 CPR 的点对合并"

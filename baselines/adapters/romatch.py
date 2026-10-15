@@ -54,12 +54,13 @@ class RomatchAdapter:
         import cv2
         from PIL import Image
 
-        h, w = img.shape
+        h, w = img.shape[:2]                     # 单通道复制成 RGB；H×W×3 原样当 RGB（m-χ，#150）
         hn, wn = long_side_size(h, w, self.long_side, df=8)
         if (hn, wn) != (h, w):
             img = cv2.resize(np.ascontiguousarray(img, np.float32), (wn, hn))
         u8 = (np.clip(img, 0.0, 1.0) * 255.0).astype(np.uint8)          # ToPILImage: mul(255).byte()
-        return Image.fromarray(np.repeat(u8[..., None], 3, -1), mode="RGB"), (h, w, hn, wn)
+        rgb = u8 if u8.ndim == 3 else np.repeat(u8[..., None], 3, -1)
+        return Image.fromarray(np.ascontiguousarray(rgb), mode="RGB"), (h, w, hn, wn)
 
     def match(self, opt, sar):
         import torch

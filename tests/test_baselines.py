@@ -57,8 +57,35 @@ def test_sar_mapping():
     np.testing.assert_allclose(inputs.sar_p2p98(sar * 7.0), x, atol=1e-5)
     for name in inputs.SAR:
         y = inputs.get("sar", name)(sar)
+        assert y.dtype == np.float32 and y.shape[:2] == (64, 64) and np.isfinite(y).all()
         assert y.min() >= 0 and y.max() <= 1
     assert inputs.get("optical", "div255")(np.array([[0, 255]], np.uint8)).tolist() == [[0.0, 1.0]]
+
+
+def test_polar_identities():
+    """极化派生量：SC + OC = S1，奇次 + 偶次 + 体散射 = S1，各分量非负（#150）。"""
+    rng = np.random.default_rng(1)
+    h, v = rng.random((2, 32, 32)) + 0.01
+    ph = rng.uniform(-np.pi, np.pi, (32, 32))
+    rho = rng.random((32, 32))                 # 相关系数 ≤ 1，保证 m ≤ 1
+    x = rho * np.sqrt(h * v) * np.exp(1j * ph)
+    sar = np.stack([h, v, x.real, x.imag], -1).astype(np.float32)
+    p = inputs.polar(sar)
+    np.testing.assert_allclose(p["sc"] + p["oc"], p["s1"], rtol=1e-6)
+    np.testing.assert_allclose(p["odd"] + p["even"] + p["vol"], p["s1"], rtol=1e-6)
+    assert (p["m"] <= 1).all() and min(p[k].min() for k in ("odd", "even", "vol")) >= -1e-9
+
+
+def test_optical_blur():
+    """x 向模糊只沿 x 展宽、保持均值；y 向不动（#150）。"""
+    img = np.zeros((32, 32), np.uint8)
+    img[16, 16] = 255
+    y = inputs.get("optical", "xblur4")(img)
+    assert y.shape == (32, 32) and y.dtype == np.float32
+    np.testing.assert_allclose(y.sum(), 1.0, rtol=1e-5)
+    assert y[15].max() == 0 and y[16, 14] > 0.1 * y[16, 16]
+    z = inputs.get("optical", "blur4x2")(img)
+    assert z[15, 16] > 0 and z[16, 14] > z[14, 16]
 
 
 def test_to_original_matches_cv2_resize():

@@ -26,17 +26,24 @@ import shutil
 import socket
 import subprocess
 import time
-import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
 
+try:
+    import tomllib
+except ModuleNotFoundError:            # 训练环境是 py3.10（写 preds 的推理脚本在那里跑）
+    try:
+        import tomli as tomllib
+    except ModuleNotFoundError:
+        from pip._vendor import tomli as tomllib
+
 SPLITS = ("val", "test")
 MAIN_METHOD = "main"
 FIELDS = ("id", "title", "kind", "parent", "init", "baseline", "date", "methods")
 ANALYSIS = "analysis"   # kind 的唯一取值；不写即普通实验
-METHOD_FIELDS = ("name", "caveat")
+METHOD_FIELDS = ("name", "caveat", "ref")
 LEGACY_FIELDS = ("status", "commit", "hypothesis", "change", "verdict", "next")
 MATCHES_CAP = 2000   # 每个 pair 的点对最多存多少个点（按 conf 取前若干）
 INTER_KINDS = ("scalar", "points", "flow", "image")

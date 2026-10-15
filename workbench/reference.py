@@ -28,8 +28,14 @@ def ranked(run: Run, score: Score) -> list[str]:
 
 
 def default_ref(run: Run, method: str, runs: dict[str, Run], score: Score) -> str | None:
-    """有 init 用 init；父实验有同名基础方法就用它；否则用父实验 Val 主指标最好的方法；
-    都没有时，基线无参考，其余对比未配准。"""
+    """[methods.<m>] 写了 ref 且找得到就用它；有 init 用 init；父实验有同名基础方法就用它；
+    否则用父实验 Val 主指标最好的方法；都没有时，基线无参考，其余对比未配准。"""
+    own = run.meta.get("methods", {}).get(method)
+    ref = own.get("ref") if isinstance(own, dict) else None
+    if ref:
+        rid, _, m = ref.partition("/")
+        if ref == UNREGISTERED or (rid in runs and m in runs[rid].methods):
+            return ref
     if run.init:
         iid, _, im = run.init.partition("/")
         if iid in runs and im in runs[iid].methods:

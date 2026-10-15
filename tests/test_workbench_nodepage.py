@@ -37,12 +37,17 @@ def tree(runs, dataset):
     return runs
 
 
-def test_reference_defaults(api, tree):
+def test_reference_defaults(api, tree, dataset):
+    write_exp(tree, "F", 'parent = "R"\n[methods.a]\nref = "E1/main"\n[methods.b]\nref = "X/none"\n')
+    light(tree, dataset, "F", "a")
+    light(tree, dataset, "F", "b")
     assert defaults(detail(api, "E1")) == {"main": "B0/loftr"}                 # 有 init 用 init
     assert defaults(detail(api, "E2")) == {"loftr__v": "B0/loftr",             # 父实验有同名基础方法
                                            "spsg__v": "B0/roma"}               # 否则父实验 Val 主指标最好的
     assert defaults(detail(api, "B0")) == {"roma": None, "loftr": None}        # 基线默认无参考
     assert defaults(detail(api, "R")) == {"main": "identity"}                  # 无父的非基线：未配准
+    assert defaults(detail(api, "F")) == {"a": "E1/main",                      # [methods.<m>] 的 ref 优先
+                                          "b": "R/main"}                       # 找不到时按原规则
 
 
 def test_reference_candidates(api, tree):

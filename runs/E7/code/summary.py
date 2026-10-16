@@ -7,8 +7,9 @@
   data/summary.csv     方法、变体、split、n、剔除 pair / 检查点数、AUC@3/5/10、SR@3/5/10、中位误差、失败率
   data/follow.csv      每个方法、变体、split：扰动后的仿射是否跟上 T（patch 四角平均位移 < 5 px）。
                        follow = 离 T∘A₀ 近（A₀ 是同一方法在原始影像上的仿射），stay = 离 A₀ 近（停在原位置），other = 都不近
-  auc5_vs_level.png    三个轴各一栏，横轴档位（0 = 原始），纵轴 AUC@5；上排 Val、下排 Test
-  sr10_vs_level.png    同上，纵轴 SR@10
+  data/gt_dist.csv     原始数据本身的平移 / 旋转 / 缩放分布（由 gtfit 仿射分解，--plot 时写）
+  auc5_vs_level.png    总览：三个轴各一栏，横轴档位（0 = 原始），纵轴 Val AUC@5，只画 5 个方法；灰底为原数据 90% 的范围
+  auc5_bars.png        原始与三个轴最重一档的 Val AUC@5 柱状图
 """
 import csv
 import json
@@ -98,6 +99,34 @@ def tables():
                 print(f"| {SHORT[m]} | " + " | ".join("—" if c is None else f"{c:.3f}" for c in cells) + " |")
 
 
+# 图里只画方法本身：Q11p（随机 reward 对照）和两个标注过拟合模型只留在表里
+PLOT_METHODS = ["anymatch_loftr", "P10", "Q4", "anymatch_roma", "erase_geo__r2"]
+# 颜色 = 路线（zero-shot 灰、离线伪标签蓝、在线自监督绿），线型 / 柱子花纹 = 骨干（LoFTR 实线、RoMa 虚线 + 斜纹）
+STYLE = {"anymatch_loftr": ("#8c8c8c", "-", "o"), "P10": ("#1f77b4", "-", "o"), "Q4": ("#2ca02c", "-", "o"),
+         "anymatch_roma": ("#8c8c8c", "--", "s"), "erase_geo__r2": ("#1f77b4", "--", "s")}
+BARS = [("orig", "原始"), ("shift128", "平移 128 px"), ("rot20", "旋转 20°"), ("scale20", "缩放 20%")]
+
+
+def gt_dist():
+    """原始数据本身的几何差异：用标注点最小二乘拟合的仿射（gtfit）分解出 patch 中心位移、旋转角、各向同性缩放。"""
+    rows = []
+    for s in ("val", "test"):
+        t, r, k = [], [], []
+        for line in open(R / "preds" / "gtfit" / f"{s}.jsonl", encoding="utf-8"):
+            A = np.array(json.loads(line)["A"], float)
+            L, c = A[:, :2], np.array([256.0, 256.0])
+            t.append(np.linalg.norm(L @ c + A[:, 2] - c))
+            U, S, Vt = np.linalg.svd(L)
+            Rm = U @ Vt
+            r.append(abs(np.degrees(np.arctan2(Rm[1, 0], Rm[0, 0]))))
+            k.append(abs(np.sqrt(S.prod()) - 1) * 100)
+        for name, v in (("shift_px", t), ("rot_deg", r), ("scale_pct", k)):
+            q = np.percentile(v, [50, 90, 99, 100])
+            rows.append({"split": s, "quantity": name, **{f"p{p}": round(float(x), 2) for p, x in zip((50, 90, 99, 100), q)}})
+    write_csv(OUT / "data" / "gt_dist.csv", rows)
+    return {(r["split"], r["quantity"]): r for r in rows}
+
+
 def plot():
     import matplotlib
     matplotlib.use("Agg")
@@ -105,29 +134,48 @@ def plot():
     plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Noto Sans CJK SC", "DejaVu Sans"]
     plt.rcParams["axes.unicode_minus"] = False
     with open(OUT / "data" / "summary.csv", encoding="utf-8") as f:
-        get = {(r["method"], r["variant"], r["split"]): r for r in csv.DictReader(f)}
-    style = {"anymatch_loftr": ("C0", ":"), "P10": ("C0", "-"), "Q4": ("C2", "-"), "Q11p": ("C2", "--"),
-             "loftr_lr5e5": ("C0", "-."), "anymatch_roma": ("C3", ":"), "erase_geo__r2": ("C3", "-"), "roma_vgg": ("C3", "-.")}
-    for key, fn in (("auc@5", "auc5_vs_level.png"), ("sr@10", "sr10_vs_level.png")):
-        fig, axs = plt.subplots(2, 3, figsize=(13, 7.5), sharey="row")
-        for j, (a, (lab, ls)) in enumerate(AXES.items()):
-            for i, s in enumerate(("val", "test")):
-                ax = axs[i, j]
-                for m in METHODS:
-                    ys = [get.get((m, "orig" if l == 0 else f"{a}{l}", s), {}).get(key) for l in ls]
-                    ys = [np.nan if y in (None, "") else float(y) for y in ys]
-                    if not np.isnan(ys).all():
-                        c, st = style[m]
-                        ax.plot(ls, ys, st, color=c, marker="o", ms=3, label=SHORT[m])
-                ax.set_xticks(ls)
-                ax.set_xlabel(lab)
-                ax.grid(alpha=.3)
-                if j == 0:
-                    ax.set_ylabel(f"{'Val' if s == 'val' else 'Test'} {key.upper()}")
-        fig.legend(*axs[0, 0].get_legend_handles_labels(), loc="lower center", ncol=4, fontsize=9, frameon=False)
-        fig.tight_layout(rect=(0, 0.07, 1, 1))
-        fig.savefig(OUT / fn, dpi=130)
-        plt.close(fig)
+        get = {(r["method"], r["variant"], r["split"]): float(r["auc@5"]) for r in csv.DictReader(f)}
+    dist = gt_dist()
+    p90 = {"shift": dist["val", "shift_px"]["p90"], "rot": dist["val", "rot_deg"]["p90"], "scale": dist["val", "scale_pct"]["p90"]}
+
+    # 图 1：总览，三个轴各一栏，Val AUC@5 随档位
+    fig, axs = plt.subplots(1, 3, figsize=(13, 4.3), sharey=True)
+    for ax, (a, (lab, ls)) in zip(axs, AXES.items()):
+        ax.axvspan(0, p90[a], color="#eeeeee", zorder=0)
+        ax.text(ls[-1] * .01, 0.008, "灰底：原数据 90% 的 pair", fontsize=8, color="#777777")
+        for m in PLOT_METHODS:
+            c, st, mk = STYLE[m]
+            ys = [get[m, "orig" if l == 0 else f"{a}{l}", "val"] for l in ls]
+            ax.plot(ls, ys, st, color=c, marker=mk, ms=5, lw=2, label=SHORT[m])
+        ax.set_xticks(ls)
+        ax.set_xlim(-ls[-1] * .03, ls[-1] * 1.03)
+        ax.set_xlabel(lab)
+        ax.set_ylim(0, 0.36)
+        ax.grid(alpha=.3)
+    axs[0].set_ylabel("Val AUC@5")
+    fig.legend(*axs[0].get_legend_handles_labels(), loc="upper center", ncol=5, fontsize=9.5, frameon=False)
+    fig.tight_layout(rect=(0, 0, 1, 0.92))
+    fig.savefig(OUT / "auc5_vs_level.png", dpi=130)
+    plt.close(fig)
+
+    # 图 2：原始与三个轴最重一档，5 个方法并排
+    fig, ax = plt.subplots(figsize=(10, 4.3))
+    w = 0.16
+    for i, m in enumerate(PLOT_METHODS):
+        c, st, _ = STYLE[m]
+        xs = np.arange(len(BARS)) + (i - 2) * w
+        ys = [get[m, v, "val"] for v, _ in BARS]
+        ax.bar(xs, ys, w * .92, color=c, hatch="//" if st == "--" else None, edgecolor="white", label=SHORT[m])
+        for x, y in zip(xs, ys):
+            ax.text(x, y + .004, f"{y:.2f}", ha="center", fontsize=7.5)
+    ax.set_xticks(range(len(BARS)), [b for _, b in BARS])
+    ax.set_ylabel("Val AUC@5")
+    ax.set_ylim(0, 0.37)
+    ax.grid(axis="y", alpha=.3)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.13), ncol=5, fontsize=9, frameon=False)
+    fig.tight_layout()
+    fig.savefig(OUT / "auc5_bars.png", dpi=130)
+    plt.close(fig)
 
 
 if __name__ == "__main__":

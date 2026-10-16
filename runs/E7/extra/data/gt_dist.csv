@@ -1,0 +1,7 @@
+split,quantity,p50,p90,p99,p100
+val,shift_px,21.21,72.98,144.93,247.36
+val,rot_deg,0.59,2.49,4.15,6.06
+val,scale_pct,1.55,4.59,8.21,13.45
+test,shift_px,27.86,123.49,230.42,276.31
+test,rot_deg,0.56,2.75,7.26,8.81
+test,scale_pct,1.77,5.18,10.93,16.2

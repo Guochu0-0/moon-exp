@@ -36,7 +36,8 @@ const fin = v => v == null ? Infinity : v;
 const errTxt = e => e == null ? '失败' : e.toFixed(1);
 const order = (x, y) => x < y ? -1 : x > y ? 1 : 0;
 const pad = n => String(n).padStart(4, '0');
-const img = (split, pair, kind) => `/img?${new URLSearchParams({ split, pair, kind })}`;
+// perturb：难版评测的扰动变体（<实验>/<变体>），SAR 底图套上它的已知 T，与 /api/pair 给出的检查点同一坐标系
+const img = (split, pair, kind, perturb) => `/img?${new URLSearchParams({ split, pair, kind, ...(kind === 'sar' && perturb ? { perturb } : {}) })}`;
 const f2 = v => +v.toFixed(2);
 
 // 仿射 A（光学 → SAR）的逆，写成 SVG matrix(a b c d e f)：把 SAR 坐标摆回光学坐标
@@ -411,7 +412,7 @@ export function mountVisual(isShown) {
   function interPane(d, s, meta, x) {
     const sd = side(s), [w, h] = meta.frame === 'sar' ? d.sar_size : d.size, full = [0, 0, w, h];
     const layer = cls => `<image class="${cls}" href="${esc(x.png)}" width="${w}" height="${h}" preserveAspectRatio="none"${cls === 'heat' ? ` opacity="${V.alpha / 100}"` : ''}/>`;
-    let base = `<image href="${img(d.split, d.pair, meta.frame)}" width="${w}" height="${h}"/>`, msg = '';
+    let base = `<image href="${img(d.split, d.pair, meta.frame, d.perturb)}" width="${w}" height="${h}"/>`, msg = '';
     if (x.state === 'absent') msg = '此 pair 没有该中间结果';
     else if (x.state === 'not_synced') msg = '本地没有该中间结果的数据';
     else if (meta.kind === 'scalar') base += layer('heat');
@@ -437,15 +438,15 @@ export function mountVisual(isShown) {
   function pane(d, s, title, right, view) {
     const [w, h] = view === 'sar' ? d.sar_size : d.size, [sw, sh] = d.sar_size;
     let full = [0, 0, w, h], base = '', msg = '';
-    if (view === 'opt' || view === 'sar') base = `<image href="${img(d.split, d.pair, view)}" width="${w}" height="${h}"/>`;
+    if (view === 'opt' || view === 'sar') base = `<image href="${img(d.split, d.pair, view, d.perturb)}" width="${w}" height="${h}"/>`;
     else if (view === 'lines') {
       const gap = Math.round(w * .04);
       full = [0, 0, w + gap + sw, Math.max(h, sh)];
-      base = `<image href="${img(d.split, d.pair, 'opt')}" width="${w}" height="${h}"/><image href="${img(d.split, d.pair, 'sar')}" x="${w + gap}" width="${sw}" height="${sh}"/>`;
+      base = `<image href="${img(d.split, d.pair, 'opt')}" width="${w}" height="${h}"/><image href="${img(d.split, d.pair, 'sar', d.perturb)}" x="${w + gap}" width="${sw}" height="${sh}"/>`;
     } else {
       base = `<image href="${img(d.split, d.pair, 'opt')}" width="${w}" height="${h}"/>`;
       const inv = s.A && inverse(s.A);
-      if (view === 'swipe' && inv) base += `<g class="clip"><image href="${img(d.split, d.pair, 'sar')}" width="${sw}" height="${sh}" transform="matrix(${inv.m.map(f2).join(' ')})"/></g><line class="cut"/>`;
+      if (view === 'swipe' && inv) base += `<g class="clip"><image href="${img(d.split, d.pair, 'sar', d.perturb)}" width="${sw}" height="${sh}" transform="matrix(${inv.m.map(f2).join(' ')})"/></g><line class="cut"/>`;
     }
     if (s && !s.A && (view === 'swipe' || view === 'resid')) msg = '估计失败，只显示光学原图';
     if (s && isPointView(view)) {

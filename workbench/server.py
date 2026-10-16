@@ -45,9 +45,9 @@ from urllib.parse import parse_qs, unquote, urlencode, urlparse
 
 import numpy as np
 
-from . import canvas, inter, protocol, reference, tb
+from . import canvas, inter, perturb, protocol, reference, tb
 from .dataset import SPLIT_DIRS, Dataset, to_display
-from .evaluate import IDENTITY, evaluate_preds, jsonable, pair_errors
+from .evaluate import IDENTITY, evaluate_preds, jsonable, pair_error, pair_errors
 from .records import (INTER_META, SPLITS, EditError, NotFound, Pred, Run, create_experiment, delete_experiment, load_runs,
                       next_id, rename_experiment, save_notes, set_parent, set_title)
 
@@ -94,7 +94,7 @@ class Workbench:
         sig = (st.st_mtime_ns, st.st_size)
         hit = self._auc.get(p)
         if hit is None or hit[0] != sig:
-            v = protocol.auc(pair_errors(self.ds, CARD_SPLIT, r.preds(method, CARD_SPLIT)), CARD_AUC)
+            v = protocol.auc(pair_errors(self._ds(r, method), CARD_SPLIT, r.preds(method, CARD_SPLIT)), CARD_AUC)
             hit = self._auc[p] = (sig, v)
         return hit[1]
 
@@ -108,17 +108,25 @@ class Workbench:
         sig = (st.st_mtime_ns, st.st_size)
         hit = self._res.get(p)
         if hit is None or hit[0] != sig:
-            hit = self._res[p] = (sig, self._evaluate(split, r.preds(method, split)))
+            hit = self._res[p] = (sig, self._evaluate(split, r.preds(method, split), self._ds(r, method)))
         return hit[1]
 
-    def _identity_result(self, split: str) -> dict:
-        if split not in self._identity:
-            self._identity[split] = self._evaluate(split, {p: Pred(p, IDENTITY) for p in self.ds.pairs(split)})
-        return self._identity[split]
+    def _ds(self, r: Run, method: str):
+        """方法评测用的数据集：难版评测的扰动变体换成扰动后的真值（workbench/perturb.py），其余就是 self.ds。"""
+        return perturb.dataset_for(self.ds, r, method)
 
-    def _evaluate(self, split: str, preds: dict) -> dict:
-        e = evaluate_preds(self.ds, split, preds)
-        return {"summary": e["summary"], "errors": e["errors"], "_err": pair_errors(self.ds, split, preds)}
+    def _identity_result(self, split: str, ds=None) -> dict:
+        ds = ds or self.ds
+        k = (split, getattr(ds, "key", None))
+        if k not in self._identity:
+            self._identity[k] = self._evaluate(split, {p: Pred(p, IDENTITY) for p in ds.pairs(split)}, ds)
+        return self._identity[k]
+
+    def _evaluate(self, split: str, preds: dict, ds) -> dict:
+        """"_pairs" 是误差的 pair 顺序（ds.labelled），扰动变体会剔掉一些 pair，比较两边时据此对齐。"""
+        e = evaluate_preds(ds, split, preds)
+        return {"summary": e["summary"], "errors": e["errors"], "_err": pair_errors(ds, split, preds),
+                "_pairs": ds.labelled(split)}
 
     def _score(self, runs: dict[str, Run]):
         main = protocol.protocol_info()["main"]
@@ -224,21 +232,36 @@ class Workbench:
         with self.lock:
             runs = load_runs(self.runs_dir)
             split = self._split(q)
-            side = {}
+            side, mds = {}, self.ds
             for name in ("method", "ref"):
                 key, target = self._target(q, name, runs)
                 if target is None:
                     side[name] = None
                     continue
-                res = self._identity_result(split) if target == reference.UNREGISTERED else self._result(*target, split)
+                if name == "method":
+                    mds = self._ds(*target)
+                # 未配准按方法那一侧的真值算：扰动变体的「未配准」就是恒等仿射对扰动后的真值
+                res = self._identity_result(split, mds) if target == reference.UNREGISTERED else self._result(*target, split)
                 if res is None:
                     raise EditError(f"{key} 没有 {split} 结果")
                 side[name] = {"key": key, "label": reference.label(key, runs), **res}
             a, b = side["method"], side["ref"]
-            diff = reference.paired_diff(a["_err"], b["_err"], a["summary"], b["summary"]) if b else None
-            pairs, no = self.ds.labelled(split), self.ds.numbers(split)
+            pairs, subset = a["_pairs"], None
+            if b and b["_pairs"] != pairs:   # 两边评测的 pair 不同（扰动变体剔掉了一些）：只在共同的 pair 上逐对比较
+                common = set(b["_pairs"])
+                pairs = [p for p in pairs if p in common]
+                a, b = (_restrict(x, pairs) for x in (a, b))
+                subset = len(pairs)
+            if not b:
+                diff = None
+            elif subset is None:
+                diff = reference.paired_diff(a["_err"], b["_err"], a["summary"], b["summary"])
+            else:                            # 差值也只在共同的 pair 上算；两边各自的 summary 仍是它自己全部 pair 上的
+                diff = reference.paired_diff(a["_err"], b["_err"], protocol.summarize(a["_err"]),
+                                             protocol.summarize(b["_err"]))
+            no = self.ds.numbers(split)
             return jsonable({"split": split, "method": _public(a), "ref": b and _public(b), "diff": diff,
-                             "pairs": pairs, "no": [no[p] for p in pairs]})
+                             "pairs": pairs, "no": [no[p] for p in pairs], "subset": subset})
 
     def pair(self, q: dict) -> dict:
         """单个 pair 的可视化素材：影像尺寸、检查点（无标注为 None），以及方法和参考方法各自的仿射与点对。"""
@@ -247,18 +270,22 @@ class Workbench:
             split, p = self._split(q), q.get("pair") or ""
             if p not in self.ds.numbers(split):
                 raise EditError(f"{SPLIT_DIRS[split]} 中没有 pair {p}")
-            cp = self.ds.checkpoints(split, p)
             points = q.get("points") != "0"
-            side = {}
-            for name in ("method", "ref"):
-                key, target = self._target(q, name, runs)
-                side[name] = target and self._pair_side(key, target, runs, split, p, cp, points)
+            # 画面按方法那一侧的坐标系：扰动变体的 SAR 影像与检查点都套上它的 T；参考方法在别的坐标系时换算过来显示
+            key, target = self._target(q, "method", runs)
+            mds = self._ds(*target)
+            cp, T = mds.checkpoints(split, p), _T(mds, split, p)
+            side = {"method": self._pair_side(key, target, runs, split, p, mds, T, points)}
+            key, target = self._target(q, "ref", runs)
+            rds = mds if target == reference.UNREGISTERED else self._ds(*target) if target else None
+            side["ref"] = target and self._pair_side(key, target, runs, split, p, rds, T, points)
             return jsonable({"split": split, "pair": p, "no": self.ds.numbers(split)[p],
                              "size": self.ds.size(split, p, "Optical"), "sar_size": self.ds.size(split, p, "SAR"),
                              "checkpoints": cp and {"opt": cp[0].tolist(), "sar": cp[1].tolist()},
-                             "inlier_px": INLIER_PX, **side})
+                             "perturb": getattr(mds, "key", None), "inlier_px": INLIER_PX, **side})
 
-    def _pair_side(self, key, target, runs, split, p, cp, points: bool) -> dict:
+    def _pair_side(self, key, target, runs, split, p, ds, T_view, points: bool) -> dict:
+        """误差按这一侧自己的真值算（ds）；仿射与点对换到画面的坐标系（T_view，方法那一侧的 T）里显示。"""
         if target == reference.UNREGISTERED:
             out = {"exp": None, "caveat": None, "A": IDENTITY, "fail": None, "extra": {}, "matches": None,
                    "inter": [] if points else None}
@@ -273,8 +300,16 @@ class Workbench:
                    "inter": [{"name": k, **{f: meta[f] for f in INTER_META},
                               **self._inter_state(InterRef(r, m, k, split, p, meta))}
                              for k, meta in r.inters(m).items()] if points else None}
-        return {"key": key, "label": reference.label(key, runs),
-                "error": protocol.pair_error(out["A"], *cp) if cp else None, **out}
+        error = pair_error(ds, split, p, out["A"])
+        M = _to_view(_T(ds, split, p), T_view)
+        if M is not None:
+            if out["A"] is not None:
+                out["A"] = _compose(M, out["A"]).tolist()
+            mt = out["matches"]
+            if mt and mt.get("state") == "ok" and mt["n"]:
+                q = np.asarray(mt["sar"], np.float64)
+                mt["sar"] = np.round(q @ M[:, :2].T + M[:, 2], 2).tolist()
+        return {"key": key, "label": reference.label(key, runs), "error": error, **out}
 
     def _pred_rows(self, r: Run, method: str, split: str) -> dict:
         """preds 按文件的 mtime 和大小缓存：翻看 pair 时每次只取一行。"""
@@ -468,13 +503,48 @@ class Workbench:
     # ---------------- 影像 ----------------
 
     @lru_cache(maxsize=512)
-    def image_png(self, split: str, pair: str, kind: str) -> bytes:
+    def image_png(self, split: str, pair: str, kind: str, pkey: str | None = None) -> bytes:
+        """pkey = <实验>/<变体>：SAR 套上难版评测的已知 T（workbench/perturb.py）。"""
         from PIL import Image
 
-        img = self.ds.optical(split, pair) if kind == "opt" else self.ds.sar(split, pair)
+        img = to_display(self.ds.optical(split, pair) if kind == "opt" else self.ds.sar(split, pair))
+        if kind == "sar" and pkey:
+            rid, _, v = pkey.partition("/")
+            img = perturb.view(self.ds, self.runs_dir / rid / "perturb" / v).sar_display(img, split, pair)
         buf = io.BytesIO()
-        Image.fromarray(to_display(img)).save(buf, format="PNG", optimize=False, compress_level=3)
+        Image.fromarray(img).save(buf, format="PNG", optimize=False, compress_level=3)
         return buf.getvalue()
+
+    def perturb_key_ok(self, pkey: str) -> bool:
+        rid, _, v = pkey.partition("/")
+        ok = re.fullmatch(r"[\w.-]+", rid) and re.fullmatch(r"[\w.-]+", v)
+        return bool(ok) and (self.runs_dir / rid / "perturb" / v).is_dir()
+
+
+def _T(ds, split: str, pair: str):
+    return ds.T(split, pair) if isinstance(ds, perturb.PerturbedView) else None
+
+
+def _to_view(T_own, T_view):
+    """把一侧的 SAR 坐标换到画面坐标的仿射 T_view∘T_own⁻¹；两边相同时为 None。"""
+    I = np.c_[np.eye(2), np.zeros(2)]
+    a, b = (I if T_own is None else T_own), (I if T_view is None else T_view)
+    if np.allclose(a, b):
+        return None
+    Li = np.linalg.inv(a[:, :2])
+    return _compose(b, np.c_[Li, -Li @ a[:, 2]])
+
+
+def _compose(T, A):
+    H = lambda M: np.r_[np.asarray(M, np.float64).reshape(2, 3), [[0, 0, 1]]]
+    return (H(T) @ H(A))[:2]
+
+
+def _restrict(res: dict, pairs: list[str]) -> dict:
+    """一侧结果只留给定 pair 的逐对误差（顺序照 pairs），summary 保持它自己全部 pair 上的值。"""
+    idx = {p: i for i, p in enumerate(res["_pairs"])}
+    sel = [idx[p] for p in pairs]
+    return {**res, "errors": [res["errors"][i] for i in sel], "_err": res["_err"][sel], "_pairs": pairs}
 
 
 def _public(res: dict) -> dict:
@@ -564,7 +634,10 @@ def make_handler(wb: Workbench):
                 if path == "/img":
                     if q.get("split") in SPLIT_DIRS and q.get("kind") in ("opt", "sar") \
                             and q.get("pair") in wb.ds.pairs(q["split"]):
-                        return self.send(wb.image_png(q["split"], q["pair"], q["kind"]), "image/png")
+                        pk = q.get("perturb") or None
+                        if pk and not wb.perturb_key_ok(pk):
+                            raise EditError(f"找不到扰动 {pk}")
+                        return self.send(wb.image_png(q["split"], q["pair"], q["kind"], pk), "image/png")
                 if path.startswith("/runs/"):
                     rid, _, rel = path[len("/runs/"):].partition("/")
                     d = wb.runs_dir / rid

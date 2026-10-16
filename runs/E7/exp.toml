@@ -1,0 +1,33 @@
+id = "E7"
+title = "难版评测：在 SAR 侧叠加已知平移 / 旋转 / 缩放后，主要方法之间的差距能否拉开"
+parent = "B0"
+date = "2026-10-15"
+perturb = true
+
+[methods.anymatch_loftr]
+name = "AnyMatch-LoFTR（zero-shot）"
+
+[methods.anymatch_roma]
+name = "AnyMatch-RoMa（zero-shot）"
+
+[methods.loftr_lr5e5]
+name = "AnyMatch-LoFTR 在 Val+Test 标注上过拟合"
+
+[methods.roma_vgg]
+name = "AnyMatch-RoMa 在 Val+Test 标注上过拟合"
+
+[methods.P10]
+name = "LoFTR 离线伪标签迭代自训练（第四轮标签 + 扰动）"
+
+[methods.Q4]
+name = "LoFTR 在线粗级闭式期望 + 外点扣分"
+
+[methods.Q11p]
+name = "LoFTR 在线训练后再训细级（随机 reward 对照）"
+
+[methods.erase_geo__r2]
+name = "RoMa 离线伪标签自训练（擦除 + 仿射，第 2 轮）"
+
+[methods.gtfit]
+name = "标注点最小二乘自拟合的仿射（只作复合自检）"
+caveat = "由标注本身算出，不是方法；扰动后误差应与原始相同"

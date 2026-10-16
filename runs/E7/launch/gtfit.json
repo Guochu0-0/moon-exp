@@ -1,0 +1,18 @@
+[
+ {
+  "start": "2026-10-15 11:19:31 +0800",
+  "end": "2026-10-15 11:19:40 +0800",
+  "status": "ok",
+  "commit": "d5c735227480b438f205babbfcf4b157bd12e84c",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-hard-eval-138",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E7/code/gtfit.py"
+  ]
+ }
+]

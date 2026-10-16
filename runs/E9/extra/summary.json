@@ -1,0 +1,3230 @@
+{
+ "note": "斜率：实测残差（SAR 标注 − 仿射映射点，或 − 局部对应点）对预测视差 P（px，不带符号）的过原点回归；r2 为 s·P 去掉的均方比例；detrended 为 pair 内去掉 [1,x,y] 平面后",
+ "magnitude": {
+  "ROI_035": {
+   "group": "E",
+   "n_pts": 1383,
+   "rms_P_mean_px": 13.11,
+   "rms_P_plane_px": 5.19,
+   "p95_abs_P_plane_px": 10.38,
+   "median_z_std_plane_m": 41.1,
+   "median_gx_m": 7.32
+  },
+  "ROI_049": {
+   "group": "W",
+   "n_pts": 706,
+   "rms_P_mean_px": 7.66,
+   "rms_P_plane_px": 3.79,
+   "p95_abs_P_plane_px": 9.21,
+   "median_z_std_plane_m": 10.0,
+   "median_gx_m": 7.64
+  },
+  "ROI_070": {
+   "group": "W",
+   "n_pts": 910,
+   "rms_P_mean_px": 10.16,
+   "rms_P_plane_px": 4.54,
+   "p95_abs_P_plane_px": 9.45,
+   "median_z_std_plane_m": 25.9,
+   "median_gx_m": 6.71
+  },
+  "ROI_071": {
+   "group": "W",
+   "n_pts": 241,
+   "rms_P_mean_px": 6.73,
+   "rms_P_plane_px": 4.07,
+   "p95_abs_P_plane_px": 5.31,
+   "median_z_std_plane_m": 19.0,
+   "median_gx_m": 7.97
+  },
+  "ROI_075": {
+   "group": "E",
+   "n_pts": 1442,
+   "rms_P_mean_px": 11.46,
+   "rms_P_plane_px": 5.22,
+   "p95_abs_P_plane_px": 10.54,
+   "median_z_std_plane_m": 39.6,
+   "median_gx_m": 7.12
+  },
+  "ROI_080": {
+   "group": "W",
+   "n_pts": 607,
+   "rms_P_mean_px": 6.82,
+   "rms_P_plane_px": 4.8,
+   "p95_abs_P_plane_px": 9.66,
+   "median_z_std_plane_m": 42.6,
+   "median_gx_m": 8.07
+  },
+  "ROI_007": {
+   "group": "E",
+   "n_pts": 2315,
+   "rms_P_mean_px": 15.62,
+   "rms_P_plane_px": 6.24,
+   "p95_abs_P_plane_px": 13.45,
+   "median_z_std_plane_m": 46.3,
+   "median_gx_m": 7.21
+  },
+  "ROI_020": {
+   "group": "W",
+   "n_pts": 739,
+   "rms_P_mean_px": 9.53,
+   "rms_P_plane_px": 5.1,
+   "p95_abs_P_plane_px": 10.92,
+   "median_z_std_plane_m": 38.2,
+   "median_gx_m": 7.93
+  }
+ },
+ "labels": {
+  "loftr_zs": {
+   "val_E": {
+    "aff_x_raw": {
+     "slope": -0.136,
+     "ci95": [
+      -0.194,
+      -0.085
+     ],
+     "r2": 0.041,
+     "n_pts": 2536,
+     "n_pairs": 310
+    },
+    "aff_x_detr": {
+     "slope": -0.907,
+     "ci95": [
+      -0.937,
+      -0.877
+     ],
+     "r2": 0.776,
+     "n_pts": 2536,
+     "n_pairs": 310
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.927,
+     "ci95_low": [
+      -0.958,
+      -0.895
+     ],
+     "slope_high": -0.29,
+     "ci95_high": [
+      -0.678,
+      0.085
+     ],
+     "n_pts": 2536,
+     "n_pairs": 310
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.938,
+     "ci95_low": [
+      -0.971,
+      -0.906
+     ],
+     "slope_high": -0.029,
+     "ci95_high": [
+      -0.412,
+      0.281
+     ],
+     "n_pts": 2536,
+     "n_pairs": 310
+    },
+    "aff_y_raw": {
+     "slope": 0.019,
+     "ci95": [
+      0.008,
+      0.031
+     ],
+     "r2": 0.015,
+     "n_pts": 2536,
+     "n_pairs": 310
+    },
+    "aff_y_detr": {
+     "slope": 0.027,
+     "ci95": [
+      0.013,
+      0.041
+     ],
+     "r2": 0.01,
+     "n_pts": 2536,
+     "n_pairs": 310
+    },
+    "loc_x_raw": {
+     "slope": -0.234,
+     "ci95": [
+      -0.365,
+      -0.123
+     ],
+     "r2": 0.008,
+     "n_pts": 1562,
+     "n_pairs": 310
+    },
+    "loc_x_detr": {
+     "slope": -0.275,
+     "ci95": [
+      -0.644,
+      -0.082
+     ],
+     "r2": 0.017,
+     "n_pts": 115,
+     "n_pairs": 14
+    },
+    "loc_y_raw": {
+     "slope": 0.086,
+     "ci95": [
+      0.009,
+      0.164
+     ],
+     "r2": 0.002,
+     "n_pts": 1562,
+     "n_pairs": 310
+    },
+    "loc_y_detr": {
+     "slope": -0.128,
+     "ci95": [
+      -0.508,
+      0.072
+     ],
+     "r2": 0.002,
+     "n_pts": 115,
+     "n_pairs": 14
+    },
+    "mse_x": 67.384,
+    "mse_x_nonaffine": 15.1,
+    "share_parallax_fit": 0.174,
+    "share_nonaffine_removed_phys": 0.768
+   },
+   "val_W": {
+    "aff_x_raw": {
+     "slope": 0.194,
+     "ci95": [
+      0.091,
+      0.308
+     ],
+     "r2": 0.044,
+     "n_pts": 2372,
+     "n_pairs": 295
+    },
+    "aff_x_detr": {
+     "slope": 0.937,
+     "ci95": [
+      0.848,
+      1.016
+     ],
+     "r2": 0.668,
+     "n_pts": 2372,
+     "n_pairs": 295
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.939,
+     "ci95_low": [
+      0.841,
+      1.024
+     ],
+     "slope_high": 0.905,
+     "ci95_high": [
+      0.552,
+      1.272
+     ],
+     "n_pts": 2372,
+     "n_pairs": 295
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.939,
+     "ci95_low": [
+      0.829,
+      1.031
+     ],
+     "slope_high": 0.896,
+     "ci95_high": [
+      0.418,
+      1.381
+     ],
+     "n_pts": 2372,
+     "n_pairs": 295
+    },
+    "aff_y_raw": {
+     "slope": -0.006,
+     "ci95": [
+      -0.018,
+      0.006
+     ],
+     "r2": 0.001,
+     "n_pts": 2372,
+     "n_pairs": 295
+    },
+    "aff_y_detr": {
+     "slope": 0.002,
+     "ci95": [
+      -0.028,
+      0.035
+     ],
+     "r2": 0.0,
+     "n_pts": 2372,
+     "n_pairs": 295
+    },
+    "loc_x_raw": {
+     "slope": 0.329,
+     "ci95": [
+      0.136,
+      0.541
+     ],
+     "r2": 0.015,
+     "n_pts": 1471,
+     "n_pairs": 294
+    },
+    "loc_x_detr": {
+     "slope": 0.261,
+     "ci95": [
+      -0.226,
+      1.261
+     ],
+     "r2": 0.001,
+     "n_pts": 120,
+     "n_pairs": 15
+    },
+    "loc_y_raw": {
+     "slope": -0.008,
+     "ci95": [
+      -0.193,
+      0.171
+     ],
+     "r2": 0.0,
+     "n_pts": 1471,
+     "n_pairs": 294
+    },
+    "loc_y_detr": {
+     "slope": 0.07,
+     "ci95": [
+      -0.317,
+      0.566
+     ],
+     "r2": 0.0,
+     "n_pts": 120,
+     "n_pairs": 15
+    },
+    "mse_x": 53.339,
+    "mse_x_nonaffine": 8.576,
+    "share_parallax_fit": 0.107,
+    "share_nonaffine_removed_phys": 0.665
+   },
+   "test_E": {
+    "aff_x_raw": {
+     "slope": -0.117,
+     "ci95": [
+      -0.182,
+      -0.062
+     ],
+     "r2": 0.026,
+     "n_pts": 1642,
+     "n_pairs": 203
+    },
+    "aff_x_detr": {
+     "slope": -0.898,
+     "ci95": [
+      -0.942,
+      -0.85
+     ],
+     "r2": 0.726,
+     "n_pts": 1642,
+     "n_pairs": 203
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.944,
+     "ci95_low": [
+      -0.989,
+      -0.893
+     ],
+     "slope_high": 0.536,
+     "ci95_high": [
+      -0.063,
+      1.13
+     ],
+     "n_pts": 1642,
+     "n_pairs": 203
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.919,
+     "ci95_low": [
+      -0.964,
+      -0.864
+     ],
+     "slope_high": -0.262,
+     "ci95_high": [
+      -0.797,
+      0.164
+     ],
+     "n_pts": 1642,
+     "n_pairs": 203
+    },
+    "aff_y_raw": {
+     "slope": -0.016,
+     "ci95": [
+      -0.047,
+      0.006
+     ],
+     "r2": 0.002,
+     "n_pts": 1642,
+     "n_pairs": 203
+    },
+    "aff_y_detr": {
+     "slope": -0.049,
+     "ci95": [
+      -0.07,
+      -0.027
+     ],
+     "r2": 0.029,
+     "n_pts": 1642,
+     "n_pairs": 203
+    },
+    "loc_x_raw": {
+     "slope": -0.253,
+     "ci95": [
+      -0.443,
+      -0.055
+     ],
+     "r2": 0.008,
+     "n_pts": 989,
+     "n_pairs": 201
+    },
+    "loc_x_detr": {
+     "slope": -0.328,
+     "ci95": [
+      -0.777,
+      -0.044
+     ],
+     "r2": 0.053,
+     "n_pts": 25,
+     "n_pairs": 3
+    },
+    "loc_y_raw": {
+     "slope": -0.002,
+     "ci95": [
+      -0.092,
+      0.091
+     ],
+     "r2": 0.0,
+     "n_pts": 989,
+     "n_pairs": 201
+    },
+    "loc_y_detr": {
+     "slope": -0.353,
+     "ci95": [
+      -1.976,
+      0.098
+     ],
+     "r2": 0.049,
+     "n_pts": 25,
+     "n_pairs": 3
+    },
+    "mse_x": 107.49,
+    "mse_x_nonaffine": 16.259,
+    "share_parallax_fit": 0.11,
+    "share_nonaffine_removed_phys": 0.716
+   },
+   "test_W": {
+    "aff_x_raw": {
+     "slope": 0.231,
+     "ci95": [
+      0.109,
+      0.376
+     ],
+     "r2": 0.067,
+     "n_pts": 715,
+     "n_pairs": 88
+    },
+    "aff_x_detr": {
+     "slope": 0.821,
+     "ci95": [
+      0.76,
+      0.878
+     ],
+     "r2": 0.637,
+     "n_pts": 715,
+     "n_pairs": 88
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.858,
+     "ci95_low": [
+      0.786,
+      0.921
+     ],
+     "slope_high": 0.077,
+     "ci95_high": [
+      -0.539,
+      0.703
+     ],
+     "n_pts": 715,
+     "n_pairs": 88
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.843,
+     "ci95_low": [
+      0.762,
+      0.919
+     ],
+     "slope_high": 0.368,
+     "ci95_high": [
+      -0.402,
+      1.06
+     ],
+     "n_pts": 715,
+     "n_pairs": 88
+    },
+    "aff_y_raw": {
+     "slope": 0.008,
+     "ci95": [
+      -0.013,
+      0.026
+     ],
+     "r2": 0.001,
+     "n_pts": 715,
+     "n_pairs": 88
+    },
+    "aff_y_detr": {
+     "slope": 0.027,
+     "ci95": [
+      -0.015,
+      0.065
+     ],
+     "r2": 0.006,
+     "n_pts": 715,
+     "n_pairs": 88
+    },
+    "loc_x_raw": {
+     "slope": 0.27,
+     "ci95": [
+      0.011,
+      0.555
+     ],
+     "r2": 0.007,
+     "n_pts": 492,
+     "n_pairs": 88
+    },
+    "loc_x_detr": {
+     "slope": 0.616,
+     "ci95": [
+      0.249,
+      1.605
+     ],
+     "r2": 0.158,
+     "n_pts": 32,
+     "n_pairs": 4
+    },
+    "loc_y_raw": {
+     "slope": -0.025,
+     "ci95": [
+      -0.163,
+      0.129
+     ],
+     "r2": 0.0,
+     "n_pts": 492,
+     "n_pairs": 88
+    },
+    "loc_y_detr": {
+     "slope": -0.473,
+     "ci95": [
+      -0.967,
+      4.85
+     ],
+     "r2": 0.033,
+     "n_pts": 32,
+     "n_pairs": 4
+    },
+    "mse_x": 64.971,
+    "mse_x_nonaffine": 10.042,
+    "share_parallax_fit": 0.098,
+    "share_nonaffine_removed_phys": 0.607
+   },
+   "per_roi": {
+    "ROI_035": {
+     "slope": -0.876,
+     "ci95": [
+      -0.922,
+      -0.836
+     ],
+     "r2": 0.745,
+     "n_pts": 1183,
+     "n_pairs": 147
+    },
+    "ROI_049": {
+     "slope": 0.753,
+     "ci95": [
+      0.506,
+      0.999
+     ],
+     "r2": 0.492,
+     "n_pts": 690,
+     "n_pairs": 86
+    },
+    "ROI_070": {
+     "slope": 0.986,
+     "ci95": [
+      0.923,
+      1.045
+     ],
+     "r2": 0.733,
+     "n_pts": 851,
+     "n_pairs": 106
+    },
+    "ROI_071": {
+     "slope": 1.115,
+     "ci95": [
+      1.022,
+      1.186
+     ],
+     "r2": 0.587,
+     "n_pts": 233,
+     "n_pairs": 29
+    },
+    "ROI_075": {
+     "slope": -0.939,
+     "ci95": [
+      -0.977,
+      -0.901
+     ],
+     "r2": 0.807,
+     "n_pts": 1353,
+     "n_pairs": 163
+    },
+    "ROI_080": {
+     "slope": 1.031,
+     "ci95": [
+      0.981,
+      1.085
+     ],
+     "r2": 0.777,
+     "n_pts": 598,
+     "n_pairs": 74
+    },
+    "ROI_007": {
+     "slope": -0.898,
+     "ci95": [
+      -0.94,
+      -0.853
+     ],
+     "r2": 0.726,
+     "n_pts": 1642,
+     "n_pairs": 203
+    },
+    "ROI_020": {
+     "slope": 0.821,
+     "ci95": [
+      0.758,
+      0.879
+     ],
+     "r2": 0.637,
+     "n_pts": 715,
+     "n_pairs": 88
+    }
+   }
+  },
+  "loftr_q4": {
+   "val_E": {
+    "aff_x_raw": {
+     "slope": -0.129,
+     "ci95": [
+      -0.184,
+      -0.081
+     ],
+     "r2": 0.051,
+     "n_pts": 2817,
+     "n_pairs": 345
+    },
+    "aff_x_detr": {
+     "slope": -0.907,
+     "ci95": [
+      -0.936,
+      -0.88
+     ],
+     "r2": 0.77,
+     "n_pts": 2817,
+     "n_pairs": 345
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.929,
+     "ci95_low": [
+      -0.963,
+      -0.898
+     ],
+     "slope_high": -0.219,
+     "ci95_high": [
+      -0.59,
+      0.173
+     ],
+     "n_pts": 2817,
+     "n_pairs": 345
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.94,
+     "ci95_low": [
+      -0.974,
+      -0.908
+     ],
+     "slope_high": 0.046,
+     "ci95_high": [
+      -0.276,
+      0.357
+     ],
+     "n_pts": 2817,
+     "n_pairs": 345
+    },
+    "aff_y_raw": {
+     "slope": 0.017,
+     "ci95": [
+      0.012,
+      0.022
+     ],
+     "r2": 0.018,
+     "n_pts": 2817,
+     "n_pairs": 345
+    },
+    "aff_y_detr": {
+     "slope": 0.026,
+     "ci95": [
+      0.012,
+      0.037
+     ],
+     "r2": 0.009,
+     "n_pts": 2817,
+     "n_pairs": 345
+    },
+    "loc_x_raw": {
+     "slope": -0.083,
+     "ci95": [
+      -0.176,
+      -0.002
+     ],
+     "r2": 0.002,
+     "n_pts": 2716,
+     "n_pairs": 345
+    },
+    "loc_x_detr": {
+     "slope": -0.186,
+     "ci95": [
+      -0.413,
+      -0.004
+     ],
+     "r2": 0.001,
+     "n_pts": 2072,
+     "n_pairs": 254
+    },
+    "loc_y_raw": {
+     "slope": 0.009,
+     "ci95": [
+      -0.006,
+      0.023
+     ],
+     "r2": 0.001,
+     "n_pts": 2716,
+     "n_pairs": 345
+    },
+    "loc_y_detr": {
+     "slope": 0.006,
+     "ci95": [
+      -0.014,
+      0.028
+     ],
+     "r2": 0.0,
+     "n_pts": 2072,
+     "n_pairs": 254
+    },
+    "mse_x": 49.182,
+    "mse_x_nonaffine": 14.882,
+    "share_parallax_fit": 0.233,
+    "share_nonaffine_removed_phys": 0.762
+   },
+   "val_W": {
+    "aff_x_raw": {
+     "slope": 0.159,
+     "ci95": [
+      0.08,
+      0.251
+     ],
+     "r2": 0.056,
+     "n_pts": 2447,
+     "n_pairs": 304
+    },
+    "aff_x_detr": {
+     "slope": 0.951,
+     "ci95": [
+      0.859,
+      1.029
+     ],
+     "r2": 0.676,
+     "n_pts": 2447,
+     "n_pairs": 304
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.957,
+     "ci95_low": [
+      0.855,
+      1.034
+     ],
+     "slope_high": 0.828,
+     "ci95_high": [
+      0.441,
+      1.19
+     ],
+     "n_pts": 2447,
+     "n_pairs": 304
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.953,
+     "ci95_low": [
+      0.846,
+      1.046
+     ],
+     "slope_high": 0.917,
+     "ci95_high": [
+      0.44,
+      1.379
+     ],
+     "n_pts": 2447,
+     "n_pairs": 304
+    },
+    "aff_y_raw": {
+     "slope": 0.005,
+     "ci95": [
+      -0.003,
+      0.013
+     ],
+     "r2": 0.001,
+     "n_pts": 2447,
+     "n_pairs": 304
+    },
+    "aff_y_detr": {
+     "slope": 0.009,
+     "ci95": [
+      -0.022,
+      0.041
+     ],
+     "r2": 0.001,
+     "n_pts": 2447,
+     "n_pairs": 304
+    },
+    "loc_x_raw": {
+     "slope": 0.005,
+     "ci95": [
+      -0.053,
+      0.074
+     ],
+     "r2": 0.0,
+     "n_pts": 2379,
+     "n_pairs": 304
+    },
+    "loc_x_detr": {
+     "slope": 0.042,
+     "ci95": [
+      -0.152,
+      0.25
+     ],
+     "r2": 0.0,
+     "n_pts": 1973,
+     "n_pairs": 245
+    },
+    "loc_y_raw": {
+     "slope": 0.008,
+     "ci95": [
+      -0.01,
+      0.028
+     ],
+     "r2": 0.001,
+     "n_pts": 2379,
+     "n_pairs": 304
+    },
+    "loc_y_detr": {
+     "slope": 0.043,
+     "ci95": [
+      0.003,
+      0.09
+     ],
+     "r2": 0.003,
+     "n_pts": 1973,
+     "n_pairs": 245
+    },
+    "mse_x": 31.129,
+    "mse_x_nonaffine": 9.103,
+    "share_parallax_fit": 0.198,
+    "share_nonaffine_removed_phys": 0.675
+   },
+   "test_E": {
+    "aff_x_raw": {
+     "slope": -0.1,
+     "ci95": [
+      -0.154,
+      -0.057
+     ],
+     "r2": 0.032,
+     "n_pts": 2195,
+     "n_pairs": 271
+    },
+    "aff_x_detr": {
+     "slope": -0.888,
+     "ci95": [
+      -0.925,
+      -0.848
+     ],
+     "r2": 0.715,
+     "n_pts": 2195,
+     "n_pairs": 271
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.931,
+     "ci95_low": [
+      -0.973,
+      -0.886
+     ],
+     "slope_high": 0.477,
+     "ci95_high": [
+      0.018,
+      0.99
+     ],
+     "n_pts": 2195,
+     "n_pairs": 271
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.907,
+     "ci95_low": [
+      -0.946,
+      -0.863
+     ],
+     "slope_high": -0.316,
+     "ci95_high": [
+      -0.789,
+      0.105
+     ],
+     "n_pts": 2195,
+     "n_pairs": 271
+    },
+    "aff_y_raw": {
+     "slope": -0.02,
+     "ci95": [
+      -0.026,
+      -0.014
+     ],
+     "r2": 0.026,
+     "n_pts": 2195,
+     "n_pairs": 271
+    },
+    "aff_y_detr": {
+     "slope": -0.05,
+     "ci95": [
+      -0.068,
+      -0.031
+     ],
+     "r2": 0.027,
+     "n_pts": 2195,
+     "n_pairs": 271
+    },
+    "loc_x_raw": null,
+    "loc_x_detr": null,
+    "loc_y_raw": null,
+    "loc_y_detr": null,
+    "mse_x": 69.794,
+    "mse_x_nonaffine": 15.572,
+    "share_parallax_fit": 0.159,
+    "share_nonaffine_removed_phys": 0.704
+   },
+   "test_W": {
+    "aff_x_raw": {
+     "slope": 0.211,
+     "ci95": [
+      0.079,
+      0.35
+     ],
+     "r2": 0.076,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_detr": {
+     "slope": 0.834,
+     "ci95": [
+      0.774,
+      0.894
+     ],
+     "r2": 0.655,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.872,
+     "ci95_low": [
+      0.801,
+      0.941
+     ],
+     "slope_high": 0.041,
+     "ci95_high": [
+      -0.566,
+      0.635
+     ],
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.853,
+     "ci95_low": [
+      0.785,
+      0.923
+     ],
+     "slope_high": 0.458,
+     "ci95_high": [
+      -0.262,
+      1.207
+     ],
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_y_raw": {
+     "slope": 0.016,
+     "ci95": [
+      0.001,
+      0.029
+     ],
+     "r2": 0.008,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_y_detr": {
+     "slope": 0.036,
+     "ci95": [
+      -0.005,
+      0.076
+     ],
+     "r2": 0.011,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "loc_x_raw": null,
+    "loc_x_detr": null,
+    "loc_y_raw": null,
+    "loc_y_detr": null,
+    "mse_x": 46.621,
+    "mse_x_nonaffine": 10.557,
+    "share_parallax_fit": 0.148,
+    "share_nonaffine_removed_phys": 0.629
+   },
+   "per_roi": {
+    "ROI_035": {
+     "slope": -0.874,
+     "ci95": [
+      -0.917,
+      -0.837
+     ],
+     "r2": 0.732,
+     "n_pts": 1383,
+     "n_pairs": 172
+    },
+    "ROI_049": {
+     "slope": 0.762,
+     "ci95": [
+      0.518,
+      0.999
+     ],
+     "r2": 0.496,
+     "n_pts": 706,
+     "n_pairs": 88
+    },
+    "ROI_070": {
+     "slope": 1.007,
+     "ci95": [
+      0.939,
+      1.061
+     ],
+     "r2": 0.744,
+     "n_pts": 902,
+     "n_pairs": 112
+    },
+    "ROI_071": {
+     "slope": 1.125,
+     "ci95": [
+      1.038,
+      1.205
+     ],
+     "r2": 0.588,
+     "n_pts": 241,
+     "n_pairs": 30
+    },
+    "ROI_075": {
+     "slope": -0.939,
+     "ci95": [
+      -0.979,
+      -0.901
+     ],
+     "r2": 0.809,
+     "n_pts": 1434,
+     "n_pairs": 173
+    },
+    "ROI_080": {
+     "slope": 1.031,
+     "ci95": [
+      0.981,
+      1.083
+     ],
+     "r2": 0.777,
+     "n_pts": 598,
+     "n_pairs": 74
+    },
+    "ROI_007": {
+     "slope": -0.888,
+     "ci95": [
+      -0.927,
+      -0.851
+     ],
+     "r2": 0.715,
+     "n_pts": 2195,
+     "n_pairs": 271
+    },
+    "ROI_020": {
+     "slope": 0.834,
+     "ci95": [
+      0.771,
+      0.891
+     ],
+     "r2": 0.655,
+     "n_pts": 731,
+     "n_pairs": 90
+    }
+   }
+  },
+  "loftr_e1": {
+   "val_E": {
+    "aff_x_raw": {
+     "slope": -0.174,
+     "ci95": [
+      -0.223,
+      -0.126
+     ],
+     "r2": 0.095,
+     "n_pts": 2809,
+     "n_pairs": 344
+    },
+    "aff_x_detr": {
+     "slope": -0.908,
+     "ci95": [
+      -0.938,
+      -0.879
+     ],
+     "r2": 0.771,
+     "n_pts": 2809,
+     "n_pairs": 344
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.929,
+     "ci95_low": [
+      -0.961,
+      -0.899
+     ],
+     "slope_high": -0.232,
+     "ci95_high": [
+      -0.57,
+      0.142
+     ],
+     "n_pts": 2809,
+     "n_pairs": 344
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.941,
+     "ci95_low": [
+      -0.973,
+      -0.911
+     ],
+     "slope_high": 0.051,
+     "ci95_high": [
+      -0.265,
+      0.388
+     ],
+     "n_pts": 2809,
+     "n_pairs": 344
+    },
+    "aff_y_raw": {
+     "slope": 0.017,
+     "ci95": [
+      0.012,
+      0.022
+     ],
+     "r2": 0.02,
+     "n_pts": 2809,
+     "n_pairs": 344
+    },
+    "aff_y_detr": {
+     "slope": 0.025,
+     "ci95": [
+      0.012,
+      0.038
+     ],
+     "r2": 0.009,
+     "n_pts": 2809,
+     "n_pairs": 344
+    },
+    "loc_x_raw": {
+     "slope": -0.059,
+     "ci95": [
+      -0.101,
+      -0.027
+     ],
+     "r2": 0.01,
+     "n_pts": 2574,
+     "n_pairs": 343
+    },
+    "loc_x_detr": {
+     "slope": -0.077,
+     "ci95": [
+      -0.128,
+      -0.032
+     ],
+     "r2": 0.009,
+     "n_pts": 1600,
+     "n_pairs": 196
+    },
+    "loc_y_raw": {
+     "slope": 0.007,
+     "ci95": [
+      0.002,
+      0.011
+     ],
+     "r2": 0.004,
+     "n_pts": 2574,
+     "n_pairs": 343
+    },
+    "loc_y_detr": {
+     "slope": -0.004,
+     "ci95": [
+      -0.018,
+      0.011
+     ],
+     "r2": 0.0,
+     "n_pts": 1600,
+     "n_pairs": 196
+    },
+    "mse_x": 47.551,
+    "mse_x_nonaffine": 14.913,
+    "share_parallax_fit": 0.242,
+    "share_nonaffine_removed_phys": 0.763
+   },
+   "val_W": {
+    "aff_x_raw": {
+     "slope": 0.229,
+     "ci95": [
+      0.154,
+      0.325
+     ],
+     "r2": 0.116,
+     "n_pts": 2456,
+     "n_pairs": 305
+    },
+    "aff_x_detr": {
+     "slope": 0.951,
+     "ci95": [
+      0.867,
+      1.024
+     ],
+     "r2": 0.681,
+     "n_pts": 2456,
+     "n_pairs": 305
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.956,
+     "ci95_low": [
+      0.862,
+      1.034
+     ],
+     "slope_high": 0.834,
+     "ci95_high": [
+      0.457,
+      1.19
+     ],
+     "n_pts": 2456,
+     "n_pairs": 305
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.951,
+     "ci95_low": [
+      0.845,
+      1.039
+     ],
+     "slope_high": 0.947,
+     "ci95_high": [
+      0.514,
+      1.422
+     ],
+     "n_pts": 2456,
+     "n_pairs": 305
+    },
+    "aff_y_raw": {
+     "slope": 0.002,
+     "ci95": [
+      -0.006,
+      0.009
+     ],
+     "r2": 0.0,
+     "n_pts": 2456,
+     "n_pairs": 305
+    },
+    "aff_y_detr": {
+     "slope": 0.007,
+     "ci95": [
+      -0.023,
+      0.037
+     ],
+     "r2": 0.0,
+     "n_pts": 2456,
+     "n_pairs": 305
+    },
+    "loc_x_raw": {
+     "slope": 0.052,
+     "ci95": [
+      0.02,
+      0.104
+     ],
+     "r2": 0.017,
+     "n_pts": 2343,
+     "n_pairs": 305
+    },
+    "loc_x_detr": {
+     "slope": 0.055,
+     "ci95": [
+      -0.049,
+      0.147
+     ],
+     "r2": 0.005,
+     "n_pts": 1779,
+     "n_pairs": 221
+    },
+    "loc_y_raw": {
+     "slope": 0.003,
+     "ci95": [
+      -0.003,
+      0.009
+     ],
+     "r2": 0.001,
+     "n_pts": 2343,
+     "n_pairs": 305
+    },
+    "loc_y_detr": {
+     "slope": 0.007,
+     "ci95": [
+      -0.023,
+      0.036
+     ],
+     "r2": 0.0,
+     "n_pts": 1779,
+     "n_pairs": 221
+    },
+    "mse_x": 31.513,
+    "mse_x_nonaffine": 9.252,
+    "share_parallax_fit": 0.2,
+    "share_nonaffine_removed_phys": 0.679
+   },
+   "test_E": {
+    "aff_x_raw": {
+     "slope": -0.123,
+     "ci95": [
+      -0.17,
+      -0.086
+     ],
+     "r2": 0.056,
+     "n_pts": 2283,
+     "n_pairs": 282
+    },
+    "aff_x_detr": {
+     "slope": -0.889,
+     "ci95": [
+      -0.926,
+      -0.853
+     ],
+     "r2": 0.72,
+     "n_pts": 2283,
+     "n_pairs": 282
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.934,
+     "ci95_low": [
+      -0.975,
+      -0.892
+     ],
+     "slope_high": 0.544,
+     "ci95_high": [
+      0.103,
+      1.004
+     ],
+     "n_pts": 2283,
+     "n_pairs": 282
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.909,
+     "ci95_low": [
+      -0.948,
+      -0.865
+     ],
+     "slope_high": -0.263,
+     "ci95_high": [
+      -0.716,
+      0.177
+     ],
+     "n_pts": 2283,
+     "n_pairs": 282
+    },
+    "aff_y_raw": {
+     "slope": -0.012,
+     "ci95": [
+      -0.017,
+      -0.006
+     ],
+     "r2": 0.011,
+     "n_pts": 2283,
+     "n_pairs": 282
+    },
+    "aff_y_detr": {
+     "slope": -0.05,
+     "ci95": [
+      -0.069,
+      -0.03
+     ],
+     "r2": 0.028,
+     "n_pts": 2283,
+     "n_pairs": 282
+    },
+    "loc_x_raw": null,
+    "loc_x_detr": null,
+    "loc_y_raw": null,
+    "loc_y_detr": null,
+    "mse_x": 61.558,
+    "mse_x_nonaffine": 15.817,
+    "share_parallax_fit": 0.185,
+    "share_nonaffine_removed_phys": 0.709
+   },
+   "test_W": {
+    "aff_x_raw": {
+     "slope": 0.264,
+     "ci95": [
+      0.137,
+      0.388
+     ],
+     "r2": 0.134,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_detr": {
+     "slope": 0.834,
+     "ci95": [
+      0.767,
+      0.896
+     ],
+     "r2": 0.655,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.872,
+     "ci95_low": [
+      0.795,
+      0.939
+     ],
+     "slope_high": 0.041,
+     "ci95_high": [
+      -0.591,
+      0.624
+     ],
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.853,
+     "ci95_low": [
+      0.785,
+      0.924
+     ],
+     "slope_high": 0.458,
+     "ci95_high": [
+      -0.249,
+      1.155
+     ],
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_y_raw": {
+     "slope": 0.015,
+     "ci95": [
+      -0.0,
+      0.029
+     ],
+     "r2": 0.007,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_y_detr": {
+     "slope": 0.036,
+     "ci95": [
+      -0.006,
+      0.077
+     ],
+     "r2": 0.011,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "loc_x_raw": null,
+    "loc_x_detr": null,
+    "loc_y_raw": null,
+    "loc_y_detr": null,
+    "mse_x": 42.044,
+    "mse_x_nonaffine": 10.557,
+    "share_parallax_fit": 0.164,
+    "share_nonaffine_removed_phys": 0.629
+   },
+   "per_roi": {
+    "ROI_035": {
+     "slope": -0.876,
+     "ci95": [
+      -0.92,
+      -0.835
+     ],
+     "r2": 0.734,
+     "n_pts": 1375,
+     "n_pairs": 171
+    },
+    "ROI_049": {
+     "slope": 0.762,
+     "ci95": [
+      0.504,
+      0.997
+     ],
+     "r2": 0.496,
+     "n_pts": 706,
+     "n_pairs": 88
+    },
+    "ROI_070": {
+     "slope": 1.007,
+     "ci95": [
+      0.947,
+      1.068
+     ],
+     "r2": 0.744,
+     "n_pts": 902,
+     "n_pairs": 112
+    },
+    "ROI_071": {
+     "slope": 1.125,
+     "ci95": [
+      1.047,
+      1.2
+     ],
+     "r2": 0.588,
+     "n_pts": 241,
+     "n_pairs": 30
+    },
+    "ROI_075": {
+     "slope": -0.939,
+     "ci95": [
+      -0.979,
+      -0.902
+     ],
+     "r2": 0.809,
+     "n_pts": 1434,
+     "n_pairs": 173
+    },
+    "ROI_080": {
+     "slope": 1.022,
+     "ci95": [
+      0.975,
+      1.074
+     ],
+     "r2": 0.788,
+     "n_pts": 607,
+     "n_pairs": 75
+    },
+    "ROI_007": {
+     "slope": -0.889,
+     "ci95": [
+      -0.924,
+      -0.849
+     ],
+     "r2": 0.72,
+     "n_pts": 2283,
+     "n_pairs": 282
+    },
+    "ROI_020": {
+     "slope": 0.834,
+     "ci95": [
+      0.775,
+      0.895
+     ],
+     "r2": 0.655,
+     "n_pts": 731,
+     "n_pairs": 90
+    }
+   }
+  },
+  "roma_zs": {
+   "val_E": {
+    "aff_x_raw": {
+     "slope": -0.117,
+     "ci95": [
+      -0.17,
+      -0.067
+     ],
+     "r2": 0.037,
+     "n_pts": 2712,
+     "n_pairs": 332
+    },
+    "aff_x_detr": {
+     "slope": -0.902,
+     "ci95": [
+      -0.931,
+      -0.87
+     ],
+     "r2": 0.769,
+     "n_pts": 2712,
+     "n_pairs": 332
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.924,
+     "ci95_low": [
+      -0.954,
+      -0.892
+     ],
+     "slope_high": -0.203,
+     "ci95_high": [
+      -0.592,
+      0.127
+     ],
+     "n_pts": 2712,
+     "n_pairs": 332
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.935,
+     "ci95_low": [
+      -0.967,
+      -0.906
+     ],
+     "slope_high": 0.047,
+     "ci95_high": [
+      -0.276,
+      0.364
+     ],
+     "n_pts": 2712,
+     "n_pairs": 332
+    },
+    "aff_y_raw": {
+     "slope": 0.011,
+     "ci95": [
+      0.004,
+      0.018
+     ],
+     "r2": 0.008,
+     "n_pts": 2712,
+     "n_pairs": 332
+    },
+    "aff_y_detr": {
+     "slope": 0.025,
+     "ci95": [
+      0.011,
+      0.038
+     ],
+     "r2": 0.008,
+     "n_pts": 2712,
+     "n_pairs": 332
+    },
+    "loc_x_raw": {
+     "slope": -0.061,
+     "ci95": [
+      -0.117,
+      0.001
+     ],
+     "r2": 0.004,
+     "n_pts": 2615,
+     "n_pairs": 332
+    },
+    "loc_x_detr": {
+     "slope": -0.064,
+     "ci95": [
+      -0.141,
+      0.015
+     ],
+     "r2": 0.002,
+     "n_pts": 2199,
+     "n_pairs": 269
+    },
+    "loc_y_raw": {
+     "slope": 0.038,
+     "ci95": [
+      -0.001,
+      0.079
+     ],
+     "r2": 0.003,
+     "n_pts": 2615,
+     "n_pairs": 332
+    },
+    "loc_y_detr": {
+     "slope": -0.025,
+     "ci95": [
+      -0.096,
+      0.042
+     ],
+     "r2": 0.0,
+     "n_pts": 2199,
+     "n_pairs": 269
+    },
+    "mse_x": 55.297,
+    "mse_x_nonaffine": 14.711,
+    "share_parallax_fit": 0.205,
+    "share_nonaffine_removed_phys": 0.76
+   },
+   "val_W": {
+    "aff_x_raw": {
+     "slope": 0.123,
+     "ci95": [
+      0.028,
+      0.235
+     ],
+     "r2": 0.021,
+     "n_pts": 2392,
+     "n_pairs": 297
+    },
+    "aff_x_detr": {
+     "slope": 0.945,
+     "ci95": [
+      0.85,
+      1.023
+     ],
+     "r2": 0.671,
+     "n_pts": 2392,
+     "n_pairs": 297
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.948,
+     "ci95_low": [
+      0.851,
+      1.026
+     ],
+     "slope_high": 0.865,
+     "ci95_high": [
+      0.489,
+      1.233
+     ],
+     "n_pts": 2392,
+     "n_pairs": 297
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.946,
+     "ci95_low": [
+      0.834,
+      1.044
+     ],
+     "slope_high": 0.924,
+     "ci95_high": [
+      0.431,
+      1.41
+     ],
+     "n_pts": 2392,
+     "n_pairs": 297
+    },
+    "aff_y_raw": {
+     "slope": -0.001,
+     "ci95": [
+      -0.023,
+      0.018
+     ],
+     "r2": 0.0,
+     "n_pts": 2392,
+     "n_pairs": 297
+    },
+    "aff_y_detr": {
+     "slope": -0.0,
+     "ci95": [
+      -0.031,
+      0.032
+     ],
+     "r2": 0.0,
+     "n_pts": 2392,
+     "n_pairs": 297
+    },
+    "loc_x_raw": {
+     "slope": 0.13,
+     "ci95": [
+      0.003,
+      0.265
+     ],
+     "r2": 0.005,
+     "n_pts": 2281,
+     "n_pairs": 297
+    },
+    "loc_x_detr": {
+     "slope": 0.34,
+     "ci95": [
+      -0.01,
+      0.806
+     ],
+     "r2": 0.012,
+     "n_pts": 1770,
+     "n_pairs": 220
+    },
+    "loc_y_raw": {
+     "slope": 0.068,
+     "ci95": [
+      -0.0,
+      0.137
+     ],
+     "r2": 0.002,
+     "n_pts": 2281,
+     "n_pairs": 297
+    },
+    "loc_y_detr": {
+     "slope": 0.009,
+     "ci95": [
+      -0.091,
+      0.122
+     ],
+     "r2": 0.0,
+     "n_pts": 1770,
+     "n_pairs": 220
+    },
+    "mse_x": 46.519,
+    "mse_x_nonaffine": 8.885,
+    "share_parallax_fit": 0.128,
+    "share_nonaffine_removed_phys": 0.669
+   },
+   "per_roi": {
+    "ROI_035": {
+     "slope": -0.875,
+     "ci95": [
+      -0.917,
+      -0.834
+     ],
+     "r2": 0.734,
+     "n_pts": 1335,
+     "n_pairs": 166
+    },
+    "ROI_049": {
+     "slope": 0.753,
+     "ci95": [
+      0.512,
+      1.008
+     ],
+     "r2": 0.492,
+     "n_pts": 690,
+     "n_pairs": 86
+    },
+    "ROI_070": {
+     "slope": 1.001,
+     "ci95": [
+      0.938,
+      1.057
+     ],
+     "r2": 0.728,
+     "n_pts": 854,
+     "n_pairs": 106
+    },
+    "ROI_071": {
+     "slope": 1.125,
+     "ci95": [
+      1.039,
+      1.197
+     ],
+     "r2": 0.588,
+     "n_pts": 241,
+     "n_pairs": 30
+    },
+    "ROI_075": {
+     "slope": -0.931,
+     "ci95": [
+      -0.969,
+      -0.892
+     ],
+     "r2": 0.806,
+     "n_pts": 1377,
+     "n_pairs": 166
+    },
+    "ROI_080": {
+     "slope": 1.022,
+     "ci95": [
+      0.974,
+      1.072
+     ],
+     "r2": 0.788,
+     "n_pts": 607,
+     "n_pairs": 75
+    },
+    "ROI_007": null,
+    "ROI_020": null
+   }
+  },
+  "roma_m4": {
+   "val_E": {
+    "aff_x_raw": {
+     "slope": -0.158,
+     "ci95": [
+      -0.208,
+      -0.106
+     ],
+     "r2": 0.077,
+     "n_pts": 2785,
+     "n_pairs": 341
+    },
+    "aff_x_detr": {
+     "slope": -0.908,
+     "ci95": [
+      -0.938,
+      -0.881
+     ],
+     "r2": 0.772,
+     "n_pts": 2785,
+     "n_pairs": 341
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.93,
+     "ci95_low": [
+      -0.963,
+      -0.9
+     ],
+     "slope_high": -0.225,
+     "ci95_high": [
+      -0.563,
+      0.161
+     ],
+     "n_pts": 2785,
+     "n_pairs": 341
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.94,
+     "ci95_low": [
+      -0.971,
+      -0.91
+     ],
+     "slope_high": 0.024,
+     "ci95_high": [
+      -0.319,
+      0.361
+     ],
+     "n_pts": 2785,
+     "n_pairs": 341
+    },
+    "aff_y_raw": {
+     "slope": 0.011,
+     "ci95": [
+      0.007,
+      0.016
+     ],
+     "r2": 0.01,
+     "n_pts": 2785,
+     "n_pairs": 341
+    },
+    "aff_y_detr": {
+     "slope": 0.026,
+     "ci95": [
+      0.013,
+      0.039
+     ],
+     "r2": 0.009,
+     "n_pts": 2785,
+     "n_pairs": 341
+    },
+    "loc_x_raw": {
+     "slope": -0.003,
+     "ci95": [
+      -0.026,
+      0.039
+     ],
+     "r2": 0.0,
+     "n_pts": 2677,
+     "n_pairs": 341
+    },
+    "loc_x_detr": {
+     "slope": -0.1,
+     "ci95": [
+      -0.13,
+      -0.071
+     ],
+     "r2": 0.04,
+     "n_pts": 2190,
+     "n_pairs": 268
+    },
+    "loc_y_raw": {
+     "slope": 0.003,
+     "ci95": [
+      -0.001,
+      0.007
+     ],
+     "r2": 0.001,
+     "n_pts": 2677,
+     "n_pairs": 341
+    },
+    "loc_y_detr": {
+     "slope": 0.002,
+     "ci95": [
+      -0.012,
+      0.018
+     ],
+     "r2": 0.0,
+     "n_pts": 2190,
+     "n_pairs": 268
+    },
+    "mse_x": 48.547,
+    "mse_x_nonaffine": 14.885,
+    "share_parallax_fit": 0.237,
+    "share_nonaffine_removed_phys": 0.764
+   },
+   "val_W": {
+    "aff_x_raw": {
+     "slope": 0.206,
+     "ci95": [
+      0.142,
+      0.289
+     ],
+     "r2": 0.096,
+     "n_pts": 2431,
+     "n_pairs": 302
+    },
+    "aff_x_detr": {
+     "slope": 0.933,
+     "ci95": [
+      0.855,
+      1.001
+     ],
+     "r2": 0.681,
+     "n_pts": 2431,
+     "n_pairs": 302
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.936,
+     "ci95_low": [
+      0.845,
+      1.014
+     ],
+     "slope_high": 0.855,
+     "ci95_high": [
+      0.454,
+      1.206
+     ],
+     "n_pts": 2431,
+     "n_pairs": 302
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.932,
+     "ci95_low": [
+      0.832,
+      1.021
+     ],
+     "slope_high": 0.965,
+     "ci95_high": [
+      0.472,
+      1.47
+     ],
+     "n_pts": 2431,
+     "n_pairs": 302
+    },
+    "aff_y_raw": {
+     "slope": 0.004,
+     "ci95": [
+      -0.004,
+      0.011
+     ],
+     "r2": 0.001,
+     "n_pts": 2431,
+     "n_pairs": 302
+    },
+    "aff_y_detr": {
+     "slope": 0.005,
+     "ci95": [
+      -0.024,
+      0.033
+     ],
+     "r2": 0.0,
+     "n_pts": 2431,
+     "n_pairs": 302
+    },
+    "loc_x_raw": {
+     "slope": 0.023,
+     "ci95": [
+      -0.007,
+      0.048
+     ],
+     "r2": 0.005,
+     "n_pts": 2289,
+     "n_pairs": 302
+    },
+    "loc_x_detr": {
+     "slope": 0.159,
+     "ci95": [
+      -0.027,
+      0.314
+     ],
+     "r2": 0.033,
+     "n_pts": 1777,
+     "n_pairs": 221
+    },
+    "loc_y_raw": {
+     "slope": 0.004,
+     "ci95": [
+      -0.004,
+      0.012
+     ],
+     "r2": 0.0,
+     "n_pts": 2289,
+     "n_pairs": 302
+    },
+    "loc_y_detr": {
+     "slope": -0.023,
+     "ci95": [
+      -0.058,
+      0.013
+     ],
+     "r2": 0.002,
+     "n_pts": 1777,
+     "n_pairs": 221
+    },
+    "mse_x": 30.098,
+    "mse_x_nonaffine": 9.258,
+    "share_parallax_fit": 0.21,
+    "share_nonaffine_removed_phys": 0.678
+   },
+   "test_E": {
+    "aff_x_raw": {
+     "slope": -0.131,
+     "ci95": [
+      -0.186,
+      -0.09
+     ],
+     "r2": 0.055,
+     "n_pts": 2122,
+     "n_pairs": 262
+    },
+    "aff_x_detr": {
+     "slope": -0.895,
+     "ci95": [
+      -0.932,
+      -0.857
+     ],
+     "r2": 0.727,
+     "n_pts": 2122,
+     "n_pairs": 262
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.94,
+     "ci95_low": [
+      -0.98,
+      -0.894
+     ],
+     "slope_high": 0.505,
+     "ci95_high": [
+      0.027,
+      0.981
+     ],
+     "n_pts": 2122,
+     "n_pairs": 262
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.916,
+     "ci95_low": [
+      -0.956,
+      -0.872
+     ],
+     "slope_high": -0.271,
+     "ci95_high": [
+      -0.73,
+      0.178
+     ],
+     "n_pts": 2122,
+     "n_pairs": 262
+    },
+    "aff_y_raw": {
+     "slope": -0.008,
+     "ci95": [
+      -0.014,
+      -0.003
+     ],
+     "r2": 0.006,
+     "n_pts": 2122,
+     "n_pairs": 262
+    },
+    "aff_y_detr": {
+     "slope": -0.052,
+     "ci95": [
+      -0.071,
+      -0.033
+     ],
+     "r2": 0.03,
+     "n_pts": 2122,
+     "n_pairs": 262
+    },
+    "loc_x_raw": null,
+    "loc_x_detr": null,
+    "loc_y_raw": null,
+    "loc_y_detr": null,
+    "mse_x": 69.479,
+    "mse_x_nonaffine": 16.147,
+    "share_parallax_fit": 0.169,
+    "share_nonaffine_removed_phys": 0.717
+   },
+   "test_W": {
+    "aff_x_raw": {
+     "slope": 0.251,
+     "ci95": [
+      0.126,
+      0.363
+     ],
+     "r2": 0.127,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_detr": {
+     "slope": 0.834,
+     "ci95": [
+      0.77,
+      0.892
+     ],
+     "r2": 0.655,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.872,
+     "ci95_low": [
+      0.802,
+      0.944
+     ],
+     "slope_high": 0.041,
+     "ci95_high": [
+      -0.578,
+      0.627
+     ],
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.853,
+     "ci95_low": [
+      0.779,
+      0.925
+     ],
+     "slope_high": 0.458,
+     "ci95_high": [
+      -0.283,
+      1.207
+     ],
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_y_raw": {
+     "slope": 0.01,
+     "ci95": [
+      -0.003,
+      0.022
+     ],
+     "r2": 0.003,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_y_detr": {
+     "slope": 0.036,
+     "ci95": [
+      -0.005,
+      0.074
+     ],
+     "r2": 0.011,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "loc_x_raw": null,
+    "loc_x_detr": null,
+    "loc_y_raw": null,
+    "loc_y_detr": null,
+    "mse_x": 39.45,
+    "mse_x_nonaffine": 10.557,
+    "share_parallax_fit": 0.175,
+    "share_nonaffine_removed_phys": 0.629
+   },
+   "per_roi": {
+    "ROI_035": {
+     "slope": -0.876,
+     "ci95": [
+      -0.913,
+      -0.835
+     ],
+     "r2": 0.733,
+     "n_pts": 1375,
+     "n_pairs": 171
+    },
+    "ROI_049": {
+     "slope": 0.753,
+     "ci95": [
+      0.513,
+      0.997
+     ],
+     "r2": 0.492,
+     "n_pts": 690,
+     "n_pairs": 86
+    },
+    "ROI_070": {
+     "slope": 0.965,
+     "ci95": [
+      0.904,
+      1.038
+     ],
+     "r2": 0.747,
+     "n_pts": 902,
+     "n_pairs": 112
+    },
+    "ROI_071": {
+     "slope": 1.125,
+     "ci95": [
+      1.04,
+      1.2
+     ],
+     "r2": 0.588,
+     "n_pts": 241,
+     "n_pairs": 30
+    },
+    "ROI_075": {
+     "slope": -0.94,
+     "ci95": [
+      -0.977,
+      -0.902
+     ],
+     "r2": 0.812,
+     "n_pts": 1410,
+     "n_pairs": 170
+    },
+    "ROI_080": {
+     "slope": 1.031,
+     "ci95": [
+      0.978,
+      1.086
+     ],
+     "r2": 0.777,
+     "n_pts": 598,
+     "n_pairs": 74
+    },
+    "ROI_007": {
+     "slope": -0.895,
+     "ci95": [
+      -0.931,
+      -0.859
+     ],
+     "r2": 0.727,
+     "n_pts": 2122,
+     "n_pairs": 262
+    },
+    "ROI_020": {
+     "slope": 0.834,
+     "ci95": [
+      0.775,
+      0.89
+     ],
+     "r2": 0.655,
+     "n_pts": 731,
+     "n_pairs": 90
+    }
+   }
+  },
+  "roma_e1": {
+   "val_E": {
+    "aff_x_raw": {
+     "slope": -0.184,
+     "ci95": [
+      -0.225,
+      -0.148
+     ],
+     "r2": 0.171,
+     "n_pts": 2825,
+     "n_pairs": 346
+    },
+    "aff_x_detr": {
+     "slope": -0.907,
+     "ci95": [
+      -0.936,
+      -0.877
+     ],
+     "r2": 0.77,
+     "n_pts": 2825,
+     "n_pairs": 346
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.929,
+     "ci95_low": [
+      -0.962,
+      -0.897
+     ],
+     "slope_high": -0.219,
+     "ci95_high": [
+      -0.57,
+      0.191
+     ],
+     "n_pts": 2825,
+     "n_pairs": 346
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.94,
+     "ci95_low": [
+      -0.971,
+      -0.909
+     ],
+     "slope_high": 0.048,
+     "ci95_high": [
+      -0.268,
+      0.395
+     ],
+     "n_pts": 2825,
+     "n_pairs": 346
+    },
+    "aff_y_raw": {
+     "slope": 0.01,
+     "ci95": [
+      0.006,
+      0.014
+     ],
+     "r2": 0.009,
+     "n_pts": 2825,
+     "n_pairs": 346
+    },
+    "aff_y_detr": {
+     "slope": 0.026,
+     "ci95": [
+      0.012,
+      0.039
+     ],
+     "r2": 0.009,
+     "n_pts": 2825,
+     "n_pairs": 346
+    },
+    "loc_x_raw": {
+     "slope": -0.097,
+     "ci95": [
+      -0.113,
+      -0.084
+     ],
+     "r2": 0.15,
+     "n_pts": 2567,
+     "n_pairs": 346
+    },
+    "loc_x_detr": {
+     "slope": -0.368,
+     "ci95": [
+      -0.417,
+      -0.317
+     ],
+     "r2": 0.3,
+     "n_pts": 1370,
+     "n_pairs": 168
+    },
+    "loc_y_raw": {
+     "slope": 0.004,
+     "ci95": [
+      0.0,
+      0.008
+     ],
+     "r2": 0.002,
+     "n_pts": 2567,
+     "n_pairs": 346
+    },
+    "loc_y_detr": {
+     "slope": 0.004,
+     "ci95": [
+      -0.013,
+      0.021
+     ],
+     "r2": 0.0,
+     "n_pts": 1370,
+     "n_pairs": 168
+    },
+    "mse_x": 29.876,
+    "mse_x_nonaffine": 14.863,
+    "share_parallax_fit": 0.383,
+    "share_nonaffine_removed_phys": 0.762
+   },
+   "val_W": {
+    "aff_x_raw": {
+     "slope": 0.188,
+     "ci95": [
+      0.135,
+      0.263
+     ],
+     "r2": 0.13,
+     "n_pts": 2464,
+     "n_pairs": 306
+    },
+    "aff_x_detr": {
+     "slope": 0.941,
+     "ci95": [
+      0.862,
+      1.014
+     ],
+     "r2": 0.693,
+     "n_pts": 2464,
+     "n_pairs": 306
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.947,
+     "ci95_low": [
+      0.863,
+      1.018
+     ],
+     "slope_high": 0.814,
+     "ci95_high": [
+      0.43,
+      1.185
+     ],
+     "n_pts": 2464,
+     "n_pairs": 306
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.94,
+     "ci95_low": [
+      0.842,
+      1.03
+     ],
+     "slope_high": 0.981,
+     "ci95_high": [
+      0.493,
+      1.433
+     ],
+     "n_pts": 2464,
+     "n_pairs": 306
+    },
+    "aff_y_raw": {
+     "slope": 0.005,
+     "ci95": [
+      -0.002,
+      0.012
+     ],
+     "r2": 0.001,
+     "n_pts": 2464,
+     "n_pairs": 306
+    },
+    "aff_y_detr": {
+     "slope": 0.008,
+     "ci95": [
+      -0.02,
+      0.038
+     ],
+     "r2": 0.0,
+     "n_pts": 2464,
+     "n_pairs": 306
+    },
+    "loc_x_raw": {
+     "slope": 0.087,
+     "ci95": [
+      0.053,
+      0.119
+     ],
+     "r2": 0.05,
+     "n_pts": 2333,
+     "n_pairs": 306
+    },
+    "loc_x_detr": {
+     "slope": 0.48,
+     "ci95": [
+      0.423,
+      0.546
+     ],
+     "r2": 0.264,
+     "n_pts": 1726,
+     "n_pairs": 215
+    },
+    "loc_y_raw": {
+     "slope": 0.005,
+     "ci95": [
+      -0.002,
+      0.011
+     ],
+     "r2": 0.001,
+     "n_pts": 2333,
+     "n_pairs": 306
+    },
+    "loc_y_detr": {
+     "slope": 0.015,
+     "ci95": [
+      -0.018,
+      0.048
+     ],
+     "r2": 0.001,
+     "n_pts": 1726,
+     "n_pairs": 215
+    },
+    "mse_x": 19.412,
+    "mse_x_nonaffine": 9.721,
+    "share_parallax_fit": 0.346,
+    "share_nonaffine_removed_phys": 0.69
+   },
+   "test_E": {
+    "aff_x_raw": {
+     "slope": -0.142,
+     "ci95": [
+      -0.182,
+      -0.109
+     ],
+     "r2": 0.112,
+     "n_pts": 2291,
+     "n_pairs": 283
+    },
+    "aff_x_detr": {
+     "slope": -0.889,
+     "ci95": [
+      -0.924,
+      -0.852
+     ],
+     "r2": 0.721,
+     "n_pts": 2291,
+     "n_pairs": 283
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": -0.935,
+     "ci95_low": [
+      -0.975,
+      -0.892
+     ],
+     "slope_high": 0.574,
+     "ci95_high": [
+      0.053,
+      1.053
+     ],
+     "n_pts": 2291,
+     "n_pairs": 283
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": -0.91,
+     "ci95_low": [
+      -0.948,
+      -0.867
+     ],
+     "slope_high": -0.252,
+     "ci95_high": [
+      -0.658,
+      0.185
+     ],
+     "n_pts": 2291,
+     "n_pairs": 283
+    },
+    "aff_y_raw": {
+     "slope": -0.01,
+     "ci95": [
+      -0.014,
+      -0.006
+     ],
+     "r2": 0.009,
+     "n_pts": 2291,
+     "n_pairs": 283
+    },
+    "aff_y_detr": {
+     "slope": -0.051,
+     "ci95": [
+      -0.069,
+      -0.032
+     ],
+     "r2": 0.029,
+     "n_pts": 2291,
+     "n_pairs": 283
+    },
+    "loc_x_raw": null,
+    "loc_x_detr": null,
+    "loc_y_raw": null,
+    "loc_y_detr": null,
+    "mse_x": 42.201,
+    "mse_x_nonaffine": 15.882,
+    "share_parallax_fit": 0.272,
+    "share_nonaffine_removed_phys": 0.71
+   },
+   "test_W": {
+    "aff_x_raw": {
+     "slope": 0.238,
+     "ci95": [
+      0.171,
+      0.335
+     ],
+     "r2": 0.207,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_detr": {
+     "slope": 0.834,
+     "ci95": [
+      0.774,
+      0.894
+     ],
+     "r2": 0.655,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_low_high_hpA": {
+     "slope_low": 0.872,
+     "ci95_low": [
+      0.796,
+      0.939
+     ],
+     "slope_high": 0.041,
+     "ci95_high": [
+      -0.571,
+      0.642
+     ],
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_x_low_high_hpB": {
+     "slope_low": 0.853,
+     "ci95_low": [
+      0.77,
+      0.926
+     ],
+     "slope_high": 0.458,
+     "ci95_high": [
+      -0.236,
+      1.157
+     ],
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_y_raw": {
+     "slope": 0.009,
+     "ci95": [
+      -0.004,
+      0.02
+     ],
+     "r2": 0.003,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "aff_y_detr": {
+     "slope": 0.036,
+     "ci95": [
+      -0.005,
+      0.079
+     ],
+     "r2": 0.011,
+     "n_pts": 731,
+     "n_pairs": 90
+    },
+    "loc_x_raw": null,
+    "loc_x_detr": null,
+    "loc_y_raw": null,
+    "loc_y_detr": null,
+    "mse_x": 21.748,
+    "mse_x_nonaffine": 10.557,
+    "share_parallax_fit": 0.318,
+    "share_nonaffine_removed_phys": 0.629
+   },
+   "per_roi": {
+    "ROI_035": {
+     "slope": -0.874,
+     "ci95": [
+      -0.92,
+      -0.833
+     ],
+     "r2": 0.732,
+     "n_pts": 1383,
+     "n_pairs": 172
+    },
+    "ROI_049": {
+     "slope": 0.762,
+     "ci95": [
+      0.53,
+      1.004
+     ],
+     "r2": 0.496,
+     "n_pts": 706,
+     "n_pairs": 88
+    },
+    "ROI_070": {
+     "slope": 0.979,
+     "ci95": [
+      0.915,
+      1.05
+     ],
+     "r2": 0.759,
+     "n_pts": 910,
+     "n_pairs": 113
+    },
+    "ROI_071": {
+     "slope": 1.125,
+     "ci95": [
+      1.037,
+      1.198
+     ],
+     "r2": 0.588,
+     "n_pts": 241,
+     "n_pairs": 30
+    },
+    "ROI_075": {
+     "slope": -0.94,
+     "ci95": [
+      -0.975,
+      -0.904
+     ],
+     "r2": 0.809,
+     "n_pts": 1442,
+     "n_pairs": 174
+    },
+    "ROI_080": {
+     "slope": 1.022,
+     "ci95": [
+      0.974,
+      1.074
+     ],
+     "r2": 0.788,
+     "n_pts": 607,
+     "n_pairs": 75
+    },
+    "ROI_007": {
+     "slope": -0.889,
+     "ci95": [
+      -0.924,
+      -0.851
+     ],
+     "r2": 0.721,
+     "n_pts": 2291,
+     "n_pairs": 283
+    },
+    "ROI_020": {
+     "slope": 0.834,
+     "ci95": [
+      0.771,
+      0.894
+     ],
+     "r2": 0.655,
+     "n_pts": 731,
+     "n_pairs": 90
+    }
+   }
+  }
+ },
+ "local_check_max_abs_diff_px": 0.1776,
+ "dense": {
+  "val_E": {
+   "x_plane": {
+    "slope": -0.669,
+    "ci95": [
+     -0.702,
+     -0.635
+    ],
+    "r2": 0.275,
+    "n_pts": 174696,
+    "n_pairs": 346
+   },
+   "y_plane": {
+    "slope": 0.003,
+    "ci95": [
+     -0.011,
+     0.017
+    ],
+    "r2": 0.0,
+    "n_pts": 174696,
+    "n_pairs": 346
+   },
+   "x_hpA": {
+    "slope": -2.434,
+    "ci95": [
+     -2.654,
+     -2.212
+    ],
+    "r2": 0.032,
+    "n_pts": 174696,
+    "n_pairs": 346
+   },
+   "y_hpA": {
+    "slope": 0.071,
+    "ci95": [
+     -0.035,
+     0.179
+    ],
+    "r2": 0.0,
+    "n_pts": 174696,
+    "n_pairs": 346
+   },
+   "x_hpB": {
+    "slope": -2.525,
+    "ci95": [
+     -2.79,
+     -2.291
+    ],
+    "r2": 0.034,
+    "n_pts": 174696,
+    "n_pairs": 346
+   },
+   "y_hpB": {
+    "slope": 0.038,
+    "ci95": [
+     -0.079,
+     0.153
+    ],
+    "r2": 0.0,
+    "n_pts": 174696,
+    "n_pairs": 346
+   },
+   "x_low_high_hpA": {
+    "slope_low": -0.689,
+    "ci95_low": [
+     -0.725,
+     -0.654
+    ],
+    "slope_high": -0.146,
+    "ci95_high": [
+     -0.295,
+     0.002
+    ],
+    "n_pts": 174696,
+    "n_pairs": 346
+   },
+   "x_low_high_hpB": {
+    "slope_low": -0.691,
+    "ci95_low": [
+     -0.726,
+     -0.655
+    ],
+    "slope_high": -0.113,
+    "ci95_high": [
+     -0.284,
+     0.055
+    ],
+    "n_pts": 174696,
+    "n_pairs": 346
+   }
+  },
+  "val_W": {
+   "x_plane": {
+    "slope": 0.518,
+    "ci95": [
+     0.449,
+     0.586
+    ],
+    "r2": 0.087,
+    "n_pts": 160199,
+    "n_pairs": 306
+   },
+   "y_plane": {
+    "slope": -0.013,
+    "ci95": [
+     -0.034,
+     0.012
+    ],
+    "r2": 0.0,
+    "n_pts": 160199,
+    "n_pairs": 306
+   },
+   "x_hpA": {
+    "slope": 1.081,
+    "ci95": [
+     0.869,
+     1.276
+    ],
+    "r2": 0.008,
+    "n_pts": 160199,
+    "n_pairs": 306
+   },
+   "y_hpA": {
+    "slope": 0.038,
+    "ci95": [
+     -0.079,
+     0.15
+    ],
+    "r2": 0.0,
+    "n_pts": 160199,
+    "n_pairs": 306
+   },
+   "x_hpB": {
+    "slope": 1.249,
+    "ci95": [
+     1.011,
+     1.476
+    ],
+    "r2": 0.011,
+    "n_pts": 160199,
+    "n_pairs": 306
+   },
+   "y_hpB": {
+    "slope": 0.039,
+    "ci95": [
+     -0.079,
+     0.163
+    ],
+    "r2": 0.0,
+    "n_pts": 160199,
+    "n_pairs": 306
+   },
+   "x_low_high_hpA": {
+    "slope_low": 0.54,
+    "ci95_low": [
+     0.46,
+     0.616
+    ],
+    "slope_high": 0.143,
+    "ci95_high": [
+     -0.031,
+     0.321
+    ],
+    "n_pts": 160199,
+    "n_pairs": 306
+   },
+   "x_low_high_hpB": {
+    "slope_low": 0.527,
+    "ci95_low": [
+     0.454,
+     0.605
+    ],
+    "slope_high": 0.354,
+    "ci95_high": [
+     0.163,
+     0.536
+    ],
+    "n_pts": 160199,
+    "n_pairs": 306
+   }
+  },
+  "test_E": {
+   "x_plane": {
+    "slope": -0.474,
+    "ci95": [
+     -0.534,
+     -0.413
+    ],
+    "r2": 0.157,
+    "n_pts": 98020,
+    "n_pairs": 286
+   },
+   "y_plane": {
+    "slope": -0.026,
+    "ci95": [
+     -0.046,
+     -0.007
+    ],
+    "r2": 0.001,
+    "n_pts": 98020,
+    "n_pairs": 286
+   },
+   "x_hpA": {
+    "slope": -1.772,
+    "ci95": [
+     -2.097,
+     -1.429
+    ],
+    "r2": 0.013,
+    "n_pts": 98020,
+    "n_pairs": 286
+   },
+   "y_hpA": {
+    "slope": -0.15,
+    "ci95": [
+     -0.321,
+     0.031
+    ],
+    "r2": 0.0,
+    "n_pts": 98020,
+    "n_pairs": 286
+   },
+   "x_hpB": {
+    "slope": -2.041,
+    "ci95": [
+     -2.339,
+     -1.763
+    ],
+    "r2": 0.018,
+    "n_pts": 98020,
+    "n_pairs": 286
+   },
+   "y_hpB": {
+    "slope": 0.042,
+    "ci95": [
+     -0.146,
+     0.213
+    ],
+    "r2": 0.0,
+    "n_pts": 98020,
+    "n_pairs": 286
+   },
+   "x_low_high_hpA": {
+    "slope_low": -0.491,
+    "ci95_low": [
+     -0.553,
+     -0.428
+    ],
+    "slope_high": 0.085,
+    "ci95_high": [
+     -0.176,
+     0.363
+    ],
+    "n_pts": 98020,
+    "n_pairs": 286
+   },
+   "x_low_high_hpB": {
+    "slope_low": -0.482,
+    "ci95_low": [
+     -0.546,
+     -0.422
+    ],
+    "slope_high": -0.227,
+    "ci95_high": [
+     -0.463,
+     -0.002
+    ],
+    "n_pts": 98020,
+    "n_pairs": 286
+   }
+  },
+  "test_W": {
+   "x_plane": {
+    "slope": 0.55,
+    "ci95": [
+     0.466,
+     0.632
+    ],
+    "r2": 0.165,
+    "n_pts": 67252,
+    "n_pairs": 91
+   },
+   "y_plane": {
+    "slope": 0.03,
+    "ci95": [
+     0.001,
+     0.058
+    ],
+    "r2": 0.001,
+    "n_pts": 67252,
+    "n_pairs": 91
+   },
+   "x_hpA": {
+    "slope": 1.202,
+    "ci95": [
+     0.866,
+     1.535
+    ],
+    "r2": 0.012,
+    "n_pts": 67252,
+    "n_pairs": 91
+   },
+   "y_hpA": {
+    "slope": 0.135,
+    "ci95": [
+     -0.006,
+     0.307
+    ],
+    "r2": 0.0,
+    "n_pts": 67252,
+    "n_pairs": 91
+   },
+   "x_hpB": {
+    "slope": 1.359,
+    "ci95": [
+     1.048,
+     1.673
+    ],
+    "r2": 0.016,
+    "n_pts": 67252,
+    "n_pairs": 91
+   },
+   "y_hpB": {
+    "slope": 0.238,
+    "ci95": [
+     0.089,
+     0.422
+    ],
+    "r2": 0.001,
+    "n_pts": 67252,
+    "n_pairs": 91
+   },
+   "x_low_high_hpA": {
+    "slope_low": 0.579,
+    "ci95_low": [
+     0.486,
+     0.674
+    ],
+    "slope_high": -0.033,
+    "ci95_high": [
+     -0.273,
+     0.2
+    ],
+    "n_pts": 67252,
+    "n_pairs": 91
+   },
+   "x_low_high_hpB": {
+    "slope_low": 0.577,
+    "ci95_low": [
+     0.472,
+     0.674
+    ],
+    "slope_high": 0.039,
+    "ci95_high": [
+     -0.169,
+     0.285
+    ],
+    "n_pts": 67252,
+    "n_pairs": 91
+   }
+  }
+ },
+ "dense_per_roi": {
+  "ROI_035": {
+   "slope": -0.614,
+   "ci95": [
+    -0.667,
+    -0.559
+   ],
+   "r2": 0.233,
+   "n_pts": 63907,
+   "n_pairs": 172
+  },
+  "ROI_049": {
+   "slope": 0.541,
+   "ci95": [
+    0.358,
+    0.743
+   ],
+   "r2": 0.076,
+   "n_pts": 47925,
+   "n_pairs": 88
+  },
+  "ROI_070": {
+   "slope": 0.408,
+   "ci95": [
+    0.329,
+    0.483
+   ],
+   "r2": 0.046,
+   "n_pts": 47860,
+   "n_pairs": 113
+  },
+  "ROI_071": {
+   "slope": 0.711,
+   "ci95": [
+    0.551,
+    0.85
+   ],
+   "r2": 0.089,
+   "n_pts": 12961,
+   "n_pairs": 30
+  },
+  "ROI_075": {
+   "slope": -0.704,
+   "ci95": [
+    -0.746,
+    -0.657
+   ],
+   "r2": 0.305,
+   "n_pts": 110789,
+   "n_pairs": 174
+  },
+  "ROI_080": {
+   "slope": 0.546,
+   "ci95": [
+    0.451,
+    0.652
+   ],
+   "r2": 0.132,
+   "n_pts": 51453,
+   "n_pairs": 75
+  },
+  "ROI_007": {
+   "slope": -0.474,
+   "ci95": [
+    -0.534,
+    -0.415
+   ],
+   "r2": 0.157,
+   "n_pts": 98020,
+   "n_pairs": 286
+  },
+  "ROI_020": {
+   "slope": 0.55,
+   "ci95": [
+    0.458,
+    0.637
+   ],
+   "r2": 0.165,
+   "n_pts": 67252,
+   "n_pairs": 91
+  }
+ }
+}

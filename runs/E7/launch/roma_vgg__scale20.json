@@ -1,0 +1,23 @@
+[
+ {
+  "start": "2026-10-15 15:12:56 +0000",
+  "end": "2026-10-15 16:05:43 +0000",
+  "status": "ok",
+  "commit": "96a1d7afbbbceb304925ae4a21860a130377d3ec",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-hard-eval-138",
+  "cuda_visible_devices": "2",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "scripts/finetune/eval_ckpt.sh",
+   "runs/E7",
+   "roma_vgg__scale20",
+   "/remote-home/xufang/YGC/moon-exp/runs/E1/ckpt/roma_vgg/ckpt_16000.pt",
+   "configs/baselines/anymatch_roma__minmax.json",
+   "scale20"
+  ]
+ }
+]

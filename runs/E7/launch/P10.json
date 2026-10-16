@@ -1,0 +1,23 @@
+[
+ {
+  "start": "2026-10-15 11:23:27 +0800",
+  "end": "2026-10-15 11:30:50 +0800",
+  "status": "ok",
+  "commit": "d5c735227480b438f205babbfcf4b157bd12e84c",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-hard-eval-138",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "scripts/finetune/eval_ckpt.sh",
+   "runs/E7",
+   "P10",
+   "/remote-home/xufang/YGC/moon-exp/runs/P/ckpt/P10/ckpt_7000.pt",
+   "configs/baselines/anymatch_loftr.json",
+   ""
+  ]
+ }
+]

@@ -1,0 +1,23 @@
+[
+ {
+  "start": "2026-10-15 03:23:32 +0000",
+  "end": "2026-10-15 04:15:29 +0000",
+  "status": "ok",
+  "commit": "d5c735227480b438f205babbfcf4b157bd12e84c",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-hard-eval-138",
+  "cuda_visible_devices": "3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "scripts/finetune/eval_ckpt.sh",
+   "runs/E7",
+   "anymatch_roma",
+   "-",
+   "configs/baselines/anymatch_roma.json",
+   ""
+  ]
+ }
+]

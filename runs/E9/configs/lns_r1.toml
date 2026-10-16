@@ -1,0 +1,2 @@
+# LoFTR 离线伪标签 noisy student 第 1 轮（#157）：zero-shot 标签（labels_b0，S1 用的同一份）
+base = "_lns"

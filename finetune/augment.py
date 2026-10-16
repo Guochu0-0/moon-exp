@@ -15,13 +15,18 @@ import numpy as np
 HW = 512
 
 
-def sample_T(rng, shift=12.0, rot=3.0, scale=0.03, hw=HW):
-    """随机仿射（角点约定）：q' = R·S·(q − c) + c + t，c = patch 中心。shift 单位原网格 px，rot 单位度。"""
+def sample_T(rng, shift=12.0, rot=3.0, scale=0.03, hw=HW, disk=False):
+    """随机仿射（角点约定）：q' = R·S·(q − c) + c + t，c = patch 中心。shift 单位原网格 px，rot 单位度。
+    disk：t 在半径 shift 的圆盘内按面积均匀（与难版评测「固定半径、方向随机」同一度量，#157）；默认 x、y 各自 ±shift。"""
     th = np.deg2rad(rng.uniform(-rot, rot))
     sc = 1.0 + rng.uniform(-scale, scale)
     L = sc * np.array([[np.cos(th), -np.sin(th)], [np.sin(th), np.cos(th)]])
     c = np.array([hw / 2, hw / 2])
-    t = rng.uniform(-shift, shift, 2)
+    if disk:
+        r, phi = shift * np.sqrt(rng.uniform()), rng.uniform(0, 2 * np.pi)
+        t = r * np.array([np.cos(phi), np.sin(phi)])
+    else:
+        t = rng.uniform(-shift, shift, 2)
     return np.c_[L, c - L @ c + t]
 
 

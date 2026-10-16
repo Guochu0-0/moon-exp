@@ -1,0 +1,9 @@
+# LoFTR 离线伪标签 noisy student 的每一轮（#157）：P10 的单轮配方（lr 1e-5、8000 步、warmup 500 + cosine、每 1000 步存档、
+# 内点前 50%、几何 + 光度扰动），几何扰动换成难版范围；补零区不监督。第 1 轮用 zero-shot 打的标签，之后每轮由上一轮的 Val 峰值
+# 在干净 Train 上重打（code/relabel.sh），学生每轮都从 zero-shot 重训。只给 lns_r<k> 当 base
+base = "_hard"
+
+[pseudo]
+labels = "/remote-home/xufang/YGC/results/finetune/labels_b0.jsonl"
+top = 0.5
+mask_fill = true

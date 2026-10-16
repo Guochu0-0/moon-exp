@@ -1,0 +1,21 @@
+# RoMa 离线伪标签 noisy student 的每一轮（#157）：N 的 erase_geo 配方（训 VGG、DINOv2 qkv 加 LoRA r 8、lr 3e-5、8000 步、
+# 内点前 50%、几何 + 擦除、不加光度），几何扰动换成难版范围；补零区不监督。第 1 轮用 zero-shot 标签，第 2 轮由第 1 轮的 Val 峰值
+# 在干净 Train 上重打（code/relabel.sh），学生每轮都从 zero-shot 重训。只给 rns_r<k> 当 base
+base = "_hard"
+
+[model]
+name = "roma"
+train_vgg = true
+lora_r = 8
+
+[optim]
+lr = 3e-5
+
+[pseudo]
+labels = "/remote-home/xufang/YGC/results/finetune/labels_roma0.jsonl"
+top = 0.5
+mask_fill = true
+
+[aug]
+photo = false
+erase = true

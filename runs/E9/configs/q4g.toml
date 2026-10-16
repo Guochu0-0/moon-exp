@@ -1,0 +1,18 @@
+# LoFTR 在线自监督（Q4 配方：粗级 ±1 闭式期望、外点 −0.25、负样本对、4000 步），打开难版范围的几何扰动（#157）；
+# Q4 原来不加任何扰动，这里只加几何、不加光度。reward 只看当前模型的 RANSAC 内点、不用参考仿射，T 只作数据扰动
+base = "_hard"
+
+[optim]
+steps = 4000
+
+[run]
+save_every = 500
+save_at = [250, 750]
+
+[cexp]
+r_out = -0.25
+
+[neg]
+
+[aug]
+photo = false

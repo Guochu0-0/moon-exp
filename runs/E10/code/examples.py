@@ -1,6 +1,6 @@
-"""E9 示例图（#150）：几对 Val 的光学与各 SAR 输入并排，写 extra/examples.png。另算各 SAR 输入与光学的梯度幅值相关，写 extra/data/grad_corr.csv。
+"""E10 示例图（#150）：几对 Val 的光学与各 SAR 输入并排，写 extra/examples.png。另算各 SAR 输入与光学的梯度幅值相关，写 extra/data/grad_corr.csv。
 
-    PYTHONPATH=. /opt/envs/loftr/bin/python runs/E9/code/examples.py      # 在 worktree 根目录跑（wb 环境没有 matplotlib）
+    PYTHONPATH=. /opt/envs/loftr/bin/python runs/E10/code/examples.py      # 在 worktree 根目录跑（wb 环境没有 matplotlib）
 
 梯度幅值相关：先按标注自拟合的仿射把 SAR 输入重采样到光学网格，两图各做 σ = 2 px 高斯平滑（压掉斑点）后取 Sobel 梯度幅值，
 在重叠区域内算 Pearson 相关；
@@ -17,7 +17,7 @@ from baselines.data import Data
 from moonlib import inputs
 from workbench.dataset import Dataset
 
-R = Path("runs/E9")
+R = Path("runs/E10")
 root = os.environ.get("MOON_DATA", "/remote-home/xufang/YGC/dataset/Moon")
 data, ds = Data(root), Dataset(root)
 MAPS = ["p2p98", "oc", "sc", "mchi_vol", "mchi_odd", "mchi_even", "cpr", "m", "cpr_ml9", "m_ml9"]

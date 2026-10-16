@@ -1,6 +1,6 @@
 """后期融合（#150）：把两个输入各自推理出的点对按 pair 拼在一起，写成 baselines.match 同格式的原始目录，再交给 baselines.fit。
 
-    python runs/E9/code/fuse.py runs/E9/raw/anymatch_loftr__s1 runs/E9/raw/anymatch_loftr__cpr --out runs/E9/raw/anymatch_loftr__fuse_s1_cpr --split val
+    python runs/E10/code/fuse.py runs/E10/raw/anymatch_loftr__s1 runs/E10/raw/anymatch_loftr__cpr --out runs/E10/raw/anymatch_loftr__fuse_s1_cpr --split val
 
 任一来源报错的 pair 记为报错；sec 为两者之和。
 """

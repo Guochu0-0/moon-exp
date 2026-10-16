@@ -1,6 +1,6 @@
-"""E9 的推理配置：从 B0 的两个 AnyMatch 配置派生，只改 input（#150）。生成 runs/E9/code/cfg/<方法>.json，提交后再跑。
+"""E10 的推理配置：从 B0 的两个 AnyMatch 配置派生，只改 input（#150）。生成 runs/E10/code/cfg/<方法>.json，提交后再跑。
 
-    python runs/E9/code/make_cfgs.py
+    python runs/E10/code/make_cfgs.py
 
 方法名 <模型>__<变体>：s1 为 B0 口径的 S1（p2–p98）在同一批卡上重跑，作配对比较的参照；s1mm 为 RoMa 的 min–max 口径
 （B0m 里 RoMa 最好的映射）；其余变体见 moonlib/inputs.py。融合（fuse_s1_cpr）不推理，由 fuse.py 合并点对。

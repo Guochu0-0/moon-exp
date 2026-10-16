@@ -1,6 +1,6 @@
-"""E9 汇总（#150）：各变体相对同模型参照 <模型>__s1 的逐对配对比较，写 extra/data/summary.csv 与 extra/delta_auc5.png。
+"""E10 汇总（#150）：各变体相对同模型参照 <模型>__s1 的逐对配对比较，写 extra/data/summary.csv 与 extra/delta_auc5.png。
 
-    PYTHONPATH=. /opt/envs/loftr/bin/python runs/E9/code/summary.py   # 在 worktree 根目录跑（wb 环境没有 matplotlib）；先 workbench eval E9
+    PYTHONPATH=. /opt/envs/loftr/bin/python runs/E10/code/summary.py   # 在 worktree 根目录跑（wb 环境没有 matplotlib）；先 workbench eval E10
 
 配对比较：同一批 Val pair 上，ΔAUC@5 = 变体 − 参照，95% CI 按 pair 重采样 2000 次（两方法用同一组下标）。
 「变好 / 变差」= pair 误差减小 / 增大超过 1 px 的对数。x / y 残差 = 检查点经 A 映射后与 SAR 检查点之差，先在 pair 内取均值，
@@ -16,7 +16,7 @@ import numpy as np
 from workbench.dataset import Dataset
 from workbench.protocol import auc, checkpoint_residuals
 
-R = Path("runs/E9")
+R = Path("runs/E10")
 REF = {"anymatch_loftr": "anymatch_loftr__s1", "anymatch_roma": "anymatch_roma__s1"}
 ds = Dataset(os.environ.get("MOON_DATA", "/remote-home/xufang/YGC/dataset/Moon"))
 met = json.loads((R / "metrics.json").read_text(encoding="utf-8"))["methods"]

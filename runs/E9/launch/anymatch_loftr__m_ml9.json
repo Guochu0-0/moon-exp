@@ -1,0 +1,19 @@
+[
+ {
+  "start": "2026-10-15 21:55:31 +0800",
+  "end": "2026-10-15 21:59:20 +0800",
+  "status": "ok",
+  "commit": "4df5576cd89b585779fab5b6c76dc8f4abe72934",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-sar-signal-150",
+  "cuda_visible_devices": "2",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "runs/E9/code/one.sh",
+   "anymatch_loftr__m_ml9"
+  ]
+ }
+]

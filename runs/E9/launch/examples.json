@@ -1,0 +1,82 @@
+[
+ {
+  "start": "2026-10-15 21:16:40 +0800",
+  "end": "2026-10-15 21:16:40 +0800",
+  "status": "ok",
+  "commit": "e9691da1c3eac29d2fd544fbd37849b4a8ab4b3f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-sar-signal-150",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E9/code/examples.py"
+  ]
+ },
+ {
+  "start": "2026-10-15 21:17:00 +0800",
+  "end": "2026-10-15 21:27:55 +0800",
+  "status": "ok",
+  "commit": "e9691da1c3eac29d2fd544fbd37849b4a8ab4b3f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-sar-signal-150",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E9/code/examples.py"
+  ]
+ },
+ {
+  "start": "2026-10-15 21:29:39 +0800",
+  "end": "2026-10-15 21:40:16 +0800",
+  "status": "ok",
+  "commit": "3dfbab2f5caea237e581e22b03f6b84720a60fbd",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-sar-signal-150",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E9/code/examples.py"
+  ]
+ },
+ {
+  "start": "2026-10-16 10:13:39 +0800",
+  "end": "2026-10-16 10:28:53 +0800",
+  "status": "fail",
+  "commit": "4df5576cd89b585779fab5b6c76dc8f4abe72934",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-sar-signal-150",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E9/code/examples.py"
+  ]
+ },
+ {
+  "start": "2026-10-16 10:29:08 +0800",
+  "end": "2026-10-16 10:45:04 +0800",
+  "status": "ok",
+  "commit": "4df5576cd89b585779fab5b6c76dc8f4abe72934",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-sar-signal-150",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E9/code/examples.py"
+  ]
+ }
+]

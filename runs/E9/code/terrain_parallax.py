@@ -499,6 +499,7 @@ def cmd_analyse(args):
     plt = setup_plt()
     fig_dense(plt, det_cache)
     fig_labels(plt, S)
+    fig_sign(plt, S)
     fig_examples(plt, D, meta, roi_names)
     print(json.dumps({k: S[k] for k in ("magnitude", "dense", "dense_per_roi")}, ensure_ascii=False, indent=1))
 
@@ -534,6 +535,29 @@ def fig_dense(plt, det_cache):
     plt.close(fig)
 
 
+LOOK = {"ROI_007": "右视", "ROI_020": "右视"}   # 其余 6 个 Val ROI 为左视（minirf_metadata.csv）
+
+
+def fig_sign(plt, S):
+    """逐 ROI 的斜率：标注点（去平面后与模型无关，取 LoFTR zero-shot 的样本）与点对。"""
+    rois = sorted(ROIS, key=lambda r: (group_of(ROIS[r][2]), ROIS[r][0] == "test", r))
+    fig, a = plt.subplots(figsize=(10, 4.2))
+    for j, (vals, lab, c) in enumerate(((S["labels"][DENSE_MODEL]["per_roi"], "SAR 标注点（去平面）", "C0"),
+                                        (S["dense_per_roi"], "LoFTR zero-shot 点对（去平面）", "C1"))):
+        v = [vals[r]["slope"] for r in rois]
+        e = [[vals[r]["slope"] - vals[r]["ci95"][0], vals[r]["ci95"][1] - vals[r]["slope"]] for r in rois]
+        a.bar(np.arange(len(rois)) + (j - 0.5) * 0.35, v, 0.35, yerr=np.array(e).T, capsize=2, color=c, label=lab)
+    a.axhline(0, c="k", lw=0.6)
+    a.set_xticks(range(len(rois)))
+    a.set_xticklabels([f"{r}\n{'Val' if ROIS[r][0] == 'val' else 'Test'}·{LOOK.get(r, '左视')}\n视方位角 {ROIS[r][2]:.0f}°"
+                       for r in rois], fontsize=8)
+    a.set_ylabel("x 残差对预测视差的斜率（95% 区间）")
+    a.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(OUT / "sign_by_roi.png", dpi=130)
+    plt.close(fig)
+
+
 def fig_labels(plt, S):
     keys = list(MODELS)
     fig, axs = plt.subplots(1, 2, figsize=(12, 4.4), sharey=True)
@@ -561,7 +585,15 @@ def fig_labels(plt, S):
 def fig_examples(plt, D, meta, roi_names, n=3):
     """起伏最大的几个 patch：光学、SAR、带符号的预测视差场、点对 x 残差（均去平面）。"""
     pairs = D["pairs"]
-    cand = sorted(meta, key=lambda p: -meta[p]["z_std_plane"])[:n]
+    cnt = np.bincount(D["pair"].astype(int), minlength=len(pairs))
+    cand, seen = [], set()
+    for p in sorted(meta, key=lambda p: -meta[p]["z_std_plane"]):   # 点对够多、起伏最大，每个 ROI 至多一个
+        roi = p.split("/")[0]
+        if roi not in seen and cnt[int(np.flatnonzero(pairs == p)[0])] >= 300:
+            cand.append(p)
+            seen.add(roi)
+        if len(cand) == n:
+            break
     fig, axs = plt.subplots(n, 4, figsize=(15, 3.9 * n))
     for row, pair in zip(axs, cand):
         roi, stem = pair.split("/")

@@ -23,9 +23,9 @@ sys.path.insert(0, str(REPO))
 R = REPO / "runs" / "E7"
 OUT = R / "extra"
 METHODS = ["anymatch_loftr", "P10", "Q4", "Q11p", "loftr_lr5e5", "anymatch_roma", "erase_geo__r2", "roma_vgg"]
-SHORT = {"anymatch_loftr": "LoFTR zero-shot", "P10": "LoFTR 离线伪标签（P10）", "Q4": "LoFTR 在线（Q4）",
-         "Q11p": "LoFTR 在线 + 细级随机对照（Q11p）", "loftr_lr5e5": "LoFTR 标注过拟合",
-         "anymatch_roma": "RoMa zero-shot", "erase_geo__r2": "RoMa 离线伪标签（N）", "roma_vgg": "RoMa 标注过拟合"}
+SHORT = {"anymatch_loftr": "LoFTR zero-shot", "P10": "LoFTR 离线伪标签自训练", "Q4": "LoFTR 在线自监督",
+         "Q11p": "LoFTR 在线自监督 + 细级随机 reward", "loftr_lr5e5": "LoFTR 标注过拟合",
+         "anymatch_roma": "RoMa zero-shot", "erase_geo__r2": "RoMa 离线伪标签自训练", "roma_vgg": "RoMa 标注过拟合"}
 AXES = {"shift": ("平移（px）", [0, 12, 64, 128]), "rot": ("旋转（度）", [0, 3, 10, 20]), "scale": ("缩放（%）", [0, 3, 10, 20])}
 KEYS = ["auc@3", "auc@5", "auc@10", "sr@3", "sr@5", "sr@10", "median", "fail_rate"]
 VARS = [f"{a}{l}" for a, (_, ls) in AXES.items() for l in ls[1:]]
@@ -124,8 +124,8 @@ def plot():
                 ax.grid(alpha=.3)
                 if j == 0:
                     ax.set_ylabel(f"{'Val' if s == 'val' else 'Test'} {key.upper()}")
-        axs[0, 2].legend(fontsize=8, loc="lower left")
-        fig.tight_layout()
+        fig.legend(*axs[0, 0].get_legend_handles_labels(), loc="lower center", ncol=4, fontsize=9, frameon=False)
+        fig.tight_layout(rect=(0, 0.07, 1, 1))
         fig.savefig(OUT / fn, dpi=130)
         plt.close(fig)
 

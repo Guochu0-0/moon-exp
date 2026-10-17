@@ -1,0 +1,260 @@
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step1000__shift12/val] 652 pairs to run (0 done)
+  50/652  errors=0  147s
+  100/652  errors=0  216s
+  150/652  errors=0  286s
+  200/652  errors=0  357s
+  250/652  errors=0  430s
+  300/652  errors=0  503s
+  350/652  errors=0  577s
+  400/652  errors=0  652s
+  450/652  errors=0  729s
+  500/652  errors=0  810s
+  550/652  errors=0  895s
+  600/652  errors=0  980s
+  650/652  errors=0  1068s
+  652/652  errors=0  1086s
+[step1000__shift12/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step1000__shift64/val] 652 pairs to run (0 done)
+  50/652  errors=0  151s
+  100/652  errors=0  223s
+  150/652  errors=0  295s
+  200/652  errors=0  372s
+  250/652  errors=0  449s
+  300/652  errors=0  529s
+  350/652  errors=0  611s
+  400/652  errors=0  692s
+  450/652  errors=0  776s
+  500/652  errors=0  858s
+  550/652  errors=0  946s
+  600/652  errors=0  1036s
+  650/652  errors=0  1130s
+  652/652  errors=0  1149s
+[step1000__shift64/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step1000__shift128/val] 652 pairs to run (0 done)
+  50/652  errors=0  174s
+  100/652  errors=0  251s
+  150/652  errors=0  339s
+  200/652  errors=0  423s
+  250/652  errors=0  508s
+  300/652  errors=0  596s
+  350/652  errors=0  685s
+  400/652  errors=0  773s
+  450/652  errors=0  862s
+  500/652  errors=0  952s
+  550/652  errors=0  1042s
+  600/652  errors=0  1133s
+  650/652  errors=0  1226s
+  652/652  errors=0  1244s
+[step1000__shift128/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step1000__rot3/val] 652 pairs to run (0 done)
+  50/652  errors=0  153s
+  100/652  errors=0  224s
+  150/652  errors=0  298s
+  200/652  errors=0  374s
+  250/652  errors=0  452s
+  300/652  errors=0  531s
+  350/652  errors=0  612s
+  400/652  errors=0  693s
+  450/652  errors=0  776s
+  500/652  errors=0  859s
+  550/652  errors=0  944s
+  600/652  errors=0  1030s
+  650/652  errors=0  1117s
+  652/652  errors=0  1135s
+[step1000__rot3/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step1000__rot10/val] 652 pairs to run (0 done)
+  50/652  errors=0  160s
+  100/652  errors=0  238s
+  150/652  errors=0  315s
+  200/652  errors=0  396s
+  250/652  errors=0  474s
+  300/652  errors=0  557s
+  350/652  errors=0  641s
+  400/652  errors=0  725s
+  450/652  errors=0  812s
+  500/652  errors=0  894s
+  550/652  errors=0  982s
+  600/652  errors=0  1073s
+  650/652  errors=0  1165s
+  652/652  errors=0  1183s
+[step1000__rot10/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step1000__rot20/val] 652 pairs to run (0 done)
+  50/652  errors=0  154s
+  100/652  errors=0  229s
+  150/652  errors=0  306s
+  200/652  errors=0  384s
+  250/652  errors=0  465s
+  300/652  errors=0  548s
+  350/652  errors=0  634s
+  400/652  errors=0  719s
+  450/652  errors=0  806s
+  500/652  errors=0  895s
+  550/652  errors=0  984s
+  600/652  errors=0  1073s
+  650/652  errors=0  1161s
+  652/652  errors=0  1179s
+[step1000__rot20/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step1000__scale3/val] 652 pairs to run (0 done)
+  50/652  errors=0  154s
+  100/652  errors=0  229s
+  150/652  errors=0  306s
+  200/652  errors=0  384s
+  250/652  errors=0  463s
+  300/652  errors=0  542s
+  350/652  errors=0  621s
+  400/652  errors=0  703s
+  450/652  errors=0  787s
+  500/652  errors=0  872s
+  550/652  errors=0  958s
+  600/652  errors=0  1046s
+  650/652  errors=0  1134s
+  652/652  errors=0  1153s
+[step1000__scale3/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step1000__scale10/val] 652 pairs to run (0 done)
+  50/652  errors=0  152s
+  100/652  errors=0  224s
+  150/652  errors=0  297s
+  200/652  errors=0  372s
+  250/652  errors=0  447s
+  300/652  errors=0  523s
+  350/652  errors=0  600s
+  400/652  errors=0  681s
+  450/652  errors=0  761s
+  500/652  errors=0  843s
+  550/652  errors=0  926s
+  600/652  errors=0  1010s
+  650/652  errors=0  1093s
+  652/652  errors=0  1112s
+[step1000__scale10/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step1000__scale20/val] 652 pairs to run (0 done)
+  50/652  errors=0  150s
+  100/652  errors=0  222s
+  150/652  errors=0  296s
+  200/652  errors=0  370s
+  250/652  errors=0  447s
+  300/652  errors=0  523s
+  350/652  errors=0  598s
+  400/652  errors=0  673s
+  450/652  errors=0  753s
+  500/652  errors=0  836s
+  550/652  errors=0  919s
+  600/652  errors=0  1004s
+  650/652  errors=0  1089s
+  652/652  errors=0  1108s
+[step1000__scale20/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step2000__shift12/val] 652 pairs to run (0 done)
+  50/652  errors=0  166s
+  100/652  errors=0  245s
+  150/652  errors=0  329s
+  200/652  errors=0  415s
+  250/652  errors=0  501s
+  300/652  errors=0  587s
+  350/652  errors=0  677s
+  400/652  errors=0  765s
+  450/652  errors=0  854s
+  500/652  errors=0  947s
+  550/652  errors=0  1040s
+  600/652  errors=0  1131s
+  650/652  errors=0  1224s
+  652/652  errors=0  1243s
+[step2000__shift12/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step2000__shift64/val] 652 pairs to run (0 done)
+  50/652  errors=0  159s
+  100/652  errors=0  235s
+  150/652  errors=0  309s
+  200/652  errors=0  385s
+  250/652  errors=0  463s
+  300/652  errors=0  540s
+  350/652  errors=0  620s
+  400/652  errors=0  701s
+  450/652  errors=0  781s
+  500/652  errors=0  864s
+  550/652  errors=0  948s
+  600/652  errors=0  1035s
+  650/652  errors=0  1121s
+  652/652  errors=0  1139s
+[step2000__shift64/val] ransac=3.0 {'ok': 652}
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step2000__shift128/val] 652 pairs to run (0 done)
+  50/652  errors=0  166s
+  100/652  errors=0  243s
+  150/652  errors=0  323s
+  200/652  errors=0  404s
+  250/652  errors=0  484s
+  300/652  errors=0  566s
+  350/652  errors=0  646s
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/envs/loftr/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+Using coarse resolution (560, 560), and upsample res (864, 864)
+[step2000__rot3/val] 652 pairs to run (0 done)
+  400/652  errors=0  730s
+  50/652  errors=0  159s
+  450/652  errors=0  815s
+  100/652  errors=0  233s
+  500/652  errors=0  900s
+  150/652  errors=0  310s
+  200/652  errors=0  387s
+  550/652  errors=0  985s
+  250/652  errors=0  465s
+  600/652  errors=0  1074s

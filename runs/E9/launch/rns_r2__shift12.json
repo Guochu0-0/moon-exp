@@ -1,0 +1,23 @@
+[
+ {
+  "start": "2026-10-17 14:50:06 +0000",
+  "end": "2026-10-17 15:38:03 +0000",
+  "status": "ok",
+  "commit": "9d7e4ac4a5c6237541eb7b44115a6c30f2958eb4",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-retrain-hard-157",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "scripts/finetune/eval_ckpt.sh",
+   "runs/E9",
+   "rns_r2__shift12",
+   "runs/E9/ckpt/rns_r2/ckpt_6000.pt",
+   "configs/baselines/anymatch_roma__minmax.json",
+   "shift12"
+  ]
+ }
+]

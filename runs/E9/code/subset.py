@@ -33,7 +33,8 @@ def preds(exp, m, split):
     f = Path("runs") / exp / "preds" / m / f"{split}.jsonl"
     if not f.exists():
         return None
-    return {d["pair"]: d.get("A") for d in map(json.loads, f.read_text(encoding="utf-8").splitlines()) if d.strip()}
+    rows = [json.loads(s) for s in f.read_text(encoding="utf-8").splitlines() if s.strip()]
+    return {d["pair"]: d.get("A") for d in rows}
 
 
 def main():

@@ -437,3 +437,64 @@ def test_mixlap_nll_prefers_wide_component_for_outliers():
     narrow = torch.zeros(1, 2, 4, 4)
     wide = torch.stack([torch.full((1, 4, 4), -5.0), torch.full((1, 4, 4), 3.0)], 1)   # 几乎全用 e^3 px 的分量
     assert float(mixlap_nll(flow, x2, wide, m)) < float(mixlap_nll(flow, x2, narrow, m))
+
+
+# ---------- #157 难版范围的训练扰动 ----------
+
+def test_sample_T_disk():
+    from finetune.augment import sample_T
+
+    T = [sample_T(np.random.default_rng(k), shift=128, rot=0, scale=0, disk=True) for k in range(4000)]
+    r = np.array([np.linalg.norm(x[:, 2]) for x in T])      # rot = scale = 0 时 L = I，第三列就是平移
+    assert r.max() <= 128 and abs(np.mean(r < 64) - 0.25) < 0.03   # 圆盘内按面积均匀：半径一半以内占 1/4
+    a = sample_T(np.random.default_rng(3), shift=12, rot=3, scale=0.03)    # 默认仍是方形，随机数用法不变
+    g = np.random.default_rng(3)
+    g.uniform(-3, 3), g.uniform(-0.03, 0.03)
+    c = np.array([256.0, 256.0])
+    assert np.allclose(a[:, 2] - (c - a[:, :2] @ c), g.uniform(-12, 12, 2))
+
+
+def test_mask_fill_loftr():
+    """A 把光学右移 60 px、T 再左移回来：T∘A 是恒等，所有格都落在扰动后的画面内；
+    但最右一列经 A 落到原 SAR 画面外（补零区），mask_fill 时粗级、细级都不监督（#157）。"""
+    import torch
+    from finetune.parts.pseudo import coarse_targets, loftr_loss
+
+    s, w = 512 / 640, 10                                    # 输入网格 640，粗格 64 px，格点 0…576
+    A0 = np.array([[1.0, 0, 60.0], [0, 1.0, 0]])
+    TA = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    assert len(coarse_targets(TA, (w, w), 64, s)[0]) == 100
+    i, _ = coarse_targets(TA, (w, w), 64, s, A0)
+    assert len(i) == 90 and not np.any(i % w == w - 1)
+    k0 = _grid(step=64)
+    data = {"conf_matrix": torch.full((1, 100, 100), 0.5), "expec_f": torch.full((100, 3), 0.5),
+            "hw0_c": (w, w), "hw0_i": (640, 640), "hw0_f": (80, 80), "W": 5,
+            "b_ids": torch.zeros(100, dtype=torch.long), "mkpts0_c": torch.from_numpy(k0),
+            "mkpts1_c": torch.from_numpy(k0)}
+    _, st = loftr_loss(data, s, [TA])
+    _, st_m = loftr_loss(data, s, [TA], src=[A0])
+    assert (st["n_coarse_pos"], st["n_fine"]) == (100, 100) and (st_m["n_coarse_pos"], st_m["n_fine"]) == (90, 90)
+
+
+def test_mask_fill_roma():
+    """RoMa：src 把查询像素映到原 SAR 画面外的部分 prob = 0，损失随之变化；src 为恒等时与不加相同（#157）。"""
+    import torch
+    from finetune.parts.pseudo import affine_norm, roma_loss
+
+    An = torch.tensor([[[1.0, 0, 0], [0, 1.0, 0]]])
+    c = {16: {"flow": torch.randn(1, 2, 8, 8), "certainty": torch.zeros(1, 1, 8, 8)}}
+    l0, _ = roma_loss(c, An)
+    l_id, _ = roma_loss(c, An, src=An.clone())
+    half = torch.from_numpy(affine_norm(np.c_[np.eye(2), [256.0, 0]])[None]).float()   # 右半经它落到原画面外
+    l_half, _ = roma_loss(c, An, src=half)
+    assert torch.isclose(l0, l_id) and not torch.isclose(l0, l_half)
+
+
+def test_config_hard_aug_options(tmp_path):
+    from finetune import config as C
+
+    c = C.load(_write(tmp_path, "t", '[model]\nname = "loftr"\n[pseudo]\nlabels = "l.jsonl"\nmask_fill = true\n'
+                                     '[aug]\nshift = 128.0\nrot = 20.0\nscale = 0.2\nshift_disk = true\n'))
+    assert c["pseudo"]["mask_fill"] is True and c["aug"]["shift_disk"] is True
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "loftr"\n[pseudo]\nlabels = "l.jsonl"\n[aug]\n'))
+    assert d["pseudo"]["mask_fill"] is False and d["aug"]["shift_disk"] is False

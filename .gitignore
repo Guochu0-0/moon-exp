@@ -9,4 +9,7 @@ runs/*/.claims/
 runs/*/sweep/*/match/
 runs/*/sweep/*/neg/
 runs/*/sweep/*/S/preds/
+runs/*/sweep/*/H/preds/
+runs/*/sweep/*/H/perturb/
+runs/*/sweep/*/hmatch/
 runs/*/raw/

@@ -10,6 +10,9 @@ name = "LoFTR 离线伪标签 noisy student 第 1 轮（难版范围扰动）"
 [methods.lns_r2]
 name = "LoFTR 离线伪标签 noisy student 第 2 轮（难版范围扰动）"
 
+[methods.lns_r3]
+name = "LoFTR 离线伪标签 noisy student 第 3 轮（难版范围扰动）"
+
 [methods.rns_r1]
 name = "RoMa 离线伪标签 noisy student 第 1 轮（难版范围扰动）"
 

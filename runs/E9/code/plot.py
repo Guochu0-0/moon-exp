@@ -68,7 +68,7 @@ def main():
             x += 1.2
         ax.axhline(0, color="k", lw=0.8)
         ax.set_xticks([t for t, _ in ticks], [s for _, s in ticks], fontsize=8)
-        ax.set_title(f"{name} {vs[-1]}{"" if unit in "°%" else " "}{unit}")
+        ax.set_title(f"{name} {vs[-1]}" + ("" if unit in "°%" else " ") + unit)
         ax.grid(axis="y", alpha=0.3)
     axs[0].set_ylabel("Val AUC@5：最重一档 - 原始")
     axs[0].legend(loc="lower left", fontsize=8)

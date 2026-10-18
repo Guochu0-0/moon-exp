@@ -4,7 +4,7 @@
     python runs/E7/code/summary.py --plot                    # 任何装了 matplotlib 的环境：只读 csv 画图
 
 产物（runs/E7/extra/）：
-  data/summary.csv     方法、变体、split、n、剔除 pair / 检查点数、AUC@3/5/10、SR@3/5/10、中位误差、失败率
+  data/summary.csv     方法、变体、split、n、落到画面外的检查点数（仍计入，#159）与全部出画面的 pair 数、AUC@3/5/10、SR@3/5/10、中位误差、失败率
   data/follow.csv      每个方法、变体、split：扰动后的仿射是否跟上 T（patch 四角平均位移 < 5 px）。
                        follow = 离 T∘A₀ 近（A₀ 是同一方法在原始影像上的仿射），stay = 离 A₀ 近（停在原位置），other = 都不近
   data/gt_dist.csv     原始数据本身的平移 / 旋转 / 缩放分布（由 gtfit 仿射分解，--plot 时写）
@@ -62,9 +62,9 @@ def tables():
             for s in ("val", "test"):
                 if k in met and s in met[k]:
                     r = met[k][s]
-                    d = r.get("perturb", {}).get("dropped", {"pairs": 0, "points": 0})
+                    d = r.get("perturb", {}).get("outside", {"pairs": 0, "points": 0})
                     rows.append({"method": m, "variant": v, "split": s, "n": r["summary"]["n"],
-                                 "dropped_pairs": d["pairs"], "dropped_points": d["points"],
+                                 "outside_pairs": d["pairs"], "outside_points": d["points"],
                                  **{x: r["summary"][x] for x in KEYS}})
     write_csv(OUT / "data" / "summary.csv", rows)
 
@@ -89,6 +89,13 @@ def tables():
                 n = sum(c.values())
                 fol.append({"method": m, "variant": v, "split": s, "n": n, **{k: round(x / n, 4) for k, x in c.items()}})
     write_csv(OUT / "data" / "follow.csv", fol)
+
+    from workbench.reference import paired_diff
+    for a, b, v in (("Q4", "P10", "shift128"),):          # Notes 引用的配对差值与 95% 区间
+        for s in ("val", "test"):
+            ea, eb = (np.array([np.inf if e is None else e for e in met[f"{m}__{v}"][s]["errors"]]) for m in (a, b))
+            d = paired_diff(ea, eb, met[f"{a}__{v}"][s]["summary"], met[f"{b}__{v}"][s]["summary"])
+            print(f"{a} − {b} {v} {s}: auc@5 {d['auc@5']:.3f} CI {d['auc@5_ci'][0]:.3f}–{d['auc@5_ci'][1]:.3f}")
 
     get = {(r["method"], r["variant"], r["split"]): r for r in rows}
     for key in ("auc@5", "sr@10"):

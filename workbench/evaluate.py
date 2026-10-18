@@ -50,7 +50,7 @@ def evaluate_preds(ds: Dataset, split: str, preds: dict[str, Pred]) -> dict:
 
 
 def evaluate_run(ds: Dataset, run: Run) -> dict:
-    """扰动变体的方法（workbench/perturb.py）按扰动后的真值评测，另记变体与剔除的 pair、检查点数。"""
+    """扰动变体的方法（workbench/perturb.py）按扰动后的真值评测，另记变体与落到画面外的检查点数。"""
     out = {"protocol": protocol.protocol_info(), "methods": {}}
     for m in run.methods:
         dm = perturb.dataset_for(ds, run, m)
@@ -58,7 +58,7 @@ def evaluate_run(ds: Dataset, run: Run) -> dict:
                              for s in SPLITS if (run.dir / "preds" / m / f"{s}.jsonl").exists()}
         if dm is not ds:
             for s, res in out["methods"][m].items():
-                res["perturb"] = {"variant": perturb.variant(run, m), "dropped": dm.dropped(s)}
+                res["perturb"] = {"variant": perturb.variant(run, m), "outside": dm.outside(s)}
     return out
 
 

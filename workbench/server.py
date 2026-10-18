@@ -247,7 +247,7 @@ class Workbench:
                 side[name] = {"key": key, "label": reference.label(key, runs), **res}
             a, b = side["method"], side["ref"]
             pairs, subset = a["_pairs"], None
-            if b and b["_pairs"] != pairs:   # 两边评测的 pair 不同（扰动变体剔掉了一些）：只在共同的 pair 上逐对比较
+            if b and b["_pairs"] != pairs:   # 两边评测的 pair 不同（如扰动变体缺了某些 pair 的 T）：只在共同的 pair 上逐对比较
                 common = set(b["_pairs"])
                 pairs = [p for p in pairs if p in common]
                 a, b = (_restrict(x, pairs) for x in (a, b))

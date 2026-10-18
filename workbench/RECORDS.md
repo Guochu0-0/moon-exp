@@ -217,7 +217,7 @@ Notes 引用的附件：诊断图表和它们的数据。工作台只显示被 n
 
 难版评测（#138）在 SAR 一侧叠加已知仿射 T 后重测现成模型。实验写 `perturb = true`，T 由 `python -m moonlib.perturb runs/<id>` 写成 `perturb/<变体>/<split>.json`（进 git；变体与抽样规则见 `moonlib/perturb.py`）。
 
-- 方法名的最后一段 `__<变体>` 对得上 `perturb/` 下的目录时，按扰动后的真值评测：检查点 SAR 一侧变为 T(q)，落到画面外的检查点不计，一个不剩的 pair 整对不计；误差把预测换回原 SAR 坐标系（T⁻¹∘A）再量，单位仍是原始像素（缩放变体在扰动后的网格里量会差 1 ± s 倍）；`metrics.json` 里记 `perturb.variant` 与剔除的 pair、检查点数。
+- 方法名的最后一段 `__<变体>` 对得上 `perturb/` 下的目录时，按扰动后的真值评测：检查点 SAR 一侧变为 T(q)，全部检查点都计入，落到扰动后画面外的也照算（#159）；误差把预测换回原 SAR 坐标系（T⁻¹∘A）再量，单位仍是原始像素（缩放变体在扰动后的网格里量会差 1 ± s 倍）；`metrics.json` 里记 `perturb.variant` 与落到画面外的检查点数、全部出画面的 pair 数。
 - 推理用 `baselines.match --perturb runs/<id>/perturb/<变体>`（或 `scripts/finetune/eval_ckpt.sh` 的第 5 个参数），扰动后的影像不落盘。
 - 逐对视图按方法那一侧的坐标系显示：SAR 底图套上 T；参考方法在别的坐标系时，它的仿射和点对换算过来显示，误差仍按它自己的真值。两边评测的 pair 不同时，逐对比较只用共同的 pair。
 

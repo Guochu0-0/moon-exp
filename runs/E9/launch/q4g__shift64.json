@@ -1,0 +1,23 @@
+[
+ {
+  "start": "2026-10-17 11:01:58 +0800",
+  "end": "2026-10-17 11:09:40 +0800",
+  "status": "ok",
+  "commit": "241bdf80034d8451fabfb9de1c266ef7f5e19824",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/worktree-retrain-hard-157",
+  "cuda_visible_devices": "5",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "scripts/finetune/eval_ckpt.sh",
+   "runs/E9",
+   "q4g__shift64",
+   "runs/E9/ckpt/q4g/ckpt_500.pt",
+   "configs/baselines/anymatch_loftr.json",
+   "shift64"
+  ]
+ }
+]

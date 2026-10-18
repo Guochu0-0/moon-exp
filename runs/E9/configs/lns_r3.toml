@@ -1,0 +1,6 @@
+# LoFTR 离线伪标签 noisy student 第 3 轮（#157）：老师换成 lns_r2（Val 峰值那一步）在干净 Train 上重打的标签（门槛不变、内点前 50%），
+# 同一组噪声，从 zero-shot 重训。lns_r2 的原始 Val AUC@5（0.265）高于 lns_r1（0.260），按停止规则继续
+base = "_lns"
+
+[pseudo]
+labels = "runs/E9/raw/labels_lns_r2.jsonl"

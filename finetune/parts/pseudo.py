@@ -32,7 +32,9 @@ from ..label import load_labels, pair_weights
 PARAMS = {"labels": "",         # finetune.label 格式的离线伪仿射（jsonl）
           "top": 1.0,           # 只用 keep 的对里内点数最多的前这一比例
           "weight": 1.0,
-          "pair_weight": ""}    # 每对损失乘的质量权重（#127）：空 = 不加权 / inlier_ratio 内点率，归一化到均值 1；要求 batch 1
+          "pair_weight": "",    # 每对损失乘的质量权重（#127）：空 = 不加权 / inlier_ratio 内点率，归一化到均值 1；要求 batch 1
+          "mask_fill": False}   # 补零区不监督（#157）：经伪仿射 A 落到原 SAR 画面外的点（扰动后多半落进 warp 补 0 的区域）不监督；
+                                # 默认只看 T∘A 是否落在扰动后的画面内
 MODELS = {"loftr": {"w_coarse": 1.0, "w_fine": 1.0},
           "roma": {"swap": 0.5,
                    "cls_soft": False,   # 粗级锚点分类的目标：一热（原损失）/ 双线性分到相邻 4 个锚点（#120，自拟）
@@ -152,11 +154,13 @@ class Term:
     def __call__(self, st):
         self.n += 1
         w = self.pw[st.batch["pair"][0]] if self.pw else 1.0
-        As = [np.asarray(self.labels[q]) for q in st.batch["pair"]]
+        As = A0 = [np.asarray(self.labels[q]) for q in st.batch["pair"]]
+        Ts = [T.numpy() for T in st.batch["T"]] if "T" in st.batch else [np.c_[np.eye(2), np.zeros(2)]] * len(As)
         if "T" in st.batch:   # SAR 被已知 T warp 过：标签精确变为 T∘A
-            As = [compose(T.numpy(), A) for T, A in zip(st.batch["T"], As)]
+            As = [compose(T, A) for T, A in zip(Ts, As)]
         if st.model_name == "loftr":
-            loss, stats = loftr_loss(st.out, self.model.s, As, self.p["w_coarse"], self.p["w_fine"])
+            loss, stats = loftr_loss(st.out, self.model.s, As, self.p["w_coarse"], self.p["w_fine"],
+                                     src=A0 if self.p["mask_fill"] else None)
             return self.p["weight"] * w * loss, stats, stats["pairs_used"] > 0
         i0, i1 = st.images()
         sw = st.rng.random(st.B) < self.p["swap"]
@@ -175,8 +179,12 @@ class Term:
             D = [np.load(self.match / f"{q}.npy") for q in st.batch["pair"]]
             f = lambda k: torch.from_numpy(np.stack([d[k(int(s))] for d, s in zip(D, sw)])).to(i0.device).float()
             match = (f(lambda s: s), f(lambda s: 1 - s), self.p["match_r"] * 2 / HW)
+        src = None
+        if self.p["mask_fill"]:   # 查询像素在原 SAR 上的位置：未交换时经 A，交换时（查询图是扰动后的 SAR）经 T⁻¹
+            src = torch.from_numpy(np.stack([affine_norm(inv_affine(T) if s else A) for A, T, s in zip(A0, Ts, sw)])
+                                   ).float().to(i0.device)
         ema = self.ema_predict(a, b) if self.shadow is not None else None
-        kw = dict(cls_soft=self.p["cls_soft"], drop_top=self.p["drop_top"], occ=occ, dense=dense,
+        kw = dict(cls_soft=self.p["cls_soft"], drop_top=self.p["drop_top"], occ=occ, dense=dense, src=src,
                   reg_tol=self.p["reg_tol"] * 2 / HW, fine_w=self.fine_w(), match=match,
                   mixlap=self.p["mixlap_w"] if self.p["reg_loss"] == "mixlap" else 0.0, ema=ema)
         tr = getattr(self.model, "train_res", "560")
@@ -207,15 +215,24 @@ class Term:
 
 # ---------- LoFTR ----------
 
-def coarse_targets(A, hw_c, scale_c, s):
+def in_orig_frame(A, p_orig):
+    """原网格点 p_orig（中心约定）经 A 后是否落在原 SAR 画面内，即 [−0.5, HW − 0.5)（补零区检查，#157）。"""
+    q = apply_affine(A, p_orig)
+    return (q >= -0.5).all(1) & (q < HW - 0.5).all(1)
+
+
+def coarse_targets(A, hw_c, scale_c, s, src=None):
     """一对的粗级正样本。hw_c: 粗网格 (h, w)；scale_c: 输入网格 / 粗网格（8）。
-    返回 (i_ids, j_ids) 两个 int64 数组：光学格 i 经伪仿射落到的 SAR 格 j（最近格），图外的不要。"""
+    返回 (i_ids, j_ids) 两个 int64 数组：光学格 i 经伪仿射落到的 SAR 格 j（最近格），图外的不要。
+    src（未扰动的伪仿射）给出时，经它落到原 SAR 画面外的 i 也不要（#157）。"""
     h, w = hw_c
     ii = np.arange(h * w)
     p0 = np.stack([ii % w, ii // w], 1).astype(np.float64) * scale_c        # 与 mkpts0_c 同一套格点坐标
     p1 = orig_to_in(apply_affine(A, in_to_orig(p0, s)), s) / scale_c
     j = np.rint(p1).astype(np.int64)
     ok = (j[:, 0] >= 0) & (j[:, 0] < w) & (j[:, 1] >= 0) & (j[:, 1] < h)
+    if src is not None:
+        ok &= in_orig_frame(src, in_to_orig(p0, s))
     return ii[ok], j[ok, 1] * w + j[ok, 0]
 
 
@@ -243,9 +260,10 @@ def fine_l2_std(expec_f, gt, mask):
     return (l2 * wgt[mask]).mean()
 
 
-def loftr_loss(data, s, affines, w_coarse=1.0, w_fine=1.0):
+def loftr_loss(data, s, affines, w_coarse=1.0, w_fine=1.0, src=None):
     """一个 batch 的伪标签损失。data 是 LoFTR 前向后的字典（模块 eval、开梯度，见 finetune/models/loftr.py）。
-    s = 原尺寸 / 输入尺寸（标量）。affines：每对一个 2×3 或 None（None 的对不监督）。返回 (loss, 统计 dict)。"""
+    s = 原尺寸 / 输入尺寸（标量）。affines：每对一个 2×3 或 None（None 的对不监督）。返回 (loss, 统计 dict)。
+    src：每对未扰动的伪仿射，给出时经它落到原 SAR 画面外的点粗级、细级都不监督（补零区，#157）。"""
     conf, expec_f = data["conf_matrix"], data["expec_f"]
     hw_c = tuple(int(x) for x in data["hw0_c"])
     scale_c = data["hw0_i"][0] / data["hw0_c"][0]
@@ -264,11 +282,15 @@ def loftr_loss(data, s, affines, w_coarse=1.0, w_fine=1.0):
             continue
         sel = b_ids == k
         used += 1
-        i, j = coarse_targets(A, hw_c, scale_c, s)
+        a0 = None if src is None else np.asarray(src[k])
+        i, j = coarse_targets(A, hw_c, scale_c, s, a0)
         cb.append(np.full(len(i), k)); ci.append(i); cj.append(j)
         g = fine_targets(A, k0[sel], k1c[sel], half, s)
         gt[sel] = g
-        valid[sel] = np.abs(g).max(1) < FINE_CORRECT_THR
+        v = np.abs(g).max(1) < FINE_CORRECT_THR
+        if a0 is not None:
+            v &= in_orig_frame(a0, in_to_orig(k0[sel], s))
+        valid[sel] = v
 
     dev = conf.device
     cat = lambda xs: torch.from_numpy(np.concatenate(xs) if xs else np.zeros(0, np.int64)).to(dev)
@@ -382,7 +404,7 @@ def robust(x, s, like):
 
 
 def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, gt=None, reg_tol=0.0, fine_w=1.0,
-              match=None, mixlap=0.0, ema=None):
+              match=None, mixlap=0.0, ema=None, src=None):
     """RoMa 原损失，GT 换成仿射。An: (B,2,3) 归一化。#120 新增（默认关）：cls_soft 粗级双线性软目标；
     drop_top 每对去掉回归残差最大的这一比例像素；occ 遮挡扰动，被遮处 prob = 0（不监督位置、certainty 目标为 0）。
     #122：dense = (老师 (B,3,H,W)，距离门限（归一化）, certainty 门限)：两个门限都过的像素把落点目标换成老师的
@@ -391,7 +413,8 @@ def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, 
     #127：reg_tol（归一化）1、2 两层回归用 max(EPE − reg_tol, 0)；fine_w 乘在 4、2、1 层的回归与 certainty 项上；
     match 给出时 certainty（含粗级 gm_certainty）的目标乘上可匹配掩码（matchable），回归照旧；
     mixlap > 0 时有 unc 输出的尺度（细化层）回归改为 mixlap × 两分量拉普拉斯混合 NLL（mixlap_nll）；
-    ema = ({尺度: EMA 老师 flow (B,2,h,w)}, α) 给出时，落点目标换成 (1−α)·伪仿射落点 + α·老师落点（粗级分类与回归都用），prob 不变。"""
+    ema = ({尺度: EMA 老师 flow (B,2,h,w)}, α) 给出时，落点目标换成 (1−α)·伪仿射落点 + α·老师落点（粗级分类与回归都用），prob 不变。
+    #157：src (B,2,3) 归一化仿射，把查询像素映到原 SAR 上；落到原画面外的像素 prob = 0（补零区不监督、certainty 目标为 0）。"""
     tot, st, prev_epe = 0.0, {}, None
     for s in sorted(corresps, reverse=True):          # 16, 8, 4, 2, 1
         c = corresps[s]
@@ -406,6 +429,8 @@ def roma_loss(corresps, An, cls_soft=False, drop_top=0.0, occ=None, dense=None, 
             x2 = (1 - ema[1]) * x2 + ema[1] * ema[0][s].permute(0, 2, 3, 1)
         if occ is not None:
             prob = prob * ~occluded(occ, An, h, w)
+        if src is not None:
+            prob = prob * affine_gt(src, h, w)[1]
         if s <= 8 and prev_epe is not None:
             prob = prob * (F.interpolate(prev_epe[:, None], size=(h, w), mode="nearest-exact")[:, 0]
                            < (2 / 512) * LOCAL_DIST[s] * s)

@@ -1,0 +1,6 @@
+# LoFTR 离线伪标签 noisy student 第 2 轮（#157）：老师换成 lns_r1（Val 峰值那一步）在干净 Train 上重打的标签（门槛不变、内点前 50%），
+# 同一组噪声，从 zero-shot 重训
+base = "_lns"
+
+[pseudo]
+labels = "runs/E9/raw/labels_lns_r1.jsonl"

@@ -1,6 +1,6 @@
 """E10 的统计与画图：读 reward_validity.py 的逐版本表，算每个 reward 在各版本族内与真实误差的对内一致率。
 
-    python runs/E10/code/summarize.py
+    python runs/E10/code/summarize.py [--plot-only]     # --plot-only：只按 summary.json 重画图
 
 对内一致率（C-index，Harrell et al., JAMA 1982 的一致性指数用在对内排序上）：同一 patch 对的同一族版本两两比较，
 只比真实误差相差 ≥ DELTA 的两份；reward 高的那份误差也小记 1，reward 相等记 0.5，反之记 0。
@@ -16,6 +16,7 @@ s1_1 / s1_2 为 8 份策略样本；real_roma 为 3 个 RoMa 模型的实际输�
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -158,5 +159,12 @@ def plot(table, res):
     plt.close(fig)
 
 
+def plot_only():
+    """只按已有的 summary.json 重画图（服务器上没有中文字体时，在有字体的机器上重画）。"""
+    res = json.loads((RUN / "extra" / "summary.json").read_text(encoding="utf-8"))
+    table = {(f, r): (v["c"], v["lo"], v["hi"]) for f, rs in res["families"].items() for r, v in rs.items()}
+    plot(table, res)
+
+
 if __name__ == "__main__":
-    main()
+    plot_only() if "--plot-only" in sys.argv else main()

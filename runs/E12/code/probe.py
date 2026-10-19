@@ -176,7 +176,7 @@ def main(argv=None):
             return self.it["image0"][None].to(dev), self.it["image1"][None].to(dev)
 
     step_sec = []
-    for i in range(5):
+    for i in range(min(5, len(ds))):
         t0 = time.time()
         loss, st, _ = term(St(ds[i]))
         loss.backward()

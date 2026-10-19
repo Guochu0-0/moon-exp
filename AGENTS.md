@@ -23,3 +23,5 @@ Shared lab GPU servers: which hosts, how to connect, GPU-sharing rules, remote-o
 Running an experiment (writing anything under `runs/<id>/`: preds, intermediate results, TensorBoard logs, notes): first read `workbench/RECORDS.md` and follow it. Don't read `workbench/README.md` for this; it documents the workbench UI.
 
 Running anything on a server (code, branches, worktrees, launching, wrapping up a ticket): read `docs/agents/experiments.md`. Code must be committed before it runs; never run from `git archive` copies.
+
+All compute runs on the lab servers, never on the user's own PC, even CPU-only analyses whose data happens to be local. The PC can't take the load. Locally, only edit code, use git, and run tiny single-process probes on a few pairs.

@@ -153,7 +153,7 @@ def plot(table, res):
         ax.set_xticks(range(len(REWARDS)), [LABEL[r] for r in REWARDS], rotation=60, ha="right", fontsize=8)
         ax.set_title(FLABEL[f])
     axes[0].set_ylabel("对内一致率")
-    axes[0].legend(fontsize=7, loc="lower left")
+    axes[0].legend(fontsize=7, loc="upper right")
     fig.tight_layout()
     fig.savefig(RUN / "extra" / "strata.png", dpi=130)
     plt.close(fig)

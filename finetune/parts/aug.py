@@ -27,8 +27,8 @@ def check(cfg):
     a = cfg["aug"]
     if not (a["geo"] or a["photo"] or a["erase"] or a["blockmask"]):
         raise ConfigError("[aug] geo、photo、erase、blockmask 至少开一个")
-    if a["erase"] and ("pseudo" not in cfg or cfg["model"]["name"] != "roma"):
-        raise ConfigError("[aug] erase 目前只配合 RoMa 的 [pseudo]（遮挡掩码由它使用）")
+    if a["erase"] and (cfg["model"]["name"] != "roma" or not ("pseudo" in cfg or "rloo" in cfg)):
+        raise ConfigError("[aug] erase 目前只配合 RoMa 的 [pseudo]（遮挡掩码由它使用）或 [rloo]（不用掩码，被擦处照常给 reward）")
 
 
 def data_kw(p):

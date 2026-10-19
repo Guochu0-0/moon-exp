@@ -78,6 +78,7 @@ def main(argv=None):
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
     ap.add_argument("--n", type=int, default=200)
     ap.add_argument("--group", type=int, default=16)
+    ap.add_argument("--temps", type=float, nargs="+", default=[1.0, 0.5, 0.3, 0.2, 0.1])
     a = ap.parse_args(argv)
     torch.manual_seed(0)
     cfg = C.expand(CFG)
@@ -87,8 +88,15 @@ def main(argv=None):
     ds = PairSet(a.data, "train", model.resize, **model.input, seed=0, **aug.data_kw(cfg["aug"]))
     ds.pairs = ds.pairs[:: max(1, len(ds.pairs) // a.n)][: a.n]
     dev = "cuda"
-    rows, cells = [], {"H": [], "pmode": [], "nonmode": [], "d_anchor": [], "conf": []}
+    rows, cells = [], {}
     consist, grads, secs = [], [], []
+    corners = np.array([[0, 0], [HW, 0], [0, HW], [HW, HW]], np.float64)
+
+    def cdist(A, B):
+        if A is None or B is None:
+            return np.nan
+        return float(np.linalg.norm(corners @ A[:, :2].T + A[:, 2] - corners @ B[:, :2].T - B[:, 2], axis=1).mean())
+
     for i in range(len(ds)):
         it = ds[i]
         i0, i1 = it["image0"][None].to(dev), it["image1"][None].to(dev)
@@ -98,49 +106,52 @@ def main(argv=None):
             cls, cert = rloo.coarse(model, f1, f2)
             cls = cls.float()
             C_, h, w = cls.shape[1:]
-            q = cls[0].softmax(0)
-            logq = cls[0].log_softmax(0)
-            mode = q.argmax(0)
-            k = torch.multinomial(q.reshape(C_, -1).T, a.group, replacement=True).T.reshape(-1, h, w)
             P = cls.softmax(1)
-            flow, ce = rloo.rollout(model, f1, f2, P, cert.float(), torch.cat([mode[None], k]), p["chunk"])
+            q = P[0]
+            mode = q.argmax(0)
+            G_, _ = rloo.anchors(C_, cls.device)
+            valid = rloo.sar_valid(i1[0])
+            m_flow, m_ce = rloo.rollout(model, f1, f2, P, cert.float(), mode[None], p["chunk"])
             if i < 5:
                 ref = model.forward(i0, i1)[1]["flow"].float()
-                consist.append(float((ref[0] - flow[0]).abs().max() * (HW / 2)))
-            fits = [rloo.fit(flow[g], ce[g], p["num"], p["ransac"]) for g in range(len(flow))]
-            valid = rloo.sar_valid(i1[0])
-            r1 = torch.stack([rloo.r1_cells(flow[g], A, p["ransac"], (h, w)) for g, (A, _) in enumerate(fits)])
-            nc = np.array([rloo.ncc(i0[0], i1[0], valid, A) for A, _ in fits])
+                d = ((ref[0] - m_flow[0]).norm(dim=0) * (HW / 2)).reshape(-1)
+                consist.append({"max": float(d.max()), "p99": float(d.quantile(0.99)), "median": float(d.median()),
+                                "frac_gt_0.5px": float((d > 0.5).float().mean())})
+            A0, n0 = rloo.fit(m_flow[0], m_ce[0], p["num"], p["ransac"])
+            r1_0 = rloo.r1_cells(m_flow[0], A0, p["ransac"], (h, w))
+            nc0 = rloo.ncc(i0[0], i1[0], valid, A0)
+            conf = torch.nn.functional.adaptive_avg_pool2d(m_ce.sigmoid(), (h, w))[0, 0] > 0.5
+            for tp in a.temps:
+                qt = (cls[0] / tp).softmax(0)
+                logq = (cls[0] / tp).log_softmax(0)
+                k = torch.multinomial(qt.reshape(C_, -1).T, a.group, replacement=True).T.reshape(-1, h, w)
+                flow, ce = rloo.rollout(model, f1, f2, P, cert.float(), k, p["chunk"])
+                fits = rloo.fit_many(flow, ce, p["num"], p["ransac"])
+                r1 = torch.stack([rloo.r1_cells(flow[g], A, p["ransac"], (h, w)) for g, (A, _) in enumerate(fits)])
+                nc = np.array([rloo.ncc(i0[0], i1[0], valid, A) for A, _ in fits])
+                H = -(qt * logq).sum(0)
+                nonmode = (k != mode).float().mean(0)
+                d_anc = ((G_[k] - G_[mode]).norm(dim=-1) * (HW / 2))                   # (G,h,w)，原网格 px
+                d_fin = ((flow - m_flow).norm(dim=1) * (HW / 2))                       # (G,H,W)
+                c = cells.setdefault(tp, {"H": [], "pmode": [], "nonmode": [], "d_anchor": [], "conf": []})
+                for key, v in (("H", H), ("pmode", qt.max(0).values), ("nonmode", nonmode), ("d_anchor", d_anc.mean(0)),
+                               ("conf", conf.float())):
+                    c[key].append(v.reshape(-1).cpu().numpy())
+                dA = [cdist(A, A0) for A, _ in fits]
+                rows.append({"pair": it["pair"], "temp": tp, "H": float(H.mean()), "pmode": float(qt.max(0).values.mean()),
+                             "nonmode": float(nonmode.mean()),
+                             "nonmode_conf": float(nonmode[conf].mean()) if conf.any() else np.nan,
+                             "conf_frac": float(conf.float().mean()),
+                             "d_anchor_nonmode": float(d_anc[k != mode].mean()) if (k != mode).any() else 0.0,
+                             "d_final_med": float(d_fin.median()), "d_final_gt3": float((d_fin > 3).float().mean()),
+                             "dA_med": float(np.nanmedian(dA)) if np.isfinite(dA).any() else np.nan,
+                             "n_fail": int(sum(A is None for A, _ in fits)),
+                             "n_inl_mode": n0, "n_inl_mean": float(np.mean([n for _, n in fits])),
+                             "r1_mode": float(r1_0.mean()), "r1_mean": float(r1.mean()),
+                             "r1_sd_cell": float(r1.std(0).mean()), "r1_sd_pair": float(r1.mean((1, 2)).std()),
+                             "ncc_mode": float(nc0), "ncc_mean": float(nc.mean()), "ncc_sd": float(nc.std())})
         secs.append(time.time() - t0)
-        G_, _ = rloo.anchors(C_, cls.device)
-        conf = torch.nn.functional.adaptive_avg_pool2d(ce[0:1].sigmoid(), (h, w))[0, 0] > 0.5
-        H = -(q * logq).sum(0)
-        nonmode = (k != mode).float().mean(0)
-        d_anc = ((G_[k] - G_[mode]).norm(dim=-1) * (HW / 2))                   # (G,h,w)，原网格 px
-        d_fin = ((flow[1:] - flow[:1]).norm(dim=1) * (HW / 2))                 # (G,H,W)
-        for key, v in (("H", H), ("pmode", q.max(0).values), ("nonmode", nonmode), ("d_anchor", d_anc.mean(0)),
-                       ("conf", conf.float())):
-            cells[key].append(v.reshape(-1).cpu().numpy())
-        A0 = fits[0][0]
-        corners = np.array([[0, 0], [HW, 0], [0, HW], [HW, HW]], np.float64)
-
-        def cdist(A, B):
-            if A is None or B is None:
-                return np.nan
-            return float(np.linalg.norm(corners @ A[:, :2].T + A[:, 2] - corners @ B[:, :2].T - B[:, 2], axis=1).mean())
-
-        dA = [cdist(A, A0) for A, _ in fits[1:]]
-        rows.append({"pair": it["pair"], "H": float(H.mean()), "pmode": float(q.max(0).values.mean()),
-                     "nonmode": float(nonmode.mean()), "nonmode_conf": float(nonmode[conf].mean()) if conf.any() else np.nan,
-                     "conf_frac": float(conf.float().mean()),
-                     "d_anchor_nonmode": float(d_anc[k != mode].mean()) if (k != mode).any() else 0.0,
-                     "d_final_med": float(d_fin.median()), "d_final_gt3": float((d_fin > 3).float().mean()),
-                     "dA_med": float(np.nanmedian(dA)) if np.isfinite(dA).any() else np.nan,
-                     "n_fail": int(sum(A is None for A, _ in fits[1:])),
-                     "r1_mode": float(r1[0].mean()), "r1_mean": float(r1[1:].mean()),
-                     "r1_sd_cell": float(r1[1:].std(0).mean()), "r1_sd_pair": float(r1[1:].mean((1, 2)).std()),
-                     "ncc_mode": float(nc[0]), "ncc_mean": float(nc[1:].mean()), "ncc_sd": float(nc[1:].std())})
-        if (i + 1) % 20 == 0:
+        if (i + 1) % 10 == 0:
             print(f"{i + 1}/{len(ds)} {secs[-1]:.2f}s", flush=True)
     # 梯度路径
     for i in range(2):
@@ -175,10 +186,11 @@ def main(argv=None):
         def images(self):
             return self.it["image0"][None].to(dev), self.it["image1"][None].to(dev)
 
-    step_sec = []
+    step_sec, step_stats = [], []
     for i in range(min(5, len(ds))):
         t0 = time.time()
         loss, st, _ = term(St(ds[i]))
+        step_stats.append(st)
         loss.backward()
         zero(model)
         torch.cuda.synchronize()
@@ -190,15 +202,19 @@ def main(argv=None):
         wr.writeheader()
         for r in rows:
             wr.writerow({k: (f"{v:.6g}" if isinstance(v, float) else v) for k, v in r.items()})
-    cat = {k: np.concatenate(v) for k, v in cells.items()}
-    cf = cat["conf"] > 0.5
-    summ = {"n_pairs": len(rows), "group": a.group, "cells_conf_frac": round(float(cf.mean()), 4),
-            "cell": {sub: {k: pct(cat[k][m]) for k in ("H", "pmode", "nonmode", "d_anchor")}
-                     for sub, m in (("all", np.ones_like(cf)), ("conf", cf), ("rest", ~cf))},
-            "pair": {k: pct([r[k] for r in rows if np.isfinite(r[k])])
-                     for k in rows[0] if k != "pair"},
-            "consistency_max_px": consist, "grads": grads,
-            "probe_sec_per_pair": pct(secs), "train_step_sec": [round(x, 3) for x in step_sec],
+    by_t = {}
+    for tp, c in cells.items():
+        cat = {k: np.concatenate(v) for k, v in c.items()}
+        cf = cat["conf"] > 0.5
+        rs = [r for r in rows if r["temp"] == tp]
+        by_t[str(tp)] = {"cells_conf_frac": round(float(cf.mean()), 4),
+                         "cell": {sub: {k: pct(cat[k][m]) for k in ("H", "pmode", "nonmode", "d_anchor")}
+                                  for sub, m in (("all", np.ones_like(cf)), ("conf", cf), ("rest", ~cf))},
+                         "pair": {k: pct([r[k] for r in rs if np.isfinite(r[k])])
+                                  for k in rs[0] if k not in ("pair", "temp")}}
+    summ = {"n_pairs": len(ds), "group": a.group, "by_temp": by_t,
+            "consistency_px": consist, "grads": grads,
+            "probe_sec_per_pair": pct(secs), "train_step_sec": [round(x, 3) for x in step_sec], "train_step_stats": step_stats,
             "train_step_mem_gb": round(torch.cuda.max_memory_allocated() / 2 ** 30, 2),
             "uniform_entropy": round(float(np.log(4096)), 4)}
     (out / "summary.json").write_text(json.dumps(summ, ensure_ascii=False, indent=1), encoding="utf-8")

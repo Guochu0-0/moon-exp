@@ -20,6 +20,7 @@ RLOO（Ahmadian 等 2402.14740 的留一基线）：优势 = 本份 reward − �
 from __future__ import annotations
 
 import math
+import time
 
 import numpy as np
 import torch
@@ -158,9 +159,25 @@ def rollout(model, f1, f2, P, cert, k, chunk=8):
 
 def fit(flow, cert, num, thr):
     """一份样本：尺度 1 的 warp (2,H,W) 与 certainty (1,H,W) → (仿射 A 或 None, 内点数)。"""
-    p0, p1, _ = sample_matches(flow, cert, num)
-    A, inl, _ = fit_affine(np.c_[p0, p1, np.ones(len(p0))].astype(np.float32), thr)
-    return A, (0 if inl is None else int(inl.sum()))
+    return fit_many(flow[None], cert[None], num, thr)[0]
+
+
+_POOL = None
+
+
+def fit_many(flows, certs, num, thr):
+    """G 份样本各自抽点、RANSAC。抽点在 GPU 上依次做，RANSAC 用线程并行（cv2 放开 GIL；fit_affine 每次调用前重置
+    本线程的随机种子，结果与串行相同）。返回 [(A 或 None, 内点数)]。"""
+    global _POOL
+    from concurrent.futures import ThreadPoolExecutor
+    if _POOL is None:
+        _POOL = ThreadPoolExecutor(8)
+    Ms = []
+    for f, c in zip(flows, certs):
+        p0, p1, _ = sample_matches(f, c, num)
+        Ms.append(np.c_[p0, p1, np.ones(len(p0))].astype(np.float32))
+    out = list(_POOL.map(lambda M: fit_affine(M, thr), Ms))
+    return [(A, 0 if inl is None else int(inl.sum())) for A, inl, _ in out]
 
 
 def r1_cells(flow, A, thr, hw_c):
@@ -220,7 +237,7 @@ class Term:
         B, C, h, w = cls.shape
         logp_all = F.log_softmax(cls / p["temp"], 1)
         loss = torch.zeros((), device=cls.device)
-        stats = {k: [] for k in ("rew", "rew_sd", "n_inl", "H", "pmode", "nonmode", "d_anchor")}
+        stats = {k: [] for k in ("rew", "rew_sd", "n_inl", "H", "pmode", "nonmode", "d_anchor", "t_roll", "t_fit")}
         for b in range(B):
             with torch.no_grad():
                 q = logp_all[b].exp()                                            # (C,h,w)
@@ -228,8 +245,13 @@ class Term:
                 P = cls[b:b + 1].softmax(1)
                 fb = {s: x[b:b + 1] for s, x in f1.items()}
                 gb = {s: x[b:b + 1] for s, x in f2.items()}
+                t0 = time.time()
                 flow, ce = rollout(model, fb, gb, P, cert[b:b + 1].float(), k, p["chunk"])
-                fits = [fit(flow[g], ce[g], p["num"], p["ransac"]) for g in range(p["group"])]
+                torch.cuda.synchronize()
+                t1 = time.time()
+                fits = fit_many(flow, ce, p["num"], p["ransac"])
+                stats["t_roll"].append(t1 - t0)
+                stats["t_fit"].append(time.time() - t1)
                 if p["reward"] == "r1":
                     r = torch.stack([r1_cells(flow[g], A, p["ransac"], (h, w)) for g, (A, _) in enumerate(fits)])
                 elif p["reward"] == "ncc":

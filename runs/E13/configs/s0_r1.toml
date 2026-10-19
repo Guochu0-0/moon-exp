@@ -1,0 +1,8 @@
+# reward 为逐格分级残差 R1，种子 0
+base = "_rl"
+
+[run]
+seed = 0
+
+[rloo]
+reward = "r1"

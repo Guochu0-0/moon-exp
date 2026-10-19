@@ -1,0 +1,8 @@
+# reward 为每格独立均匀随机数（随机对照），种子 0
+base = "_rl"
+
+[run]
+seed = 0
+
+[rloo]
+reward = "rand"

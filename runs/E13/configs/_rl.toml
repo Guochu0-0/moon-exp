@@ -1,0 +1,25 @@
+# 粗级锚点采样 + RLOO（#169；策略、算法与 reward 见 #165，开跑前检查见 E12 / #168）。每对 16 份样本，温度 1，不加 KL、不训 certainty。
+# 训练数据与扰动同 E9 的 RoMa noisy student（难版范围几何 + 擦除，不加光度），DINOv2 qkv 加 LoRA r 8，lr 3e-5（LoRA 1e-4）。
+# log π 只经粗级回传，VGG 与各级细化层收不到梯度（E12 实测），所以 train_vgg 开不开结果相同，这里关掉以省显存。
+# 步数先取参照配方的一半（4000，warmup 500 + cosine），今晚 6 个方法要在 2 张卡上跑完；每 1000 步存档
+[model]
+name = "roma"
+lora_r = 8
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[run]
+save_every = 1000
+save_zero = false
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]

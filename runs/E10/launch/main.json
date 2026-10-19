@@ -1,0 +1,46 @@
+[
+ {
+  "start": "2026-10-19 20:40:00 +0800",
+  "end": "2026-10-19 21:06:34 +0800",
+  "status": "fail",
+  "commit": "2b3166c378b24891a03359dd461ae5257999e793",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "Guochu",
+  "cwd": "D:\\Code\\moon-exp\\.claude\\worktrees\\reward-validity-164",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "python",
+   "runs/E10/code/reward_validity.py",
+   "--data",
+   "G:/Lunar_Optical_SAR_Registration_Dataset",
+   "--matches",
+   "D:/Code/moon-exp/runs/E7/preds",
+   "--workers",
+   "12"
+  ]
+ },
+ {
+  "start": "2026-10-19 21:14:04 +0800",
+  "end": "2026-10-19 22:16:36 +0800",
+  "status": "ok",
+  "commit": "625daa820b61ff796b8f61b4a1f6e9dc585c799a",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/reward-validity-164",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "python",
+   "runs/E10/code/reward_validity.py",
+   "--data",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "--matches",
+   "/remote-home/xufang/YGC/moon-exp/runs/E7/preds",
+   "--workers",
+   "6"
+  ]
+ }
+]

@@ -1,0 +1,4 @@
+id = "E10"
+title = "reward 有效性检验：候选无标注 reward 能否在同一 patch 对内按真实误差给 RoMa 输出排序"
+kind = "analysis"
+date = "2026-10-19"

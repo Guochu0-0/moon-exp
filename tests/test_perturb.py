@@ -64,17 +64,18 @@ def setup_perturbed(runs, dataset, T=SHIFT, perturb_flag=True):
     return d
 
 
-def test_eval_uses_perturbed_truth_and_drops_out_of_frame(runs, dataset):
+def test_eval_uses_perturbed_truth_and_keeps_out_of_frame(runs, dataset):
+    """画面外的检查点照算（#159）：全部出画面的那一对也在，误差仍为 0；只另记画面外的点数。"""
     setup_perturbed(runs, dataset)
     met = evaluate_run(dataset, load_runs(runs)["E7"])["methods"]
     assert met["m"]["val"]["summary"]["median"] == pytest.approx(0)
     v = met["m__s"]["val"]
-    assert v["summary"]["n"] == len(dataset.labelled("val")) - 1 and v["summary"]["median"] == pytest.approx(0, abs=1e-9)
-    assert v["perturb"]["variant"] == "s" and v["perturb"]["dropped"]["pairs"] == 1
-    assert v["perturb"]["dropped"]["points"] >= 8                   # 那一对的 8 个，另有平移出界的
+    assert v["summary"]["n"] == len(dataset.labelled("val")) and v["summary"]["median"] == pytest.approx(0, abs=1e-9)
+    assert v["perturb"]["variant"] == "s" and v["perturb"]["outside"]["pairs"] == 1
+    assert v["perturb"]["outside"]["points"] >= 8                   # 那一对的 8 个，另有平移出界的
     view = WP.dataset_for(dataset, load_runs(runs)["E7"], "m__s")
-    opt, sar = view.checkpoints("val", "ROI_002/patch_0")
-    assert (sar < 16).all() and (sar >= 0).all()
+    opt, sar = view.checkpoints("val", "ROI_010/patch_10")
+    assert len(opt) == len(dataset.checkpoints("val", "ROI_010/patch_10")[0]) and (sar[:, 0] >= 16).all()
 
 
 def test_scale_error_measured_in_original_pixels(runs, dataset):
@@ -105,8 +106,8 @@ def test_check_flags_missing_T(runs, dataset):
 def test_api_compare_aligns_and_pair_view_uses_method_frame(api, runs, dataset):
     setup_perturbed(runs, dataset)
     code, c = api.get("/api/compare?method=E7/m__s&ref=E7/m&split=val")
-    assert code == 200 and c["subset"] == len(c["pairs"]) == len(dataset.labelled("val")) - 1
-    assert len(c["method"]["errors"]) == len(c["ref"]["errors"]) == c["subset"]
+    assert code == 200 and c["subset"] is None and len(c["pairs"]) == len(dataset.labelled("val"))
+    assert len(c["method"]["errors"]) == len(c["ref"]["errors"]) == len(c["pairs"])
     assert c["diff"]["median"] == pytest.approx(0, abs=1e-9)
 
     code, d = api.get("/api/pair?method=E7/m__s&ref=E7/m&split=val&pair=ROI_002/patch_0&points=0")
@@ -120,7 +121,8 @@ def test_api_compare_aligns_and_pair_view_uses_method_frame(api, runs, dataset):
     assert d["perturb"] is None and np.allclose(d["ref"]["A"], A_TRUE)
 
     code, d = api.get("/api/pair?method=E7/m__s&split=val&pair=ROI_010/patch_10&points=0")
-    assert code == 200 and d["checkpoints"] is None
+    assert code == 200 and d["checkpoints"] is not None
+    assert d["method"]["error"] == pytest.approx(np.hypot(98, 1))     # 预测按 SHIFT，T 却是 +100 px：画面外照样量出偏差
 
 
 def test_api_image_with_perturb(api, runs, dataset):

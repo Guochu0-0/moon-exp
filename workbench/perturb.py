@@ -1,7 +1,8 @@
 """难版评测：SAR 侧叠加已知 T 的方法，按扰动后的真值评测和显示（#138，T 的定义见 moonlib/perturb.py）。
 
 实验在 exp.toml 写 `perturb = true`，T 存在 runs/<id>/perturb/<变体>/<split>.json；方法名的最后一段 `__<变体>`
-对得上这个目录的，就按该变体评测：检查点 SAR 一侧变为 T(q)，落到 SAR 画面外的检查点不计，一个都不剩的 pair 整对不计；
+对得上这个目录的，就按该变体评测：检查点 SAR 一侧变为 T(q)，全部检查点都计入，落到扰动后 SAR 画面外的也照算
+（#159：误差在原 SAR 坐标系里量，真值精确已知，画面外的点只是要求仿射外推；剔除它们会去掉误差最大的边缘点、抬高重档分数）；
 误差把预测换回原 SAR 坐标系（T⁻¹∘A）再量，单位仍是原始像素（见 PerturbedView.original）；
 逐对视图里的 SAR 影像同样套上 T。其余方法照常。
 """
@@ -53,18 +54,15 @@ class PerturbedView:
 
     @lru_cache(maxsize=None)
     def checkpoints(self, split: str, pair: str):
-        """(光学 N×2, 扰动后的 SAR N×2)，只留落在 SAR 画面内的；没有 T 或一个不剩时为 None。"""
+        """(光学 N×2, 扰动后的 SAR N×2)，全部检查点，含落到 SAR 画面外的；没有检查点或没有 T 时为 None。"""
         cp, T = self.ds.checkpoints(split, pair), self.T(split, pair)
         if cp is None or T is None:
             return None
         opt, sar = cp
-        q = sar @ T[:, :2].T + T[:, 2]
-        w, h = self.ds.size(split, pair, "SAR")
-        keep = (q[:, 0] >= 0) & (q[:, 0] < w) & (q[:, 1] >= 0) & (q[:, 1] < h)
-        return (opt[keep], q[keep]) if keep.any() else None
+        return opt, sar @ T[:, :2].T + T[:, 2]
 
     def original(self, split: str, pair: str, A):
-        """评测用：把扰动坐标系里的仿射 A 换回原 SAR 坐标系（T⁻¹∘A），连同留下的检查点（原坐标）一起返回。
+        """评测用：把扰动坐标系里的仿射 A 换回原 SAR 坐标系（T⁻¹∘A），连同检查点（原坐标）一起返回。
         误差按原 SAR 像素计：缩放变体若在扰动后的网格里量，误差会被放大或缩小 1 ± s 倍，与原协议的阈值不可比。
         平移、旋转是等距变换，两种量法结果相同。"""
         cp, T = self.checkpoints(split, pair), self.T(split, pair)
@@ -83,12 +81,15 @@ class PerturbedView:
     def labelled(self, split: str) -> list[str]:
         return [p for p in self.ds.labelled(split) if self.checkpoints(split, p) is not None]
 
-    def dropped(self, split: str) -> dict:
-        """被剔除的 pair 数与检查点数（相对原始有标注 pair）。"""
-        base = self.ds.labelled(split)
-        n0 = sum(len(self.ds.checkpoints(split, p)[0]) for p in base)
-        n1 = sum(len(self.checkpoints(split, p)[0]) for p in self.labelled(split))
-        return {"pairs": len(base) - len(self.labelled(split)), "points": n0 - n1}
+    def outside(self, split: str) -> dict:
+        """落到扰动后 SAR 画面外的检查点数（仍计入评测），以及全部检查点都在画面外的 pair 数。"""
+        n, pairs = 0, 0
+        for p in self.labelled(split):
+            q = self.checkpoints(split, p)[1]
+            w, h = self.ds.size(split, p, "SAR")
+            out = (q[:, 0] < 0) | (q[:, 0] >= w) | (q[:, 1] < 0) | (q[:, 1] >= h)
+            n, pairs = n + int(out.sum()), pairs + bool(out.all())
+        return {"points": n, "pairs": pairs}
 
     def sar_display(self, img: np.ndarray, split: str, pair: str) -> np.ndarray:
         """显示用的 SAR（已拉伸到 uint8）套上 T；先拉伸再 warp，补的 0 不影响拉伸。"""

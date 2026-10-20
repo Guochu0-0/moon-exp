@@ -15,6 +15,7 @@ import re
 import shlex
 import subprocess
 import sys
+import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -30,6 +31,7 @@ EVAL_PATHS = ("moonlib/", "workbench/evaluate.py", "workbench/protocol.py", "wor
 RULE_PATHS = ("AGENTS.md", "CLAUDE.md", "CONTEXT.md", "CODING_STANDARDS.md", "docs/agents/", "docs/adr/", ".claude/skills/")
 RECORD = re.compile(r"runs/([^/]+)/(notes\.md|metrics\.json)")
 NOTES = re.compile(r"runs/([^/]+)/notes\.md")
+EXP = re.compile(r"runs/([^/]+)/exp\.toml")
 PR_MERGE = re.compile(r"Merge pull request #(\d+) from [^/\s]+/(\S+)")
 CANVAS = "runs/canvas.json"
 PR_FIELDS = "number,state,headRefName,headRefOid,baseRefName,mergeCommit,title,closingIssuesReferences"
@@ -186,9 +188,22 @@ class Closer:
                 parts.append("画布")
             elif m := NOTES.fullmatch(path):
                 parts.append(f"{m[1]} Notes")
+            elif (m := EXP.fullmatch(path)) and self.title_only(path):
+                parts.append(f"{m[1]} 标题")
             else:
                 other.append(path)
         return list(dict.fromkeys(parts)), other
+
+    def title_only(self, path: str) -> bool:
+        """工作区的 exp.toml 与 HEAD 相比只有 title 不同。"""
+        try:
+            old = tomllib.loads(self.git("show", f"HEAD:{path}"))
+            new = tomllib.loads((self.s.local / path).read_text(encoding="utf-8"))
+        except (Stop, OSError, tomllib.TOMLDecodeError):
+            return False
+        old.pop("title", None)
+        new.pop("title", None)
+        return old == new
 
     def check_local(self):
         br = self.git("rev-parse", "--abbrev-ref", "HEAD").strip()
@@ -196,7 +211,7 @@ class Closer:
             raise Stop(f"本地仓库 {self.s.local} 不在 main 上（在 {br}）", "切回 main 后重跑")
         _, other = self.classify_local(self.local_changes())
         if other:
-            raise Stop("本地有 Notes、画布、未跟踪实验目录以外的改动，不替用户提交：\n  " + "\n  ".join(other),
+            raise Stop("本地有 Notes、标题、画布、未跟踪实验目录以外的改动，不替用户提交：\n  " + "\n  ".join(other),
                        "请用户决定这些改动（提交、挪走或丢弃）后重跑")
 
     def check_local_pushed(self):

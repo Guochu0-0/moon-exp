@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-YGC = "/remote-home/xufang/YGC"   # A6000 上有同名软链指向它自己的 NFS（docs/agents/servers.md「A6000」）
+YGC = "/remote-home/xufang/YGC"   # A6000 上有同名软链指向它自己的 NFS（.claude/skills/server/a6000.md）
 
 # 需用户点头的类别（#173「收尾脚本」第 1 步）
 EVAL_PATHS = ("moonlib/", "workbench/evaluate.py", "workbench/protocol.py")
@@ -112,7 +112,7 @@ class Closer:
         out = (r.stdout + r.stderr).decode("utf-8", "replace").strip()
         if r.returncode == 255 and shell[0] == "ssh":
             raise Stop(f"连不上 {where}（{shell[1]}）：{out}",
-                       "按 docs/agents/servers.md「怎么连」检查工位机与 Tailscale 后重跑"
+                       "按 .claude/skills/server/machines.md「怎么连」检查工位机与 Tailscale 后重跑"
                        + ("；若本票确实没在 A6000 跑，可带 --skip-a6000 重跑" if where == "a6000" else ""))
         return r.returncode, out
 

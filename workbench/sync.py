@@ -11,7 +11,7 @@
 
 传输：`ssh <host> "cd <root>/runs && find …"` 拿远端清单（大小、mtime），本地已有且大小与 mtime（秒）都相同的跳过；
 其余用 `ssh <host> "tar cf - -T -" | tar xf -` 流回来，tar 保留 mtime，所以下次就能跳过。只依赖 ssh 与 tar，
-不需要 rsync。远程命令都加 timeout（见 docs/agents/servers.md）。测试时传 shell= 把 ["ssh", host] 换成本地 shell。
+不需要 rsync。远程命令都加 timeout（见 .claude/skills/server/rules.md「操作注意」）。测试时传 shell= 把 ["ssh", host] 换成本地 shell。
 主机取参数、环境变量 MOON_SYNC_HOST、DEFAULT_HOST；远端根目录取参数、MOON_SYNC_ROOT、DEFAULT_ROOT。
 """
 from __future__ import annotations
@@ -23,7 +23,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_HOST = "xufang126内网"   # 与 154 同一份 gpfs；内网组首选、外网常断（docs/agents/servers.md）
+DEFAULT_HOST = "xufang126内网"   # 与 154 同一份 gpfs；内网组首选、外网常断（.claude/skills/server/machines.md「怎么连」）
 DEFAULT_ROOT = "/remote-home/xufang/YGC/moon-exp"
 HOST_ENV = "MOON_SYNC_HOST"
 ROOT_ENV = "MOON_SYNC_ROOT"

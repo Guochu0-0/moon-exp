@@ -1,4 +1,4 @@
-"""启动检查与运行记录（「管理规范落地：文档与工具」#76）。规矩见 docs/agents/experiments.md。
+"""启动检查与运行记录（「管理规范落地：文档与工具」#76）。规矩见 .claude/skills/server/SKILL.md。
 
     python -m workbench.launch check                          # 代码不干净就退出码 2
     python -m workbench.launch begin runs/P P17 -- <命令...>   # 检查 + 在 launch/P17.json 追加一次启动
@@ -50,9 +50,9 @@ def require_clean(repo=REPO) -> dict:
     st = repo_state(repo)
     allow = os.environ.get(ALLOW_ENV) == "1"
     if st["commit"] is None:
-        msg = f"{repo} 不是 git 仓库（导出副本不能跑实验，见 docs/agents/experiments.md）"
+        msg = f"{repo} 不是 git 仓库（导出副本不能跑实验，见 .claude/skills/server/SKILL.md）"
     elif st["dirty"]:
-        msg = "代码有未提交的改动，先提交再跑（docs/agents/experiments.md）：\n  " + "\n  ".join(st["changes"][:30])
+        msg = "代码有未提交的改动，先提交再跑（.claude/skills/server/SKILL.md）：\n  " + "\n  ".join(st["changes"][:30])
     else:
         return {**st, "allow_dirty": False}
     if not allow:
@@ -82,7 +82,7 @@ def _save(p: Path, items: list):
 def begin(run_dir, method: str, cmd: list[str], repo=REPO, **extra) -> dict:
     """检查代码，然后在 runs/<id>/launch/<method>.json 追加一次启动（续训、重跑各算一次）。
     extra 原样记进这次启动：微调驱动用它记入口（entry）、配置文件（config_file）、展开后的完整配置（args）和
-    推理配置（config），字段含义见 RECORDS.md「启动记录」。"""
+    推理配置（config），字段含义见 .claude/skills/records/formats.md「启动记录」。"""
     st = require_clean(repo)
     rec = {"start": _now(), "end": None, "status": None, "commit": st["commit"], "dirty": st["dirty"],
            "allow_dirty": st["allow_dirty"], "host": socket.gethostname(), "cwd": os.getcwd(),

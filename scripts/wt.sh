@@ -1,5 +1,5 @@
 #!/bin/bash
-# 服务器上每张票一个 git worktree（#76）。规矩见 docs/agents/experiments.md。在 gpfs 主机（154 / 126）上跑；A6000 上同理（它自己的主 checkout）。
+# 服务器上每张票一个 git worktree（#76）。规矩见 .claude/skills/server/SKILL.md。在 gpfs 主机（154 / 126）上跑；A6000 上同理（它自己的主 checkout）。
 #
 #   scripts/wt.sh new <分支> [起点，默认 origin/main]   建 $WT/<分支>：已有远端分支就跟踪它，否则从起点新建；子模块从主 checkout 引用初始化
 #   scripts/wt.sh close <分支> [--dry-run]              结票收尾：核对记录已进 main → 把 runs/ 下不进 git 的文件挪回主 checkout → 删 worktree

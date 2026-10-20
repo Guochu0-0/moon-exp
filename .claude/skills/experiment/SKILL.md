@@ -29,7 +29,7 @@ disable-model-invocation: true
 1. **选票并认领。** 给了票就用它；只给地图时，按 frontier 查询取地图里第一张可开始的 `wayfinder:task` 票，没有就告诉用户并结束。`gh issue edit <票> --add-assignee @me`。
 2. **读懂票。** 读票的全文、地图的 Notes（固定设置、判据、本图要调用的技能），按需读相关的已关票和父实验的 Notes。票里有关口时按「找用户」第 1 条停下。
 3. **开 worktree、建实验。** 分支名沿用 `<地图简称>-<票号>`（如 `roma-rl-169`）。按 `/server`「流程」开 worktree，按 `/records` 建实验目录（编号取下一个未用的 `E<n>`）。
-4. **写配置和代码，提交并推送。** 给共享代码（`runs/` 以外的代码：训练框架、基线、moonlib、工作台、scripts）新增行为时，同时写证明它按设想工作的测试；修 bug 先写能复现它的测试。测试在服务器 worktree 里跑。本流程内不调用 `/tdd`：它要和用户确认测试接口，会打断无人值守。
+4. **写配置和代码，提交并推送。** 改共享代码（`runs/` 以外的代码）时按 `CODING_STANDARDS.md` 带测试，测试在服务器 worktree 里跑。本流程内不调用 `/tdd`：它要和用户确认测试接口，会打断无人值守。
 5. **review（只在改了共享代码时）。** `git diff --name-only origin/main...HEAD` 里有 `runs/` 以外的文件时，用 Skill 工具调用 `code-review`，固定点 `origin/main`。发现的问题自己改完、提交、推送；只有「找用户」第 3 条的情形才停下。只改了 `runs/<id>/` 的跳过这一步。
 6. **开跑。** 按 `/server`「流程」第 4 步启动，用只读命令定时查进度，直到每个方法的 launch 记录都写上了 `end` 与 `status`。启动失败或代码出错，修好、提交后重跑；发现票的前提不成立时按「找用户」第 2 条停下。
 7. **写 Notes、评测、检查。** 按 `/records` 写 `runs/<id>/notes.md`，跑 `eval` 和 `check`，直到 `check` 输出「记录无问题」。提交小文件并推送。

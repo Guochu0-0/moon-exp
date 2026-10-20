@@ -356,6 +356,22 @@ def test_a6000_untracked_unignored_record_stops_before_copying(w, capsys):
         assert (w.a6000 / p).read_bytes() == v
 
 
+@pytest.mark.parametrize("on", ["gpfs", "a6000"])
+def test_worktree_untracked_unignored_record_stops_before_merge(w, capsys, on):
+    wt = w.ticket("t-e2", E2, E2_BIG, on=on)
+    write(wt, {"runs/E2/stray.md": "忘了 git add\n"})
+    code = w.close("t-e2")
+    out = capsys.readouterr().out
+    assert code == 1, out
+    assert "runs/E2/stray.md" in out
+    assert w.gh_state()["merged"] == []
+    assert not w.main_has("t-e2")
+    assert w.wt_calls() == []
+    assert (wt / "runs/E2/stray.md").read_text(encoding="utf-8") == "忘了 git add\n"
+    for p, v in E2_BIG.items():
+        assert (wt / p).read_bytes() == v
+
+
 def test_a6000_unreachable_stops_before_merge_unless_skipped(w, capsys, tmp_path):
     dead = tmp_path / "dead.sh"
     dead.write_text('echo "ssh: connect to host a6000: Connection refused" >&2; exit 255\n')

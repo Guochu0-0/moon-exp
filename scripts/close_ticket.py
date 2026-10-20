@@ -345,18 +345,45 @@ class Closer:
         self.step(f"{where} 上的 worktree {wt}/{branch} 已关")
         return True
 
-    def a6000_untracked(self, ids) -> dict[str, tuple[int, bool]]:
-        """A6000 主 checkout 里本票实验未跟踪的文件 → （大小，是否被 gitignore）。.claims 是 A6000 自己的占位，不算。"""
+    def untracked(self, where: str, root: str, ids, *, ignored: bool) -> dict[str, int]:
+        """root 下本票实验 runs/<id>/ 里未跟踪的文件 → 大小；ignored 选被 gitignore 的或不被 gitignore 的。
+        .claims 是各机器自己的占位，不算。"""
         paths = " ".join(shlex.quote(f"runs/{i}") for i in ids)
+        out = self.must(where, f"cd {shlex.quote(root)} && git ls-files -z --others{' --ignored' if ignored else ''}"
+                               f" --exclude-standard -- {paths} | xargs -0 -r stat --printf '%s\\t%n\\n'",
+                        f"列 {where} 上 {root} 的未跟踪文件失败", f"检查 {where} 上的 {root}")
         files = {}
-        for ignored, flag in ((True, " --ignored"), (False, "")):
-            out = self.must("a6000", f"cd {shlex.quote(self.s.a6000_main)} && git ls-files -z --others{flag} --exclude-standard"
-                                     f" -- {paths} | xargs -0 -r stat --printf '%s\\t%n\\n'",
-                            "列 A6000 上的产物失败", "检查 A6000 主 checkout")
-            for line in out.splitlines():
-                size, _, p = line.partition("\t")
-                if p and "/.claims/" not in p:
-                    files[p] = (int(size), ignored)
+        for line in out.splitlines():
+            size, _, p = line.partition("\t")
+            if p and "/.claims/" not in p:
+                files[p] = int(size)
+        return files
+
+    def check_untracked(self, tickets):
+        """合并前查各分支的 gpfs 与 A6000 worktree：本票实验里未跟踪、又不被 gitignore 的文件多半是忘了 git add，
+        wt.sh close 会连 worktree 一起删掉它们。有就停下。"""
+        loose = []
+        for t in tickets:
+            if not t.ids:
+                continue
+            for where, root in (("gpfs", self.s.gpfs_wt), ("a6000", self.s.a6000_wt)):
+                if where == "a6000" and not self.on_a6000.get(t.branch):
+                    continue
+                if where == "gpfs" and not self.wt_exists("gpfs", t.branch):
+                    continue
+                d = f"{root}/{t.branch}"
+                loose += [f"{where}：{d}/{p}" for p in sorted(self.untracked(where, d, t.ids, ignored=False))]
+        if loose:
+            raise Stop("worktree 里有本票实验未提交、也不被 gitignore 的文件（忘了 git add？），什么都没合并、没删：\n  "
+                       + "\n  ".join(loose),
+                       "在 worktree 里把它们提交到分支并推送（不要的删掉）后重跑")
+
+    def a6000_untracked(self, ids) -> dict[str, tuple[int, bool]]:
+        """A6000 主 checkout 里本票实验未跟踪的文件 → （大小，是否被 gitignore）。"""
+        files = {}
+        for ignored in (True, False):
+            for p, size in self.untracked("a6000", self.s.a6000_main, ids, ignored=ignored).items():
+                files[p] = (size, ignored)
         return files
 
     def gpfs_sizes(self, paths) -> dict[str, int]:
@@ -464,6 +491,7 @@ class Closer:
                            f"转问用户；同意后 python scripts/close_ticket.py {branch} --confirm", code=2)
             self.log("已带 --confirm：" + "；".join(reasons))
         self.probe_a6000(tickets)
+        self.check_untracked(tickets)
         if any(t.shared for t in tickets if not t.merged):
             self.run_tests(target)   # target 包含全部依赖的提交
         for t in tickets:

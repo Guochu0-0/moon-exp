@@ -1,0 +1,6 @@
+# RIPE++ 式：reward 直接当权重，不减平均，温度 0.2
+base = "_rl"
+
+[rloo]
+baseline = "none"
+temp = 0.2

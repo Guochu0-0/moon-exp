@@ -12,10 +12,17 @@ reward（每份样本单独算，只用训练对的两张影像和这份输出�
 - r1：逐点分级残差 max(0, 1 − (r/3)²)，r 为每个像素的 warp 到 A 的距离（原网格 px）；取每个粗格内像素的均值，逐格给分；
 - ncc：用 A 把 SAR 拉到光学网格，在重叠区上比两图灰度的 NCC，整对一个数；SAR 的补零区（像素值 < 1/255，再外扩 4 px）不计；
 - rand：每格独立 U(0, 1)（随机对照，与 r1 一样逐格给分）。
-RANSAC 失败的样本：r1 记 0，ncc 记 −1。
+- ref（第二批，#183）：不细化各份样本。先用当前模型对这对图正常推理一次（每格取 mode，细化到尺度 1），同样抽 num
+  个点、RANSAC 拟合参照仿射 A_ref；每份样本每格的粗匹配位置（anchor_flow 的输出，即抽到的锚点经邻居加权）与 A_ref
+  把格子中心映射到的位置相距 d（原网格 px），照 RIPE++ 的分级奖励逐格给分：d ≤ tau 时 1 − ½(d/delta)²，d > tau 时
+  r_out。不筛图对，参照拟合得差也照用。
+RANSAC 失败的样本：r1 记 0，ncc 记 −1；ref 的参照拟合失败时整对记 0（这一步没有梯度）。
 
-RLOO（Ahmadian 等 2402.14740 的留一基线）：优势 = 本份 reward − 同一对其余 group − 1 份的均值（逐格 reward 逐格算），
-不除标准差；loss = −mean_{份, 格} 优势 · log π。不训 certainty、不加 KL。
+权重（baseline）：
+- loo：RLOO（Ahmadian 等 2402.14740 的留一基线），优势 = 本份 reward − 同一对其余 group − 1 份的均值（逐格 reward
+  逐格算），不除标准差；
+- none：RIPE++ 式，直接用 reward 当权重，不减平均。
+loss = −mean_{份, 格} 权重 · log π。不训 certainty、不加 KL。
 """
 from __future__ import annotations
 
@@ -33,15 +40,20 @@ from ..geom import HW
 from .cexp import sample_matches
 from .pseudo import affine_norm, grid
 
-PARAMS = {"reward": "r1",   # r1 | ncc | rand
+PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "group": 16,      # 每对的样本份数 G
           "temp": 1.0,      # 采样温度
           "num": 5000,      # 每份样本抽来拟合仿射的点数（同 [cexp] RoMa）
           "ransac": 3.0,    # RANSAC 阈值与 r1 的残差尺度（原网格 px）
           "chunk": 8,       # 细化一次并行跑几份样本（只影响显存）
+          "baseline": "loo",  # loo（减同一对其余份的均值）| none（RIPE++ 式，reward 直接当权重）
+          "delta": 8.0,     # ref：分级奖励的尺度（原网格 px）
+          "tau": 16.0,      # ref：内点阈值（原网格 px）
+          "r_out": -0.1,    # ref：d > tau 的格子得分
           "weight": 1.0}
 MODELS = {"roma": {}}
-REWARDS = ("r1", "ncc", "rand")
+REWARDS = ("r1", "ncc", "rand", "ref")
+BASELINES = ("loo", "none")
 SCALES = ("16", "8", "4", "2", "1")
 
 
@@ -53,8 +65,12 @@ def check(cfg):
     p = cfg["rloo"]
     if p["reward"] not in REWARDS:
         raise ConfigError(f"[rloo] reward 可选 {REWARDS}，得到 {p['reward']!r}")
-    if p["group"] < 2:
-        raise ConfigError("[rloo] group 至少为 2（留一基线）")
+    if p["baseline"] not in BASELINES:
+        raise ConfigError(f"[rloo] baseline 可选 {BASELINES}，得到 {p['baseline']!r}")
+    if p["group"] < (2 if p["baseline"] == "loo" else 1):
+        raise ConfigError("[rloo] group 至少为 2（留一基线；baseline = 'none' 时至少为 1）")
+    if p["delta"] <= 0 or p["tau"] <= 0:
+        raise ConfigError("[rloo] delta、tau 应 > 0")
     if p["temp"] <= 0:
         raise ConfigError("[rloo] temp 应 > 0")
     for other in ("pseudo", "cexp", "neg", "warpc"):
@@ -216,6 +232,23 @@ def ncc(opt, sar, valid, A, min_px=1000):
     return float((a * b).sum() / ((a * a).sum() * (b * b).sum()).sqrt().clamp(min=1e-12))
 
 
+def ref_cells(fc, A, delta, tau, r_out):
+    """fc：G 份粗 warp (G,2,h,w)；A：参照仿射（原网格）或 None → (逐格分级奖励 (G,h,w), 距离 d (G,h,w) 或 None)。
+    d 为 fc 与 A 把格子中心映射到的位置之间的距离（原网格 px）；d ≤ tau 得 1 − ½(d/delta)²，否则 r_out。"""
+    G, _, h, w = fc.shape
+    if A is None:
+        return torch.zeros(G, h, w, device=fc.device), None
+    An = torch.from_numpy(affine_norm(A)).to(fc.device).float()
+    pred = torch.einsum("ij,hwj->hwi", An[:, :2], grid(h, w, fc.device)) + An[:, 2]
+    d = (fc.permute(0, 2, 3, 1).float() - pred).norm(dim=-1) * (HW / 2)
+    return torch.where(d <= tau, 1 - 0.5 * (d / delta) ** 2, torch.full_like(d, r_out)), d
+
+
+def advantage(r, baseline):
+    """r (G, ...) → 策略梯度的权重：loo 减留一均值，none 原样。"""
+    return loo(r) if baseline == "loo" else r
+
+
 def loo(r):
     """留一优势：r (G, ...) → r − 其余 G−1 份的均值。"""
     G = r.shape[0]
@@ -238,6 +271,8 @@ class Term:
         logp_all = F.log_softmax(cls / p["temp"], 1)
         loss = torch.zeros((), device=cls.device)
         stats = {k: [] for k in ("rew", "rew_sd", "n_inl", "H", "pmode", "nonmode", "d_anchor", "t_roll", "t_fit")}
+        if p["reward"] == "ref":
+            stats.update(ref_ok=[], d_ref=[], in_tau=[])
         for b in range(B):
             with torch.no_grad():
                 q = logp_all[b].exp()                                            # (C,h,w)
@@ -246,20 +281,31 @@ class Term:
                 fb = {s: x[b:b + 1] for s, x in f1.items()}
                 gb = {s: x[b:b + 1] for s, x in f2.items()}
                 t0 = time.time()
-                flow, ce = rollout(model, fb, gb, P, cert[b:b + 1].float(), k, p["chunk"])
+                if p["reward"] == "ref":    # 只细化不抽签的一份（正常推理）；各份样本只用粗 warp
+                    flow, ce = refine(model, fb, gb, anchor_flow(P, P.argmax(1)), cert[b:b + 1].float())
+                else:
+                    flow, ce = rollout(model, fb, gb, P, cert[b:b + 1].float(), k, p["chunk"])
                 torch.cuda.synchronize()
                 t1 = time.time()
                 fits = fit_many(flow, ce, p["num"], p["ransac"])
                 stats["t_roll"].append(t1 - t0)
                 stats["t_fit"].append(time.time() - t1)
-                if p["reward"] == "r1":
+                if p["reward"] == "ref":
+                    A_ref = fits[0][0]
+                    r, d = ref_cells(anchor_flow(P.expand(p["group"], -1, -1, -1), k), A_ref,
+                                     p["delta"], p["tau"], p["r_out"])
+                    stats["ref_ok"].append(float(A_ref is not None))
+                    if d is not None:
+                        stats["d_ref"].append(float(d.mean()))
+                        stats["in_tau"].append(float((d <= p["tau"]).float().mean()))
+                elif p["reward"] == "r1":
                     r = torch.stack([r1_cells(flow[g], A, p["ransac"], (h, w)) for g, (A, _) in enumerate(fits)])
                 elif p["reward"] == "ncc":
                     valid = sar_valid(i1[b])
                     r = torch.tensor([ncc(i0[b], i1[b], valid, A) for A, _ in fits], device=cls.device)[:, None, None]
                 else:
                     r = torch.rand(p["group"], h, w, device=cls.device)
-                adv = loo(r).expand(p["group"], h, w)
+                adv = advantage(r, p["baseline"]).expand(p["group"], h, w)
                 mode = q.argmax(0)
                 G_, res = anchors(C, cls.device)
                 stats["rew"].append(float(r.mean()))
@@ -270,7 +316,7 @@ class Term:
                 stats["nonmode"].append(float((k != mode).float().mean()))
                 stats["d_anchor"].append(float(((G_[k] - G_[mode]).norm(dim=-1) * (HW / 2)).mean()))
             loss = loss - (adv * _logp(logp_all[b], k)).mean() / B
-        return p["weight"] * loss, {k: round(float(np.mean(v)), 5) for k, v in stats.items()}, True
+        return p["weight"] * loss, {k: round(float(np.mean(v)), 5) for k, v in stats.items() if v}, True
 
 
 def _logp(logp, k):

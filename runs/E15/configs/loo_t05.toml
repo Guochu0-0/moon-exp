@@ -1,0 +1,6 @@
+# RLOO：权重为本份 reward 减同一格其余 15 份的均值，温度 0.5
+base = "_rl"
+
+[rloo]
+baseline = "loo"
+temp = 0.5

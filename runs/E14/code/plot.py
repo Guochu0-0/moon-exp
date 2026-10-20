@@ -20,9 +20,9 @@ plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
 LINES = [("moon", "月球光学对 SAR，未训练，无扰动", "C3", "-"),
-         ("moon_hard", "月球光学对 SAR，未训练，加扰动（E12）", "C3", "--"),
+         ("moon_hard", "月球光学对 SAR，未训练，加训练用扰动", "C3", "--"),
          ("mega", "MegaDepth 自然图，未训练", "C0", "-"),
-         ("optopt_hard", "月球光学对光学，未训练，加同款几何扰动", "C2", "-"),
+         ("optopt_hard", "月球光学对光学，未训练，加同样的几何扰动", "C2", "-"),
          ("rns_r2", "月球光学对 SAR，伪标签自训练第 2 轮", "C1", "-")]
 
 

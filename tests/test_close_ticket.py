@@ -265,22 +265,18 @@ def test_local_notes_canvas_and_new_experiment_committed_before_pull(w, capsys):
 
 def test_local_title_edit_committed_before_pull(w, capsys):
     w.ticket("t-e2", E2, E2_BIG)
-    write(w.local, {"runs/E1/exp.toml": "title = 'E1 的结论'
-"})
+    write(w.local, {"runs/E1/exp.toml": "title = 'E1 的结论'\n"})
     code = w.close("t-e2")
     out = capsys.readouterr().out
     assert code == 0, out
     assert git("-C", str(w.local), "status", "--porcelain") == ""
     assert "E1 标题" in git("-C", str(w.bare), "log", "-1", "--format=%s", "main")
-    assert (w.gpfs / "runs/E1/exp.toml").read_text(encoding="utf-8") == "title = 'E1 的结论'
-"
+    assert (w.gpfs / "runs/E1/exp.toml").read_text(encoding="utf-8") == "title = 'E1 的结论'\n"
 
 
 def test_local_exp_toml_edit_beyond_title_stops_before_merge(w, capsys):
     w.ticket("t-e2", E2, E2_BIG)
-    write(w.local, {"runs/E1/exp.toml": "title = 'E1 的结论'
-parent = 'E0'
-"})
+    write(w.local, {"runs/E1/exp.toml": "title = 'E1 的结论'\nparent = 'E0'\n"})
     code = w.close("t-e2")
     out = capsys.readouterr().out
     assert code == 1, out

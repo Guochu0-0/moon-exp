@@ -195,7 +195,7 @@ class Closer:
         return list(dict.fromkeys(parts)), other
 
     def title_only(self, path: str) -> bool:
-        """工作区的 exp.toml 与 HEAD 相比只改了 title（工作台上改标题写的就是它）。"""
+        """工作区的 exp.toml 与 HEAD 相比只有 title 不同。"""
         try:
             old = tomllib.loads(self.git("show", f"HEAD:{path}"))
             new = tomllib.loads((self.s.local / path).read_text(encoding="utf-8"))

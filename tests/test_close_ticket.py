@@ -13,6 +13,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("close_ticket", REPO / "scripts" / "close_ticket.py")
 close_ticket = importlib.util.module_from_spec(_spec)
+sys.modules["close_ticket"] = close_ticket   # dataclass 要在 sys.modules 里找到所在模块
 _spec.loader.exec_module(close_ticket)
 
 SHELL = ["bash", "-c"] if os.name != "nt" and shutil.which("bash") else None

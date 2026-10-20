@@ -1,0 +1,5 @@
+id = "E14"
+title = "zero-shot RoMa 粗级概率很平，是 RoMa 本身的特性还是不适应月球数据"
+kind = "analysis"
+parent = "E12"
+date = "2026-10-20"

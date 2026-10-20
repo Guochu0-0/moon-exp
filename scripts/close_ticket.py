@@ -2,21 +2,8 @@
 
     python scripts/close_ticket.py <分支> [--confirm] [--skip-a6000]
 
-步骤：
-1. 判断分支相对 main 改了什么。需用户点头的类别（评测口径、已结票实验的 metrics / Notes、规矩文件）停下并列出原因，
-   用户同意后带 --confirm 重跑。
-2. 分支包含其他未合并 PR 的提交时，这些 PR 按先后顺序一起处理。
-3. 动了共享代码（runs/ 以外）时，在服务器 worktree 里跑全量测试；失败不合并。
-4. gh 合并 PR（--match-head-commit，合并的正是测过的那个 commit）。
-5. gpfs 主 checkout pull --ff-only；scripts/wt.sh close（先 --dry-run）。
-6. A6000 上有本票的 worktree 或产物时：A6000 主 checkout pull、wt.sh close，把不进 git 的产物经 150 内网拷回 gpfs 主 checkout，
-   逐文件核对大小，全部一致才删 A6000 上的这些文件。gpfs 已有同名不同大小的文件时不拷、停下。
-7. 本地仓库：改动只有 runs/*/notes.md、runs/canvas.json 和未跟踪的实验目录时替用户提交、rebase 到 origin/main、推送，
-   gpfs 主 checkout 再 pull 一次；有别的改动或本地有未推送的提交时停下。没改动时 pull --ff-only。
-8. workbench sync 本票动过的实验；输出可在工作台查看的实验 id。
-
-任何一步停下：不删文件、不强推，输出已完成的步骤、现状和建议，非零退出（1 停下，2 等用户点头）。重跑是安全的：
-已合并的 PR 跳过合并，已删的 worktree 跳过 close。A6000 连不上而本票确实没在 A6000 跑时，带 --skip-a6000 重跑。
+步骤、停下的情形与退出码的含义见 .claude/skills/server/closing.md。需用户点头的类别是下面的 EVAL_PATHS、RULE_PATHS
+与 Closer.closed_record_reasons；合并前跑的全量测试是 TEST_CMD。
 
 测试时向 main() 传 sites=Sites(...)：ssh 换成本地 shell，gh 换成替身，路径换成临时目录（同 workbench sync 的 shell 注入）。
 """
@@ -32,14 +19,32 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO))
+from workbench import sync as wb_sync  # noqa: E402
+
 YGC = "/remote-home/xufang/YGC"   # A6000 上有同名软链指向它自己的 NFS（.claude/skills/server/a6000.md）
 
-# 需用户点头的类别（#173「收尾脚本」第 1 步）
-EVAL_PATHS = ("moonlib/", "workbench/evaluate.py", "workbench/protocol.py")
+# 需用户点头的类别（#173「收尾脚本」第 1 步）。评测口径：算 metrics 的代码（workbench eval 经 evaluate → protocol、
+# perturb、dataset 读检查点）与 moonlib；reference.py、inter.py 只管显示，不在内。
+EVAL_PATHS = ("moonlib/", "workbench/evaluate.py", "workbench/protocol.py", "workbench/perturb.py", "workbench/dataset.py")
 RULE_PATHS = ("AGENTS.md", "CLAUDE.md", "CONTEXT.md", "CODING_STANDARDS.md", "docs/agents/", "docs/adr/", ".claude/skills/")
-CLOSED_RECORD = re.compile(r"runs/[^/]+/(notes\.md|metrics\.json)")
+RECORD = re.compile(r"runs/([^/]+)/(notes\.md|metrics\.json)")
 NOTES = re.compile(r"runs/([^/]+)/notes\.md")
+PR_MERGE = re.compile(r"Merge pull request #(\d+) from [^/\s]+/(\S+)")
 CANVAS = "runs/canvas.json"
+PR_FIELDS = "number,state,headRefName,headRefOid,baseRefName,mergeCommit,title,closingIssuesReferences"
+
+# 合并前的全量测试，在 PR 的服务器 worktree 里跑。两段都过才合并：
+# 工作台环境（py3.11，无 torch）跑大部分；训练环境（有 torch）跑 import torch 的训练测试与 py3.8 检查。
+# 训练环境里要装 pytest（是否装、装在哪由用户定）；装好前可临时 PYTHONPATH 指向单独 pip --target 的目录。
+WB_PYTHON = "/opt/envs/wb/bin/python"
+TORCH_PYTHON = "/opt/envs/loftr/bin/python"
+TORCH_TESTS = ("tests/test_finetune.py", "tests/test_replay.py", "tests/test_py38.py")
+TEST_CMD = ("export CUDA_VISIBLE_DEVICES=; "
+            f"timeout 3600 {WB_PYTHON} -m pytest -q -p no:cacheprovider tests "
+            + " ".join(f"--ignore={t}" for t in TORCH_TESTS) + "; wb=$?; "
+            f"timeout 3600 {TORCH_PYTHON} -m pytest -q -p no:cacheprovider {' '.join(TORCH_TESTS)}; torch=$?; "
+            'echo "close-tests: wb=$wb torch=$torch"; [ $wb -eq 0 ] && [ $torch -eq 0 ]')
 
 
 @dataclass
@@ -53,7 +58,7 @@ class Sites:
     a6000_wt: str = f"{YGC}/wt"
     relay: str = "ssh -i /root/.ssh/ygc_154 -p 20128 root@10.254.1.150"   # 在 A6000 上执行，接收端是 gpfs（150）
     gh: list = field(default_factory=lambda: ["gh"])
-    test_cmd: str = "CUDA_VISIBLE_DEVICES= timeout 3600 /opt/envs/wb/bin/python -m pytest -q tests"
+    test_cmd: str = TEST_CMD
 
 
 class Stop(Exception):
@@ -67,11 +72,16 @@ class Ticket:
     branch: str
     pr: dict
     tip: str
+    base: str     # 与 main 的分叉点
     files: list   # [(状态, 路径)]，相对分叉点
 
     @property
     def merged(self) -> bool:
         return self.pr["state"] == "MERGED"
+
+    @property
+    def closes(self) -> set:
+        return {i["number"] for i in self.pr.get("closingIssuesReferences") or []}
 
     @property
     def ids(self) -> list:
@@ -86,6 +96,7 @@ class Closer:
     def __init__(self, s: Sites, confirm: bool, skip_a6000: bool):
         self.s, self.confirm, self.skip_a6000 = s, confirm, skip_a6000
         self.done: list[str] = []
+        self.on_a6000: dict[str, bool] = {}   # 分支 → A6000 上有没有它的 worktree（预检时查）
 
     # ---- 底层调用 ----
     def log(self, msg: str):
@@ -95,12 +106,23 @@ class Closer:
         self.done.append(msg)
         self.log(msg)
 
-    def git(self, *args, check=True, timeout=300) -> str:
-        r = subprocess.run(["git", "-c", "core.quotepath=false", *args], cwd=self.s.local, capture_output=True, timeout=timeout)
-        out = r.stdout.decode("utf-8", "replace")
-        if check and r.returncode:
+    def _run(self, what: str, cmd: list, **kw) -> subprocess.CompletedProcess:
+        try:
+            return subprocess.run(cmd, capture_output=True, **kw)
+        except subprocess.TimeoutExpired:
+            raise Stop(f"{what} 超时", "检查网络或远端状态后重跑")
+
+    def git_rc(self, *args, timeout=300) -> tuple[int, str]:
+        r = self._run(f"本地 git {' '.join(args)}", ["git", "-c", "core.quotepath=false", *args],
+                      cwd=self.s.local, timeout=timeout)
+        return r.returncode, r.stdout.decode("utf-8", "replace")
+
+    def git(self, *args, timeout=300) -> str:
+        r = self._run(f"本地 git {' '.join(args)}", ["git", "-c", "core.quotepath=false", *args],
+                      cwd=self.s.local, timeout=timeout)
+        if r.returncode:
             raise Stop(f"本地 git {' '.join(args)} 失败：{r.stderr.decode('utf-8', 'replace').strip()}", "看上面的错误，处理后重跑")
-        return out if check else (r.returncode, out)
+        return r.stdout.decode("utf-8", "replace")
 
     def remote(self, where: str, script: str, *, input: str | None = None, timeout=600) -> tuple[int, str]:
         shell = self.s.gpfs_shell if where == "gpfs" else self.s.a6000_shell
@@ -110,8 +132,8 @@ class Closer:
         except subprocess.TimeoutExpired:
             raise Stop(f"{where} 上的命令超时：{script}", "远端进程可能已半途退出，先用只读命令查看现场再重跑")
         out = (r.stdout + r.stderr).decode("utf-8", "replace").strip()
-        if r.returncode == 255 and shell[0] == "ssh":
-            raise Stop(f"连不上 {where}（{shell[1]}）：{out}",
+        if r.returncode == 255:   # ssh 连不上时的退出码；远端命令本身不用 255
+            raise Stop(f"连不上 {where}（{' '.join(shell)}）：{out}",
                        "按 .claude/skills/server/machines.md「怎么连」检查工位机与 Tailscale 后重跑"
                        + ("；若本票确实没在 A6000 跑，可带 --skip-a6000 重跑" if where == "a6000" else ""))
         return r.returncode, out
@@ -122,12 +144,19 @@ class Closer:
             raise Stop(f"{what}（{where}，退出码 {rc}）：\n{out}", advice)
         return out
 
-    def gh(self, *args):
-        r = subprocess.run([*self.s.gh, *args], cwd=self.s.local, capture_output=True, timeout=300)
+    def gh(self, *args) -> str:
+        r = self._run(f"gh {' '.join(args)}", [*self.s.gh, *args], cwd=self.s.local, timeout=300)
         if r.returncode:
             raise Stop(f"gh {' '.join(args)} 失败：{(r.stdout + r.stderr).decode('utf-8', 'replace').strip()}",
                        "看上面的错误，处理后重跑")
         return r.stdout.decode("utf-8")
+
+    def gh_json(self, *args):
+        out = self.gh(*args)
+        try:
+            return json.loads(out)
+        except json.JSONDecodeError:
+            raise Stop(f"gh {' '.join(args)} 的输出不是 JSON：{out[:500]}", "检查 gh 是否登录、版本是否支持这些字段后重跑")
 
     # ---- 本地仓库 ----
     def local_changes(self) -> list[tuple[str, str]]:
@@ -177,8 +206,7 @@ class Closer:
 
     # ---- GitHub ----
     def find_pr(self, branch: str) -> dict:
-        prs = json.loads(self.gh("pr", "list", "--head", branch, "--state", "all", "--json",
-                                 "number,state,headRefName,headRefOid,baseRefName,mergeCommit,title"))
+        prs = self.gh_json("pr", "list", "--head", branch, "--state", "all", "--json", PR_FIELDS)
         for state in ("OPEN", "MERGED"):
             for pr in prs:
                 if pr["state"] == state:
@@ -191,7 +219,7 @@ class Closer:
             if pr["baseRefName"] != "main":
                 raise Stop(f"PR #{pr['number']}（{branch}）的目标分支是 {pr['baseRefName']}，不是 main",
                            "把 PR 的目标改成 main（gh pr edit --base main）后重跑")
-            rc, remote_tip = self.git("rev-parse", "-q", "--verify", f"origin/{branch}", check=False)
+            rc, remote_tip = self.git_rc("rev-parse", "-q", "--verify", f"origin/{branch}")
             remote_tip = remote_tip.strip()
             if rc:
                 raise Stop(f"本地看不到 origin/{branch}", "确认分支已推送到 GitHub 后重跑")
@@ -206,35 +234,63 @@ class Closer:
         for line in self.git("diff", "--name-status", "--no-renames", base, tip).splitlines():
             st, path = line.split("\t", 1)
             files.append((st, path))
-        return Ticket(branch, pr, tip, files)
+        return Ticket(branch, pr, tip, base, files)
+
+    def is_ancestor(self, a: str, b: str) -> bool:
+        return self.git_rc("merge-base", "--is-ancestor", a, b)[0] == 0
 
     def dependencies(self, target: Ticket) -> list[Ticket]:
-        prs = json.loads(self.gh("pr", "list", "--state", "open", "--limit", "200", "--json",
-                                 "number,state,headRefName,headRefOid,baseRefName,mergeCommit,title"))
+        prs = self.gh_json("pr", "list", "--state", "open", "--limit", "200", "--json", PR_FIELDS)
         deps = []
         for pr in prs:
             oid = pr["headRefOid"]
-            if pr["headRefName"] == target.branch or self.git("cat-file", "-e", oid, check=False)[0]:
+            if pr["headRefName"] == target.branch or self.git_rc("cat-file", "-e", oid)[0]:
                 continue
-            if self.git("merge-base", "--is-ancestor", oid, target.tip, check=False)[0] == 0 \
-                    and self.git("merge-base", "--is-ancestor", oid, "origin/main", check=False)[0] != 0:
+            if self.is_ancestor(oid, target.tip) and not self.is_ancestor(oid, "origin/main"):
                 deps.append(pr)
-        # 先合并的在前：被越多其他依赖包含的越靠前
-        anc = {p["number"]: sum(self.git("merge-base", "--is-ancestor", q["headRefOid"], p["headRefOid"], check=False)[0] == 0
-                                for q in deps if q is not p) for p in deps}
+        # 先合并的在前：按「自己包含了几个其他依赖」升序，祖先排在后代前面
+        anc = {p["number"]: sum(self.is_ancestor(q["headRefOid"], p["headRefOid"]) for q in deps if q is not p)
+               for p in deps}
         return [self.ticket(p["headRefName"], p) for p in sorted(deps, key=lambda p: anc[p["number"]])]
 
-    @staticmethod
-    def approval_reasons(t: Ticket) -> list[str]:
+    def closed_record_reasons(self, t: Ticket) -> list[str]:
+        """改了已结票实验的 notes / metrics：分叉点上已有这份记录，且把这个实验带进 main 的 PR 里有不属于本票的。
+        「属于本票」= 与本 PR 同一分支名，或 Closes 的 issue 落在本 PR 的 Closes 里。实验的 PR 从 main 的
+        first-parent 历史里的「Merge pull request #N from …/分支」读；一个也读不到（如直接提交进 main）时按需点头算。"""
+        def own(n: int, br: str) -> bool:
+            if br == t.branch:
+                return True
+            if not t.closes:
+                return False
+            refs = self.gh_json("pr", "view", str(n), "--json", "closingIssuesReferences").get("closingIssuesReferences")
+            theirs = {i["number"] for i in refs or []}
+            return bool(theirs) and theirs <= t.closes
+
+        owners: dict[str, tuple] = {}   # 实验 id → （带进 main 的 PR 号，其中不属于本票的）
         out = []
         for st, p in t.files:
+            m = RECORD.fullmatch(p)
+            if not m or st == "A":
+                continue
+            rid = m[1]
+            if rid not in owners:
+                log = self.git("log", "--first-parent", "--format=%s", t.base, "--", f"runs/{rid}/")
+                prs = [(int(g[1]), g[2]) for g in map(PR_MERGE.match, log.splitlines()) if g]
+                owners[rid] = (prs, [n for n, br in prs if not own(n, br)])
+            prs, foreign = owners[rid]
+            if not prs or foreign:
+                why = f"由 PR {'、'.join(f'#{n}' for n in foreign)} 建立" if foreign else "不是经 PR 进的 main"
+                out.append(f"改了已结票实验的记录：{p}（{rid} {why}）")
+        return out
+
+    def approval_reasons(self, t: Ticket) -> list[str]:
+        out = []
+        for _, p in t.files:
             if p.startswith(EVAL_PATHS):
                 out.append(f"改了评测口径：{p}")
             elif p in RULE_PATHS or p.startswith(tuple(r for r in RULE_PATHS if r.endswith("/"))):
                 out.append(f"改了规矩文件：{p}")
-            elif CLOSED_RECORD.fullmatch(p) and st != "A":
-                out.append(f"改了已结票实验的记录：{p}")
-        return out
+        return out + self.closed_record_reasons(t)
 
     # ---- 服务器 ----
     def wt_exists(self, where: str, branch: str) -> bool:
@@ -242,11 +298,20 @@ class Closer:
         rc, _ = self.remote(where, f"test -d {shlex.quote(root + '/' + branch)}", timeout=60)
         return rc == 0
 
+    def probe_a6000(self, tickets):
+        """合并前只读地查 A6000：各分支在那里有没有 worktree。连不上就在合并前停下。"""
+        if self.skip_a6000:
+            self.log("--skip-a6000：不查 A6000")
+            return
+        self.on_a6000 = {t.branch: self.wt_exists("a6000", t.branch) for t in tickets}
+        on = [b for b, yes in self.on_a6000.items() if yes]
+        self.log(f"A6000 上有 worktree 的分支：{' '.join(on) or '无'}")
+
     def run_tests(self, target: Ticket):
         for where in ("gpfs", "a6000"):
-            if where == "a6000" and self.skip_a6000:
+            if where == "a6000" and (self.skip_a6000 or not self.on_a6000.get(target.branch)):
                 continue
-            if not self.wt_exists(where, target.branch):
+            if where == "gpfs" and not self.wt_exists(where, target.branch):
                 continue
             d = (self.s.gpfs_wt if where == "gpfs" else self.s.a6000_wt) + "/" + target.branch
             head = self.must(where, f"git -C {shlex.quote(d)} rev-parse HEAD", "读 worktree 的 HEAD 失败", "检查 worktree").strip()
@@ -254,7 +319,7 @@ class Closer:
                 raise Stop(f"{where} 上的 worktree {d} 停在 {head[:8]}，不是 PR 的 head {target.tip[:8]}",
                            "在 worktree 里推送或 pull 到与 PR 一致后重跑")
             self.log(f"在 {where} 的 {d} 跑测试：{self.s.test_cmd}")
-            rc, out = self.remote(where, f"cd {shlex.quote(d)} && {self.s.test_cmd}", timeout=3700)
+            rc, out = self.remote(where, f"cd {shlex.quote(d)} && {self.s.test_cmd}", timeout=7300)
             if rc:
                 raise Stop(f"测试失败（退出码 {rc}），未合并：\n{out[-4000:]}", "修好后推送再重跑")
             self.step(f"测试通过（{where}：{d}）")
@@ -280,17 +345,18 @@ class Closer:
         self.step(f"{where} 上的 worktree {wt}/{branch} 已关")
         return True
 
-    def ignored_files(self, ids) -> dict[str, int]:
-        """A6000 主 checkout 里本票实验不进 git 的文件 → 大小（.claims 是 A6000 自己的占位，不拷）。"""
+    def a6000_untracked(self, ids) -> dict[str, tuple[int, bool]]:
+        """A6000 主 checkout 里本票实验未跟踪的文件 → （大小，是否被 gitignore）。.claims 是 A6000 自己的占位，不算。"""
         paths = " ".join(shlex.quote(f"runs/{i}") for i in ids)
-        out = self.must("a6000", f"cd {shlex.quote(self.s.a6000_main)} && git ls-files -z --others --ignored --exclude-standard"
-                                 f" -- {paths} | xargs -0 -r stat --printf '%s\\t%n\\n'",
-                        "列 A6000 上的产物失败", "检查 A6000 主 checkout")
         files = {}
-        for line in out.splitlines():
-            size, _, p = line.partition("\t")
-            if p and "/.claims/" not in p:
-                files[p] = int(size)
+        for ignored, flag in ((True, " --ignored"), (False, "")):
+            out = self.must("a6000", f"cd {shlex.quote(self.s.a6000_main)} && git ls-files -z --others{flag} --exclude-standard"
+                                     f" -- {paths} | xargs -0 -r stat --printf '%s\\t%n\\n'",
+                            "列 A6000 上的产物失败", "检查 A6000 主 checkout")
+            for line in out.splitlines():
+                size, _, p = line.partition("\t")
+                if p and "/.claims/" not in p:
+                    files[p] = (int(size), ignored)
         return files
 
     def gpfs_sizes(self, paths) -> dict[str, int]:
@@ -301,13 +367,18 @@ class Closer:
 
     def a6000(self, t: Ticket):
         if self.skip_a6000:
-            self.log("--skip-a6000：不查 A6000")
             return
-        had_wt = self.wt_exists("a6000", t.branch)
+        had_wt = self.on_a6000.get(t.branch, False)
         if had_wt:
             self.pull_main("a6000")
             self.wt_close("a6000", t.branch)
-        files = self.ignored_files(t.ids) if t.ids else {}
+        found = self.a6000_untracked(t.ids) if t.ids else {}
+        loose = sorted(p for p, (_, ignored) in found.items() if not ignored)
+        if loose:
+            raise Stop("A6000 主 checkout 里有本票实验未提交、也不被 gitignore 的文件（该进 git 的记录？），什么都没拷、没删：\n  "
+                       + "\n  ".join(loose),
+                       "请用户决定：该进 git 的经 worktree 提交、开 PR；该忽略的补进 .gitignore；不要的删掉。处理后重跑")
+        files = {p: size for p, (size, _) in found.items()}
         if not files:
             if had_wt:
                 self.step("A6000 上没有要拷回的产物")
@@ -338,6 +409,10 @@ class Closer:
         self.step("已删 A6000 上的副本")
 
     # ---- 本地收尾 ----
+    def undo_auto_commit(self):
+        """撤回刚替用户做的提交，改动回到工作区（未暂存），本地 main 回到原处，重跑不会被「未推送的提交」挡住。"""
+        self.git("reset", "-q", "HEAD~1")
+
     def finish_local(self):
         self.check_local()
         parts, _ = self.classify_local(self.local_changes())
@@ -351,25 +426,24 @@ class Closer:
         self.git("add", "-A", "--", "runs")
         self.git("commit", "-q", "-m", msg)
         self.step(f"已替用户提交：{msg}")
-        rc, _ = self.git("rebase", "-q", "origin/main", check=False)
-        if rc:
-            self.git("rebase", "--abort", check=False)
-            raise Stop("用户的编辑与 main 上的改动冲突，rebase 已撤回；提交留在本地 main，未推送",
-                       "请用户看冲突（git rebase origin/main）后手动处理")
-        rc, out = self.git("push", "-q", "origin", "main", check=False)
-        if rc:
-            raise Stop("推送失败（不强推），提交留在本地 main", "稍后重跑，或查看远端是否又有新提交")
+        if self.git_rc("rebase", "-q", "origin/main")[0]:
+            self.git_rc("rebase", "--abort")
+            self.undo_auto_commit()
+            raise Stop("用户的编辑与 main 上的改动冲突：rebase 已撤回，替用户做的提交也已撤回，改动原样留在本地工作区（未提交）",
+                       "请用户对照 origin/main 手动合并这些改动（如 git stash、git pull --ff-only、git stash pop 后解决冲突），再重跑")
+        if self.git_rc("push", "-q", "origin", "main")[0]:
+            self.undo_auto_commit()
+            raise Stop("推送失败（不强推）：替用户做的提交已撤回，改动留在本地工作区（未提交）",
+                       "稍后重跑，或查看远端是否又有新提交、是否拒收")
         self.step("已推送，本地与 origin/main 一致")
         self.pull_main("gpfs")
 
     def sync(self, ids):
         if not ids:
             return
-        sys.path.insert(0, str(REPO))
-        from workbench import sync
         try:
-            r = sync.sync(ids, self.s.local / "runs", remote_root=self.s.gpfs_main, shell=self.s.gpfs_shell)
-        except RuntimeError as e:
+            r = wb_sync.sync(ids, self.s.local / "runs", remote_root=self.s.gpfs_main, shell=self.s.gpfs_shell)
+        except (RuntimeError, subprocess.TimeoutExpired) as e:
             raise Stop(f"workbench sync 失败：{e}", f"稍后在本地重跑 python -m workbench sync {' '.join(ids)}")
         self.step(f"已 sync：拉回 {len(r.fetched)} 个文件（{r.fetched_bytes / 2**20:.1f} MiB），跳过 {len(r.skipped)} 个")
 
@@ -389,6 +463,7 @@ class Closer:
                 raise Stop("这些改动需要用户点头才能合并：\n  " + "\n  ".join(reasons),
                            f"转问用户；同意后 python scripts/close_ticket.py {branch} --confirm", code=2)
             self.log("已带 --confirm：" + "；".join(reasons))
+        self.probe_a6000(tickets)
         if any(t.shared for t in tickets if not t.merged):
             self.run_tests(target)   # target 包含全部依赖的提交
         for t in tickets:

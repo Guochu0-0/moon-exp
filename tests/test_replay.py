@@ -120,7 +120,8 @@ def test_replay_old_config(src, i, rec, tmp_path):
     cfg = C.load(_configs_at(rec["commit"], rec["config_file"], tmp_path))
     d = diff(rec["args"], cfg)
     bad = {k: v for k, v in d.items() if not allowed(k, v)}
-    assert not bad, f"{rec['config_file']}（commit {rec['commit'][:9]}）今天展开与启动记录不同：{bad}"
+    assert not bad, (f"{rec['config_file']}（commit {rec['commit'][:9]}）今天展开与启动记录不同：{bad}。"
+                     "改了默认值就改回来；新增的参数在本文件 ADDED 登记，默认值须等于新增之前的行为")
 
 
 def test_added_entries_all_used(tmp_path):

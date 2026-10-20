@@ -160,7 +160,7 @@ class Run:
 
     def launches(self) -> dict[str, list[dict]]:
         """{方法: 启动记录列表}，来自 launch/<method>.json（进 git）。只列有记录的方法；分析没有方法，列出全部文件。
-        事后补记的记录带 backfilled 字段（格式见 RECORDS.md「启动记录」）。"""
+        事后补记的记录带 backfilled 字段（格式见 .claude/skills/records/formats.md「启动记录」）。"""
         d = self.dir / "launch"
         names = sorted(p.stem for p in d.glob("*.json")) if self.analysis and d.is_dir() else self.methods
         out = {}

@@ -1,5 +1,5 @@
 """微调实验的驱动：训练 → 逐 ckpt 在 Val 上评测 → 按 Val AUC@5 峰值选 ckpt 补评 Test → 写成正式记录（#76、#86）。
-规矩见 docs/agents/experiments.md，配置格式见 finetune/config.py，产物布局见 workbench/RECORDS.md「训练产物」。
+规矩见 .claude/skills/server/SKILL.md，配置格式见 finetune/config.py，产物布局见 .claude/skills/records/formats.md「训练产物」。
 
     GPU=<空卡> /opt/envs/loftr/bin/python scripts/finetune/run.py runs/<id>
 
@@ -163,7 +163,7 @@ def main(argv=None):
             log(f"FAIL {m}: {e}")
             continue
         infer = json.loads((REPO / cfg["model"]["config"]).read_text(encoding="utf-8"))
-        launch.begin(R, m, [sys.executable, *sys.argv], repo=REPO, entry=ENTRY,      # 字段同 RECORDS.md「启动记录」
+        launch.begin(R, m, [sys.executable, *sys.argv], repo=REPO, entry=ENTRY,      # 字段同 .claude/skills/records/formats.md「启动记录」
                      config_file=src.relative_to(REPO).as_posix(), args=cfg, config=infer)
         try:
             Job(R, m, cfg, gpu)()

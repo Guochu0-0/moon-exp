@@ -32,7 +32,7 @@ python -m baselines.match <cfg> --split …  →  python -m baselines.fit <raw>/
 
 ## 在服务器上跑（154）
 
-先读 `docs/agents/servers.md`：先看 GPU 占用，只用空卡；nice/ionice；环境装在容器本地 `/opt`，不放 gpfs。
+先读 `/server` 技能的 `.claude/skills/server/rules.md`：先看 GPU 占用，只用空卡；nice/ionice；环境装在容器本地 `/opt`，不放 gpfs。
 
 ```bash
 export MOON_DATA=/remote-home/xufang/YGC/dataset/Moon

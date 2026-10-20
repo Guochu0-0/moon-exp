@@ -70,7 +70,7 @@ geo = false
 
 ## 训练（154 / 126 / 150 / A6000，loftr 环境）
 
-在本票的 worktree 里用驱动跑：`GPU=<空卡> /opt/envs/loftr/bin/python scripts/finetune/run.py runs/<id>`。它逐个领取 `configs/` 里的方法：训练 → 逐 ckpt 在 Val 上评测 → 按 Val 峰值补评 Test → 写成正式记录。流程见 `docs/agents/experiments.md`，产物布局见 `workbench/RECORDS.md`「训练产物」。
+在本票的 worktree 里用驱动跑：`GPU=<空卡> /opt/envs/loftr/bin/python scripts/finetune/run.py runs/<id>`。它逐个领取 `configs/` 里的方法：训练 → 逐 ckpt 在 Val 上评测 → 按 Val 峰值补评 Test → 写成正式记录。流程见 `.claude/skills/server/SKILL.md`，产物布局见 `.claude/skills/records/formats.md`「训练产物」。
 
 单独训练（调试）：`python -m finetune.train runs/<id>/configs/<方法>.toml --out <目录> [--stop-at N]`；`--stop-at` 提前停下，lr 调度仍按配置的总步数。
 

@@ -1,0 +1,8 @@
+# reward 为整对灰度 NCC，种子 1
+base = "_rl"
+
+[run]
+seed = 1
+
+[rloo]
+reward = "ncc"

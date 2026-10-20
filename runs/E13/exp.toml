@@ -1,22 +1,22 @@
 id = "E13"
-title = "RoMa 粗级锚点采样 + RLOO 从 zero-shot 训练：灰度 NCC 与逐格分级残差两种 reward 能否超过随机 reward 与 noisy student"
+title = "照原概率在粗匹配上抽签做强化学习：连随机评分都会把概率压到一个位置上，两种不用标注的评分都没有超过未训练的 RoMa"
 parent = "E9"
 date = "2026-10-20"
 
 [methods.s0_ncc]
-name = "粗级采样 RLOO，灰度 NCC reward，种子 0"
+name = "粗匹配抽签强化学习，灰度相关评分，种子 0"
 
 [methods.s0_r1]
-name = "粗级采样 RLOO，分级残差 reward，种子 0"
+name = "粗匹配抽签强化学习，吻合度评分，种子 0"
 
 [methods.s0_rand]
-name = "粗级采样 RLOO，随机 reward，种子 0"
+name = "粗匹配抽签强化学习，随机评分，种子 0"
 
 [methods.s1_ncc]
-name = "粗级采样 RLOO，灰度 NCC reward，种子 1"
+name = "粗匹配抽签强化学习，灰度相关评分，种子 1"
 
 [methods.s1_r1]
-name = "粗级采样 RLOO，分级残差 reward，种子 1"
+name = "粗匹配抽签强化学习，吻合度评分，种子 1"
 
 [methods.s1_rand]
-name = "粗级采样 RLOO，随机 reward，种子 1"
+name = "粗匹配抽签强化学习，随机评分，种子 1"

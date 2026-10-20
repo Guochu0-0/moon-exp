@@ -1,4 +1,4 @@
 id = "E12"
-title = "zero-shot RoMa 粗级锚点分布有多尖：按温度 1 抽样能否带来探索，粗级与细级的 log π 梯度各能回到哪些模块"
+title = "zero-shot RoMa 粗匹配给出的概率很分散：照原概率抽签，最终匹配会明显偏离、质量下降；温度降到 0.3 左右更合适"
 kind = "analysis"
 date = "2026-10-20"

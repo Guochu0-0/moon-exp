@@ -13,3 +13,4 @@ runs/*/sweep/*/H/preds/
 runs/*/sweep/*/H/perturb/
 runs/*/sweep/*/hmatch/
 runs/*/raw/
+.claude/worktrees/

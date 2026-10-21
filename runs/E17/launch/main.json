@@ -1,0 +1,78 @@
+[
+ {
+  "start": "2026-10-21 05:19:00 +0000",
+  "end": "2026-10-21 07:03:42 +0000",
+  "status": "ok",
+  "commit": "d894c9c721565739561b2c61ff8b966c1e5659ab",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-187",
+  "cuda_visible_devices": "0,1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "runs/E17/code/run.sh",
+   "gtref_zs",
+   "gtref_loo_t05",
+   "gtref_loo_t03",
+   "gtref_none_t03",
+   "gtref_rns_r2",
+   "coarse_moon_zs",
+   "coarse_moon_loo_t05",
+   "coarse_moon_loo_t03",
+   "coarse_moon_none_t03",
+   "coarse_moon_rns_r2"
+  ]
+ },
+ {
+  "start": "2026-10-21 07:04:31 +0000",
+  "end": "2026-10-21 07:17:23 +0000",
+  "status": "ok",
+  "commit": "a0d97415ad4f23e555e358221da5736d0ec270b2",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-187",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "runs/E17/code/run.sh",
+   "coarse_mega_zs"
+  ]
+ },
+ {
+  "start": "2026-10-21 08:12:52 +0000",
+  "end": "2026-10-21 08:25:45 +0000",
+  "status": "ok",
+  "commit": "d0585ce8db44a16caf57b34fb42b8b21784eac34",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-187",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "runs/E17/code/run.sh",
+   "coarse_mega_roma_outdoor"
+  ]
+ },
+ {
+  "start": "2026-10-21 16:27:11 +0800",
+  "end": "2026-10-21 16:27:22 +0800",
+  "status": "ok",
+  "commit": "0ed95c755206eafacf705622f6ba12e3be1e9268",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-187",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E17/code/summary.py"
+  ]
+ }
+]

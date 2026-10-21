@@ -654,7 +654,7 @@ def test_rloo_fine_surrogate_gradient_equals_direct():
         mu = fin + _disp(dec, s, d_flow, 64, 64)
         L = L - w * (adv[s] * (-(x - mu).square().sum(1) / (2 * sig[s] ** 2))).mean()
     L.backward()
-    want = [p.grad.clone() for p in params]
+    want = [None if p.grad is None else p.grad.clone() for p in params]
     for p in params:
         p.grad = None
 
@@ -664,7 +664,8 @@ def test_rloo_fine_surrogate_gradient_equals_direct():
     (sur * fac).backward()
     assert float(sur) == pytest.approx(float(L), rel=1e-5)
     for p, g in zip(params, want):
-        assert torch.allclose(p.grad / fac, g, rtol=1e-4, atol=1e-6)
+        assert (p.grad is None) == (g is None)
+        assert g is None or torch.allclose(p.grad / fac, g, rtol=1e-4, atol=1e-6)
     for s in ("16", "4", "1"):
         assert all(p.grad is None for p in dec.conv_refiner[s].parameters())
     assert theta.grad.abs().sum() > 0

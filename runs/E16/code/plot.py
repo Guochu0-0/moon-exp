@@ -79,7 +79,7 @@ def main():
     ax.set_yscale("symlog", linthresh=1.0)
     ax.set_xticks(pos, [f"{tp:g}" for tp in temps])
     ax.set_xlabel("抽签温度")
-    ax.set_ylabel("16 次抽签误差的中位数 − 不抽签误差（像素）")
+    ax.set_ylabel("16 次抽签误差的中位数 - 不抽签误差（像素）")
     ax.legend(loc="upper right", fontsize=9, frameon=False)
     ax.set_xlim(-0.6, len(temps) - 0.2)
     fig.tight_layout()

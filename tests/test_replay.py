@@ -56,6 +56,10 @@ ADDED = {
     "model.drop_path": (0.0, "#130 新增（RoMa）；0 = DINOv2 不加 stochastic depth"),
     "aug.shift_disk": (False, "#157 新增；false = 平移照旧在方形范围内均匀取"),
     "pseudo.mask_fill": (False, "#157 新增；false = 补零区照常监督"),
+    "rloo.baseline": ("loo", "#183 新增；loo = 留一优势，即首批的权重"),
+    "rloo.delta": (8.0, "#183 与 reward = ref 同批新增；只在 reward = ref 时起作用"),
+    "rloo.tau": (16.0, "#183 与 reward = ref 同批新增；只在 reward = ref 时起作用"),
+    "rloo.r_out": (-0.1, "#183 与 reward = ref 同批新增；只在 reward = ref 时起作用"),
 }
 
 

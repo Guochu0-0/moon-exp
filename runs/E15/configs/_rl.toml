@@ -1,0 +1,28 @@
+# 以正常推理的仿射为参照的粗级抽签奖励（#183）。策略同首批 E13：粗级 gm_cls 每格抽锚点，细级不加噪声、不求梯度，每对 16 份。
+# reward：每步用当前模型正常推理一次、RANSAC 3 px 拟合参照仿射；每格抽到锚点的粗匹配位置离参照仿射映射的格子中心 d px，
+# d ≤ 16 得 1 − ½(d/8)²，否则 −0.1（照 RIPE++ 分级奖励，尺度放大 8 倍以配粗级锚点间距）。
+# 其余同 E13：训练数据与难版扰动、DINOv2 qkv 加 LoRA r 8、lr 3e-5（LoRA 1e-4）、4000 步（warmup 500 + cosine）、每 1000 步存档。
+# 温度：#182 诊断在起训练时还没出结果，按票先以 0.3 为中心取 0.5 / 0.3 / 0.2。
+[model]
+name = "roma"
+lora_r = 8
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[run]
+save_every = 1000
+save_zero = false
+seed = 0
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"

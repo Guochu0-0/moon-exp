@@ -498,3 +498,42 @@ def test_config_hard_aug_options(tmp_path):
     assert c["pseudo"]["mask_fill"] is True and c["aug"]["shift_disk"] is True
     d = C.load(_write(tmp_path, "d", '[model]\nname = "loftr"\n[pseudo]\nlabels = "l.jsonl"\n[aug]\n'))
     assert d["pseudo"]["mask_fill"] is False and d["aug"]["shift_disk"] is False
+
+
+def test_rloo_ref_cells_graded_reward():
+    """ref：粗 warp 与参照仿射相距 d = 0 / 8 / 16 / 24 px 时，分级奖励为 1、0.5、−1（阈值内侧照 RIPE++ 不修）、r_out（#183）。"""
+    import torch
+    from finetune.parts.pseudo import grid
+    from finetune.parts.rloo import ref_cells
+
+    A = np.array([[1.0, 0, 16], [0, 1.0, 0]])                     # 参照：右移 16 px
+    g = grid(4, 4, "cpu").permute(2, 0, 1)                        # (2,h,w)
+    off = torch.tensor([16.0, 24.0, 32.0, 40.0])                  # 粗 warp 右移的 px → d = 0、8、16、24
+    fc = g[None].repeat(4, 1, 1, 1)
+    fc[:, 0] += (off / 256)[:, None, None]
+    r, d = ref_cells(fc, A, delta=8.0, tau=16.0, r_out=-0.1)
+    assert torch.allclose(d.mean((1, 2)), off - 16, atol=1e-3)
+    assert torch.allclose(r[:, 0, 0], torch.tensor([1.0, 0.5, -1.0, -0.1]), atol=1e-4)
+    r0, d0 = ref_cells(fc, None, 8.0, 16.0, -0.1)
+    assert d0 is None and (r0 == 0).all()
+
+
+def test_rloo_advantage_baselines():
+    import torch
+    from finetune.parts.rloo import advantage
+
+    r = torch.rand(16, 3, 3)
+    assert torch.equal(advantage(r, "none"), r)
+    a = advantage(r, "loo")
+    assert torch.allclose(a[0], r[0] - r[1:].mean(0)) and not torch.allclose(a, r)
+
+
+def test_config_rloo_ref(tmp_path):
+    from finetune import config as C
+
+    c = C.load(_write(tmp_path, "a", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nbaseline = "none"\ntemp = 0.3\n'))
+    assert (c["rloo"]["delta"], c["rloo"]["tau"], c["rloo"]["r_out"]) == (8.0, 16.0, -0.1)
+    d = C.load(_write(tmp_path, "b", '[model]\nname = "roma"\n[rloo]\n'))
+    assert d["rloo"]["baseline"] == "loo" and d["rloo"]["reward"] == "r1"     # 默认同首批
+    with pytest.raises(C.ConfigError):
+        C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[rloo]\nbaseline = "mean"\n'))

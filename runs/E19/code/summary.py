@@ -1,6 +1,6 @@
 """E19 汇总：各方法逐存档的 Val AUC@5 与误差中位数、峰值存档及其置信区间、新形式与本批 ripe 复跑的配对自助差，
 E15 loo_t03 的原值，以及训练日志里概率形状与离参照距离的窗口均值。
-用法（在仓库根目录、wb 环境）：python runs/E19/code/summary.py
+用法（在仓库根目录、wb 环境）：PYTHONPATH=. python runs/E19/code/summary.py
 """
 import json
 from pathlib import Path

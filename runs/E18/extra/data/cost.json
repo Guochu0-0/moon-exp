@@ -1,0 +1,93 @@
+{
+ "gpu": "Tesla V100-SXM2-32GB",
+ "torch": "2.1.2+cu118",
+ "k": 0.5,
+ "chunk": 8,
+ "steps": 25,
+ "warmup": 5,
+ "by_chains": {
+  "16": {
+   "sec_median": 3.34,
+   "sec_mean": 3.347,
+   "sec_p10": 3.292,
+   "sec_p90": 3.422,
+   "t_enc_median": 0.221,
+   "t_roll_median": 0.786,
+   "t_rew_median": 0.009,
+   "t_grad_median": 2.272,
+   "peak_alloc_gb": 18.36,
+   "peak_reserved_gb": 21.05
+  },
+  "8": {
+   "sec_median": 1.977,
+   "sec_mean": 1.986,
+   "sec_p10": 1.914,
+   "sec_p90": 2.051,
+   "t_enc_median": 0.22,
+   "t_roll_median": 0.473,
+   "t_rew_median": 0.008,
+   "t_grad_median": 1.232,
+   "peak_alloc_gb": 18.26,
+   "peak_reserved_gb": 22.61
+  },
+  "4": {
+   "sec_median": 1.265,
+   "sec_mean": 1.281,
+   "sec_p10": 1.23,
+   "sec_p90": 1.36,
+   "t_enc_median": 0.216,
+   "t_roll_median": 0.261,
+   "t_rew_median": 0.008,
+   "t_grad_median": 0.712,
+   "peak_alloc_gb": 13.7,
+   "peak_reserved_gb": 15.0
+  }
+ },
+ "grad_reach": {
+  "refiner_16": {
+   "n": 58,
+   "frac_nonzero": 0.0,
+   "finite": true
+  },
+  "refiner_8": {
+   "n": 58,
+   "frac_nonzero": 1.0,
+   "finite": true
+  },
+  "refiner_4": {
+   "n": 58,
+   "frac_nonzero": 1.0,
+   "finite": true
+  },
+  "refiner_2": {
+   "n": 58,
+   "frac_nonzero": 1.0,
+   "finite": true
+  },
+  "refiner_1": {
+   "n": 58,
+   "frac_nonzero": 1.0,
+   "finite": true
+  },
+  "vgg": {
+   "n": 48,
+   "frac_nonzero": 1.0,
+   "finite": true
+  },
+  "embedding_decoder": {
+   "n": 57,
+   "frac_nonzero": 1.0,
+   "finite": true
+  },
+  "gp16": {
+   "n": 2,
+   "frac_nonzero": 1.0,
+   "finite": true
+  },
+  "dino_lora": {
+   "n": 48,
+   "frac_nonzero": 0.5,
+   "finite": true
+  }
+ }
+}

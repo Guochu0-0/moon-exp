@@ -1,0 +1,34 @@
+[
+ {
+  "start": "2026-10-21 13:29:05 +0000",
+  "end": "2026-10-21 13:33:45 +0000",
+  "status": "ok",
+  "commit": "6b903de36e646300138e8c330b2321857999a19e",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-189",
+  "cuda_visible_devices": "0,1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "runs/E18/code/run.sh"
+  ]
+ },
+ {
+  "start": "2026-10-21 13:37:06 +0000",
+  "end": "2026-10-21 13:37:06 +0000",
+  "status": "ok",
+  "commit": "d44427e70e4ba3f8b4d0a1044b2b90bcc9f9718f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-189",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E18/code/split.py"
+  ]
+ }
+]

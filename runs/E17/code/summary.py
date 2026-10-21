@@ -35,7 +35,7 @@ RAW, OUT = RUN / "raw", RUN / "extra" / "data"
 RINGS = range(11)
 MOON = ["zs", "loo_t05", "loo_t03", "none_t03", "rns_r2"]
 MEGA = ["zs", "roma_outdoor"]
-LABEL = {"zs": "zero-shot AnyMatch-RoMa", "loo_t05": "强化学习：留一基线、温度 0.5",
+LABEL = {"zs": "未训练的 AnyMatch-RoMa", "loo_t05": "强化学习：留一基线、温度 0.5",
          "loo_t03": "强化学习：留一基线、温度 0.3", "none_t03": "强化学习：直接权重、温度 0.3",
          "rns_r2": "伪标签自训练第 2 轮", "roma_outdoor": "RoMa 原版室外权重"}
 COLOR = {"zs": "k", "loo_t05": "tab:blue", "loo_t03": "tab:cyan", "none_t03": "tab:purple", "rns_r2": "tab:red",

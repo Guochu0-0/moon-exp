@@ -25,6 +25,17 @@ RANSAC 失败的样本：r1 记 0，ncc 记 −1；ref 的参照拟合失败时�
   逐格算），不除标准差；
 - none：RIPE++ 式，直接用 reward 当权重，不减平均。
 loss = −mean_{份, 格} 权重 · log π。不训 certainty、不加 KL。
+
+细化加噪（#192，只配 reward = ref）：levels 列出加噪的细化级（8、4、2、1 的子集；空 = 细化照推理跑、不加噪，即上面的做法）。
+此时每对 group 条完整的抽签链：粗级按上面抽锚点 → 各级细化照推理跑，但 levels 里那一级的输出 a 从以细化层输出 μ
+（这一级的输入 warp + 细化层算出的位移）为中心、σ = k·s 原网格 px 的二维各向同性高斯里抽，再送进下一级。
+这一级的 log π = −‖a − μ‖² / 2σ²（略去常数），μ 带梯度（经细化层、VGG 与 DINOv2 特征的 proj）；各级之间照 romatch 本来就
+detach，所以各级的 log π 只经本级的细化层回到特征。每级的抽签结果逐像素与参照仿射映射的位置相距 d，按与粗级相同的
+shape 打分，长度参数按级缩放：delta_s = delta·s/8、tau_s = tau·s/8（粗级尺度记为 8，即 E15 / #191 的 delta、tau）；
+各级（含粗级）的优势各自 RLOO（减同一位置其余链的均值）。loss = 粗级项 + 各加噪级的 −mean(优势 · log π) 之和。
+实现照 E18 的开销测试（runs/E18/code/cost.py）：第一遍不求梯度跑完全部链，记下各加噪级的输入、certainty 与抽到的输出；
+第二遍逐级、每 chunk 条链带梯度重算 μ 并立刻反向，细化层参数直接得到梯度，特征上的梯度先累积在叶子上，最后经一个
+替身项随粗级损失一起反向穿过编码器（替身项的值换成细化各级损失之和，日志里的 loss 即粗级 + 细化）。
 """
 from __future__ import annotations
 
@@ -53,12 +64,15 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "tau": 16.0,      # ref：内点阈值（原网格 px）
           "r_out": -0.1,    # ref：d > tau 的格子得分（ripe）/ 下限（clip）
           "shape": "ripe",  # ref：奖励随距离的形式 ripe | clip | gauss（#191）
+          "levels": [],     # 细化中加高斯噪声的级（8、4、2、1 的子集，#192）；空 = 细化不加噪
+          "k": 0.5,         # 加噪级的 σ = k × 这一级的尺度（原网格 px，#192）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
 SHAPES = ("ripe", "clip", "gauss")
 BASELINES = ("loo", "none")
 SCALES = ("16", "8", "4", "2", "1")
+LEVELS = (8, 4, 2, 1)
 
 
 def fill(p):
@@ -82,6 +96,13 @@ def check(cfg):
     for other in ("pseudo", "cexp", "neg", "warpc"):
         if other in cfg:
             raise ConfigError(f"[rloo] 不与 [{other}] 同用")
+    lv = p["levels"]
+    if any(not isinstance(s, int) or s not in LEVELS for s in lv) or len(set(lv)) != len(lv):
+        raise ConfigError(f"[rloo] levels 只能是 {LEVELS} 中不重复的整数，得到 {lv!r}")
+    if lv and p["reward"] != "ref":
+        raise ConfigError("[rloo] levels 只配 reward = 'ref'")
+    if p["k"] <= 0:
+        raise ConfigError("[rloo] k 应 > 0")
     if cfg["model"]["train_res"] != "560":
         raise ConfigError("[rloo] 只支持 [model] train_res = '560'")
 
@@ -175,6 +196,84 @@ def rollout(model, f1, f2, P, cert, k, chunk=8):
         fl.append(a)
         ce.append(b)
     return torch.cat(fl), torch.cat(ce)
+
+
+# ---------- 细化加噪（#192） ----------
+
+def _disp(dec, s, d_flow, h, w):
+    """细化层输出的位移 → 归一化坐标下的 warp 增量（同 refine）。"""
+    return int(s) * torch.stack((d_flow[:, 0].float() / (dec.refine_init * w),
+                                 d_flow[:, 1].float() / (dec.refine_init * h)), dim=1)
+
+
+@torch.no_grad()
+def rollout_noisy(model, f1, f2, P, cert, k, sig, chunk=8):
+    """一对、len(k) 条链：粗 warp（锚点 k）→ 尺度 16…1 的细化（同 refine），sig 里的级（尺度 → σ，归一化坐标）在输出上
+    加高斯后再送进下一级。返回 ({尺度: (输入 warp, 输入 certainty, 抽到的输出)}，每项 (N,…)；尺度 1 的 (flow, certainty))。
+    sig 为空时尺度 1 的输出与 rollout 相同。"""
+    dec = model.model.decoder
+    H, W = f1[1].shape[-2:]
+    rec = {s: ([], [], []) for s in sig}
+    out = ([], [])
+    for i in range(0, len(k), chunk):
+        kk = k[i:i + chunk]
+        n = len(kk)
+        flow = anchor_flow(P.expand(n, -1, -1, -1), kk)
+        ce = cert.expand(n, -1, -1, -1)
+        for s in SCALES:
+            a, b = f1[int(s)], f2[int(s)]
+            if a.shape[0] != n:
+                a, b = a.expand(n, -1, -1, -1), b.expand(n, -1, -1, -1)
+            d_flow, d_cert = dec.conv_refiner[s](a, b, flow, scale_factor=1, logits=ce)
+            mu = flow + _disp(dec, s, d_flow, H, W)
+            if int(s) in sig:
+                x = mu + sig[int(s)] * torch.randn_like(mu)
+                for lst, v in zip(rec[int(s)], (flow, ce, x)):
+                    lst.append(v)
+                mu = x
+            flow, ce = mu, ce + d_cert
+            if s != "1":
+                size = f1[int(s) // 2].shape[-2:]
+                flow = F.interpolate(flow, size=size, mode=dec.flow_upsample_mode)
+                ce = F.interpolate(ce, size=size, mode=dec.flow_upsample_mode)
+        out[0].append(flow)
+        out[1].append(ce)
+    return {s: tuple(torch.cat(v) for v in r) for s, r in rec.items()}, tuple(torch.cat(v) for v in out)
+
+
+def level_reward(x, A, s, p):
+    """一级的抽签输出 x (N,2,h,w) 与参照仿射 A → (逐像素奖励 (N,h,w), 距离 d (N,h,w) px)。长度参数按级缩放：
+    delta·s/8、tau·s/8。"""
+    r, d = ref_cells(x, A, p["delta"] * s / 8, p["tau"] * s / 8, p["r_out"], p["shape"])
+    return r, d
+
+
+def fine_surrogate(dec, f1, f2, rec, adv, sig, chunk, backward, factor, w=1.0):
+    """第二遍：逐级、每 chunk 条链带梯度重算 μ，loss_s = −w · mean(优势 · log π_s)，立刻 backward(loss 的一部分)。
+    f1、f2：尺度 → 这一对的特征（带梯度，batch 1）；rec、sig 见 rollout_noisy；adv：尺度 → 优势 (N,h,w)。
+    backward(l) 反向的是 l × factor（训练时为 optim.backward 与 optim.factor()）。细化层参数的梯度在这里就累积好；
+    特征上的梯度先存在叶子上，返回一个替身项：随其余损失一起 backward 时，它把这些梯度传回编码器，值为各级损失之和。"""
+    H, W = f1[1].shape[-2:]
+    leaf1 = {s: f1[s].detach().requires_grad_() for s in rec}
+    leaf2 = {s: f2[s].detach().requires_grad_() for s in rec}
+    val = 0.0
+    for s, (fin, cin, x) in rec.items():
+        N = len(x)
+        for i in range(0, N, chunk):
+            n = min(chunk, N - i)
+            d_flow, _ = dec.conv_refiner[str(s)](leaf1[s].expand(n, -1, -1, -1), leaf2[s].expand(n, -1, -1, -1),
+                                                 fin[i:i + n], scale_factor=1, logits=cin[i:i + n])
+            mu = fin[i:i + n] + _disp(dec, s, d_flow, H, W)
+            lp = -(x[i:i + n] - mu).square().sum(1) / (2 * sig[s] ** 2)               # (n,h,w)
+            loss = -w * (adv[s][i:i + n] * lp).mean() * n / N
+            backward(loss)
+            val += float(loss)
+    sur = sum((f1[s].float() * leaf1[s].grad.float()).sum() + (f2[s].float() * leaf2[s].grad.float()).sum()
+              for s in rec if leaf1[s].grad is not None)
+    if not torch.is_tensor(sur):
+        return torch.zeros((), device=f1[1].device) + val
+    sur = sur / factor
+    return sur - sur.detach() + val
 
 
 # ---------- reward ----------
@@ -292,6 +391,12 @@ class Term:
         stats = {k: [] for k in ("rew", "rew_sd", "n_inl", "H", "pmode", "nonmode", "d_anchor", "t_roll", "t_fit")}
         if p["reward"] == "ref":
             stats.update(ref_ok=[], d_ref=[], in_tau=[])
+        lv = p["levels"]
+        sig = {s_: p["k"] * s_ / (HW / 2) for s_ in lv}       # σ（归一化坐标）
+        fine = torch.zeros((), device=cls.device)
+        if lv:
+            stats.update({f"{n}_{s_}": [] for s_ in lv for n in ("rew", "rew_sd", "d")},
+                         t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         for b in range(B):
             with torch.no_grad():
                 q = logp_all[b].exp()                                            # (C,h,w)
@@ -325,6 +430,18 @@ class Term:
                 else:
                     r = torch.rand(p["group"], h, w, device=cls.device)
                 adv = advantage(r, p["baseline"]).expand(p["group"], h, w)
+                if lv and A_ref is not None:     # 细化加噪（#192）：全部链再跑一遍，各加噪级逐像素打分、各自 RLOO
+                    t2 = time.time()
+                    rec, _ = rollout_noisy(model, fb, gb, P, cert[b:b + 1].float(), k, sig, p["chunk"])
+                    adv_f = {}
+                    for s_ in lv:
+                        r_s, d_s = level_reward(rec[s_][2], A_ref, s_, p)
+                        adv_f[s_] = advantage(r_s, p["baseline"])
+                        stats[f"rew_{s_}"].append(float(r_s.mean()))
+                        stats[f"rew_sd_{s_}"].append(float(r_s.std(0).mean()))
+                        stats[f"d_{s_}"].append(float(d_s.mean()))
+                    torch.cuda.synchronize()
+                    stats["t_roll_fine"].append(time.time() - t2)
                 mode = q.argmax(0)
                 G_, res = anchors(C, cls.device)
                 stats["rew"].append(float(r.mean()))
@@ -335,7 +452,18 @@ class Term:
                 stats["nonmode"].append(float((k != mode).float().mean()))
                 stats["d_anchor"].append(float(((G_[k] - G_[mode]).norm(dim=-1) * (HW / 2)).mean()))
             loss = loss - (adv * _logp(logp_all[b], k)).mean() / B
-        return p["weight"] * loss, {k: round(float(np.mean(v)), 5) for k, v in stats.items() if v}, True
+            if lv and A_ref is not None:
+                t3 = time.time()
+                fine = fine + fine_surrogate(model.model.decoder, {s_: x[b:b + 1] for s_, x in f1.items()},
+                                             {s_: x[b:b + 1] for s_, x in f2.items()},
+                                             rec, adv_f, sig, p["chunk"], st.optim.backward, st.optim.factor(),
+                                             p["weight"] / B)
+                torch.cuda.synchronize()
+                stats["t_fine"].append(time.time() - t3)
+        if lv:
+            stats["l_coarse"].append(float(p["weight"] * loss))
+            stats["l_fine"].append(float(fine))
+        return p["weight"] * loss + fine, {k: round(float(np.mean(v)), 5) for k, v in stats.items() if v}, True
 
 
 def _logp(logp, k):

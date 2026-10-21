@@ -66,3 +66,17 @@ for m in METHODS:
         print(f"  steps {n}  sec/step median {sec:.2f}  mem_gb(step 1) {mem}  非有限梯度步 {bad}")
         for a, v in win.items():
             print(f"  step {a:4d}: " + " ".join(f"{k}={v[k]:.3f}" for k in KEYS if np.isfinite(v[k])))
+
+print("== 发散起点：离参照距离（d_ref）的 50 步滑动中位数首次超过 100 px 的步；每步耗时取第 11–300 步的中位数")
+for d in sorted((E / "ckpt").iterdir()):
+    p = d / "log.jsonl"
+    if not p.exists():
+        continue
+    rows = [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+    rows = [r for r in rows if "step" in r]
+    dr = np.array([r.get("d_ref", np.nan) for r in rows])
+    roll = [np.nanmedian(dr[max(0, i - 49):i + 1]) for i in range(len(dr))]
+    onset = next((rows[i]["step"] for i, v in enumerate(roll) if v > 100), None)
+    pre = [r["sec"] for r in rows if 10 < r["step"] <= 300]
+    print(f"  {d.name:22s} 步数 {len(rows):5d}  发散起点 {onset}  每步 {np.median(pre):.2f} s  第 1 步显存 {rows[0].get('mem_gb')} GB"
+          f"  起点前 100 步 in_tau {np.nanmean([r.get('in_tau', np.nan) for r in rows[max(0, (onset or 1) - 101):max(1, (onset or 1) - 1)]]):.2f}")

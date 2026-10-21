@@ -1,0 +1,28 @@
+# 粗级奖励的形式（#191）：完全照 E15 的 loo_t03（RLOO，温度 0.3），只换 [rloo] shape / delta。
+# 策略：粗级 gm_cls 每格按温度 0.3 抽锚点，细级照推理跑、不加噪；每对 16 份；参照仿射为当前模型正常推理一次、RANSAC 3 px。
+# 其余同 E15：训练数据与难版扰动、DINOv2 qkv 加 LoRA r 8、lr 3e-5（LoRA 1e-4）、4000 步（warmup 500 + cosine）、每 1000 步存档；种子 0。
+[model]
+name = "roma"
+lora_r = 8
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[run]
+save_every = 1000
+save_zero = false
+seed = 0
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3

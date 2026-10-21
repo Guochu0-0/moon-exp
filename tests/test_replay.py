@@ -60,6 +60,7 @@ ADDED = {
     "rloo.delta": (8.0, "#183 与 reward = ref 同批新增；只在 reward = ref 时起作用"),
     "rloo.tau": (16.0, "#183 与 reward = ref 同批新增；只在 reward = ref 时起作用"),
     "rloo.r_out": (-0.1, "#183 与 reward = ref 同批新增；只在 reward = ref 时起作用"),
+    "rloo.shape": ("ripe", "#191 新增；ripe = RIPE++ 分级奖励原式，即 E15 的奖励；只在 reward = ref 时起作用"),
 }
 
 

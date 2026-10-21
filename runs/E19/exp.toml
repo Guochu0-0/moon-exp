@@ -1,0 +1,19 @@
+id = "E19"
+title = "粗级奖励换成随距离单调连续的形式（截平、高斯核），在 E15 的 RLOO 温度 0.3 设置下复跑"
+parent = "E15"
+date = "2026-10-22"
+
+[methods.ripe]
+name = "RIPE++ 原式（E15 复跑）"
+
+[methods.clip]
+name = "截平，下限 −0.1"
+
+[methods.gauss4]
+name = "高斯核，δ 4 px"
+
+[methods.gauss8]
+name = "高斯核，δ 8 px"
+
+[methods.gauss16]
+name = "高斯核，δ 16 px"

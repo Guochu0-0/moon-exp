@@ -14,8 +14,10 @@ reward（每份样本单独算，只用训练对的两张影像和这份输出�
 - rand：每格独立 U(0, 1)（随机对照，与 r1 一样逐格给分）。
 - ref（第二批，#183）：不细化各份样本。先用当前模型对这对图正常推理一次（每格取 mode，细化到尺度 1），同样抽 num
   个点、RANSAC 拟合参照仿射 A_ref；每份样本每格的粗匹配位置（anchor_flow 的输出，即抽到的锚点经邻居加权）与 A_ref
-  把格子中心映射到的位置相距 d（原网格 px），照 RIPE++ 的分级奖励逐格给分：d ≤ tau 时 1 − ½(d/delta)²，d > tau 时
-  r_out。不筛图对，参照拟合得差也照用。
+  把格子中心映射到的位置相距 d（原网格 px），按 shape 由 d 逐格给分（distance_reward）。不筛图对，参照拟合得差也照用。
+  shape（#191）：ripe（默认，照 RIPE++ 分级奖励）d ≤ tau 时 1 − ½(d/delta)²，d > tau 时 r_out；
+  clip：max(1 − ½(d/delta)², r_out)，去掉 ripe 在 d = tau 处的跳变，不用 tau；
+  gauss：exp(−½(d/delta)²)，处处光滑单调，不用 tau、r_out。长度参数只有 delta、tau，按级复用时同比缩放即可。
 RANSAC 失败的样本：r1 记 0，ncc 记 −1；ref 的参照拟合失败时整对记 0（这一步没有梯度）。
 
 权重（baseline）：
@@ -49,10 +51,12 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "baseline": "loo",  # loo（减同一对其余份的均值）| none（RIPE++ 式，reward 直接当权重）
           "delta": 8.0,     # ref：分级奖励的尺度（原网格 px）
           "tau": 16.0,      # ref：内点阈值（原网格 px）
-          "r_out": -0.1,    # ref：d > tau 的格子得分
+          "r_out": -0.1,    # ref：d > tau 的格子得分（ripe）/ 下限（clip）
+          "shape": "ripe",  # ref：奖励随距离的形式 ripe | clip | gauss（#191）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
+SHAPES = ("ripe", "clip", "gauss")
 BASELINES = ("loo", "none")
 SCALES = ("16", "8", "4", "2", "1")
 
@@ -67,6 +71,8 @@ def check(cfg):
         raise ConfigError(f"[rloo] reward 可选 {REWARDS}，得到 {p['reward']!r}")
     if p["baseline"] not in BASELINES:
         raise ConfigError(f"[rloo] baseline 可选 {BASELINES}，得到 {p['baseline']!r}")
+    if p["shape"] not in SHAPES:
+        raise ConfigError(f"[rloo] shape 可选 {SHAPES}，得到 {p['shape']!r}")
     if p["group"] < (2 if p["baseline"] == "loo" else 1):
         raise ConfigError("[rloo] group 至少为 2（留一基线；baseline = 'none' 时至少为 1）")
     if p["delta"] <= 0 or p["tau"] <= 0:
@@ -232,16 +238,29 @@ def ncc(opt, sar, valid, A, min_px=1000):
     return float((a * b).sum() / ((a * a).sum() * (b * b).sum()).sqrt().clamp(min=1e-12))
 
 
-def ref_cells(fc, A, delta, tau, r_out):
-    """fc：G 份粗 warp (G,2,h,w)；A：参照仿射（原网格）或 None → (逐格分级奖励 (G,h,w), 距离 d (G,h,w) 或 None)。
-    d 为 fc 与 A 把格子中心映射到的位置之间的距离（原网格 px）；d ≤ tau 得 1 − ½(d/delta)²，否则 r_out。"""
+def distance_reward(d, shape="ripe", delta=8.0, tau=16.0, r_out=-0.1):
+    """离参照的距离 d（张量，px）→ 同形状的奖励。ripe：d ≤ tau 时 1 − ½(d/delta)²，否则 r_out（RIPE++ 分级奖励）；
+    clip：max(1 − ½(d/delta)², r_out)；gauss：exp(−½(d/delta)²)。clip、gauss 不用 tau，gauss 不用 r_out。"""
+    q = 0.5 * (d / delta) ** 2
+    if shape == "ripe":
+        return torch.where(d <= tau, 1 - q, torch.full_like(d, r_out))
+    if shape == "clip":
+        return (1 - q).clamp(min=r_out)
+    if shape == "gauss":
+        return torch.exp(-q)
+    raise ValueError(f"shape 可选 {SHAPES}，得到 {shape!r}")
+
+
+def ref_cells(fc, A, delta, tau, r_out, shape="ripe"):
+    """fc：G 份粗 warp (G,2,h,w)；A：参照仿射（原网格）或 None → (逐格奖励 (G,h,w), 距离 d (G,h,w) 或 None)。
+    d 为 fc 与 A 把格子中心映射到的位置之间的距离（原网格 px），按 shape 换成奖励（distance_reward）。"""
     G, _, h, w = fc.shape
     if A is None:
         return torch.zeros(G, h, w, device=fc.device), None
     An = torch.from_numpy(affine_norm(A)).to(fc.device).float()
     pred = torch.einsum("ij,hwj->hwi", An[:, :2], grid(h, w, fc.device)) + An[:, 2]
     d = (fc.permute(0, 2, 3, 1).float() - pred).norm(dim=-1) * (HW / 2)
-    return torch.where(d <= tau, 1 - 0.5 * (d / delta) ** 2, torch.full_like(d, r_out)), d
+    return distance_reward(d, shape, delta, tau, r_out), d
 
 
 def advantage(r, baseline):
@@ -293,7 +312,7 @@ class Term:
                 if p["reward"] == "ref":
                     A_ref = fits[0][0]
                     r, d = ref_cells(anchor_flow(P.expand(p["group"], -1, -1, -1), k), A_ref,
-                                     p["delta"], p["tau"], p["r_out"])
+                                     p["delta"], p["tau"], p["r_out"], p["shape"])
                     stats["ref_ok"].append(float(A_ref is not None))
                     if d is not None:
                         stats["d_ref"].append(float(d.mean()))

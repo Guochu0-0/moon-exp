@@ -1,0 +1,6 @@
+# 高斯核：exp(−½(d/16)²)，δ = 16 px。处处光滑、单调，远处趋于 0。
+base = "_rl"
+
+[rloo]
+shape = "gauss"
+delta = 16.0

@@ -11,7 +11,7 @@ RLOO（减同一位置其余 N − 1 条链的均值）。log π：粗级同 E15
 μ = 这一级的输入 warp + 细化层输出的位移（带梯度），a 为抽到的输出。loss = 粗级项 + 四级之和，各项为 −mean(优势 · log π)。
 
 实现：DINOv2 与 VGG 的特征每对只算一次（带梯度）。第一遍不求梯度跑完 N 条链，记下各级输入、抽到的输出与奖励；
-第二遍按 chunk 条链一组，带梯度重算各级 μ 并反向，梯度先累积到特征上，最后一次反向穿过编码器。
+第二遍逐级、每 chunk 条链一组，带梯度重算这一级的 μ 并立刻反向，梯度先累积到特征上，最后一次反向穿过编码器。
 每步耗时含取数据之后的全部计算（torch.cuda.synchronize 计时）；峰值显存为 torch.cuda.max_memory_allocated，
 每个 N 开始前清零。产物：runs/E18/extra/data/cost.json、cost_steps.csv。
 """
@@ -132,19 +132,15 @@ def train_step(model, optim, batch, N, p, sig, chunk, dev):
     leaf1 = {s: f1[int(s)].detach().requires_grad_() for s in LEVELS}
     leaf2 = {s: f2[int(s)].detach().requires_grad_() for s in LEVELS}
     H, W = f1[1].shape[-2:]
-    lp_mean = {s: 0.0 for s in LEVELS}
-    for i in range(0, N, chunk):
-        n = min(chunk, N - i)
-        loss = torch.zeros((), device=dev)
-        for s in LEVELS:
+    for s in LEVELS:                     # 给定存下的输入，各级互不相关：每级每组单独前向、立刻反向
+        for i in range(0, N, chunk):
+            n = min(chunk, N - i)
             fin, cin, x = (v[i:i + n] for v in rec[s])
             d_flow, _ = dec.conv_refiner[s](leaf1[s].expand(n, -1, -1, -1), leaf2[s].expand(n, -1, -1, -1), fin,
                                             scale_factor=1, logits=cin)
             mu = fin + disp(dec, s, d_flow, H, W)
             lp = -(x - mu).square().sum(1) / (2 * sig[s] ** 2)                      # (n,h,w)
-            loss = loss - (adv[s][i:i + n] * lp).mean() * n / N
-            lp_mean[s] += float(lp.detach().mean()) * n / N
-        sc.scale(loss).backward()
+            sc.scale(-(adv[s][i:i + n] * lp).mean() * n / N).backward()
     loss_c = -(adv_c * rloo._logp(logp_all[0], k)).mean()
     ts = [sc.scale(loss_c)] + [f1[int(s)] for s in LEVELS] + [f2[int(s)] for s in LEVELS]
     gs = [None] + [leaf1[s].grad for s in LEVELS] + [leaf2[s].grad for s in LEVELS]

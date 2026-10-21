@@ -1,0 +1,35 @@
+# 粗级与细化一起用 RL 训练（#192）。粗级照 E19 gauss8（E15 的 RLOO、温度 0.3，奖励为高斯核 δ 8 px）；
+# 细化：levels 里的级在输出上加 σ = k × s px 的二维高斯，每级逐像素按同一高斯核打分（δ = s px），各级优势各自留一（RLOO）。
+# 每对 N 条完整的抽签链（group）；VGG 放开训练；其余同 E15 / E19：训练数据与难版扰动、DINOv2 qkv 加 LoRA r 8、
+# lr 3e-5（LoRA 1e-4）、4000 步（warmup 500 + cosine）、每 1000 步存档；种子 0。不加 KL，不训可信度。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[run]
+save_every = 1000
+save_zero = false
+seed = 0
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+group = 8
+levels = [8, 4]
+k = 0.5

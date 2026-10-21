@@ -579,3 +579,149 @@ def test_config_rloo_ref(tmp_path):
     assert d["rloo"]["baseline"] == "loo" and d["rloo"]["reward"] == "r1"     # 默认同首批
     with pytest.raises(C.ConfigError):
         C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[rloo]\nbaseline = "mean"\n'))
+
+
+# ---------- 细化加噪（#192） ----------
+
+def _fake_roma(c=3, seed=0):
+    """只有细化层的假 RoMa：每级一个小卷积，输入同 romatch ConvRefiner（两侧特征、warp、certainty）。
+    返回 (model, dec, θ, feats, P, cert)：feats() 给出两侧各尺度特征，为 θ · 固定随机图（θ 可训，当作编码器）。"""
+    import types
+
+    import torch
+    torch.manual_seed(seed)
+
+    class Ref(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.conv = torch.nn.Conv2d(2 * c + 3, 3, 3, padding=1)
+
+        def forward(self, a, b, flow, scale_factor=1, logits=None):
+            o = self.conv(torch.cat([a, b, flow, logits], 1))
+            return o[:, :2], o[:, 2:]
+
+    dec = torch.nn.Module()
+    dec.conv_refiner = torch.nn.ModuleDict({s: Ref() for s in ("16", "8", "4", "2", "1")})
+    dec.refine_init, dec.flow_upsample_mode = 4.0, "bilinear"
+    theta = torch.nn.Parameter(torch.ones(c))
+    base1 = {s: torch.randn(1, c, 64 // s, 64 // s) for s in (16, 8, 4, 2, 1)}
+    base2 = {s: torch.randn(1, c, 64 // s, 64 // s) for s in (16, 8, 4, 2, 1)}
+    feats = lambda: ({s: theta.view(1, c, 1, 1) * x for s, x in base1.items()},
+                     {s: theta.view(1, c, 1, 1) * x for s, x in base2.items()})
+    model = types.SimpleNamespace(model=types.SimpleNamespace(decoder=dec))
+    P = torch.randn(1, 16, 4, 4).softmax(1)                  # 4×4 个锚点
+    cert = torch.randn(1, 1, 4, 4)
+    return model, dec, theta, feats, P, cert
+
+
+def test_rloo_rollout_noisy_matches_refine_without_noise():
+    """σ = 0 或不加噪时，抽签链的尺度 1 输出与正常细化（rollout）相同；加噪级记下的输入、输出形状对。"""
+    import torch
+    from finetune.parts.rloo import rollout, rollout_noisy
+
+    model, dec, theta, feats, P, cert = _fake_roma()
+    f1, f2 = feats()
+    k = torch.randint(0, 16, (5, 4, 4))
+    ref, _ = rollout(model, f1, f2, P, cert, k, chunk=2)
+    rec0, (fl0, _) = rollout_noisy(model, f1, f2, P, cert, k, {}, chunk=2)
+    rec, (fl, _) = rollout_noisy(model, f1, f2, P, cert, k, {8: 0.0, 2: 0.0}, chunk=3)
+    assert rec0 == {} and torch.allclose(fl0, ref, atol=1e-6) and torch.allclose(fl, ref, atol=1e-6)
+    assert rec[8][0].shape == (5, 2, 8, 8) and rec[2][2].shape == (5, 2, 32, 32) and rec[2][1].shape == (5, 1, 32, 32)
+    recn, (fln, _) = rollout_noisy(model, f1, f2, P, cert, k, {8: 0.05}, chunk=3)
+    assert not torch.allclose(fln, ref)                          # 加噪的级把噪声带进后面各级
+
+
+def test_rloo_fine_surrogate_gradient_equals_direct():
+    """分段反向（每 chunk 条链立刻反向 + 特征上的替身项）与一次性求整体损失的梯度相同，且不受 GradScaler 倍数影响；
+    未加噪的细化层收不到梯度；替身项的值等于细化各级损失之和。"""
+    import torch
+    from finetune.parts.rloo import _disp, fine_surrogate, rollout_noisy
+
+    model, dec, theta, feats, P, cert = _fake_roma()
+    params = [theta] + list(dec.parameters())
+    sig = {8: 0.05, 2: 0.02}
+    with torch.no_grad():
+        f1, f2 = feats()
+        rec, _ = rollout_noisy(model, f1, f2, P, cert, torch.randint(0, 16, (4, 4, 4)), sig, chunk=4)
+    adv = {s: torch.randn(4, *rec[s][2].shape[-2:]) for s in sig}
+    w = 0.7
+
+    f1, f2 = feats()                                              # 直接算：整体损失一次反向
+    L = 0
+    for s, (fin, cin, x) in rec.items():
+        d_flow, _ = dec.conv_refiner[str(s)](f1[s].expand(4, -1, -1, -1), f2[s].expand(4, -1, -1, -1), fin,
+                                             scale_factor=1, logits=cin)
+        mu = fin + _disp(dec, s, d_flow, 64, 64)
+        L = L - w * (adv[s] * (-(x - mu).square().sum(1) / (2 * sig[s] ** 2))).mean()
+    L.backward()
+    want = [None if p.grad is None else p.grad.clone() for p in params]
+    for p in params:
+        p.grad = None
+
+    fac = 8.0                                                     # 模拟 GradScaler：backward 反向的是 loss × fac
+    f1, f2 = feats()
+    sur = fine_surrogate(dec, f1, f2, rec, adv, sig, 3, lambda l: (l * fac).backward(), fac, w)
+    (sur * fac).backward()
+    assert float(sur) == pytest.approx(float(L), rel=1e-5)
+    for p, g in zip(params, want):
+        assert (p.grad is None) == (g is None)
+        assert g is None or torch.allclose(p.grad / fac, g, rtol=1e-4, atol=1e-6)
+    for s in ("16", "4", "1"):
+        assert all(p.grad is None for p in dec.conv_refiner[s].parameters())
+    assert theta.grad.abs().sum() > 0
+
+
+def test_rloo_level_reward_scales_with_level():
+    """细化级的奖励长度参数按级缩放：尺度 s 上 delta·s/8、tau·s/8（高斯核 δ 8 → 尺度 4 上 δ 4）。"""
+    import torch
+    from finetune.parts.pseudo import grid
+    from finetune.parts.rloo import distance_reward, level_reward
+
+    A = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    x = grid(8, 8, "cpu").permute(2, 0, 1)[None].repeat(3, 1, 1, 1)
+    x[:, 0] += (torch.tensor([0.0, 4.0, 8.0]) / 256)[:, None, None]
+    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss"}
+    r, d = level_reward(x, A, 4, p)
+    assert torch.allclose(d[:, 0, 0], torch.tensor([0.0, 4.0, 8.0]), atol=1e-3)
+    assert torch.allclose(r, distance_reward(d, "gauss", 4.0))
+    r2, _ = level_reward(x, A, 4, {**p, "shape": "ripe"})
+    assert torch.allclose(r2, distance_reward(d, "ripe", 4.0, 8.0, -0.1))
+
+
+def test_config_rloo_levels(tmp_path):
+    from finetune import config as C
+
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\n'))
+    assert d["rloo"]["levels"] == [] and d["rloo"]["k"] == 0.5                # 默认细化不加噪
+    c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nlevels = [8, 4]\nk = 1\n'))
+    assert c["rloo"]["levels"] == [8, 4] and c["rloo"]["k"] == 1.0
+    for bad in ('reward = "ref"\nlevels = [3]', 'reward = "ref"\nlevels = [8, 8]', 'levels = [8]',
+                'reward = "ref"\nlevels = [8]\nk = 0.0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n[rloo]\n{bad}\n'))
+
+
+def test_optim_factor():
+    import torch
+    from finetune import config as C
+    from finetune.optim import Optim
+
+    a = torch.nn.Parameter(torch.zeros(1))
+    assert Optim([a], {**C.OPTIM, "accum": 4}, amp=False).factor() == 0.25
+
+
+def test_rloo_fit_many_degenerate_output_counts_as_failed_fit():
+    """模型发散后 certainty 全为 −inf / NaN 或 warp 含非有限值时，这份样本记为拟合失败 (None, 0)，不在抽点处报错
+    （E20 l84_k025 在 460 步因此中止，#192）；正常样本不受影响。"""
+    import torch
+    from finetune.parts.pseudo import grid
+    from finetune.parts.rloo import fit_many
+
+    flow = grid(64, 64, "cpu").permute(2, 0, 1)[None].repeat(3, 1, 1, 1).clone()
+    flow[:, 0] += 8 / 256                                         # 右移 8 px
+    cert = torch.full((3, 1, 64, 64), 5.0)
+    cert[1] = -float("inf")
+    flow[2, 0, 3, 3] = float("nan")
+    out = fit_many(flow, cert, 500, 3.0)
+    assert out[1] == (None, 0) and out[2] == (None, 0)
+    assert out[0][0] is not None and abs(out[0][0][0, 2] - 8) < 0.5

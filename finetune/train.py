@@ -38,11 +38,12 @@ PRINT_KEYS = ("coarse", "fine", "pairs_used", "epe1_px", "cexp", "lcert", "n_mat
 
 
 class Step:
-    """一步的上下文：batch、共用的前向（第一次用到时才算）、随机数发生器。"""
+    """一步的上下文：batch、共用的前向（第一次用到时才算）、随机数发生器；optim 供要在成分内部分段反向的成分用
+    （optim.backward、optim.factor()，#192 细化加噪）。"""
 
-    def __init__(self, model, model_name, batch, device, neg, rng):
-        self.model, self.model_name, self.batch, self.device, self.neg, self.rng = \
-            model, model_name, batch, device, neg, rng
+    def __init__(self, model, model_name, batch, device, neg, rng, optim=None):
+        self.model, self.model_name, self.batch, self.device, self.neg, self.rng, self.optim = \
+            model, model_name, batch, device, neg, rng, optim
         self.B = len(batch["pair"])
         self._out = None
 
@@ -134,7 +135,7 @@ def main(argv=None):
         while step < total:
             for batch in dl:
                 t0 = time.time()
-                st = Step(model, mname, batch, args.device, neg, rng)
+                st = Step(model, mname, batch, args.device, neg, rng, optim)
                 loss, stats, active = torch.zeros((), device=args.device), {}, False
                 for n, term in terms:
                     l, s, a = term(st)

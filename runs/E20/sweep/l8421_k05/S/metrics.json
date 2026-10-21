@@ -1,0 +1,195 @@
+{
+ "protocol": {
+  "auc_thresholds": [3.0, 5.0, 10.0, 20.0],
+  "sr_thresholds": [1.0, 2.0, 3.0, 5.0, 10.0, 20.0],
+  "table_auc": [3.0, 5.0, 10.0],
+  "table_sr": [3.0, 5.0, 10.0],
+  "main": "auc@5",
+  "provisional": false
+ },
+ "methods": {
+  "step1000": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 0.004601226993865031,
+     "median": 198.08691418371384,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [221.529, 262.5616, 167.724, 170.0974, 101.9161, 176.3696, 82.5755, 191.5035, 192.0899, 570.1585, 170.1085, 236.9391, 144.8946, 156.9408, 120.2451, 209.1898, 173.6268, 148.167, 479.9259, 175.3498, 432.5697, 127.9451, 128.0924, 215.6874, 260.892, 189.6046, 428.9113, null, 178.8701, 207.7574, 216.7461, 177.4841, 523.0861, 186.0687, 174.8007, 168.0198, 183.1009, 162.9521, 116.6994, 420.7193, 249.5773, 188.3626, 163.1809, 247.7275, 200.8152, 172.561, 201.395, 247.7858, 162.2569, 344.4565, 176.08, 313.5829, 295.5837, 108.8076, 149.6189, 371.0002, 185.8965, 186.7161, 191.0801, 458.4456, 312.401, 144.5027, 190.2258, 153.7166, 180.7698, 230.8949, 188.4643, 393.4655, 436.6031, 121.6278, 195.0525, 179.7383, 550.7148, 186.867, 206.9783, 177.8715, 220.66, 184.2731, 160.4647, 148.2037, null, 171.7789, 290.024, 145.2849, 134.8728, 188.1694, 170.5745, null, 166.5278, 115.5892, 171.7552, 150.2526, 386.9151, 473.6677, 179.1629, 208.2029, 415.6465, 180.7222, 201.9755, 172.6105, 227.4441, 147.8749, 323.0261, 194.7417, 212.6868, 235.8234, 139.192, 156.1337, 184.1417, 191.8345, 183.4837, 208.2813, 237.9331, 223.2494, 178.1867, 366.2972, 190.1396, 191.6259, 199.9213, 367.4513, 120.5106, 154.2338, 142.1658, 128.5815, 377.5211, 191.2505, 206.7296, 166.6241, 599.4309, 491.1875, 221.3751, 413.9691, 188.9228, 163.8316, 176.1764, 539.3752, 708.9049, 446.548, 409.3571, 251.4984, 473.0806, 350.6369, 353.1875, 142.4254, 348.6108, 147.0969, 234.9285, 399.3545, 174.8801, 158.9235, 143.8106, 152.4916, 211.2904, 178.4002, 143.7009, 182.3859, 224.3797, 564.2499, 133.0381, 164.0667, 215.0084, 140.5402, 204.6997, 236.057, 144.6997, 202.8093, 180.4571, 149.9812, 141.8888, 545.95, 190.427, 347.5178, 322.2655, 162.2281, 371.1149, 171.1668, 403.8439, 239.7725, 176.7827, 190.7761, 262.0801, 186.6925, 584.0435, 189.384, 216.7918, 228.1122, 254.8564, 160.7526, 196.2798, 290.8647, 167.7323, 235.004, 242.2905, 179.6505, 121.2029, 148.394, 78.9922, 385.3137, 251.8567, 279.9111, 499.0218, 381.3753, 248.8493, 403.8414, 159.9896, 162.4328, 363.9927, 369.3472, 192.762, 486.7588, 171.6041, 216.6675, 434.733, 195.2644, 176.0838, 390.6515, 514.8102, 181.4767, 173.8837, 90.6511, 311.2489, 307.2363, 257.7445, 136.13, 148.9656, 189.2313, 170.6592, 126.1307, 416.2677, 138.6525, 146.062, 462.5663, 152.1428, 563.8602, 181.3383, 241.5604, 175.8261, 456.1418, 175.5482, 353.3466, 155.6234, 174.3723, 173.7063, 250.1832, 153.4395, 127.7963, 367.3813, 170.1396, 285.0604, 347.1459, 186.9401, 159.0416, 213.6087, 179.0819, 450.4812, 147.8642, 448.4921, 158.4523, 493.762, 185.7295, 139.0491, 202.4073, 162.8182, 183.1915, 182.729, 168.533, 302.1396, 431.4401, 165.7581, 188.1912, 294.959, 210.2367, 195.2078, 162.7172, 149.7516, 518.8086, 234.4074, 434.6595, 451.9965, 169.6561, 127.7626, 165.9707, 442.9338, 142.7794, 204.1797, 256.1685, 181.9054, 356.7071, 575.3286, 139.2101, 97.6933, 99.5529, 228.4848, 131.9146, 130.3307, 495.3798, 144.7854, 459.9711, 239.4129, 351.2335, 533.5959, 137.2552, 518.6623, 482.1198, 408.4078, 137.7698, 183.352, 515.5102, 539.3583, 166.358, 155.7246, 399.9442, 195.7182, 452.9519, 223.2876, 201.9985, 142.0579, 462.2445, 198.3868, 201.9456, 154.7111, 111.5637, 567.5174, 240.6108, 189.2875, 183.5192, 194.3339, 152.5509, 379.7273, 197.6015, 182.8616, 165.183, 184.1987, 445.2189, 481.293, 193.8299, 390.6592, 406.1657, 185.8928, 261.1706, 300.0238, 422.5596, 381.2563, 370.1047, 444.5617, 193.5372, 174.8496, 203.5214, 179.5418, 142.4359, 483.3016, 223.7087, 165.1225, 432.9906, 215.5586, 164.2183, 174.2743, 217.0322, 372.118, 174.3913, 378.9438, 160.1936, 168.2045, 444.773, 187.68, 137.773, 381.4502, 130.6426, 467.905, 341.4545, 408.6964, 159.3545, 132.738, 185.918, 428.2162, 176.4508, 172.8071, 150.9672, 197.787, 379.4619, 107.9776, 243.0792, 180.9627, 157.9815, 426.845, 204.0112, 157.0006, 119.6804, 174.4427, 172.4179, 397.6016, 141.3236, 140.3641, 367.6243, 178.5041, 137.5223, 313.4444, 390.3308, 139.4262, 136.3168, 306.5627, 165.6559, 166.8595, 241.4332, 207.8141, 284.8308, 205.7021, 246.1904, 334.2235, 139.4559, 370.8627, 265.7406, 88.6799, 246.1899, 322.3971, 124.0348, 388.9505, 223.0078, 271.2522, 214.8689, 178.9776, 218.9862, 236.7903, 292.3137, 151.4334, 232.8019, 227.024, 200.32, 202.226, 463.1325, 173.3199, 167.8194, 516.2189, 172.8196, 201.5645, 189.2162, 253.8105, 266.1144, 250.1635, 154.817, 269.4499, 229.1226, 166.6564, 143.2728, 196.2472, 142.8781, 151.3629, 493.5578, 337.0225, 254.3021, 472.3283, 168.4582, 152.1751, 323.8571, 139.8554, 177.7552, 131.8657, 180.6737, 529.644, 177.6429, 419.2928, 278.4712, 331.1655, 173.7832, 117.4557, 172.6045, 159.2728, 304.2272, 270.298, 263.2334, 296.2013, 184.7551, 211.3831, 125.642, 274.5031, 455.0948, 185.173, 308.5527, 299.7826, 139.1475, 350.9467, 140.6223, 172.9052, 218.5089, 169.4511, 224.2864, 173.3994, 271.8244, 129.3825, 301.1884, 336.4923, 222.7369, 277.0805, 314.036, 293.2274, 192.7618, 203.0408, 209.7401, 193.5286, 292.7151, 208.4723, 182.1793, 229.4, 154.382, 584.2692, 196.2111, 347.4598, 242.6564, 178.5337, 247.3339, 345.2182, 253.6151, 362.5191, 147.9373, 258.3904, 261.4033, 229.8385, 196.0511, 216.8887, 127.8844, 213.0265, 214.7371, 154.5451, 233.1369, 133.4737, 222.6793, 184.092, 279.7132, 195.6362, 203.5759, 192.3266, 144.4443, 772.2337, 189.1198, 509.6386, 159.0598, 149.7896, 308.6374, 213.5859, 381.5515, 453.1855, 145.2268, 175.186, 505.0817, 180.9002, 232.888, 247.9896, 203.303, 141.4645, 204.9129, 371.6303, 170.8452, 168.4593, 167.9842, 138.8897, 177.8418, 157.7697, 222.4365, 547.6724, 194.0787, 231.4559, 394.9212, 397.5203, 139.1945, 149.6014, 153.6634, 198.6606, 503.2782, 166.5532, 183.9373, 181.3468, 188.1469, 570.732, 367.4728, 227.4746, 207.9644, 178.6723, 173.8442, 256.6009, 195.1996, 191.0952, 470.4236, 140.5008, 213.1909, 236.8713, 142.7203, 210.8586, 332.1758, 181.0322, 329.5335, 226.504, 453.0344, 147.9964, 144.5169, 494.6895, 224.7197, 101.063, 207.7304, 498.677, 202.5364, 194.842, 251.0925, 438.8209, 417.0397, 176.1688, 208.8108, 167.7587, 187.3533, 542.4352, 223.1643, 232.3597, 184.4283, 151.1398, 105.4871, 156.4577, 184.7902, 155.878, 195.6204, 223.4322, 423.5901, 392.71, 454.2932, 148.6627, 171.3737, 161.8848, 125.9508, 134.2442, 136.6317, 165.6435, 152.8896, 190.4343, 188.2981, 212.6271, 231.0125, 337.506, 181.2971, 182.339, 545.4641, 146.1825, 499.5917, 496.3093, 495.8814, 182.6399, 342.3834, 174.4602, 152.2864, 146.3486, 463.9188, 156.0653, 443.7961, 208.2337, 590.4521]
+   },
+   "test": {
+    "summary": {
+     "n": 953,
+     "fail_rate": 0.0031479538300104933,
+     "median": 197.8615784133242,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 1130,
+     "n_labelled": 953,
+     "n_pred": 953,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [369.3577, 222.6526, 368.733, 420.9277, 370.6683, 177.1636, 259.9016, 100.496, 425.3201, 204.5644, 143.4554, 188.1299, 431.299, 182.4578, 138.2435, 317.9209, 259.5219, 154.1958, 122.5258, 229.1597, 187.0088, 200.5105, 230.2807, 366.3454, 196.0672, 189.3919, 112.6664, 181.026, 469.286, 391.7837, 169.4249, 109.0667, 157.2246, 416.2009, 182.8345, 169.3027, 371.6298, 175.4604, 389.3554, 359.609, 118.0306, 160.1489, 200.8893, 121.7563, 190.6205, 138.7904, 121.2823, 108.7204, 152.4545, 362.228, 276.4265, 149.5185, 125.8217, 161.7816, 123.4207, 200.0722, 254.6484, 158.8658, 157.0493, 99.8033, 212.8638, 172.8563, 187.5347, 469.3151, 441.4499, 227.0939, 149.6882, 193.8949, 209.5657, 188.0295, 218.6842, 88.0884, 188.3688, 216.9356, 154.0946, 497.6543, 627.4124, 180.115, 257.9147, 415.6866, 388.8709, 498.1305, 411.2233, 207.8703, 204.6001, 511.0203, 154.6295, 672.2609, 610.5853, 175.7222, 178.8263, 177.2351, 789.3505, 129.2742, 119.4412, 229.9503, 372.5146, 655.9487, 210.2287, 141.7533, 255.0381, 208.3572, 144.44, 195.3921, 193.7863, 204.6941, 460.0842, 127.6642, 143.5478, 200.8989, 218.3922, 403.1789, 139.4659, 155.6512, 164.4081, 150.9818, 193.9966, 154.3061, 509.2247, 342.8451, 146.0891, 146.3244, 179.8977, 253.5841, 365.0506, 229.8458, 128.1587, 248.2654, 113.0085, 441.1216, 173.645, 274.9216, 462.9646, 399.8892, 243.7379, 179.7373, 175.845, 494.4962, 174.564, 165.7275, 429.175, 192.2134, 187.7511, 214.9438, 545.7744, 184.6298, 259.5017, 637.2267, 89.1185, 290.0332, 191.4761, 201.1623, 221.4056, 314.107, 213.1832, 183.8203, 154.5023, 212.993, 532.5459, 343.9335, 169.064, 184.1855, 218.9069, 153.2256, 253.4869, 372.9997, 122.779, 274.7948, 187.7765, 213.3531, 278.4401, 186.0519, 162.3955, 146.5662, 124.8063, 548.8875, 74.6887, 200.479, 104.6507, 170.0867, 369.5933, 512.7141, 386.3729, 132.1705, 379.7889, 305.9874, 184.2784, 125.6958, 185.1044, 188.345, 206.2651, 90.3439, 506.1506, 383.5447, 148.4739, 189.2284, 210.032, 162.9172, 153.6324, 124.1622, 248.0791, 228.1984, 175.0133, 167.6556, 254.4299, 210.3826, 162.6229, 79.6726, 249.2367, 220.6802, 180.3474, 433.5442, 147.7861, 190.5706, 169.6347, 197.0869, 259.7146, 267.7074, 231.9789, 421.19, 235.9027, 180.8884, 179.1446, 185.3912, 374.0149, 177.2128, 393.8574, 193.9966, 183.1876, 372.7219, 139.1138, 443.5678, 194.5281, 178.1424, 458.5982, 220.1571, 306.694, 145.1469, 243.5172, 218.4674, 192.4356, 428.1485, 219.2648, 269.9297, 285.7461, 117.9952, 335.4892, 148.3637, 388.4226, 214.712, 194.8468, 239.0771, 206.9965, 251.0675, 212.3268, 368.2866, 162.5614, 145.2443, 171.7228, 109.5098, 150.6209, 274.5693, 390.2898, 150.7032, 165.8194, 139.5841, 133.5806, 473.3398, 189.5833, 284.3432, 113.9954, 196.4171, 293.8922, 639.9439, 244.9156, 97.7085, 260.8205, 476.2663, 164.4891, 234.964, 218.7444, 591.0763, 158.0256, 206.6268, 183.6896, 182.1473, 158.2603, 597.714, 151.7428, 420.5657, 148.3363, 233.1772, 167.6874, 182.8458, 326.0281, 131.8826, 182.1521, 328.3105, 156.5997, 155.4844, 381.1768, 428.0273, 187.3885, 129.9299, 436.3548, 114.7723, 119.7788, 245.4136, 118.8664, 159.3433, 262.1594, 151.2547, 192.9552, 208.2536, 482.4675, 280.8889, 391.3276, 161.2347, 160.05, 122.7511, 275.4689, 150.0039, 207.9986, 202.3793, 204.8154, 198.7676, 176.8251, 156.2602, 200.4191, 215.3061, 220.7042, 172.6471, 184.4107, 231.8306, 345.441, 171.7747, 128.3054, 265.1674, 183.8616, 179.6613, 514.682, 215.7108, 323.5387, 262.4097, 246.4459, 161.4683, 497.3801, 156.7895, 96.8853, 249.2, 217.0209, 203.9501, 243.7835, 136.3896, 178.0199, 324.8928, 225.5111, 121.9993, 149.0367, 739.1077, 428.3331, 181.607, 145.9373, 162.9268, 363.6707, 448.1899, 380.8622, 377.4369, null, 163.9809, 170.2556, 210.3056, 507.5615, 166.7223, 154.1607, 523.5467, 220.5461, 142.2365, 118.176, 268.6127, 432.1944, 142.864, 144.1305, 185.483, 450.8745, 501.2703, 169.117, 184.1813, 136.6231, 159.86, 501.288, 148.4279, 358.0513, 190.3475, 127.0388, 153.1524, 418.2176, 199.4903, 92.8861, 183.5054, 615.1633, 520.9802, 225.8259, 111.7375, 142.5727, 524.7752, 124.0766, 181.432, 484.377, 153.9914, 163.8973, 174.7478, 212.7495, 490.4216, 105.442, 469.9932, 520.5019, 401.3553, 158.0471, 345.6399, 411.6627, 214.0527, 368.7787, 213.3582, 211.2306, 83.4215, 130.7503, 207.9684, 500.3078, 120.737, 155.2306, 197.2775, 153.3314, 160.231, 166.9322, 217.1181, 171.3725, 131.392, 125.4337, 239.2257, 279.2401, 399.263, 111.9093, 182.7564, 196.0086, 454.6444, 263.3122, 657.1917, 165.0339, 190.2965, 383.6156, 230.4126, 367.4633, 144.4966, 152.4404, 170.3741, 293.0658, 158.4533, 233.9522, 168.1037, 188.411, 177.8585, 206.5533, 191.3064, 322.9939, 188.8817, 373.7393, 256.482, 225.3535, 124.4263, 163.668, 327.5643, 167.2732, 480.5139, 165.6989, 271.0065, 191.1963, 235.6106, 181.1962, 130.0927, 173.2024, 202.9747, 315.9353, 171.5068, 316.5138, 150.3424, 270.6335, 530.7317, 149.8092, 166.8796, 160.2567, 223.4106, 203.7562, 546.2722, 109.8482, 400.6908, 429.2408, 259.261, 235.3466, 233.1159, 435.0473, 161.9646, 227.258, 550.3788, 74.2554, 244.5593, 446.2453, 240.8231, 162.6152, 421.7037, 232.3199, 178.7412, 467.9304, 195.6905, 233.2583, 155.8485, 193.3707, 153.8971, 193.1785, 142.5157, 230.0689, 194.4384, 459.09, 174.9106, 386.0139, 136.9775, 380.2922, 290.6435, 295.6605, 444.9114, 288.3348, 409.0337, 244.3375, 392.3734, 177.6627, 205.0957, 213.6001, 166.1541, 225.5387, 242.951, 197.8616, 205.3451, 188.6862, 261.2392, 204.1246, 170.9808, 131.3445, 216.5728, 160.0285, 154.3933, 286.5614, 176.6628, 144.0089, 172.7492, 271.867, 164.0598, 122.2128, 174.7122, 215.4672, 198.2419, 266.8664, 230.4646, 237.5184, 315.6584, 246.6813, 171.9128, 170.6538, 271.2339, 180.5788, 186.7389, 168.0424, 143.7932, 192.5407, 137.1303, 164.0196, 350.6958, 198.859, 182.2073, 224.5034, 127.9903, 253.069, 149.3733, 128.8679, 193.168, 184.2696, 157.8682, 179.0889, 188.5155, 169.6901, 275.806, 158.248, 440.1075, 147.3178, 200.9473, 427.9996, 157.4717, 201.9257, 197.8786, 170.0037, 178.2781, 199.1391, 267.6608, 181.9549, 257.0288, 193.5876, 151.2764, 117.1294, 192.2319, 208.3754, 135.9808, 226.62, 118.3252, null, 378.7313, 111.4234, 176.9999, 178.9367, 125.5838, 98.717, 169.0875, 190.3111, 410.007, 182.2813, 110.9502, 173.1906, 133.4389, 212.7494, 170.7332, 111.3839, 405.3496, 422.13, 392.7459, 115.5785, 369.9979, 465.1533, 340.2862, 190.1779, 384.4617, 468.2976, 453.4964, 171.2044, 211.625, 156.0726, 199.8591, 237.163, 340.8871, 140.9386, 145.9137, 176.3408, 201.9737, 144.4939, 180.0199, 177.2339, 411.4257, 180.3085, 228.9147, 192.8963, 127.7335, 380.2694, 518.188, 138.5811, 394.9625, 174.2672, 132.6987, 146.4482, 142.2885, 187.281, 168.1381, 149.9212, 356.736, 265.7119, 159.186, 215.7884, 248.3721, 156.9159, 138.0667, 408.3626, 433.6524, 177.1661, 208.7557, 154.0183, 301.4383, 313.2377, 160.656, 186.4159, 486.1808, 191.1452, 443.4126, 171.3023, 83.9413, 419.404, 145.7873, 378.8169, 129.7003, 470.3871, 495.1293, 207.43, 174.3305, 139.5302, 168.9315, 134.1572, 181.5654, 182.2398, 375.6454, 158.4478, 219.1023, 182.4031, 419.8237, 220.4121, 186.4752, 197.1713, 317.7241, 418.2344, 92.3716, 170.8172, 151.3251, 200.9853, 422.9015, 287.9514, 231.2716, 259.4473, 269.8904, 582.1693, 140.3137, 172.8247, 524.224, 180.2936, 219.3111, 152.9349, 268.6238, 421.7344, 206.4099, 189.8434, 212.6406, 223.7005, 216.424, 475.8833, 516.2268, 163.1194, 425.5617, 471.2274, 182.5943, 164.6443, 196.8075, 456.9998, 458.7738, 373.5731, 131.0373, 140.3939, 197.4812, 515.1686, 885.7436, 492.4709, 147.332, 454.1951, 389.7158, 196.3014, 406.6818, 172.3674, 195.284, 204.1613, 138.472, 180.6795, 202.7182, 213.4661, 109.3928, 219.4804, 175.4328, 213.3524, 204.7052, 156.5891, 110.1551, 500.1264, 162.9096, 176.3935, 456.9542, 159.9319, 413.7556, 443.4222, 402.939, 175.7041, 195.12, 254.3305, 205.7769, 203.5091, 147.2304, 593.8297, 435.9383, 165.1426, 131.3306, 516.9034, 95.4226, 247.3829, 146.093, 158.8387, 310.8012, 235.596, 200.9136, 91.3381, 159.4234, 480.4972, 361.4982, 189.7395, 142.9602, 316.4143, 451.5982, 198.3015, 198.3554, 186.1093, 171.9223, 170.8988, 130.6445, 393.9632, 124.7644, 187.0825, 170.0071, 159.2418, 194.5554, 395.6198, 199.7487, 129.768, 320.8366, 221.9057, 119.6073, 177.5218, 208.7538, 190.4683, 164.7689, 162.6662, 180.7121, 161.8418, 448.1067, 137.0894, 160.2043, 191.6483, 144.6667, 553.4272, 186.1153, 148.8707, 132.432, 152.8285, 203.9898, 169.1711, 236.2545, 133.0917, 202.8948, 139.4974, 109.3001, 210.5267, 265.8534, 178.2138, 172.1367, 224.212, 180.5003, 132.9617, 211.2669, 194.1913, 176.1422, 150.8971, 512.3595, null, 176.4141, 211.0733, 125.6808, 462.6197, 210.4491, 243.2395, 135.0741, 134.8563, 207.8371, 123.3815, 171.9319, 151.5775, 121.7718, 140.8682, 181.6766, 225.0457, 144.4606, 239.9078, 109.4485, 480.9832, 156.9806, 186.9288, 542.2905, 214.4566, 183.1063, 138.6688, 120.2339, 222.5644, 287.1749, 146.4227, 257.093, 96.4485, 243.6299, 244.3221, 106.1847, 174.6663, 248.5679, 423.5484, 349.1965, 270.5464, 317.7089, 468.9715, 290.4367, 394.4063, 269.814, 129.8217, 194.3624, 250.6698, 152.3275, 352.8219, 210.0793, 176.9964, 528.1001, 186.9376, 365.8939, 592.9031, 400.1374, 193.7809, 263.9026, 199.3396, 156.3449, 148.6517, 231.9029, 393.7825, 132.0721, 523.9107, 178.5122, 145.5743, 154.3946, 366.029, 180.7952, 133.4187, 213.8101, 180.5591, 206.8034, 232.2246, 202.6557, 251.192, 422.4525, 166.8673, 465.1658, 136.0168, 276.4838, 252.0538, 363.3815, 178.7723, 305.1507, 154.4849, 364.3332, 517.6907, 281.7618, 427.2896]
+   }
+  },
+  "step2000": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 0.9984662576687117,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1335.5641, null, null, null, null, null, null, null, null]
+   }
+  },
+  "step3000": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 1.0,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  },
+  "step4000": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 1.0,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  }
+ }
+}

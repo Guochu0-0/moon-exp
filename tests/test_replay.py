@@ -61,6 +61,8 @@ ADDED = {
     "rloo.tau": (16.0, "#183 与 reward = ref 同批新增；只在 reward = ref 时起作用"),
     "rloo.r_out": (-0.1, "#183 与 reward = ref 同批新增；只在 reward = ref 时起作用"),
     "rloo.shape": ("ripe", "#191 新增；ripe = RIPE++ 分级奖励原式，即 E15 的奖励；只在 reward = ref 时起作用"),
+    "rloo.levels": ([], "#192 新增；空 = 细化不加噪声，即之前只在粗级抽签的做法"),
+    "rloo.k": (0.5, "#192 与 levels 同批新增；只在 levels 非空时起作用"),
 }
 
 

@@ -32,6 +32,10 @@ class Optim:
         x = loss / self.o["accum"]
         (self.scaler.scale(x) if self.scaler else x).backward()
 
+    def factor(self) -> float:
+        """backward(loss) 实际反向的是 loss × factor()：GradScaler 的当前 scale（没有时为 1）÷ accum。"""
+        return (self.scaler.get_scale() if self.scaler else 1.0) / self.o["accum"]
+
     def step(self, step) -> dict:
         """每 accum 步更新一次（有梯度时）。返回要记进日志的 lr、裁剪前的梯度范数（及 GradScaler 的 scale）。"""
         o, upd = self.o, {}

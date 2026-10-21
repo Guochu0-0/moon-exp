@@ -56,7 +56,8 @@ for m in METHODS:
     st = max(s, key=lambda k: s[k]["summary"]["auc@5"])
     print(f"== {m}")
     print("  val auc@5 :", {k: round(v["summary"]["auc@5"], 3) for k, v in s.items()})
-    print("  val median:", {k: round(v["summary"]["median"], 2) for k, v in s.items()})
+    print("  val median:", {k: v["summary"]["median"] and round(v["summary"]["median"], 1) for k, v in s.items()}
+    print("  val fail_rate:", {k: round(v["summary"]["fail_rate"], 3) for k, v in s.items()}))
     d, ci = paired(s[st]["errors"], ref["errors"])
     print(f"  peak step {st}: auc@5 {s[st]['summary']['auc@5']:.3f}  − E19 gauss8: {d:+.4f} ci {np.round(ci, 4)}")
     if (E / "ckpt" / m / "log.jsonl").exists():

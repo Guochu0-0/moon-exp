@@ -150,6 +150,26 @@ def train_step(model, optim, batch, N, p, sig, chunk, dev):
     return tm, A_ref is not None
 
 
+def grad_reach(model):
+    """各模块：可训参数个数、梯度不全为 0 的参数所占比例、梯度是否全部有限。"""
+    named = list(model.model.named_parameters())
+    groups = {f"refiner_{s}": f"decoder.conv_refiner.{s}." for s in rloo.SCALES}
+    groups |= {"vgg": "encoder.cnn.", "embedding_decoder": "decoder.embedding_decoder.", "gp16": "decoder.gps."}
+    out = {}
+    for g, pre in groups.items():
+        out[g] = _reach([p for n, p in named if n.startswith(pre) and p.requires_grad])
+    out["dino_lora"] = _reach([q for l in model.lora.values() for q in (l.A, l.B)])
+    return out
+
+
+def _reach(ps):
+    if not ps:
+        return None
+    nz = [p.grad is not None and bool(p.grad.abs().sum() > 0) for p in ps]
+    fin = all(p.grad is None or bool(torch.isfinite(p.grad).all()) for p in ps)
+    return {"n": len(ps), "frac_nonzero": round(sum(nz) / len(ps), 3), "finite": fin}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--data", default=os.environ.get("MOON_DATA"))
@@ -184,6 +204,8 @@ def main(argv=None):
             torch.cuda.synchronize()
             t0 = time.time()
             tm, ok = train_step(model, optim, batch, N, p, sig, min(a.chunk, N), dev)
+            if step == 0:                # 第一步（不计时）：各模块是否收到梯度
+                summ["grad_reach"] = grad_reach(model)
             step += 1
             upd = optim.step(step)
             torch.cuda.synchronize()

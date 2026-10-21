@@ -585,7 +585,7 @@ def test_config_rloo_ref(tmp_path):
 
 def _fake_roma(c=3, seed=0):
     """只有细化层的假 RoMa：每级一个小卷积，输入同 romatch ConvRefiner（两侧特征、warp、certainty）。
-    返回 (model, f1, f2, P, cert)：特征为 θ · 固定随机图（θ 可训，当作编码器）。"""
+    返回 (model, dec, θ, feats, P, cert)：feats() 给出两侧各尺度特征，为 θ · 固定随机图（θ 可训，当作编码器）。"""
     import types
 
     import torch

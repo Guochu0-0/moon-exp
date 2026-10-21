@@ -29,7 +29,7 @@ loss = −mean_{份, 格} 权重 · log π。不训 certainty、不加 KL。
 细化加噪（#192，只配 reward = ref）：levels 列出加噪的细化级（8、4、2、1 的子集；空 = 细化照推理跑、不加噪，即上面的做法）。
 此时每对 group 条完整的抽签链：粗级按上面抽锚点 → 各级细化照推理跑，但 levels 里那一级的输出 a 从以细化层输出 μ
 （这一级的输入 warp + 细化层算出的位移）为中心、σ = k·s 原网格 px 的二维各向同性高斯里抽，再送进下一级。
-这一级的 log π = −‖a − μ‖² / 2σ²（略去常数），μ 带梯度（经细化层、VGG 与 DINOv2 特征的 proj）；各级之间照 romatch 本来就
+这一级的 log π = −‖a − μ‖² / 2σ²（略去常数），μ 带梯度（经本级细化层与本级特征的 proj 回到 VGG；尺度 8–1 的特征只来自 VGG，DINOv2 的 LoRA 只受粗级训练）；各级之间照 romatch 本来就
 detach，所以各级的 log π 只经本级的细化层回到特征。每级的抽签结果逐像素与参照仿射映射的位置相距 d，按与粗级相同的
 shape 打分，长度参数按级缩放：delta_s = delta·s/8、tau_s = tau·s/8（粗级尺度记为 8，即 E15 / #191 的 delta、tau）；
 各级（含粗级）的优势各自 RLOO（减同一位置其余链的均值）。loss = 粗级项 + 各加噪级的 −mean(优势 · log π) 之和。
@@ -244,8 +244,7 @@ def rollout_noisy(model, f1, f2, P, cert, k, sig, chunk=8):
 def level_reward(x, A, s, p):
     """一级的抽签输出 x (N,2,h,w) 与参照仿射 A → (逐像素奖励 (N,h,w), 距离 d (N,h,w) px)。长度参数按级缩放：
     delta·s/8、tau·s/8。"""
-    r, d = ref_cells(x, A, p["delta"] * s / 8, p["tau"] * s / 8, p["r_out"], p["shape"])
-    return r, d
+    return ref_cells(x, A, p["delta"] * s / 8, p["tau"] * s / 8, p["r_out"], p["shape"])
 
 
 def fine_surrogate(dec, f1, f2, rec, adv, sig, chunk, backward, factor, w=1.0):

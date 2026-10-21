@@ -518,6 +518,43 @@ def test_rloo_ref_cells_graded_reward():
     assert d0 is None and (r0 == 0).all()
 
 
+def test_rloo_distance_reward_shapes():
+    """奖励形式（#191）：ripe 照 RIPE++ 在 tau 处跳回 r_out；clip 单调连续、到 r_out 截平；gauss 为 exp(−½(d/δ)²)；
+    长度参数同比缩放时奖励只看 d/δ（供细化按级复用）。"""
+    import torch
+    from finetune.parts.rloo import distance_reward
+
+    d = torch.tensor([0.0, 8.0, 12.0, 16.0, 16.5, 24.0])
+    ripe = distance_reward(d, "ripe", 8.0, 16.0, -0.1)
+    assert torch.allclose(ripe, torch.tensor([1.0, 0.5, -0.125, -1.0, -0.1, -0.1]))
+    assert torch.equal(distance_reward(d), ripe)                                   # 默认即 E15 原式
+    clip = distance_reward(d, "clip", 8.0, 16.0, -0.1)
+    assert torch.allclose(clip, torch.tensor([1.0, 0.5, -0.1, -0.1, -0.1, -0.1]))
+    gauss = distance_reward(d, "gauss", 8.0, 16.0, -0.1)
+    assert torch.allclose(gauss, torch.exp(-0.5 * (d / 8) ** 2))
+    fine = torch.linspace(0, 64, 641)
+    for shape in ("clip", "gauss"):                                                # 单调不增、无跳变
+        r = distance_reward(fine, shape, 8.0, 16.0, -0.1)
+        assert (r[1:] <= r[:-1] + 1e-7).all() and (r[:-1] - r[1:]).max() < 0.02
+    assert (ripe[4] - ripe[3]) > 0.8                                               # 原式在 tau 处向上跳
+    for shape in ("ripe", "clip", "gauss"):                                        # 尺度 s：delta、tau 同乘 s/8
+        assert torch.allclose(distance_reward(d / 4, shape, 2.0, 4.0, -0.1), distance_reward(d, shape, 8.0, 16.0, -0.1))
+    with pytest.raises(ValueError):
+        distance_reward(d, "box")
+
+
+def test_rloo_ref_cells_shape():
+    import torch
+    from finetune.parts.pseudo import grid
+    from finetune.parts.rloo import distance_reward, ref_cells
+
+    A = np.array([[1.0, 0, 16], [0, 1.0, 0]])
+    fc = grid(4, 4, "cpu").permute(2, 0, 1)[None].repeat(2, 1, 1, 1)
+    fc[1, 0] += 20 / 256
+    r, d = ref_cells(fc, A, 4.0, 8.0, -0.1, shape="gauss")
+    assert torch.allclose(r, distance_reward(d, "gauss", 4.0)) and r.min() < r.max() <= 1
+
+
 def test_rloo_advantage_baselines():
     import torch
     from finetune.parts.rloo import advantage
@@ -533,6 +570,11 @@ def test_config_rloo_ref(tmp_path):
 
     c = C.load(_write(tmp_path, "a", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nbaseline = "none"\ntemp = 0.3\n'))
     assert (c["rloo"]["delta"], c["rloo"]["tau"], c["rloo"]["r_out"]) == (8.0, 16.0, -0.1)
+    assert c["rloo"]["shape"] == "ripe"                                         # 默认同 E15
+    g = C.load(_write(tmp_path, "g", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nshape = "gauss"\ndelta = 4.0\n'))
+    assert (g["rloo"]["shape"], g["rloo"]["delta"]) == ("gauss", 4.0)
+    with pytest.raises(C.ConfigError):
+        C.load(_write(tmp_path, "s", '[model]\nname = "roma"\n[rloo]\nshape = "box"\n'))
     d = C.load(_write(tmp_path, "b", '[model]\nname = "roma"\n[rloo]\n'))
     assert d["rloo"]["baseline"] == "loo" and d["rloo"]["reward"] == "r1"     # 默认同首批
     with pytest.raises(C.ConfigError):

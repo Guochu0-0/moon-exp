@@ -708,3 +708,20 @@ def test_optim_factor():
 
     a = torch.nn.Parameter(torch.zeros(1))
     assert Optim([a], {**C.OPTIM, "accum": 4}, amp=False).factor() == 0.25
+
+
+def test_rloo_fit_many_degenerate_output_counts_as_failed_fit():
+    """模型发散后 certainty 全为 −inf / NaN 或 warp 含非有限值时，这份样本记为拟合失败 (None, 0)，不在抽点处报错
+    （E20 l84_k025 在 460 步因此中止，#192）；正常样本不受影响。"""
+    import torch
+    from finetune.parts.pseudo import grid
+    from finetune.parts.rloo import fit_many
+
+    flow = grid(64, 64, "cpu").permute(2, 0, 1)[None].repeat(3, 1, 1, 1).clone()
+    flow[:, 0] += 8 / 256                                         # 右移 8 px
+    cert = torch.full((3, 1, 64, 64), 5.0)
+    cert[1] = -float("inf")
+    flow[2, 0, 3, 3] = float("nan")
+    out = fit_many(flow, cert, 500, 3.0)
+    assert out[1] == (None, 0) and out[2] == (None, 0)
+    assert out[0][0] is not None and abs(out[0][0][0, 2] - 8) < 0.5

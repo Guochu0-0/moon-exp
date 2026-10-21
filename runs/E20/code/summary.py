@@ -36,7 +36,8 @@ def logs(m):
 
 def paired(e1, e0, n=2000, seed=0):
     """同一批验证图对上 AUC@5(e1) − AUC@5(e0) 的配对自助法 95% 区间。"""
-    e1, e0 = np.asarray(e1), np.asarray(e0)
+    fix = lambda e: np.array([np.inf if x is None else x for x in e], float)   # 没有输出的图对：误差记为无穷
+    e1, e0 = fix(e1), fix(e0)
     rng = np.random.default_rng(seed)
     idx = rng.integers(0, len(e1), (n, len(e1)))
     diff = [auc(e1[i], 5.0) - auc(e0[i], 5.0) for i in idx]

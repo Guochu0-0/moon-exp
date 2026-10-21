@@ -77,6 +77,9 @@ def main():
     ax.axhline(1.0, color="C3", ls="--", lw=1.2, label="选温度的门槛：中位数 ≤ 1 像素")
     ax.axhline(0.0, color="0.6", lw=0.8)
     ax.set_yscale("symlog", linthresh=1.0)
+    ticks = [-10, -3, -1, 0, 1, 3, 10, 30]
+    ax.set_yticks(ticks, [str(t) for t in ticks])
+    ax.set_ylim(-12, 40)
     ax.set_xticks(pos, [f"{tp:g}" for tp in temps])
     ax.set_xlabel("抽签温度")
     ax.set_ylabel("16 次抽签误差的中位数 - 不抽签误差（像素）")

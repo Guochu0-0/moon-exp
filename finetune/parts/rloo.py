@@ -287,16 +287,21 @@ _POOL = None
 
 def fit_many(flows, certs, num, thr):
     """G 份样本各自抽点、RANSAC。抽点在 GPU 上依次做，RANSAC 用线程并行（cv2 放开 GIL；fit_affine 每次调用前重置
-    本线程的随机种子，结果与串行相同）。返回 [(A 或 None, 内点数)]。"""
+    本线程的随机种子，结果与串行相同）。返回 [(A 或 None, 内点数)]。
+    warp 含非有限值、或 certainty 经 sigmoid 后全为 0 / 非有限（模型发散时出现）的样本抽不出点，记为拟合失败 (None, 0)。"""
     global _POOL
     from concurrent.futures import ThreadPoolExecutor
     if _POOL is None:
         _POOL = ThreadPoolExecutor(8)
     Ms = []
     for f, c in zip(flows, certs):
+        pc = c.float().sigmoid()
+        if not (bool(torch.isfinite(f).all()) and bool(torch.isfinite(pc).all()) and float(pc.sum()) > 0):
+            Ms.append(None)
+            continue
         p0, p1, _ = sample_matches(f, c, num)
         Ms.append(np.c_[p0, p1, np.ones(len(p0))].astype(np.float32))
-    out = list(_POOL.map(lambda M: fit_affine(M, thr), Ms))
+    out = list(_POOL.map(lambda M: (None, None, None) if M is None else fit_affine(M, thr), Ms))
     return [(A, 0 if inl is None else int(inl.sum())) for A, inl, _ in out]
 
 

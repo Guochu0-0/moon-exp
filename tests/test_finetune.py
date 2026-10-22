@@ -680,7 +680,7 @@ def test_rloo_level_reward_scales_with_level():
     A = np.array([[1.0, 0, 0], [0, 1.0, 0]])
     x = grid(8, 8, "cpu").permute(2, 0, 1)[None].repeat(3, 1, 1, 1)
     x[:, 0] += (torch.tensor([0.0, 4.0, 8.0]) / 256)[:, None, None]
-    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss"}
+    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss", "fine_shape": ""}
     r, d = level_reward(x, A, 4, p)
     assert torch.allclose(d[:, 0, 0], torch.tensor([0.0, 4.0, 8.0]), atol=1e-3)
     assert torch.allclose(r, distance_reward(d, "gauss", 4.0))

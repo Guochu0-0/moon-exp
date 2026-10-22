@@ -18,6 +18,8 @@ reward（每份样本单独算，只用训练对的两张影像和这份输出�
   shape（#191）：ripe（默认，照 RIPE++ 分级奖励）d ≤ tau 时 1 − ½(d/delta)²，d > tau 时 r_out；
   clip：max(1 − ½(d/delta)², r_out)，去掉 ripe 在 d = tau 处的跳变，不用 tau；
   gauss：exp(−½(d/delta)²)，处处光滑单调，不用 tau、r_out。长度参数只有 delta、tau，按级复用时同比缩放即可。
+  cauchy（#197）：1 / (1 + ½(d/delta)²)，在 d = 0 附近与 gauss 同为 1 − ½(d/delta)²，远处按 2(delta/d)² 衰减：
+  单精度下 gauss 在 d 超过约 14·delta 时为 0（这样的像素没有梯度），cauchy 在任何有限距离上都不为 0。
 RANSAC 失败的样本：r1 记 0，ncc 记 −1；ref 的参照拟合失败时整对记 0（这一步没有梯度）。
 
 权重（baseline）：
@@ -26,12 +28,13 @@ RANSAC 失败的样本：r1 记 0，ncc 记 −1；ref 的参照拟合失败时�
 - none：RIPE++ 式，直接用 reward 当权重，不减平均。
 loss = −mean_{份, 格} 权重 · log π。不训 certainty、不加 KL。
 
-细化加噪（#192，只配 reward = ref）：levels 列出加噪的细化级（8、4、2、1 的子集；空 = 细化照推理跑、不加噪，即上面的做法）。
+细化加噪（#192，只配 reward = ref）：levels 列出加噪的细化级（16、8、4、2、1 的子集，16 自 #197 起；空 = 细化照推理跑、不加噪，即上面的做法）。
 此时每对 group 条完整的抽签链：粗级按上面抽锚点 → 各级细化照推理跑，但 levels 里那一级的输出 a 从以细化层输出 μ
 （这一级的输入 warp + 细化层算出的位移）为中心、σ = k·s 原网格 px 的二维各向同性高斯里抽，再送进下一级。
 这一级的 log π = −‖a − μ‖² / 2σ²（略去常数），μ 带梯度（经本级细化层与本级特征的 proj 回到 VGG；尺度 8–1 的特征只来自 VGG，DINOv2 的 LoRA 只受粗级训练）；各级之间照 romatch 本来就
-detach，所以各级的 log π 只经本级的细化层回到特征。每级的抽签结果逐像素与参照仿射映射的位置相距 d，按与粗级相同的
-shape 打分，长度参数按级缩放：delta_s = delta·s/8、tau_s = tau·s/8（粗级尺度记为 8，即 E15 / #191 的 delta、tau）；
+detach，所以各级的 log π 只经本级的细化层回到特征。尺度 16 的细化层读 DINOv2 特征（proj16），它的梯度经 proj16 回到
+DINOv2 的 LoRA。每级的抽签结果逐像素与参照仿射映射的位置相距 d，按与粗级相同的
+shape 打分（fine_shape 非空时细化各级改用它，#197），长度参数按级缩放：delta_s = delta·s/8、tau_s = tau·s/8（粗级尺度记为 8，即 E15 / #191 的 delta、tau）；
 各级（含粗级）的优势各自 RLOO（减同一位置其余链的均值）。loss = 粗级项 + 各加噪级的 −mean(优势 · log π) 之和。
 实现照 E18 的开销测试（runs/E18/code/cost.py）：第一遍不求梯度跑完全部链，记下各加噪级的输入、certainty 与抽到的输出；
 第二遍逐级、每 chunk 条链带梯度重算 μ 并立刻反向，细化层参数直接得到梯度，特征上的梯度先累积在叶子上，最后经一个
@@ -63,16 +66,17 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "delta": 8.0,     # ref：分级奖励的尺度（原网格 px）
           "tau": 16.0,      # ref：内点阈值（原网格 px）
           "r_out": -0.1,    # ref：d > tau 的格子得分（ripe）/ 下限（clip）
-          "shape": "ripe",  # ref：奖励随距离的形式 ripe | clip | gauss（#191）
-          "levels": [],     # 细化中加高斯噪声的级（8、4、2、1 的子集，#192）；空 = 细化不加噪
+          "shape": "ripe",  # ref：奖励随距离的形式 ripe | clip | gauss（#191）| cauchy（#197）
+          "fine_shape": "", # 细化各级的奖励形式（#197）；空 = 同 shape
+          "levels": [],     # 细化中加高斯噪声的级（16、8、4、2、1 的子集，#192、#197）；空 = 细化不加噪
           "k": 0.5,         # 加噪级的 σ = k × 这一级的尺度（原网格 px，#192）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
-SHAPES = ("ripe", "clip", "gauss")
+SHAPES = ("ripe", "clip", "gauss", "cauchy")
 BASELINES = ("loo", "none")
 SCALES = ("16", "8", "4", "2", "1")
-LEVELS = (8, 4, 2, 1)
+LEVELS = (16, 8, 4, 2, 1)
 
 
 def fill(p):
@@ -85,8 +89,9 @@ def check(cfg):
         raise ConfigError(f"[rloo] reward 可选 {REWARDS}，得到 {p['reward']!r}")
     if p["baseline"] not in BASELINES:
         raise ConfigError(f"[rloo] baseline 可选 {BASELINES}，得到 {p['baseline']!r}")
-    if p["shape"] not in SHAPES:
-        raise ConfigError(f"[rloo] shape 可选 {SHAPES}，得到 {p['shape']!r}")
+    for key in ("shape", "fine_shape"):
+        if p[key] not in SHAPES and not (key == "fine_shape" and p[key] == ""):
+            raise ConfigError(f"[rloo] {key} 可选 {SHAPES}，得到 {p[key]!r}")
     if p["group"] < (2 if p["baseline"] == "loo" else 1):
         raise ConfigError("[rloo] group 至少为 2（留一基线；baseline = 'none' 时至少为 1）")
     if p["delta"] <= 0 or p["tau"] <= 0:
@@ -243,8 +248,8 @@ def rollout_noisy(model, f1, f2, P, cert, k, sig, chunk=8):
 
 def level_reward(x, A, s, p):
     """一级的抽签输出 x (N,2,h,w) 与参照仿射 A → (逐像素奖励 (N,h,w), 距离 d (N,h,w) px)。长度参数按级缩放：
-    delta·s/8、tau·s/8。"""
-    return ref_cells(x, A, p["delta"] * s / 8, p["tau"] * s / 8, p["r_out"], p["shape"])
+    delta·s/8、tau·s/8；形式取 fine_shape，空时同粗级的 shape。"""
+    return ref_cells(x, A, p["delta"] * s / 8, p["tau"] * s / 8, p["r_out"], p.get("fine_shape") or p["shape"])
 
 
 def fine_surrogate(dec, f1, f2, rec, adv, sig, chunk, backward, factor, w=1.0):
@@ -343,7 +348,8 @@ def ncc(opt, sar, valid, A, min_px=1000):
 
 def distance_reward(d, shape="ripe", delta=8.0, tau=16.0, r_out=-0.1):
     """离参照的距离 d（张量，px）→ 同形状的奖励。ripe：d ≤ tau 时 1 − ½(d/delta)²，否则 r_out（RIPE++ 分级奖励）；
-    clip：max(1 − ½(d/delta)², r_out)；gauss：exp(−½(d/delta)²)。clip、gauss 不用 tau，gauss 不用 r_out。"""
+    clip：max(1 − ½(d/delta)², r_out)；gauss：exp(−½(d/delta)²)；cauchy：1 / (1 + ½(d/delta)²)。
+    clip、gauss、cauchy 不用 tau，gauss、cauchy 不用 r_out。"""
     q = 0.5 * (d / delta) ** 2
     if shape == "ripe":
         return torch.where(d <= tau, 1 - q, torch.full_like(d, r_out))
@@ -351,6 +357,8 @@ def distance_reward(d, shape="ripe", delta=8.0, tau=16.0, r_out=-0.1):
         return (1 - q).clamp(min=r_out)
     if shape == "gauss":
         return torch.exp(-q)
+    if shape == "cauchy":
+        return 1 / (1 + q)
     raise ValueError(f"shape 可选 {SHAPES}，得到 {shape!r}")
 
 
@@ -399,7 +407,7 @@ class Term:
         sig = {s_: p["k"] * s_ / (HW / 2) for s_ in lv}       # σ（归一化坐标）
         fine = torch.zeros((), device=cls.device)
         if lv:
-            stats.update({f"{n}_{s_}": [] for s_ in lv for n in ("rew", "rew_sd", "d")},
+            stats.update({f"{n}_{s_}": [] for s_ in lv for n in ("rew", "rew_sd", "d", "zero")},
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         for b in range(B):
             with torch.no_grad():
@@ -444,6 +452,7 @@ class Term:
                         stats[f"rew_{s_}"].append(float(r_s.mean()))
                         stats[f"rew_sd_{s_}"].append(float(r_s.std(0).mean()))
                         stats[f"d_{s_}"].append(float(d_s.mean()))
+                        stats[f"zero_{s_}"].append(float((r_s == 0).float().mean()))   # 奖励下溢为 0 的比例（#197）
                     torch.cuda.synchronize()
                     stats["t_roll_fine"].append(time.time() - t2)
                 mode = q.argmax(0)

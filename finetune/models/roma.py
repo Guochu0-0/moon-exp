@@ -32,6 +32,8 @@ PARAMS = {"config": "configs/baselines/anymatch_roma__minmax.json",
           "train_vgg": False,    # 解冻 VGG（encoder.cnn）
           "train_decoder": True, # 训 decoder；false 时只训 VGG（#120）
           "vgg_lr": 1.0,         # VGG 的学习率 = 这一倍数 × [optim] lr（#120；RoMa 原训练为 1/20）
+          "refine_lr": 1.0,      # 细化部分（各级细化层 conv_refiner 与尺度 8–1 的 proj）的学习率 = 这一倍数 × [optim] lr
+                                 # （#197）；粗级部分（GP、embedding decoder、尺度 16 的 proj）仍为 [optim] lr
           "vgg_dropout": 0.0,    # 训练前向时对 VGG 各尺度特征做 channel dropout 的概率（#120，UniMatch V2 式特征扰动）
           "train_res": "560",    # 训哪一遍（#122）：560 只训 560 一遍（原训练）/ 864 560 一遍 no_grad、只训推理时的
                                  # 864 上采样那一遍 / both 两遍都训、损失相加
@@ -55,6 +57,16 @@ TRAIN_RES = ("560", "864", "both")
 LORA_TARGETS = {"qkv": ("attn.qkv",), "all": ("attn.qkv", "attn.proj", "mlp.fc1", "mlp.fc2")}
 MEAN = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
 STD = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
+
+
+def _refine_part(name: str):
+    """decoder 参数名 → 它属于哪一级细化（'16'、'8'、…），不属于细化部分时为 None（#197）。细化部分是各级细化层
+    conv_refiner 与尺度 8–1 的 proj；尺度 16 的 proj 喂粗级，归粗级。"""
+    for pre in ("decoder.conv_refiner.", "decoder.proj."):
+        if name.startswith(pre):
+            s = name[len(pre):].split(".", 1)[0]
+            return s if pre == "decoder.conv_refiner." or s != "16" else None
+    return None
 
 
 def _norm(x):
@@ -123,12 +135,12 @@ class Model:
         for mod in self.model.modules():
             if isinstance(mod, torch.nn.modules.batchnorm._BatchNorm):
                 mod.eval()
-        dec, vgg = [], []
+        dec, ref, vgg = [], [], []
         for name, p in self.model.named_parameters():
             on_dec = m["train_decoder"] and name.startswith("decoder.")
             on_vgg = m["train_vgg"] and name.startswith("encoder.cnn")
             p.requires_grad_(on_dec or on_vgg)
-            (dec if on_dec else vgg if on_vgg else []).append(p)
+            (ref if on_dec and _refine_part(name) else dec if on_dec else vgg if on_vgg else []).append(p)
         self.lora, self.dino_blocks = ({}, {}) if m["lora_r"] <= 0 and m["dino_unfreeze"] <= 0 else self._open_dino(m)
         lora = [p for l in self.lora.values() for p in (l.A, l.B)]
         dino = [p for b in self.dino_blocks.values() for p in b.parameters()]
@@ -143,8 +155,9 @@ class Model:
                 ref.out_conv.register_forward_hook(
                     lambda mod, inp, out, k=k: self._unc.__setitem__(int(k), self.unc_heads[k](inp[0])))
             dec = dec + list(self.unc_heads.parameters())
-        self.params = dec + vgg + lora + dino
-        self.groups = [g for g in ({"params": dec, "lr_scale": 1.0}, {"params": vgg, "lr_scale": m["vgg_lr"]},
+        self.params = dec + ref + vgg + lora + dino
+        self.groups = [g for g in ({"params": dec, "lr_scale": 1.0}, {"params": ref, "lr_scale": m["refine_lr"]},
+                                   {"params": vgg, "lr_scale": m["vgg_lr"]},
                                    {"params": lora, "lr_scale": m["lora_lr"] / cfg["optim"]["lr"]},
                                    {"params": dino, "lr_scale": 1.0})
                        if g["params"]]
@@ -234,6 +247,20 @@ class Model:
         self._unc = {}
         return self._attach(self.model({"im_A": _norm(image0), "im_B": _norm(image1), "corresps": init},
                                        batched=True, upsample=True, scale_factor=RES_HI / RES))
+
+    def update_parts(self):
+        """每步相对改变量的分组（#197，见 finetune.optim.UpdateMonitor）：(部分 → 参数, LoRA 层)。coarse 为粗级
+        decoder（GP、embedding decoder、尺度 16 的 proj）；ref<s> 为尺度 s 的细化层（及尺度 s 的 proj，s < 16）；vgg；
+        lora 层按 ΔW = scale·Δ(BA) 相对原权重 W 计。只列参与训练的参数。"""
+        parts = {}
+        for name, p in self.model.named_parameters():
+            if not p.requires_grad:
+                continue
+            s = _refine_part(name)
+            key = f"ref{s}" if s else "coarse" if name.startswith("decoder.") else "vgg" if name.startswith("encoder.cnn")                 else None
+            if key:
+                parts.setdefault(key, []).append(p)
+        return parts, [(l.A, l.B, l.scale, l.base.weight) for l in self.lora.values()]
 
     def state_dict(self):
         """{'model': ...}，RomatchAdapter(weights_key='model') 直接能读；有 LoRA 时另存 'dinov2_lora'

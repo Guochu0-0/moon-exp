@@ -50,6 +50,7 @@ RUN = {
     "limit": 0,             # 只用 Train 的 N 对（均匀取样，调试用）；0 = 全部
     "split": "train",       # 训练用的 split，可用 + 连接；val / test 只用于有标注的上限参考（#96）
     "select": "val_peak",   # 驱动怎么选正式结果的 ckpt：val_peak 按 Val AUC@5 峰值 / last 最后一个（在 Test 上训练时用，#98）
+    "log_update": False,    # 每次更新后把各部分参数的相对改变量记进日志（upd_<部分>，#197）；模型要提供 update_parts
 }
 SELECT = ("val_peak", "last")
 SPLITS = ("train", "val", "test")

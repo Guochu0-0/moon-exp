@@ -843,3 +843,20 @@ def test_update_monitor_relative_change():
     assert out["upd_fine"] == pytest.approx(float(np.sqrt((4 * 0.01 + 2 * 0.04) / (4 + 8))), rel=1e-3)
     want = float((2.0 * (B @ A - BA0)).norm() / W.norm())
     assert out["upd_lora"] == pytest.approx(want, rel=1e-3)
+
+
+def test_update_monitor_lora_tiny_change_stays_accurate():
+    """LoRA 的 BA 已很大、这一步只改一点时（E22 训练中在 ~1000 步出现），‖Δ(BA)‖ 不因大数相减变负或失准。"""
+    import torch
+    from finetune.optim import UpdateMonitor
+
+    torch.manual_seed(0)
+    A, B, W = torch.randn(8, 1024) * 10, torch.randn(3072, 8) * 10, torch.randn(3072, 1024)
+    mon = UpdateMonitor({}, [(A, B, 2.0, W)])
+    for _ in range(5):
+        mon.before()
+        BA0 = (B.double() @ A.double()).clone()
+        with torch.no_grad():
+            A += 1e-6 * torch.randn_like(A)
+        want = float((2.0 * (B.double() @ A.double() - BA0)).norm() / W.double().norm())
+        assert mon.after()["upd_lora"] == pytest.approx(want, rel=1e-2)

@@ -23,9 +23,8 @@ RAW = RUN / "raw"                     # probe.py 的分片（不进 git）
 FONT = "/remote-home/xufang/YGC/fonts/simhei.ttf"      # 同 E14
 if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
-plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
+plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "SimHei", "Microsoft YaHei"]   # 中文按字回退到 SimHei
 plt.rcParams["axes.unicode_minus"] = False
-plt.rcParams["mathtext.fontset"] = "dejavusans"      # 刻度里的负号（SimHei 缺 U+2212）
 
 LAYERS = ("a", "b", "c")
 GROUPS = ("all", "success", "fail")
@@ -139,12 +138,12 @@ def main():
                 continue
             for gi, (gl, col) in enumerate((("配准成功", "C0"), ("配准失败", "C3"))):
                 x = np.clip(k[k[:, 1] == gi, 2 + j], edges[0], edges[-1])
-                ax.hist(x, bins=edges, density=True, histtype="step", color=col, label=gl)
+                ax.hist(x, bins=edges, weights=np.full(len(x), 1 / max(len(x), 1)), histtype="step", color=col, label=gl)
             ax.set_xscale("log")
             if i == 0:
                 ax.set_title(names[j] + "（px）")
             if j == 0:
-                ax.set_ylabel(label(c).split("，")[0])
+                ax.set_ylabel(label(c).split("，")[0] + "\n每箱占比")
     axes[0, 0].legend(fontsize=7, frameon=False)
     fig.savefig(RUN / "extra" / "geometry.png", dpi=120)
 

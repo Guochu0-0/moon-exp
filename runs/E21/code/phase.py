@@ -25,9 +25,8 @@ import geom  # noqa: E402
 FONT = "/remote-home/xufang/YGC/fonts/simhei.ttf"      # 同 E14
 if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
-plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
+plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "SimHei", "Microsoft YaHei"]   # 中文按字回退到 SimHei
 plt.rcParams["axes.unicode_minus"] = False
-plt.rcParams["mathtext.fontset"] = "dejavusans"      # 刻度里的负号（SimHei 缺 U+2212）
 
 BS = np.logspace(-1, 1.5, 61)          # b/s
 MR = np.logspace(-1, 1.5, 61)          # |M − R|/s

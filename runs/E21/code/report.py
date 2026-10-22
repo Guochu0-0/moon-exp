@@ -23,8 +23,17 @@ RAW = RUN / "raw"                     # probe.py 的分片（不进 git）
 FONT = "/remote-home/xufang/YGC/fonts/simhei.ttf"      # 同 E14
 if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
-plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "SimHei", "Microsoft YaHei"]   # 中文按字回退到 SimHei
+plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
+PLAIN = matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}")   # 对数轴刻度写成 0.1、1、10（SimHei 缺数学负号）
+
+
+def logaxis(ax, *which):
+    for w in which:
+        a = getattr(ax, f"{w}axis")
+        getattr(ax, f"set_{w}scale")("log")
+        a.set_major_formatter(PLAIN)
+        a.set_minor_formatter(matplotlib.ticker.NullFormatter())
 
 LAYERS = ("a", "b", "c")
 GROUPS = ("all", "success", "fail")
@@ -139,7 +148,7 @@ def main():
             for gi, (gl, col) in enumerate((("配准成功", "C0"), ("配准失败", "C3"))):
                 x = np.clip(k[k[:, 1] == gi, 2 + j], edges[0], edges[-1])
                 ax.hist(x, bins=edges, weights=np.full(len(x), 1 / max(len(x), 1)), histtype="step", color=col, label=gl)
-            ax.set_xscale("log")
+            logaxis(ax, "x")
             if i == 0:
                 ax.set_title(names[j] + "（px）")
             if j == 0:
@@ -155,7 +164,7 @@ def main():
             bb = summ["by_config"][c]["layers"][ln]["by_bin"]["all"]
             y = [np.nan if x["n"] < 50 else x["right"] for x in bb]
             ax.plot(mid, y, ls=ls, c="k", marker=".", label=lab)
-        ax.set_xscale("log")
+        logaxis(ax, "x")
         ax.axhline(0.5, c="gray", lw=0.6)
         ax.set_title(label(c))
         ax.set_xlabel("b / s")

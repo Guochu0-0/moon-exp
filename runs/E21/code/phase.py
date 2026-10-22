@@ -25,8 +25,17 @@ import geom  # noqa: E402
 FONT = "/remote-home/xufang/YGC/fonts/simhei.ttf"      # 同 E14
 if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
-plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "SimHei", "Microsoft YaHei"]   # 中文按字回退到 SimHei
+plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
+PLAIN = matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}")   # 对数轴刻度写成 0.1、1、10（SimHei 缺数学负号）
+
+
+def logaxis(ax, *which):
+    for w in which:
+        a = getattr(ax, f"{w}axis")
+        getattr(ax, f"set_{w}scale")("log")
+        a.set_major_formatter(PLAIN)
+        a.set_minor_formatter(matplotlib.ticker.NullFormatter())
 
 BS = np.logspace(-1, 1.5, 61)          # b/s
 MR = np.logspace(-1, 1.5, 61)          # |M − R|/s
@@ -72,8 +81,7 @@ def main():
             im = ax.pcolormesh(BS, MR, z, cmap="RdBu", vmin=0 if j == 0 else -1, vmax=1, shading="nearest")
             ax.contour(BS, MR, z, levels=[0.5 if j == 0 else 0.0], colors="k", linewidths=0.8)
             ax.plot(BS, BS, ls=":", c="k", lw=0.8)
-            ax.set_xscale("log")
-            ax.set_yscale("log")
+            logaxis(ax, "x", "y")
             if i == 0:
                 ax.set_title(f"δ/s = {d:g}")
             if c == 0:

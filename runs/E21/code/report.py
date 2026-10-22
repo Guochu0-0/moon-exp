@@ -25,6 +25,7 @@ if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
 plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
+plt.rcParams["mathtext.fontset"] = "dejavusans"      # 刻度里的负号（SimHei 缺 U+2212）
 
 LAYERS = ("a", "b", "c")
 GROUPS = ("all", "success", "fail")
@@ -112,18 +113,30 @@ def main():
         tot = sum(x["n"] for x in bb)
         lines.append(f"| {label(c)} | " + " | ".join(
             "—" if not x["n"] else f"{f(x['right'])} / {f(x['net'])} / {x['n'] / tot:.2f}" for x in bb) + " |")
+    for g in ("success", "fail"):
+        lines += [f"\n### 按 b/s 分档（{g}）：b 层 对的比例 / 净比例 / 像素占比\n",
+                  "| 配置 | " + " | ".join(f"[{bins[i]:g}, {bins[i + 1]:g})" for i in range(len(bins) - 1)) + " |",
+                  "|---|" + "---|" * (len(bins) - 1)]
+        for c in configs:
+            bb = summ["by_config"][c]["layers"]["b"]["by_bin"][g]
+            tot = sum(x["n"] for x in bb)
+            lines.append(f"| {label(c)} | " + " | ".join(
+                "—" if not x["n"] else f"{f(x['right'])} / {f(x['net'])} / {x['n'] / tot:.2f}" for x in bb) + " |")
     (DATA / "tables.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
 
     # 图 1：几何量分布（成功 / 失败），每级一行（细化取 k = 0.5 的 s；b、|M−T|、|M−R| 与 k 无关）
     lv = ["coarse"] + [c for c in configs if c.endswith("_k0.5")]
     fig, axes = plt.subplots(len(lv), 4, figsize=(13, 2.1 * len(lv)), constrained_layout=True)
-    names = ("b = |R − T|", "|M − T|", "|M − R|", "散开程度 s")
+    names = ("b = |R - T|", "|M - T|", "|M - R|", "散开程度 s")
     edges = np.logspace(-2, 3.5, 56)
     for i, c in enumerate(lv):
         k = keep[c]
         for j in range(4):
             ax = axes[i, j]
+            if j == 3 and c != "coarse":       # 细化的 s 就是 σ，是常数
+                ax.axis("off")
+                continue
             for gi, (gl, col) in enumerate((("配准成功", "C0"), ("配准失败", "C3"))):
                 x = np.clip(k[k[:, 1] == gi, 2 + j], edges[0], edges[-1])
                 ax.hist(x, bins=edges, density=True, histtype="step", color=col, label=gl)
@@ -132,27 +145,22 @@ def main():
                 ax.set_title(names[j] + "（px）")
             if j == 0:
                 ax.set_ylabel(label(c).split("，")[0])
-            if j == 3 and c != "coarse":
-                ax.set_title("σ = 0.5·s" if i == 1 else "")
     axes[0, 0].legend(fontsize=7, frameon=False)
     fig.savefig(RUN / "extra" / "geometry.png", dpi=120)
 
-    # 图 2：对的比例随 b/s 分档（全部图对），三层不同线型，各 k 不同颜色
+    # 图 2：对的比例随 b/s 分档（全部图对），三层不同线型；细化取 σ = 0.5·s
     fig, axes = plt.subplots(1, 6, figsize=(18, 3.2), sharey=True, constrained_layout=True)
     mid = np.sqrt(np.r_[bins[1] / 2, bins[1:-1]] * np.r_[bins[1:-1], bins[-2] * 2])
-    for ax, s in zip(axes, ["coarse", "16", "8", "4", "2", "1"]):
-        cs = ["coarse"] if s == "coarse" else [c for c in configs if c.startswith(f"s{s}_")]
-        for ci, c in enumerate(cs):
-            for ln, ls in zip(LAYERS, ("--", "-", ":")):
-                bb = summ["by_config"][c]["layers"][ln]["by_bin"]["all"]
-                y = [np.nan if x["n"] < 50 else x["right"] for x in bb]
-                ax.plot(mid, y, ls=ls, c=f"C{ci}", marker=".",
-                        label=f"{ln} 层" + ("" if s == "coarse" else f"，{c.split('_k')[1]}·s"))
+    for ax, c in zip(axes, lv):
+        for ln, ls, lab in zip(LAYERS, ("--", "-", ":"), ("a 几何模型", "b 精确期望", "c 16 次实测")):
+            bb = summ["by_config"][c]["layers"][ln]["by_bin"]["all"]
+            y = [np.nan if x["n"] < 50 else x["right"] for x in bb]
+            ax.plot(mid, y, ls=ls, c="k", marker=".", label=lab)
         ax.set_xscale("log")
         ax.axhline(0.5, c="gray", lw=0.6)
-        ax.set_title("粗级" if s == "coarse" else f"尺度 {s}")
+        ax.set_title(label(c))
         ax.set_xlabel("b / s")
-        ax.legend(fontsize=6, frameon=False)
+    axes[0].legend(fontsize=7, frameon=False)
     axes[0].set_ylabel("信号对的像素比例")
     fig.savefig(RUN / "extra" / "right_by_bs.png", dpi=120)
 

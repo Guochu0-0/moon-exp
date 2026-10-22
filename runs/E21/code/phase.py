@@ -27,6 +27,7 @@ if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
 plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
+plt.rcParams["mathtext.fontset"] = "dejavusans"      # 刻度里的负号（SimHei 缺 U+2212）
 
 BS = np.logspace(-1, 1.5, 61)          # b/s
 MR = np.logspace(-1, 1.5, 61)          # |M − R|/s
@@ -77,7 +78,7 @@ def main():
             if i == 0:
                 ax.set_title(f"δ/s = {d:g}")
             if c == 0:
-                ax.set_ylabel(lab + "\n|M − R| / s")
+                ax.set_ylabel(lab + "\n|M - R| / s")
             if i == len(rows) - 1:
                 ax.set_xlabel("b / s")
         fig.colorbar(im, ax=axes[i, :], shrink=0.9)

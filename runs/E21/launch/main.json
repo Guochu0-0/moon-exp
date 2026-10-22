@@ -1,0 +1,66 @@
+[
+ {
+  "start": "2026-10-22 21:37:37 +0800",
+  "end": "2026-10-22 21:43:07 +0800",
+  "status": "ok",
+  "commit": "3cd138251733f0137b2cd3462e15c6fb67638905",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-195",
+  "cuda_visible_devices": "1,2",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "runs/E21/code/run.sh"
+  ]
+ },
+ {
+  "start": "2026-10-22 21:50:59 +0800",
+  "end": "2026-10-22 21:51:57 +0800",
+  "status": "ok",
+  "commit": "8c16d0bf46e7b85a8e2c0029e7941ad55061c139",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-195",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "bash",
+   "runs/E21/code/replot.sh"
+  ]
+ },
+ {
+  "start": "2026-10-22 21:53:51 +0800",
+  "end": "2026-10-22 21:54:37 +0800",
+  "status": "ok",
+  "commit": "a044e5e32bb449611813a5f71bd8158173e64a03",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-195",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "bash",
+   "runs/E21/code/replot.sh"
+  ]
+ },
+ {
+  "start": "2026-10-22 21:56:04 +0800",
+  "end": "2026-10-22 21:57:01 +0800",
+  "status": "ok",
+  "commit": "5e61d911707d1a49e88062a536c242a4380146a3",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "653cd62be801",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-195",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "bash",
+   "runs/E21/code/replot.sh"
+  ]
+ }
+]

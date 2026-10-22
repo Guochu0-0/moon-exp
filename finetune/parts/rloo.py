@@ -249,7 +249,7 @@ def rollout_noisy(model, f1, f2, P, cert, k, sig, chunk=8):
 def level_reward(x, A, s, p):
     """一级的抽签输出 x (N,2,h,w) 与参照仿射 A → (逐像素奖励 (N,h,w), 距离 d (N,h,w) px)。长度参数按级缩放：
     delta·s/8、tau·s/8；形式取 fine_shape，空时同粗级的 shape。"""
-    return ref_cells(x, A, p["delta"] * s / 8, p["tau"] * s / 8, p["r_out"], p.get("fine_shape") or p["shape"])
+    return ref_cells(x, A, p["delta"] * s / 8, p["tau"] * s / 8, p["r_out"], p["fine_shape"] or p["shape"])
 
 
 def fine_surrogate(dec, f1, f2, rec, adv, sig, chunk, backward, factor, w=1.0):
@@ -407,7 +407,7 @@ class Term:
         sig = {s_: p["k"] * s_ / (HW / 2) for s_ in lv}       # σ（归一化坐标）
         fine = torch.zeros((), device=cls.device)
         if lv:
-            stats.update({f"{n}_{s_}": [] for s_ in lv for n in ("rew", "rew_sd", "d", "zero")},
+            stats.update({f"{n}_{s_}": [] for s_ in lv for n in ("rew", "rew_sd", "d", "d90", "zero")},
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         for b in range(B):
             with torch.no_grad():
@@ -452,6 +452,7 @@ class Term:
                         stats[f"rew_{s_}"].append(float(r_s.mean()))
                         stats[f"rew_sd_{s_}"].append(float(r_s.std(0).mean()))
                         stats[f"d_{s_}"].append(float(d_s.mean()))
+                        stats[f"d90_{s_}"].append(float(torch.quantile(d_s.flatten()[::4].float(), 0.9)))
                         stats[f"zero_{s_}"].append(float((r_s == 0).float().mean()))   # 奖励下溢为 0 的比例（#197）
                     torch.cuda.synchronize()
                     stats["t_roll_fine"].append(time.time() - t2)

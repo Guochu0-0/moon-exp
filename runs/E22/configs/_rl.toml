@@ -3,6 +3,7 @@
 # 每对 8 条链；VGG 放开训练。细化部分（尺度 16、8、4 的细化层与尺度 8、4 的 proj、VGG）的学习率 = [model] refine_lr、vgg_lr
 # × 3e-5，两者取同一个值，由各方法给出。其余同 E20：难版扰动、DINOv2 qkv 加 LoRA r 8、4000 步（warmup 500 + cosine）；
 # 每 500 步存档；种子 0。不加 KL，不训可信度，不裁梯度。每步记各部分参数的相对改变量（upd_*）。
+# 各方法必须同时写 refine_lr 与 vgg_lr，且取同一个值（细化部分是一组）。
 [model]
 name = "roma"
 lora_r = 8

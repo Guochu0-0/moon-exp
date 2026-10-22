@@ -19,7 +19,7 @@ for k in keys:
 for k in ("upd_coarse", "upd_lora"):
     if k in med and med.get("upd_fine"):
         print(f"{k} / upd_fine = {med[k] / med['upd_fine']:.4g}")
-for k in ("d_ref", "d_16", "d_8", "d_4", "rew", "rew_16", "rew_8", "rew_4", "zero_16", "zero_8", "zero_4", "sec"):
+for k in ("d_ref", "d_16", "d_8", "d_4", "d90_16", "d90_8", "d90_4", "rew", "rew_16", "rew_8", "rew_4", "zero_16", "zero_8", "zero_4", "sec"):
     v = [r[k] for r in rows if k in r]
     if v:
         print(f"{k:8s} mean {np.mean(v):.4g}  median {np.median(v):.4g}")

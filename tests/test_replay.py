@@ -63,6 +63,9 @@ ADDED = {
     "rloo.shape": ("ripe", "#191 新增；ripe = RIPE++ 分级奖励原式，即 E15 的奖励；只在 reward = ref 时起作用"),
     "rloo.levels": ([], "#192 新增；空 = 细化不加噪声，即之前只在粗级抽签的做法"),
     "rloo.k": (0.5, "#192 与 levels 同批新增；只在 levels 非空时起作用"),
+    "rloo.fine_shape": ("", "#197 新增；空 = 细化各级与粗级同一奖励形式，即 #192 的做法"),
+    "model.refine_lr": (1.0, "#197 新增（RoMa）；1 = 细化部分与其余 decoder 同一学习率，即之前的做法"),
+    "run.log_update": (False, "#197 新增；只多记日志，不影响训练"),
 }
 
 

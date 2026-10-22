@@ -148,7 +148,7 @@ def main(argv=None):
                 if active:
                     optim.backward(loss)
                 step += 1
-                if mon:
+                if mon and step % o["accum"] == 0:
                     mon.before()
                 upd = optim.step(step)
                 if mon and upd:

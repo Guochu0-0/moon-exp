@@ -789,25 +789,46 @@ def test_rloo_rollout_noisy_level16():
 
 def test_roma_refine_part_names():
     """细化部分 = 各级 conv_refiner 与尺度 8–1 的 proj；尺度 16 的 proj、GP、embedding decoder 归粗级。"""
-    from finetune.models.roma import _refine_part
+    from finetune.models.roma import _part, _refine_level
 
-    assert _refine_part("decoder.conv_refiner.16.block1.0.weight") == "16"
-    assert _refine_part("decoder.conv_refiner.4.out_conv.bias") == "4"
-    assert _refine_part("decoder.proj.8.0.weight") == "8"
+    assert _refine_level("decoder.conv_refiner.16.block1.0.weight") == "16"
+    assert _refine_level("decoder.conv_refiner.4.out_conv.bias") == "4"
+    assert _refine_level("decoder.proj.8.0.weight") == "8"
     for name in ("decoder.proj.16.0.weight", "decoder.gps.16.foo", "decoder.embedding_decoder.x", "encoder.cnn.layers.0"):
-        assert _refine_part(name) is None
+        assert _refine_level(name) is None
+    assert [_part(n) for n in ("decoder.proj.16.0.weight", "decoder.proj.4.0.weight", "encoder.cnn.layers.0.weight",
+                               "encoder.dinov2.x")] == ["coarse", "refine", "vgg", None]
+
+
+def test_roma_split_param_groups():
+    """三组参数：粗级 decoder、细化、VGG；train_vgg 关时 VGG 不训、不进任何组。"""
+    import torch
+    from finetune.models.roma import _split
+
+    names = ["decoder.gps.16.w", "decoder.proj.16.w", "decoder.proj.8.w", "decoder.conv_refiner.16.w",
+             "encoder.cnn.layers.0.w", "encoder.other.w"]
+    ps = {n: torch.nn.Parameter(torch.zeros(1)) for n in names}
+    dec, refine, vgg = _split(ps.items(), {"train_decoder": True, "train_vgg": True})
+    assert dec == [ps["decoder.gps.16.w"], ps["decoder.proj.16.w"]]
+    assert refine == [ps["decoder.proj.8.w"], ps["decoder.conv_refiner.16.w"]]
+    assert vgg == [ps["encoder.cnn.layers.0.w"]] and not ps["encoder.other.w"].requires_grad
+    dec, refine, vgg = _split(ps.items(), {"train_decoder": True, "train_vgg": False})
+    assert vgg == [] and not ps["encoder.cnn.layers.0.w"].requires_grad
 
 
 def test_update_monitor_relative_change():
-    """普通参数：‖Δθ‖/‖θ‖；LoRA：‖scale·Δ(BA)‖/‖W‖，与直接算等效权重的结果相同；fine 合并 ref* 与 vgg。"""
+    """普通参数：‖Δθ‖/‖θ‖；LoRA：‖scale·Δ(BA)‖/‖W‖，与直接算等效权重的结果相同；fine 合并 ref* 与 vgg；
+    没收到梯度的参数（未加噪的细化级）不计入，整部分没有梯度时不出现。"""
     import torch
     from finetune.optim import UpdateMonitor
 
     torch.manual_seed(0)
     a, v = torch.nn.Parameter(torch.ones(4)), torch.nn.Parameter(torch.full((2,), 2.0))
-    c = torch.nn.Parameter(torch.ones(3))
+    c, idle = torch.nn.Parameter(torch.ones(3)), torch.nn.Parameter(torch.full((100,), 5.0))
     A, B, W = torch.randn(2, 5), torch.randn(6, 2), torch.randn(6, 5)
-    mon = UpdateMonitor({"ref8": [a], "vgg": [v], "coarse": [c]}, [(A, B, 2.0, W)])
+    for p in (a, v, c):
+        p.grad = torch.zeros_like(p)
+    mon = UpdateMonitor({"ref8": [a], "ref1": [idle], "vgg": [v], "coarse": [c]}, [(A, B, 2.0, W)])
     mon.before()
     BA0 = (B @ A).clone()
     with torch.no_grad():
@@ -816,7 +837,7 @@ def test_update_monitor_relative_change():
         A += 0.05 * torch.randn_like(A)
         B += 0.05 * torch.randn_like(B)
     out = mon.after()
-    assert out["upd_coarse"] == 0.0
+    assert out["upd_coarse"] == 0.0 and "upd_ref1" not in out
     assert out["upd_ref8"] == pytest.approx(0.1, rel=1e-3)
     assert out["upd_vgg"] == pytest.approx(0.1, rel=1e-3)
     assert out["upd_fine"] == pytest.approx(float(np.sqrt((4 * 0.01 + 2 * 0.04) / (4 + 8))), rel=1e-3)

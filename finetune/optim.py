@@ -88,10 +88,9 @@ class UpdateMonitor:
         if self.lora:
             num["lora"], den["lora"] = 0.0, 0.0
             for (A, B, sc, W), (A0, B0) in zip(self.lora, old_l):
-                X = torch.cat([B.detach().double(), -B0.double()], 1)   # B'A' − BA = [B', −B] [A'; A]
-                Y = torch.cat([A.detach().double(), A0.double()], 0)
-                # ‖XY‖² = Σ (XᵀX) ⊙ (YYᵀ)：Δ 远小于 BA 时是大数相减，用双精度，舍入误差不让它变负
-                num["lora"] += sc ** 2 * max(0.0, float(((X.T @ X) * (Y @ Y.T)).sum()))
+                A1, B1 = A.detach().float(), B.detach().float()
+                dW = B1 @ (A1 - A0) + (B1 - B0) @ A0                # B'A' − BA，按增量算，不做大数相减
+                num["lora"] += sc ** 2 * float(dW.double().square().sum())
                 den["lora"] += float(W.detach().float().square().sum())
         fine = [k for k in num if k.startswith("ref") or k == "vgg"]
         if fine:

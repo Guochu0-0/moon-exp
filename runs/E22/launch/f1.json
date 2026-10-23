@@ -1,0 +1,118 @@
+[
+ {
+  "start": "2026-10-22 23:41:48 +0000",
+  "end": "2026-10-23 04:25:37 +0000",
+  "status": "ok",
+  "commit": "7f0f6d019707e22d369c9cb1b902d96499f9eca9",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-197",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "scripts/finetune/run.py",
+   "runs/E22"
+  ],
+  "entry": "scripts/finetune/run.py",
+  "config_file": "runs/E22/configs/f1.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.47,
+    "refine_lr": 0.47,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 8,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false
+   },
+   "optim": {
+    "steps": 4000,
+    "batch": 1,
+    "lr": 3e-05,
+    "wd": 0.01,
+    "warmup": 500,
+    "warmup_start": 0.1,
+    "sched": "cosine",
+    "lr_min": 0.0,
+    "clip": 0.0,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 4,
+    "save_every": 500,
+    "save_at": [],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "val_peak",
+    "log_update": true
+   },
+   "aug": {
+    "geo": true,
+    "photo": false,
+    "shift": 128.0,
+    "rot": 20.0,
+    "scale": 0.2,
+    "shift_disk": true,
+    "erase": true,
+    "erase_n": 3,
+    "erase_min": 0.1,
+    "erase_max": 0.25,
+    "blockmask": false,
+    "mask_block": 32,
+    "mask_ratio": 0.3
+   },
+   "rloo": {
+    "reward": "ref",
+    "group": 8,
+    "temp": 0.3,
+    "num": 5000,
+    "ransac": 3.0,
+    "chunk": 8,
+    "baseline": "loo",
+    "delta": 8.0,
+    "tau": 16.0,
+    "r_out": -0.1,
+    "shape": "gauss",
+    "fine_shape": "cauchy",
+    "levels": [
+     16,
+     8,
+     4
+    ],
+    "k": 0.5,
+    "weight": 1.0
+   }
+  },
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  }
+ }
+]

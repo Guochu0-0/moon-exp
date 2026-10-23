@@ -29,7 +29,7 @@ from workbench.tbwriter import ScalarWriter
 from . import config as C
 from .data import PairSet
 from .models import MODELS
-from .optim import Optim
+from .optim import Optim, UpdateMonitor
 from .parts import PARTS
 
 REPO = Path(__file__).resolve().parents[1]
@@ -117,6 +117,9 @@ def main(argv=None):
                                      drop_last=True, persistent_workers=r["workers"] > 0)
     optim = Optim(model.params, o, model.amp, getattr(model, "groups", None))
     ema = Ema(model, o["ema"]) if o["ema"] > 0 else None
+    if r["log_update"] and not hasattr(model, "update_parts"):
+        raise C.ConfigError(f"[run] log_update 要求模型提供 update_parts，{mname} 没有")
+    mon = UpdateMonitor(*model.update_parts()) if r["log_update"] else None
     (out / "args.json").write_text(json.dumps(
         {"config": cfg, "source": str(args.config), "infer_config": model.infer_cfg, "weights": model.weights,
          "n_train": len(ds), "n_params": sum(p.numel() for p in model.params), "commit": git_head(REPO),
@@ -145,7 +148,11 @@ def main(argv=None):
                 if active:
                     optim.backward(loss)
                 step += 1
+                if mon and step % o["accum"] == 0:
+                    mon.before()
                 upd = optim.step(step)
+                if mon and upd:
+                    upd.update(mon.after())
                 if ema and upd:
                     ema.update()
                 rec = {"step": step, "pairs": batch["pair"], "loss": round(float(loss), 5), **stats, **upd,

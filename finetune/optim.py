@@ -58,3 +58,42 @@ class Optim:
                 upd["scale"] = self.scaler.get_scale()
         self.opt.zero_grad(set_to_none=True)
         return upd
+
+
+class UpdateMonitor:
+    """每次参数更新的相对改变量（#197）：各部分 ‖θ_新 − θ_旧‖ / ‖θ_旧‖（范数取部分内全部参数拼成的向量）。
+    LoRA 层按等效权重算：ΔW = scale·(B_新 A_新 − B_旧 A_旧)，相对原权重 W；各层合起来为 √ΣΔW² / √ΣW²。
+    parts：部分 → 参数列表；lora：[(A, B, scale, W)]。另给 fine（名字以 ref 开头的部分与 vgg 合起来，即细化各级与它们的特征）。
+    只计这一步收到梯度的参数（before 在 optim.step 之前、梯度已在时调用）：没加噪的细化级没有梯度、AdamW 不动它们，
+    计进分母会把 fine 拉低。整个部分都没有梯度时这一部分不出现在结果里。"""
+
+    def __init__(self, parts: dict, lora=()):
+        self.parts, self.lora = parts, list(lora)
+        self._old = None
+
+    @torch.no_grad()
+    def before(self):
+        live = {k: [p for p in ps if p.grad is not None] for k, ps in self.parts.items()}
+        self._live = {k: ps for k, ps in live.items() if ps}
+        self._old = ({k: [p.detach().float().clone() for p in ps] for k, ps in self._live.items()},
+                     [(A.detach().float().clone(), B.detach().float().clone()) for A, B, _, _ in self.lora])
+
+    @torch.no_grad()
+    def after(self) -> dict:
+        old, old_l = self._old
+        num, den = {}, {}
+        for k, ps in self._live.items():
+            num[k] = sum(float((p.detach().float() - q).square().sum()) for p, q in zip(ps, old[k]))
+            den[k] = sum(float(q.square().sum()) for q in old[k])
+        if self.lora:
+            num["lora"], den["lora"] = 0.0, 0.0
+            for (A, B, sc, W), (A0, B0) in zip(self.lora, old_l):
+                A1, B1 = A.detach().float(), B.detach().float()
+                dW = B1 @ (A1 - A0) + (B1 - B0) @ A0                # B'A' − BA，按增量算，不做大数相减
+                num["lora"] += sc ** 2 * float(dW.double().square().sum())
+                den["lora"] += float(W.detach().float().square().sum())
+        fine = [k for k in num if k.startswith("ref") or k == "vgg"]
+        if fine:
+            num["fine"], den["fine"] = sum(num[k] for k in fine), sum(den[k] for k in fine)
+        self._old = None
+        return {f"upd_{k}": float(f"{math.sqrt(num[k] / den[k]):.4g}") if den[k] > 0 else 0.0 for k in num}

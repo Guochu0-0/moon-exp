@@ -680,7 +680,7 @@ def test_rloo_level_reward_scales_with_level():
     A = np.array([[1.0, 0, 0], [0, 1.0, 0]])
     x = grid(8, 8, "cpu").permute(2, 0, 1)[None].repeat(3, 1, 1, 1)
     x[:, 0] += (torch.tensor([0.0, 4.0, 8.0]) / 256)[:, None, None]
-    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss"}
+    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss", "fine_shape": ""}
     r, d = level_reward(x, A, 4, p)
     assert torch.allclose(d[:, 0, 0], torch.tensor([0.0, 4.0, 8.0]), atol=1e-3)
     assert torch.allclose(r, distance_reward(d, "gauss", 4.0))
@@ -725,3 +725,138 @@ def test_rloo_fit_many_degenerate_output_counts_as_failed_fit():
     out = fit_many(flow, cert, 500, 3.0)
     assert out[1] == (None, 0) and out[2] == (None, 0)
     assert out[0][0] is not None and abs(out[0][0][0, 2] - 8) < 0.5
+
+
+# ---------- 细化第二批（#197） ----------
+
+def test_rloo_cauchy_reward_does_not_underflow():
+    """cauchy 1 / (1 + ½(d/δ)²)：d 小时与 gauss 一致到二阶；单精度下 gauss 在 d 超过约 14δ 时为 0，cauchy 在远处
+    仍不为 0、单调下降，相邻距离（差 1%）的奖励分得开。"""
+    import torch
+    from finetune.parts.rloo import distance_reward
+
+    d = torch.tensor([0.0, 0.1, 0.2])
+    assert torch.allclose(distance_reward(d, "cauchy", 4.0), distance_reward(d, "gauss", 4.0), atol=1e-6)
+    far = torch.tensor([15.0, 100.0, 1e3, 1e4]) * 4                       # 15δ … 10⁴δ，δ = 4
+    assert (distance_reward(far, "gauss", 4.0) == 0).all()
+    r = distance_reward(far, "cauchy", 4.0)
+    assert (r > 0).all() and (r[1:] < r[:-1]).all()
+    assert (distance_reward(far * 1.01, "cauchy", 4.0) < r).all()
+    assert torch.allclose(r, 1 / (1 + 0.5 * (far / 4) ** 2))
+
+
+def test_rloo_level_reward_fine_shape_and_level16():
+    """fine_shape 非空时细化各级用它，空时同粗级 shape；尺度 16 的长度参数为 delta·2。"""
+    import torch
+    from finetune.parts.pseudo import grid
+    from finetune.parts.rloo import distance_reward, level_reward
+
+    A = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    x = grid(4, 4, "cpu").permute(2, 0, 1)[None].repeat(2, 1, 1, 1)
+    x[1, 0] += 40 / 256
+    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss", "fine_shape": "cauchy"}
+    r, d = level_reward(x, A, 16, p)
+    assert torch.allclose(r, distance_reward(d, "cauchy", 16.0))
+    r0, _ = level_reward(x, A, 16, {**p, "fine_shape": ""})
+    assert torch.allclose(r0, distance_reward(d, "gauss", 16.0))
+
+
+def test_config_rloo_level16_and_fine_shape(tmp_path):
+    from finetune import config as C
+
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\n'))
+    assert d["rloo"]["fine_shape"] == "" and d["model"]["refine_lr"] == 1.0 and d["run"]["log_update"] is False
+    c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\nrefine_lr = 0.5\n[run]\nlog_update = true\n'
+                                     '[rloo]\nreward = "ref"\nlevels = [16, 8, 4]\nfine_shape = "cauchy"\n'))
+    assert c["rloo"]["levels"] == [16, 8, 4] and c["rloo"]["fine_shape"] == "cauchy"
+    assert c["model"]["refine_lr"] == 0.5 and c["run"]["log_update"] is True
+    with pytest.raises(C.ConfigError):
+        C.load(_write(tmp_path, "b", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nfine_shape = "box"\n'))
+
+
+def test_rloo_rollout_noisy_level16():
+    """尺度 16 也能加噪：记下的是尺度 16 细化层的输入与抽到的输出（4×4 格）。"""
+    import torch
+    from finetune.parts.rloo import rollout, rollout_noisy
+
+    model, dec, theta, feats, P, cert = _fake_roma()
+    f1, f2 = feats()
+    k = torch.randint(0, 16, (3, 4, 4))
+    ref, _ = rollout(model, f1, f2, P, cert, k)
+    rec, (fl, _) = rollout_noisy(model, f1, f2, P, cert, k, {16: 0.0})
+    assert rec[16][2].shape == (3, 2, 4, 4) and torch.allclose(fl, ref, atol=1e-6)
+
+
+def test_roma_refine_part_names():
+    """细化部分 = 各级 conv_refiner 与尺度 8–1 的 proj；尺度 16 的 proj、GP、embedding decoder 归粗级。"""
+    from finetune.models.roma import _part, _refine_level
+
+    assert _refine_level("decoder.conv_refiner.16.block1.0.weight") == "16"
+    assert _refine_level("decoder.conv_refiner.4.out_conv.bias") == "4"
+    assert _refine_level("decoder.proj.8.0.weight") == "8"
+    for name in ("decoder.proj.16.0.weight", "decoder.gps.16.foo", "decoder.embedding_decoder.x", "encoder.cnn.layers.0"):
+        assert _refine_level(name) is None
+    assert [_part(n) for n in ("decoder.proj.16.0.weight", "decoder.proj.4.0.weight", "encoder.cnn.layers.0.weight",
+                               "encoder.dinov2.x")] == ["coarse", "refine", "vgg", None]
+
+
+def test_roma_split_param_groups():
+    """三组参数：粗级 decoder、细化、VGG；train_vgg 关时 VGG 不训、不进任何组。"""
+    import torch
+    from finetune.models.roma import _split
+
+    names = ["decoder.gps.16.w", "decoder.proj.16.w", "decoder.proj.8.w", "decoder.conv_refiner.16.w",
+             "encoder.cnn.layers.0.w", "encoder.other.w"]
+    ps = {n: torch.nn.Parameter(torch.zeros(1)) for n in names}
+    dec, refine, vgg = _split(ps.items(), {"train_decoder": True, "train_vgg": True})
+    assert dec == [ps["decoder.gps.16.w"], ps["decoder.proj.16.w"]]
+    assert refine == [ps["decoder.proj.8.w"], ps["decoder.conv_refiner.16.w"]]
+    assert vgg == [ps["encoder.cnn.layers.0.w"]] and not ps["encoder.other.w"].requires_grad
+    dec, refine, vgg = _split(ps.items(), {"train_decoder": True, "train_vgg": False})
+    assert vgg == [] and not ps["encoder.cnn.layers.0.w"].requires_grad
+
+
+def test_update_monitor_relative_change():
+    """普通参数：‖Δθ‖/‖θ‖；LoRA：‖scale·Δ(BA)‖/‖W‖，与直接算等效权重的结果相同；fine 合并 ref* 与 vgg；
+    没收到梯度的参数（未加噪的细化级）不计入，整部分没有梯度时不出现。"""
+    import torch
+    from finetune.optim import UpdateMonitor
+
+    torch.manual_seed(0)
+    a, v = torch.nn.Parameter(torch.ones(4)), torch.nn.Parameter(torch.full((2,), 2.0))
+    c, idle = torch.nn.Parameter(torch.ones(3)), torch.nn.Parameter(torch.full((100,), 5.0))
+    A, B, W = torch.randn(2, 5), torch.randn(6, 2), torch.randn(6, 5)
+    for p in (a, v, c):
+        p.grad = torch.zeros_like(p)
+    mon = UpdateMonitor({"ref8": [a], "ref1": [idle], "vgg": [v], "coarse": [c]}, [(A, B, 2.0, W)])
+    mon.before()
+    BA0 = (B @ A).clone()
+    with torch.no_grad():
+        a += 0.1
+        v -= 0.2
+        A += 0.05 * torch.randn_like(A)
+        B += 0.05 * torch.randn_like(B)
+    out = mon.after()
+    assert out["upd_coarse"] == 0.0 and "upd_ref1" not in out
+    assert out["upd_ref8"] == pytest.approx(0.1, rel=1e-3)
+    assert out["upd_vgg"] == pytest.approx(0.1, rel=1e-3)
+    assert out["upd_fine"] == pytest.approx(float(np.sqrt((4 * 0.01 + 2 * 0.04) / (4 + 8))), rel=1e-3)
+    want = float((2.0 * (B @ A - BA0)).norm() / W.norm())
+    assert out["upd_lora"] == pytest.approx(want, rel=1e-3)
+
+
+def test_update_monitor_lora_tiny_change_stays_accurate():
+    """LoRA 的 BA 已很大、这一步只改一点时（E22 训练中在 ~1000 步出现），‖Δ(BA)‖ 不因大数相减变负或失准。"""
+    import torch
+    from finetune.optim import UpdateMonitor
+
+    torch.manual_seed(0)
+    A, B, W = torch.randn(8, 1024) * 10, torch.randn(3072, 8) * 10, torch.randn(3072, 1024)
+    mon = UpdateMonitor({}, [(A, B, 2.0, W)])
+    for _ in range(5):
+        mon.before()
+        BA0 = (B.double() @ A.double()).clone()
+        with torch.no_grad():
+            A += 1e-6 * torch.randn_like(A)
+        want = float((2.0 * (B.double() @ A.double() - BA0)).norm() / W.double().norm())
+        assert mon.after()["upd_lora"] == pytest.approx(want, rel=1e-2)

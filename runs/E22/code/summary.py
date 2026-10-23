@@ -18,7 +18,7 @@ plt.rcParams["axes.unicode_minus"] = False
 
 E = Path(__file__).resolve().parents[1]
 E19 = E.parent / "E19"
-MULT = {"f0002": 0.002, "f0005": 0.005, "f001": 0.01, "f002": 0.02, "f005": 0.05, "f01": 0.1, "f1": 1, "f10": 10}
+MULT = {"f0002": 0.002, "f001": 0.01, "f01": 0.1, "f1": 1, "f10": 10}
 AT = [1, 500, 1000, 1500, 2000, 2500, 3000, 3500, 3900]     # 从该步起 100 步的窗口
 KEYS = ["d_ref", "rew", "rew_16", "rew_8", "rew_4", "d_16", "d_8", "d_4", "d90_16", "d90_8", "d90_4",
         "upd_coarse", "upd_lora", "upd_fine", "upd_ref16", "upd_ref8", "upd_ref4", "upd_vgg"]

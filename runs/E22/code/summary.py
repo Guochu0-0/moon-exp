@@ -13,8 +13,12 @@ import numpy as np
 
 from workbench.protocol import auc
 
-plt.rcParams["font.sans-serif"] = ["SimHei"]
+FONT = "/remote-home/xufang/YGC/fonts/simhei.ttf"      # 同 E14、E21
+if Path(FONT).exists():
+    matplotlib.font_manager.fontManager.addfont(FONT)
+plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
+PLAIN = matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}")   # 对数轴刻度写成纯文本（SimHei 缺数学负号）
 
 E = Path(__file__).resolve().parents[1]
 E19 = E.parent / "E19"
@@ -105,6 +109,7 @@ for m in sorted(logs, key=MULT.get):
     ax.plot([r["step"] for r in rs], roll, lw=1, label=f"× {MULT[m]}")
 ax.axhline(100, color="k", ls=":", lw=1)
 ax.set_yscale("log")
+ax.yaxis.set_major_formatter(PLAIN)
 ax.set_xlabel("训练步数")
 ax.set_ylabel("离参照距离，50 步滑动中位数（px）")
 ax.legend(fontsize=7, ncol=2)

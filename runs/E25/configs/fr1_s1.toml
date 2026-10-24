@@ -1,0 +1,8 @@
+# 冻结参照（#202）：参照取训练开始时模型的冻结副本；其余同 E22 f1。种子 1。
+base = "_rl"
+
+[run]
+seed = 1
+
+[rloo]
+frozen_ref = true

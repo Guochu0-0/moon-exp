@@ -1,0 +1,40 @@
+# 照 E22 f1（#197、#202）：细化部分学习率 = 锚点 0.47 × 1（1.4e-5）。E22 原注释：细化训练第二批（#197）。粗级照 E19 gauss8（RLOO、温度 0.3，奖励为高斯核 δ 8 px），学习率照 E19（decoder 3e-5、LoRA 1e-4）。
+# 细化：尺度 16、8、4 的输出上加 σ = 0.5 × s px 的二维高斯，每级逐像素与参照仿射打分（cauchy，δ = s px），各级优势各自 RLOO；
+# 每对 8 条链；VGG 放开训练。细化部分（尺度 16、8、4 的细化层与尺度 8、4 的 proj、VGG）的学习率 = [model] refine_lr、vgg_lr
+# × 3e-5，两者取同一个值。其余同 E20：难版扰动、DINOv2 qkv 加 LoRA r 8、4000 步（warmup 500 + cosine）；
+# 每 500 步存档；种子 0。不加 KL，不训可信度，不裁梯度。每步记各部分参数的相对改变量（upd_*）。
+[model]
+name = "roma"
+refine_lr = 0.47
+vgg_lr = 0.47
+lora_r = 8
+train_vgg = true
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[run]
+save_every = 500
+save_zero = false
+seed = 0
+log_update = true
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+fine_shape = "cauchy"
+group = 8
+levels = [16, 8, 4]
+k = 0.5

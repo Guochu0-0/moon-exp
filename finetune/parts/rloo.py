@@ -40,6 +40,10 @@ shape 打分（fine_shape 非空时细化各级改用它，#197），长度参�
 第二遍逐级、每 chunk 条链带梯度重算 μ 并立刻反向，细化层参数直接得到梯度，特征上的梯度先累积在叶子上，最后经一个
 替身项随粗级损失一起反向穿过编码器（替身项的值换成细化各级损失之和，日志里的 loss 即粗级 + 细化）。
 
+冻结参照（#202，只配 reward = ref）：frozen_ref 打开时，训练开始时深拷贝一份初始模型（frozen_copy：不训练、不求梯度、
+eval 模式），每步用它对同一对已扰动的图正常推理、拟合参照仿射 A_ref，粗级与细化各级都对它打分；当前模型照旧正常推理
+一次、拟合 A_cur，只用来记录：d_cur 为粗匹配位置离 A_cur 的距离（同 d_ref 的口径），ref_gap 为 A_ref 与 A_cur
+把各格中心映射到的位置之间的平均距离（px）。
 细化训练方式（#201，fine_mode；默认 chain 即上面的整链抽签）：grad、local 不跑抽签链，levels 里的每一级都从正常推理
 （即拟合参照仿射的那一次）这一级的输入出发，带梯度重算细化层的输出 μ_s（梯度去向同 chain）。
 - grad（精确梯度，诊断用）：loss_s = −mean_像素 r(μ_s)，r 为 level_reward，参照仿射当常数，直接对 μ_s 求导；
@@ -78,6 +82,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "fine_shape": "", # 细化各级的奖励形式（#197）；空 = 同 shape
           "levels": [],     # 细化中加高斯噪声的级（16、8、4、2、1 的子集，#192、#197）；空 = 细化不加噪
           "k": 0.5,         # 加噪级的 σ = k × 这一级的尺度（原网格 px，#192）
+          "frozen_ref": False,  # ref：参照取训练开始时的模型、全程冻结（#202）；False = 当前模型
           "fine_mode": "chain",  # 细化训练方式（#201）：chain（整链抽签）| grad（精确梯度）| local（逐级局部抽签）
           "fine_group": 8,  # local：每级每像素的抽签次数
           "cos_every": 0,   # 每几次调用算一次 local 与 grad 梯度的余弦相似度（0 = 不算，#201）
@@ -89,6 +94,7 @@ BASELINES = ("loo", "none")
 FINE_MODES = ("chain", "grad", "local")
 SCALES = ("16", "8", "4", "2", "1")
 LEVELS = (16, 8, 4, 2, 1)
+FROZEN_OFF = ("dino_unfreeze", "dino_ckpt", "drop_path", "lora_dropout", "vgg_dropout", "unc_head")
 
 
 def fill(p):
@@ -118,6 +124,10 @@ def check(cfg):
         raise ConfigError(f"[rloo] levels 只能是 {LEVELS} 中不重复的整数，得到 {lv!r}")
     if lv and p["reward"] != "ref":
         raise ConfigError("[rloo] levels 只配 reward = 'ref'")
+    if p["frozen_ref"] and p["reward"] != "ref":
+        raise ConfigError("[rloo] frozen_ref 只配 reward = 'ref'")
+    if p["frozen_ref"] and any(cfg["model"].get(x) for x in FROZEN_OFF):     # 副本里会带随机性或引用原模型
+        raise ConfigError(f"[rloo] frozen_ref 要求 [model] {', '.join(FROZEN_OFF)} 都关闭")
     if p["k"] <= 0:
         raise ConfigError("[rloo] k 应 > 0")
     if p["fine_mode"] not in FINE_MODES:
@@ -306,6 +316,37 @@ def _surrogate(f1, f2, leaf1, leaf2, factor, val):
     return sur - sur.detach() + val
 
 
+def frozen_copy(model):
+    """训练开始时的模型的冻结副本（#202）：深拷贝 model.model，不求梯度、eval 模式，返回与 model 同样可传给 features、
+    coarse、refine 的包装。finetune.models.roma 在 lora_r > 0 时给 encoder 实例挂了闭包 forward（引用原模型的 encoder
+    与 DINOv2），拷贝里删掉它，退回 romatch 原实现（同样的计算，DINOv2 在 no_grad 里算）。DINOv2 放在 encoder 的列表里、
+    不是子模块，单独冻结。其余实例级 forward 与 forward 钩子（会引用原模型或带随机性）不支持。"""
+    import copy
+    import types
+    m = copy.deepcopy(model.model)
+    enc = getattr(m, "encoder", None)
+    if enc is not None and "forward" in vars(enc):
+        del enc.forward
+    mods = [m] + [x for x in getattr(enc, "dinov2_vitl14", []) if isinstance(x, torch.nn.Module)]
+    bad = [n for x in mods for n, mod in x.named_modules()
+           if "forward" in vars(mod) or mod._forward_hooks or mod._forward_pre_hooks]
+    if bad:
+        raise ValueError(f"frozen_copy 不支持实例级 forward 与 forward 钩子：{bad[:3]}")
+    for x in mods:
+        x.requires_grad_(False)
+        x.eval()
+    return types.SimpleNamespace(model=m)
+
+
+def affine_gap(A, B, h, w):
+    """两个仿射（原网格）把 h×w 格子中心映射到的位置之间的平均距离（px）；任一为 None 时 None。"""
+    if A is None or B is None:
+        return None
+    g = grid(h, w, "cpu")
+    pa, pb = (torch.einsum("ij,hwj->hwi", M[:, :2], g) + M[:, 2]
+              for M in (torch.from_numpy(affine_norm(X)).float() for X in (A, B)))
+    return float((pa - pb).norm(dim=-1).mean() * (HW / 2))
+
 # ---------- 细化：精确梯度与逐级局部抽签（#201） ----------
 
 def _mu(dec, s, a, b, fin, cin, H, W):
@@ -482,6 +523,7 @@ def loo(r):
 class Term:
     def __init__(self, p, model, ds):
         self.p, self.model = p, model
+        self.frozen = frozen_copy(model) if p.get("frozen_ref") else None   # 训练开始时的模型（#202）
         self.calls = 0
 
     def __call__(self, st):
@@ -497,6 +539,11 @@ class Term:
         stats = {k: [] for k in ("rew", "rew_sd", "n_inl", "H", "pmode", "nonmode", "d_anchor", "t_roll", "t_fit")}
         if p["reward"] == "ref":
             stats.update(ref_ok=[], d_ref=[], in_tau=[])
+        if self.frozen is not None:
+            stats.update(cur_ok=[], d_cur=[], ref_gap=[])
+            with torch.no_grad():
+                z1, z2 = features(self.frozen, i0, i1)
+                zcls, zcert = coarse(self.frozen, z1, z2)
         lv = p["levels"]
         sig = {s_: p["k"] * s_ / (HW / 2) for s_ in lv}       # σ（归一化坐标）
         fine = torch.zeros((), device=cls.device)
@@ -523,8 +570,21 @@ class Term:
                 stats["t_fit"].append(time.time() - t1)
                 if p["reward"] == "ref":
                     A_ref = fits[0][0]
-                    r, d = ref_cells(anchor_flow(P.expand(p["group"], -1, -1, -1), k), A_ref,
-                                     p["delta"], p["tau"], p["r_out"], p["shape"])
+                    fc = anchor_flow(P.expand(p["group"], -1, -1, -1), k)
+                    if self.frozen is not None:     # 参照换成冻结的初始模型；当前模型的仿射只用来记录
+                        A_cur, Pz = A_ref, zcls[b:b + 1].float().softmax(1)
+                        zf, zc = refine(self.frozen, {s: x[b:b + 1] for s, x in z1.items()},
+                                        {s: x[b:b + 1] for s, x in z2.items()}, anchor_flow(Pz, Pz.argmax(1)),
+                                        zcert[b:b + 1].float())
+                        A_ref = fit_many(zf, zc, p["num"], p["ransac"])[0][0]
+                        _, dc = ref_cells(fc, A_cur, p["delta"], p["tau"], p["r_out"], p["shape"])
+                        stats["cur_ok"].append(float(A_cur is not None))
+                        if dc is not None:
+                            stats["d_cur"].append(float(dc.mean()))
+                        gap = affine_gap(A_ref, A_cur, h, w)
+                        if gap is not None:
+                            stats["ref_gap"].append(gap)
+                    r, d = ref_cells(fc, A_ref, p["delta"], p["tau"], p["r_out"], p["shape"])
                     stats["ref_ok"].append(float(A_ref is not None))
                     if d is not None:
                         stats["d_ref"].append(float(d.mean()))

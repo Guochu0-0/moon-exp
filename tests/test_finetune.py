@@ -862,6 +862,77 @@ def test_update_monitor_lora_tiny_change_stays_accurate():
         assert mon.after()["upd_lora"] == pytest.approx(want, rel=1e-2)
 
 
+# ---------- 冻结参照（#202） ----------
+
+def test_config_rloo_frozen_ref(tmp_path):
+    from finetune import config as C
+
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\n'))
+    assert d["rloo"]["frozen_ref"] is False                                   # 默认参照随当前模型（旧行为）
+    c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nfrozen_ref = true\n'))
+    assert c["rloo"]["frozen_ref"] is True
+    for bad in ('[rloo]\nreward = "r1"\nfrozen_ref = true', 'dino_unfreeze = 2\n[rloo]\nreward = "ref"\nfrozen_ref = true',
+                'lora_r = 8\ndino_ckpt = true\n[rloo]\nreward = "ref"\nfrozen_ref = true',
+                'lora_r = 8\ndrop_path = 0.1\n[rloo]\nreward = "ref"\nfrozen_ref = true',
+                'vgg_dropout = 0.1\n[rloo]\nreward = "ref"\nfrozen_ref = true'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n{bad}\n'))
+
+
+def test_rloo_frozen_copy_is_independent_and_frozen():
+    """冻结副本：参数与原模型数值相同但不共享、不求梯度、eval 模式；原模型训练后副本不变。encoder 上引用原模型的
+    实例级闭包 forward 被删掉，副本走类自己的 forward（用副本的参数）；其余模块有实例级 forward 时报错。"""
+    import types
+    import torch
+    from finetune.parts.rloo import frozen_copy
+
+    class Enc(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.lin = torch.nn.Linear(2, 2)
+
+        def forward(self, x):
+            return self.lin(x)
+
+    net = torch.nn.Module()
+    net.encoder, net.head = Enc(), torch.nn.Linear(2, 2)
+    orig = net.encoder
+    net.encoder.forward = lambda x: orig.lin(x) * 0 + 7          # 同 finetune.models.roma._open_dino 的闭包写法
+    net.train()
+    model = types.SimpleNamespace(model=net)
+    fz = frozen_copy(model).model
+    assert not fz.training and not any(p.requires_grad for p in fz.parameters())
+    assert all(p.requires_grad for p in net.parameters()) and net.training
+    x = torch.randn(3, 2)
+    assert torch.allclose(fz.encoder(x), net.encoder.lin(x))          # 类 forward，不是原模型的闭包
+    with torch.no_grad():
+        net.encoder.lin.weight.add_(1.0)
+        net.head.weight.add_(1.0)
+    assert not torch.allclose(fz.encoder.lin.weight, net.encoder.lin.weight)
+    assert not torch.allclose(fz.head.weight, net.head.weight)
+    net.head.forward = lambda x: x
+    with pytest.raises(ValueError):
+        frozen_copy(model)
+    del net.head.forward
+    net.encoder.dinov2_vitl14 = [torch.nn.Linear(2, 2)]           # 同 romatch：DINOv2 放在列表里，不是子模块
+    fz = frozen_copy(model).model
+    dv = fz.encoder.dinov2_vitl14[0]
+    assert dv is not net.encoder.dinov2_vitl14[0] and not dv.training and not dv.weight.requires_grad
+    net.head.register_forward_hook(lambda mod, inp, out: out)
+    with pytest.raises(ValueError):
+        frozen_copy(model)
+
+
+def test_rloo_affine_gap():
+    """两个仿射把格子中心映射到的位置之间的平均距离：相同为 0，相差平移 (3, 4) px 为 5；任一为 None 时 None。"""
+    from finetune.parts.rloo import affine_gap
+
+    A = np.array([[1.0, 0.1, 5.0], [-0.1, 1.0, 2.0]])
+    B = A.copy()
+    B[:, 2] += [3.0, 4.0]
+    assert affine_gap(A, A, 8, 8) == pytest.approx(0.0, abs=1e-6)
+    assert affine_gap(A, B, 8, 8) == pytest.approx(5.0, rel=1e-4)
+    assert affine_gap(None, A, 8, 8) is None
 # ---------- 细化训练方式：精确梯度与逐级局部抽签（#201） ----------
 
 def _traj(model, f1, f2, P, cert):

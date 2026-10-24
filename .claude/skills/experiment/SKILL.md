@@ -1,7 +1,6 @@
 ---
 name: experiment
 description: 把一张 wayfinder 实验票（或地图上第一张可开始的实验票）从认领一路做到可在工作台查看，并登记结论、关票。
-disable-model-invocation: true
 ---
 
 # 跑一张实验票

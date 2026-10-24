@@ -66,6 +66,9 @@ ADDED = {
     "rloo.fine_shape": ("", "#197 新增；空 = 细化各级与粗级同一奖励形式，即 #192 的做法"),
     "model.refine_lr": (1.0, "#197 新增（RoMa）；1 = 细化部分与其余 decoder 同一学习率，即之前的做法"),
     "run.log_update": (False, "#197 新增；只多记日志，不影响训练"),
+    "rloo.fine_mode": ("chain", "#201 新增；chain = 整链抽签，即 #192 的细化训练方式"),
+    "rloo.fine_group": (8, "#201 与 fine_mode 同批新增；只在 fine_mode = local 时起作用"),
+    "rloo.cos_every": (0, "#201 新增；只多记日志，不影响训练"),
 }
 
 

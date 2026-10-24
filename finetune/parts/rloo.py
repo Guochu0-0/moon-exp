@@ -314,14 +314,15 @@ def _mu(dec, s, a, b, fin, cin, H, W):
     return fin + _disp(dec, s, d_flow, H, W)
 
 
-def level_loss(mu, A, s, sig, p):
-    """一级：带梯度的 μ (1,2,h,w) → (loss, (奖励, 距离))。grad：−mean_像素 r(μ)，对 μ 求导；local：从 μ 抽 fine_group 次
-    x = μ + σε，按 r(x) 打分、advantage，loss = −mean(优势 · log π)，log π = −‖x − μ‖² / 2σ²。"""
-    if p["fine_mode"] == "grad":
+def level_loss(mu, A, s, sig, p, mode, gen=None):
+    """一级：带梯度的 μ (1,2,h,w) → (loss, (奖励, 距离))。mode = grad：−mean_像素 r(μ)，对 μ 求导；local：从 μ 抽
+    fine_group 次 x = μ + σε（随机数取自 gen，不给时用全局发生器），按 r(x) 打分、advantage，
+    loss = −mean(优势 · log π)，log π = −‖x − μ‖² / 2σ²。"""
+    if mode == "grad":
         r, d = level_reward(mu, A, s, p)
         return -r.mean(), (r.detach(), d.detach())
     with torch.no_grad():
-        x = mu.detach() + sig * torch.randn((p["fine_group"],) + tuple(mu.shape[1:]), device=mu.device)
+        x = mu.detach() + sig * torch.randn((p["fine_group"],) + tuple(mu.shape[1:]), device=mu.device, generator=gen)
         r, d = level_reward(x, A, s, p)
         adv = advantage(r, p["baseline"])
     lp = -(x - mu).square().sum(1) / (2 * sig ** 2)
@@ -338,18 +339,19 @@ def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0):
     val, out = 0.0, {}
     for s in sig:
         fin, cin, _ = traj[s]
-        loss, out[s] = level_loss(_mu(dec, s, leaf1[s], leaf2[s], fin, cin, H, W), A, s, sig[s], p)
+        loss, out[s] = level_loss(_mu(dec, s, leaf1[s], leaf2[s], fin, cin, H, W), A, s, sig[s], p, p["fine_mode"])
         loss = w * loss
         backward(loss)
         val += float(loss)
     return _surrogate(f1, f2, leaf1, leaf2, factor, val), out
 
 
-def grad_cos(dec, f1, f2, traj, A, sig, p, scale=1024.0):
-    """同一对图、同一轨迹上 local 与 grad 两种细化损失的梯度的余弦相似度（诊断，用 autograd.grad，不碰 .grad）。
-    返回 cos_s（尺度 s 细化层的参数）、cosf_s（尺度 s 的两图特征）、cos（各级细化层参数拼成一个向量）。
-    scale 在求导前乘到损失上（余弦与它无关），免得半精度的细化层里梯度下溢。"""
+def grad_cos(dec, f1, f2, traj, A, sig, p, seed=0):
+    """同一对图、同一轨迹上 local 与 grad 两种细化损失的梯度的余弦相似度（诊断，用 autograd.grad，不碰 .grad；
+    local 的抽签用以 seed 起的独立发生器，不动训练的随机数流）。返回 cos_s（尺度 s 细化层的参数）、cosf_s（尺度 s 的
+    两图特征）、cos（各级细化层参数拼成一个向量）。求导前损失乘 1024（余弦与它无关），免得半精度的细化层里梯度下溢。"""
     H, W = f1[1].shape[-2:]
+    gen = torch.Generator(device=f1[1].device).manual_seed(seed)
     cos = lambda u, v: float((u * v).sum() / (u.norm() * v.norm()).clamp(min=1e-30))
     out, tot = {}, {"grad": [], "local": []}
     for s in sig:
@@ -359,8 +361,8 @@ def grad_cos(dec, f1, f2, traj, A, sig, p, scale=1024.0):
         mu = _mu(dec, s, a, b, fin, cin, H, W)
         g = {}
         for mode in ("grad", "local"):
-            loss, _ = level_loss(mu, A, s, sig[s], {**p, "fine_mode": mode})
-            gr = torch.autograd.grad(loss * scale, ps + [a, b], retain_graph=True, allow_unused=True)
+            loss, _ = level_loss(mu, A, s, sig[s], p, mode, gen)
+            gr = torch.autograd.grad(loss * 1024.0, ps + [a, b], retain_graph=True, allow_unused=True)
             g[mode] = [torch.zeros_like(q).flatten().float() if x is None else x.flatten().float()
                        for x, q in zip(gr, ps + [a, b])]
             tot[mode] += g[mode][:len(ps)]
@@ -572,7 +574,7 @@ class Term:
                     for s_, (r_s, d_s) in rd.items():
                         _level_stats(stats, s_, r_s, d_s)
                 if p["cos_every"] and b == 0 and (self.calls - 1) % p["cos_every"] == 0:
-                    for key, v in grad_cos(dec, fb, gb, traj, A_ref, sig, p).items():
+                    for key, v in grad_cos(dec, fb, gb, traj, A_ref, sig, p, self.calls).items():
                         stats.setdefault(key, []).append(v)
                 torch.cuda.synchronize()
                 stats["t_fine"].append(time.time() - t3)

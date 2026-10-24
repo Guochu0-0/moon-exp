@@ -5,6 +5,8 @@
    GP、embedding decoder 没有。
 2. descent：同一对图（扰动只抽一次），按 g1_s0 的配置（warmup 关掉、学习率恒定为锚点 × 1）训练 --steps 步，
    记每步正常推理轨迹上各级的细化奖励 mean r(μ_s)（精确梯度方式的损失为它的相反数）与离参照的距离。
+   descent_fine：同一对图，参照仿射固定为第 0 步的，只更新细化部分（细化层、proj、VGG；粗匹配、LoRA 不动），
+   只有精确梯度的细化损失，学习率同上，排除粗匹配与参照一起变的影响。
 3. cos：--n 对不同的训练图，各算一次 local 与 grad 两种细化损失对细化层参数的梯度的余弦相似度（rloo.grad_cos）。
 
     python runs/E24/code/probe.py --out runs/E24/extra/data/probe.json
@@ -103,6 +105,29 @@ def descent(cfg, ds, steps):
     return rows
 
 
+def descent_fine(cfg, ds, steps):
+    model = roma.Model(cfg, os.environ.get("MOON_WEIGHTS", ""))
+    p = {**cfg["rloo"], "fine_mode": "grad"}
+    sig = {s: p["k"] * s / (HW / 2) for s in p["levels"]}
+    groups = [g for g in model.groups if g["lr_scale"] in (cfg["model"]["refine_lr"], cfg["model"]["vgg_lr"])]
+    o = {**cfg["optim"], "warmup": 0, "sched": "const"}
+    optim = Optim([q for g in groups for q in g["params"]], o, model.amp, groups)
+    it = ds[0]
+    _, _, _, A = prepare(model, it, p)
+    rows = []
+    for t in range(1, steps + 1):
+        f1, f2, traj, _ = prepare(model, it, p)
+        sur, rd = rloo.fine_direct(model.model.decoder, f1, f2, traj, A, sig, p, optim.backward, optim.factor())
+        optim.backward(sur)
+        optim.step(t)
+        for q in model.params:
+            q.grad = None
+        rows.append({"step": t, **{f"rew_{s}": float(r.mean()) for s, (r, _) in rd.items()},
+                     **{f"d_{s}": float(d.mean()) for s, (_, d) in rd.items()}})
+        print("fine", rows[-1], flush=True)
+    return rows
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
@@ -135,6 +160,8 @@ def main(argv=None):
     del model
     torch.cuda.empty_cache()
     res["descent"] = descent(cfg, ds, a.steps)
+    torch.cuda.empty_cache()
+    res["descent_fine"] = descent_fine(cfg, ds, a.steps)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
     print("cos_summary", res["cos_summary"], flush=True)

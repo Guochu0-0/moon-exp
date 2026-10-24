@@ -944,15 +944,56 @@ def test_rloo_local_gradient_agrees_with_exact_for_many_draws():
          "baseline": "loo"}
     sig = {8: 0.5 * 8 / 256, 4: 0.5 * 4 / 256}
     f1, f2 = feats()
+    state = torch.get_rng_state()
     many = grad_cos(dec, f1, f2, traj, A, sig, {**p, "fine_group": 20000})
     few = grad_cos(dec, f1, f2, traj, A, sig, {**p, "fine_group": 2})
+    assert torch.equal(torch.get_rng_state(), state)                             # 不动全局随机数流
     assert set(many) == {"cos_8", "cos_4", "cosf_8", "cosf_4", "cos"}
     assert many["cos"] > 0.95 and many["cos_8"] > 0.95 and many["cosf_4"] > 0.9
     assert -1 <= few["cos"] <= 1 and few["cos"] < many["cos"]
     assert theta.grad is None and all(q.grad is None for q in dec.parameters())   # 诊断不碰 .grad
     mu = traj[8][2].clone().requires_grad_()
-    loss, (r, d) = level_loss(mu, A, 8, sig[8], {**p, "fine_group": 4})
+    loss, (r, d) = level_loss(mu, A, 8, sig[8], {**p, "fine_group": 4}, "local")
     assert r.shape == (4, 8, 8) and not r.requires_grad and loss.requires_grad
+
+
+def test_rloo_fine_direct_local_equals_direct():
+    """local 方式：分段反向 + 替身项的梯度与同一批抽签下直接求 −Σ_s mean(RLOO 优势 · log π_s) 的梯度相同。"""
+    import torch
+    from finetune.parts.rloo import _disp, advantage, fine_direct, level_reward
+
+    model, dec, theta, feats, P, cert = _fake_roma()
+    params = [theta] + list(dec.parameters())
+    with torch.no_grad():
+        traj, _ = _traj(model, *feats(), P, cert)
+    A = np.array([[1.0, 0.02, 3.0], [-0.01, 1.0, -2.0]])
+    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss", "fine_shape": "cauchy", "fine_mode": "local",
+         "fine_group": 6, "baseline": "loo"}
+    sig = {16: 0.5 * 16 / 256, 4: 0.5 * 4 / 256}
+
+    torch.manual_seed(5)
+    f1, f2 = feats()
+    L = 0
+    for s in sig:
+        fin, cin, _ = traj[s]
+        d_flow, _ = dec.conv_refiner[str(s)](f1[s], f2[s], fin, scale_factor=1, logits=cin)
+        mu = fin + _disp(dec, s, d_flow, 64, 64)
+        x = mu.detach() + sig[s] * torch.randn((6,) + tuple(mu.shape[1:]))
+        adv = advantage(level_reward(x, A, s, p)[0], "loo")
+        L = L - (adv * (-(x - mu).square().sum(1) / (2 * sig[s] ** 2))).mean()
+    L.backward()
+    want = [None if q.grad is None else q.grad.clone() for q in params]
+    for q in params:
+        q.grad = None
+
+    torch.manual_seed(5)
+    f1, f2 = feats()
+    sur, rd = fine_direct(dec, f1, f2, traj, A, sig, p, lambda l: (l * 4.0).backward(), 4.0)
+    (sur * 4.0).backward()
+    assert float(sur) == pytest.approx(float(L), rel=1e-5) and rd[16][0].shape == (6, 4, 4)
+    for q, g in zip(params, want):
+        assert (q.grad is None) == (g is None)
+        assert g is None or torch.allclose(q.grad / 4.0, g, rtol=1e-4, atol=1e-7)
 
 
 def test_config_rloo_fine_mode(tmp_path):

@@ -1,0 +1,38 @@
+# 细化学习率近零复跑（#200）：完全照 E22 f0002（其 _rl 加 f0002），只改种子，由各方法给出。
+# 粗级照 E19 gauss8；细化尺度 16、8、4 加 σ = 0.5 × s px 高斯噪声、cauchy 打分、各级 RLOO；每对 8 条链；VGG 放开训练；
+# 细化部分（尺度 16、8、4 的细化层与尺度 8、4 的 proj、VGG）学习率 0.00094 × 3e-5（锚点 × 0.002）；每 500 步存档；记 upd_*。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.00094
+vgg_lr = 0.00094
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[run]
+save_every = 500
+save_zero = false
+seed = 0
+log_update = true
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+fine_shape = "cauchy"
+group = 8
+levels = [16, 8, 4]
+k = 0.5

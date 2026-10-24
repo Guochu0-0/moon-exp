@@ -22,7 +22,7 @@
 | `parts/pseudo.py` | `[pseudo]` 离线伪标签监督：LoFTR 按上游监督形式（粗级 focal + 细级 l2_with_std），RoMa 按 RoMa 原损失，GT 换成伪仿射 |
 | `parts/cexp.py` | `[cexp]` 粗级 ±1 期望：当前模型 RANSAC 内点 +1、外点 `r_out`；`placebo` 为随机分数对照 |
 | `parts/neg.py` | `[neg]` 负样本对：SAR 换成其他 ROI 的，并入同一次前向，由 `[cexp]` 给分 |
-| `parts/rloo.py` | `[rloo]` 粗级锚点采样 + 策略梯度（RoMa）：每格按 `gm_cls` 抽锚点、细化照推理跑，每对 G 份，reward 为 r1 逐格分级残差 / ncc 整对灰度 NCC / rand 随机对照 / ref 以正常推理的仿射为参照、逐格按距离给粗匹配位置打分（`shape` 选奖励形式：`ripe` RIPE++ 分级原式 / `clip` 截平 / `gauss` 高斯核 / `cauchy` 1/(1 + ½(d/δ)²)，单精度下不下溢，长度参数 `delta`、`tau`）；权重为 RLOO 留一优势（`baseline = "loo"`）或直接用 reward（`"none"`，RIPE++ 式）；`levels` 列出细化中加高斯噪声的级（16、8、4、2、1 的子集，σ = `k` × 尺度，每级逐像素打分、各自 RLOO，#192、#197；形式取 `fine_shape`，空则同 `shape`），空则细化照推理跑；`frozen_ref = true` 时参照取训练开始时模型的冻结副本（#202），当前模型的仿射只记录（`d_cur`、`ref_gap`） |
+| `parts/rloo.py` | `[rloo]` 粗级锚点采样 + 策略梯度（RoMa）：每格按 `gm_cls` 抽锚点、细化照推理跑，每对 G 份，reward 为 r1 逐格分级残差 / ncc 整对灰度 NCC / rand 随机对照 / ref 以正常推理的仿射为参照、逐格按距离给粗匹配位置打分（`shape` 选奖励形式：`ripe` RIPE++ 分级原式 / `clip` 截平 / `gauss` 高斯核 / `cauchy` 1/(1 + ½(d/δ)²)，单精度下不下溢，长度参数 `delta`、`tau`）；权重为 RLOO 留一优势（`baseline = "loo"`）或直接用 reward（`"none"`，RIPE++ 式）；`levels` 列出细化中加高斯噪声的级（16、8、4、2、1 的子集，σ = `k` × 尺度，每级逐像素打分、各自 RLOO，#192、#197；形式取 `fine_shape`，空则同 `shape`），空则细化照推理跑；`fine_mode` 选细化训练方式：`chain` 整链抽签（默认）/ `grad` 沿正常推理轨迹对各级奖励求精确梯度（诊断）/ `local` 每级从正常推理的输入抽 `fine_group` 次、各级独立 RLOO（#201），`cos_every` > 0 时每隔几步记 local 与 grad 梯度的余弦相似度；`frozen_ref = true` 时参照取训练开始时模型的冻结副本（#202），当前模型的仿射只记录（`d_cur`、`ref_gap`） |
 | `parts/aug.py` | `[aug]` 已知随机扰动：SAR 已知仿射（标签随之变换）、光度扰动；实现在 `augment.py` |
 | `data.py` | `PairSet`：一个 split 的全部 patch 对，可带负样本对与扰动 |
 | `geom.py` | 坐标约定与仿射小工具 |

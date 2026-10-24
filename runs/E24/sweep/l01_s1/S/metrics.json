@@ -1,0 +1,343 @@
+{
+ "protocol": {
+  "auc_thresholds": [3.0, 5.0, 10.0, 20.0],
+  "sr_thresholds": [1.0, 2.0, 3.0, 5.0, 10.0, 20.0],
+  "table_auc": [3.0, 5.0, 10.0],
+  "table_sr": [3.0, 5.0, 10.0],
+  "main": "auc@5",
+  "provisional": false
+ },
+ "methods": {
+  "step1000": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 0.901840490797546,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, 363.5758, null, null, 328.5713, 339.114, 300.9141, 380.2545, 340.2104, null, null, null, null, null, null, null, null, null, null, 383.3448, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 306.3647, null, null, null, null, null, null, null, null, null, null, null, 413.7343, null, null, null, null, 306.9514, 363.9664, null, null, null, null, 377.7953, null, null, null, null, null, null, null, null, 305.6126, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 356.1835, null, null, null, null, null, null, null, null, null, 423.4212, 337.1402, null, null, null, null, null, 321.8532, null, null, null, null, 339.6023, null, null, 334.2358, null, null, null, null, null, null, null, null, 293.8185, 343.2296, null, null, null, null, null, null, null, null, null, 457.2212, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 327.4245, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 384.1337, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 328.7644, null, null, null, null, null, 399.4242, null, 285.3672, null, null, null, null, null, null, null, null, 341.4547, null, 406.2922, null, null, null, null, null, null, null, null, null, null, null, null, null, 384.1225, null, null, null, null, null, null, null, null, null, null, null, 297.9568, null, null, null, 366.5645, null, null, null, null, null, null, null, null, 378.3225, null, null, null, null, null, 302.7901, null, null, null, null, 352.8734, null, null, null, null, null, null, null, null, null, null, 342.6256, null, null, 331.7333, null, 263.0834, null, null, null, null, null, null, 402.3302, null, null, null, null, 281.9118, null, 305.0917, 295.7359, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 429.8986, null, null, null, null, null, 333.0555, null, null, null, 330.651, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 315.5308, null, null, null, null, null, null, null, 408.5795, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 465.6279, null, 341.536, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 334.5816, null, 263.7628, null, 313.1483, null, null, null, null, null, null, null, null, null, null, null, null, null, 379.981, null, null, null, null, null, null, null, null, null, null, null, null, null, 395.7004, null, null, null, null, null, 466.0181, null, null, null, null, 372.1739, 409.8326, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 326.0273, null, null, null, null, null, null, null, null, 295.2771, null, null, null, null, null, 415.7241, null, null, null, null, null, null, null, null, null, null, 466.1868, null, null, null, null, null, null, null, null, null, null, null, 308.3857, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 293.2566, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 446.947, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  },
+  "step1500": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 1.0,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  },
+  "step2000": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 1.0,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  },
+  "step2500": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 1.0,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  },
+  "step3000": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 1.0,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  },
+  "step3500": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 1.0,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  },
+  "step4000": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 1.0,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  },
+  "step500": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 0.0015337423312883436,
+     "median": 102.7109716980069,
+     "auc@3": 3.0455161429295243e-05,
+     "auc@5": 0.0006317700293729146,
+     "auc@10": 0.0010827561803306292,
+     "auc@20": 0.0013082492558094863,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0015337423312883436,
+     "sr@5": 0.0015337423312883436,
+     "sr@10": 0.0015337423312883436,
+     "sr@20": 0.0015337423312883436,
+     "auc@3_ci": [0.0, 9.136548428788573e-05],
+     "auc@5_ci": [0.0, 0.0018953100881187437],
+     "auc@10_ci": [0.0, 0.003248268540991887],
+     "auc@20_ci": [0.0, 0.003924747767428459],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.004601226993865031],
+     "sr@5_ci": [0.0, 0.004601226993865031],
+     "sr@10_ci": [0.0, 0.004601226993865031],
+     "sr@20_ci": [0.0, 0.004601226993865031]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [108.5597, 254.4276, 75.0588, 72.741, 52.7035, 132.1213, 116.339, 162.3847, 174.4743, 132.1851, 103.5572, 201.8937, 170.6049, 162.133, 131.5746, 144.2205, 96.974, 93.045, 146.1392, 132.7954, 146.4719, 137.7953, 130.3859, 179.6668, 95.9684, 131.4676, 65.0988, 64.2461, 76.7717, 208.4041, 102.4834, 125.4965, 148.6377, 250.2295, 64.1426, 116.2224, 99.8479, 77.4119, 184.9911, 192.6741, 200.4865, 70.9095, 142.2627, 405.4584, 121.4808, 34.6341, 224.7774, 332.059, 136.9801, 106.3757, 52.3074, 159.4169, 149.3923, 76.6914, 233.5345, 112.6308, 225.1445, 66.9946, 123.5309, 194.488, 483.626, 126.9015, 127.5757, 152.2136, 147.5803, 100.4659, 103.7745, 153.0962, 145.2091, 191.837, 91.7408, 154.0618, 152.3505, 118.8017, 251.9387, 308.6609, 144.2473, 160.3674, 153.6648, 157.8986, 316.4949, 118.332, 118.4041, 219.6158, 176.709, 165.6208, 183.3398, 196.4973, 206.7254, 108.2868, 175.9701, 153.1882, 178.47, 152.9622, 167.6964, 283.3768, 133.4774, 96.5017, 221.3333, 82.8451, 86.1276, 91.9975, 64.1822, 134.9574, 194.7003, 403.5452, 146.3212, 225.0435, 81.2106, 102.2236, 138.73, 126.2973, 39.4437, 87.8851, 93.3818, 101.8714, 125.1756, 152.9058, 134.3135, 190.3004, 118.7883, 102.3066, 149.9064, 230.4442, 204.2684, 244.3905, 691.872, 463.4449, 144.2605, 206.7147, 82.3684, 152.6388, 175.7463, 198.2508, 162.6834, null, 257.796, 120.2242, 115.2318, 102.525, 230.5193, 69.7291, 178.0924, 63.5718, 160.6395, 63.3252, 107.1503, 60.4083, 69.0921, 66.663, 113.8702, 193.685, 119.664, 269.0571, 180.6815, 61.0673, 141.2663, 104.0227, 132.0676, 68.4039, 136.8239, 133.9145, 211.4945, 111.7636, 121.9672, 78.1865, 136.2233, 147.3803, 130.5242, 177.5673, 184.4842, 62.2421, 94.516, 71.4844, 44.5018, 58.3401, 55.0143, 69.3307, 28.0216, 57.396, 58.0121, 53.2945, 62.8881, 59.1026, 58.6206, 54.6497, 45.3154, 56.5314, 55.9222, 72.516, 26.788, 78.8928, 137.8024, 71.2821, 45.7516, 80.8974, 50.0633, 95.0903, 46.8022, 52.0493, 51.8698, 28.4895, 47.5015, 191.8391, 78.5329, 86.5986, 93.852, 63.3323, 111.8804, 40.5822, 104.8966, 78.9996, 72.4817, 59.0809, 66.2662, 83.1509, 70.7408, 68.4305, 75.5726, 62.2292, 72.8884, 77.775, 78.0089, 72.5685, 75.5243, 78.3263, 65.9445, 198.297, 39.1637, 117.3532, 82.8337, 60.4211, 67.5849, 86.4603, 151.2031, 132.754, 71.0426, 81.3465, 60.9247, 139.6746, 81.4203, 69.6893, 64.2967, 101.649, 62.62, 166.2442, 55.8653, 99.4938, 97.229, 149.368, 148.0799, 120.7961, 313.3216, 127.2835, 65.8586, 98.93, 72.7934, 83.4639, 108.757, 74.5056, 106.6621, 52.0892, 126.8063, 44.2113, 79.6996, 49.1871, 70.4158, 40.135, 64.8415, 151.7874, 48.7675, 44.7408, 37.0148, 41.2945, 73.4788, 49.0405, 158.0195, 49.8975, 36.3481, 64.3878, 62.6734, 42.4488, 55.0536, 47.0756, 40.6668, 55.2551, 43.7233, 51.6411, 49.7238, 37.8355, 136.5717, 36.0327, 39.2762, 55.0017, 75.4487, 108.2697, 73.8624, 48.2813, 65.7021, 54.9995, 44.9737, 45.5266, 50.9993, 2.9404, 66.6217, 91.8244, 69.4753, 56.6364, 53.248, 44.5295, 212.9724, 133.6428, 168.2176, 94.7874, 95.2016, 165.4946, 109.6849, 75.1751, 108.7444, 122.7522, 162.7468, 178.0217, 109.0913, 176.6982, 134.659, 84.147, 271.2549, 210.8074, 284.9428, 128.9234, 158.8376, 64.3291, 208.5135, 179.5889, 126.1989, 59.228, 119.2971, 106.3256, 175.5227, 81.2153, 135.676, 114.0238, 102.3426, 355.6068, 166.1556, 107.883, 206.0956, 74.6238, 59.9716, 122.757, 59.2619, 77.8274, 78.9314, 94.8172, 102.8969, 91.6501, 79.8135, 112.0583, 78.962, 161.0025, 113.3991, 243.3007, 115.8621, 111.9794, 187.5185, 105.511, 180.981, 79.2465, 164.4161, 261.8352, 265.0186, 229.2197, 99.7378, 60.2105, 87.6052, 228.9101, 117.1672, 75.2914, 109.8869, 84.7165, 80.9601, 118.6145, 148.5555, 78.2954, 67.1237, 97.3093, 78.9, 55.1735, 83.4732, 334.2202, 55.6673, 64.884, 54.2049, 108.8097, 59.2023, 62.2254, 45.4694, 76.4446, 86.7482, 67.9193, 70.2461, 134.4587, 112.366, 48.1797, 71.6279, 51.6473, 147.8942, 85.1547, 112.854, 180.8934, 53.8425, 79.1963, 57.3477, 111.737, 79.6604, 84.2881, 112.4265, 45.5889, 67.4977, 53.6871, 56.481, 90.378, 62.4363, 74.221, 39.3366, 77.6395, 183.8152, 80.6201, 63.7773, 109.0328, 69.6533, 45.9876, 49.5239, 71.9982, 59.7894, 184.82, 82.5822, 143.532, 76.1467, 51.7236, 67.1483, 152.7565, 117.4144, 48.0478, 96.4505, 40.5579, 190.774, 83.41, 64.2881, 65.6117, 83.8895, 71.8527, 166.5774, 82.826, 99.0327, 95.285, 151.4003, 85.8589, 111.584, 76.905, 186.6242, 104.5589, 71.7514, 57.2605, 56.9784, 73.8959, 110.65, 57.6008, 115.1148, 211.9215, 91.5478, 166.2133, 94.0505, 87.6747, 124.976, 84.3754, 131.1974, 157.6613, 86.6825, 136.6019, 126.0221, 210.6243, 127.079, 189.3023, 112.4961, 295.8503, 108.0795, 143.846, 101.3396, 183.5829, 159.5228, 93.7112, 172.1655, 161.1073, 179.2079, 373.3778, 131.012, 110.6631, 141.376, 62.4057, 275.9841, 111.7312, 84.633, 97.8814, 69.6257, 187.8447, 62.1118, 47.7024, 350.0062, 87.9288, 54.3611, 93.7033, 93.788, 114.4283, 90.633, 206.6035, 84.4094, 125.9413, 108.6538, 144.1346, 151.4047, 105.6012, 45.4831, 167.5284, 180.9937, 70.6102, 243.6265, 118.244, 224.7176, 381.9397, 185.5745, 128.5653, 168.9271, 279.5779, 170.1472, 194.5704, 219.6924, 104.2313, 93.2354, 126.5256, 175.9536, 124.5272, 216.3722, 126.5255, 150.1052, 172.377, 53.8679, 57.7894, 156.1132, 174.508, 312.5674, 135.6253, 412.3771, 95.5523, 226.701, 154.4022, 75.4087, 142.8805, 212.5776, 164.4096, 207.83, 182.4063, 155.3192, 139.12, 1415.6513, 208.8119, 104.3337, 157.497, 225.1544, 136.4622, 266.2771, 149.5328, 525.2333, 236.2234, 401.9454, 311.1596, 337.2641, 75.9555, 70.0354, 60.1147, 29.1953, 101.259, 118.0916, 59.528, 97.4821, 75.5671, 64.6047, 171.7, 76.6594, 92.9723, 98.7568, 149.9974, 63.276, 47.1323, 110.7785, 62.0118, 44.5202, 67.801, 113.9588, 72.5867, 77.8279, 85.7095, 65.6614, 35.8891, 137.7025, 66.3419, 62.2741, 170.0384, 383.4031, 65.6002, 123.9073, 69.1497, 77.657, 123.5754, 111.8029, 158.8343, 135.9, 75.839, 92.6726, 91.9047, 68.647, 75.6887, 117.5202, 110.138, 44.6073, 81.7435, 90.0159, 168.8024, 200.696, 145.4635, 202.2026, 98.7239, 79.9315, 58.8212, 148.3912, 71.2182, 168.5747, 98.5024, 57.3325, 68.9082, 39.6995, 55.5777, 99.735, 63.7593, 86.331, 80.3219, 67.2875, 42.1199, 54.4488, 64.4663, 74.2038, 139.6973]
+   },
+   "test": {
+    "summary": {
+     "n": 953,
+     "fail_rate": 0.001049317943336831,
+     "median": 91.24049987902308,
+     "auc@3": 0.0013696582847931803,
+     "auc@5": 0.007591190397367695,
+     "auc@10": 0.013764115660383743,
+     "auc@20": 0.018505774224400497,
+     "sr@1": 0.0,
+     "sr@2": 0.001049317943336831,
+     "sr@3": 0.008394543546694649,
+     "sr@5": 0.01993704092339979,
+     "sr@10": 0.01993704092339979,
+     "sr@20": 0.02728226652675761,
+     "auc@3_ci": [0.0004279939006825256, 0.0026954729361741694],
+     "auc@5_ci": [0.004282628671581836, 0.011414051716476385],
+     "auc@10_ci": [0.008118241029583138, 0.020308415309705313],
+     "auc@20_ci": [0.011095064117078293, 0.026604130165129938],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0031479538300104933],
+     "sr@3_ci": [0.0031479538300104933, 0.015739769150052464],
+     "sr@5_ci": [0.011542497376705142, 0.02938090241343127],
+     "sr@10_ci": [0.011542497376705142, 0.02938090241343127],
+     "sr@20_ci": [0.016789087093389297, 0.03777544596012592]
+    },
+    "coverage": {
+     "n_pairs": 1130,
+     "n_labelled": 953,
+     "n_pred": 953,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [134.0725, 95.2135, 122.9897, 245.1894, 191.6828, 49.9549, 124.9245, 184.1227, 181.6138, 51.051, 52.6485, 65.8835, 101.7407, 126.0719, 63.9245, 42.981, 37.0558, 108.1903, 78.6215, 119.8197, 150.9733, 170.1064, 89.5475, 130.3494, 140.5063, 45.0992, 123.0, 203.6917, 280.2678, 145.3369, 196.7208, 101.5047, 211.1126, 122.5186, 116.8428, 85.9101, 147.6629, 119.5871, 119.6181, 171.3029, 210.4251, 180.9406, 111.3941, 190.302, 163.2376, 185.3651, 130.0062, 99.8777, 96.4093, 115.297, 34.7593, 112.3244, 114.3173, 151.6789, 63.1703, 215.4186, 192.5242, 85.2903, 69.4726, 181.7102, 110.916, 127.8323, 142.7211, 133.375, 67.1572, 222.9054, 145.7594, 142.7515, 69.1584, 98.9921, 318.7632, 162.838, 309.2407, 127.4038, 117.6832, 96.0907, 147.433, 230.0165, 160.861, 213.5274, 187.1258, 375.8248, 193.3032, 251.1001, 158.482, 212.1925, 98.6094, 94.2477, 59.3765, 200.4153, 181.608, 179.0408, 80.4925, 260.8587, 121.5529, 178.2106, 170.0541, 103.6564, 125.8923, 74.4181, 175.586, 109.3612, 105.712, 57.8821, 269.1272, 312.8067, 281.8219, 340.674, 309.703, 306.2617, 286.5364, 260.5335, 245.7891, 269.7713, 116.4539, 195.4238, 67.3154, 52.071, 181.4601, 195.8163, 105.4101, 33.0079, 101.9425, 105.7606, 111.9983, 90.0619, 59.023, 398.9386, 80.1913, 79.2121, 136.5618, 252.8383, 151.99, 55.6418, 188.5503, 102.02, 149.2023, 171.2671, 244.4921, 202.1, 142.128, 109.2506, 56.8071, 106.0585, 78.375, 164.1088, 325.1728, 136.6066, 83.673, 273.9414, 107.2873, 125.023, 77.8708, 163.4298, 128.5857, 165.7079, 109.8737, 43.9327, 100.4973, 133.4604, 457.4789, 171.6497, 142.4702, 130.0276, 106.4887, 421.169, 98.3191, 192.4541, 285.7537, 134.0334, 358.8582, 187.0902, 197.0535, 268.6584, 205.5096, 512.586, 217.0466, 1136.2719, 276.5353, 101.8504, 178.3637, 165.8487, 67.3667, 182.0045, 100.3027, 163.66, 206.9341, 174.9091, 248.8183, 134.1984, 142.5897, 159.8901, 159.5541, 128.1525, 173.7265, 353.1409, 404.7026, 118.0624, 65.9437, 104.9374, 327.7988, 107.8285, 61.2283, 94.8762, 137.1273, 138.6335, 115.2251, 406.3934, 171.5207, 55.5101, 67.889, 224.1722, 151.1252, 187.1442, 85.1844, 144.1462, 126.6673, 232.7208, 272.8006, null, 78.5349, 189.6592, 177.8007, 158.6782, 181.4858, 247.278, 121.1564, 44.7727, 120.5773, 208.1036, 79.0901, 179.2635, 96.8755, 205.9256, 103.2241, 50.4654, 136.7964, 243.8399, 143.746, 145.7635, 175.1298, 144.2926, 109.4628, 106.9663, 129.546, 183.9512, 123.5948, 117.2723, 75.3995, 53.7356, 386.6873, 231.1206, 182.814, 68.7713, 77.8236, 245.2549, 250.6129, 341.8811, 291.0247, 244.879, 303.0488, 318.3351, 289.9949, 352.894, 312.5919, 254.6631, 279.9973, 294.1545, 317.8059, 346.9801, 97.222, 127.76, 91.1132, 92.0485, 120.3772, 83.1357, 71.2104, 241.4823, 77.9718, 87.3541, 74.8509, 51.7027, 219.0996, 186.613, 98.3618, 64.915, 117.3402, 210.8393, 60.1608, 73.9549, 107.7285, 297.8489, 94.8157, 79.8649, 149.6076, 161.4575, 275.1569, 196.4308, 241.5275, 190.2236, 328.9284, 244.6526, 256.2803, 272.2989, 202.7555, 234.1773, 248.4489, 239.0576, 149.5112, 249.558, 478.9964, 126.8768, 165.6043, 49.0146, 131.4206, 59.3789, 177.2904, 55.7825, 74.2786, 53.7972, 45.4843, 55.2639, 50.7015, 74.8306, 38.4663, 128.1476, 30.6016, 132.8377, 65.6549, 198.4455, 68.1396, 69.575, 78.395, 89.7516, 68.3355, 143.4414, 54.1849, 99.9225, 44.9516, 164.2281, 77.7383, 169.1822, 137.4129, 147.669, 140.7284, 169.6701, 87.837, 238.0106, 78.4798, 93.3304, 104.7629, 79.6928, 71.4552, 155.5923, 170.7699, 213.1084, 185.3756, 156.5591, 88.5919, 75.1251, 75.0359, 44.4232, 99.8186, 53.0573, 101.2787, 56.5984, 67.8519, 44.3556, 46.7673, 27.5265, 67.2454, 65.9125, 37.8902, 96.4513, 16.9093, 116.0938, 81.9715, 65.2598, 75.9778, 65.6292, 65.1782, 44.6592, 68.8732, 48.3953, 69.9188, 71.0745, 30.339, 57.1619, 58.0087, 118.6625, 70.4701, 61.7502, 65.8852, 45.2809, 91.7515, 81.3919, 57.4797, 71.6427, 45.83, 56.4196, 67.0561, 53.6638, 77.0928, 46.1404, 91.019, 66.1987, 95.6051, 135.5355, 207.228, 124.2837, 133.8531, 66.7904, 82.9976, 62.6852, 73.2933, 114.7803, 126.573, 74.4215, 163.5035, 64.2445, 118.3114, 98.4417, 96.7055, 110.0049, 124.9994, 153.6456, 131.0833, 211.063, 142.3215, 91.2315, 99.6338, 77.9079, 44.4904, 67.9019, 75.1228, 114.3265, 201.9293, 80.9148, 50.6431, 57.3693, 88.4133, 157.426, 60.0454, 50.7476, 84.9959, 46.6532, 43.9311, 56.8661, 72.2277, 69.8518, 97.3445, 44.3722, 153.7918, 102.415, 115.46, 72.7941, 101.3039, 66.023, 42.4774, 66.1012, 40.8189, 88.5735, 77.2989, 23.1627, 74.8226, 70.4883, 414.5464, 53.2363, 63.9067, 598.8536, 159.2218, 124.448, 80.2575, 166.6312, 135.437, 367.6858, 69.1746, 118.8622, 15.2479, 163.5943, 116.8967, 112.5603, 405.7742, 66.6241, 63.7918, 69.7979, 109.0877, 230.0015, 196.7093, 129.2686, 185.7582, 111.7124, 134.2455, 142.219, 222.4951, 123.9983, 176.3076, 162.2665, 240.658, 92.0879, 53.7121, 45.28, 237.2981, 131.2861, 38.9215, 68.659, 83.2824, 58.1221, 49.8683, 37.6303, 95.8812, 25.7095, 98.3767, 59.1611, 71.2913, 64.955, 54.0823, 77.9529, 83.649, 68.057, 54.5576, 56.8173, 52.3085, 25.4593, 65.8548, 123.1945, 41.4912, 69.5807, 45.0974, 28.6875, 2.9685, 35.8065, 41.7523, 21.5876, 40.1816, 60.9276, 45.2937, 59.1962, 61.4502, 46.5652, 53.2873, 15.9398, 4.0115, 37.5248, 52.2902, 26.987, 25.1524, 2.2931, 64.3275, 2.6799, 32.1356, 43.3888, 3.6351, 3.4345, 4.5208, 21.0425, 2.5619, 36.4985, 48.7549, 3.1231, 3.0612, 45.1044, 45.5336, 59.0564, 27.0996, 2.7029, 34.1258, 2.7281, 2.2918, 62.4132, 4.0964, 48.4768, 3.0399, 1.8579, 47.8869, 3.6104, 3.167, 29.8366, 28.8381, 40.3938, 24.1341, 47.1098, 70.4833, 37.7705, 50.1701, 46.6079, 41.8731, 60.0124, 3.0442, 44.4659, 27.8276, 12.8464, 43.2424, 22.9472, 23.6136, 137.6123, 63.6043, 78.4173, 45.269, 85.8464, 38.7049, 82.0386, 24.8374, 33.2801, 47.4874, 120.7152, 85.4924, 42.8625, 62.214, 54.5305, 128.4744, 152.0909, 187.5894, 157.4227, 81.8465, 126.2308, 190.8375, 140.0195, 212.4645, 125.2455, 177.0261, 92.8215, 93.4842, 120.1057, 145.751, 116.5363, 89.9284, 88.6994, 62.3288, 76.2947, 122.6948, 72.9401, 56.754, 63.6653, 79.0536, 58.3565, 76.9218, 30.1027, 42.0102, 47.508, 55.5681, 176.0389, 68.4243, 142.8754, 176.6229, 98.6866, 61.794, 66.6211, 65.4229, 84.8336, 41.0587, 73.206, 76.421, 60.1618, 51.2326, 82.1094, 93.9381, 276.5667, 68.2594, 62.6414, 87.3365, 96.2372, 75.9458, 65.2103, 60.7797, 51.581, 51.9655, 24.5056, 117.0255, 213.4196, 128.3969, 173.2441, 246.8001, 137.7334, 201.1468, 216.1797, 106.6362, 167.0735, 208.6128, 233.3093, 160.4371, 202.4423, 123.4619, 158.5972, 172.7421, 188.2368, 205.9314, 154.7567, 266.2734, 116.806, 150.108, 79.3194, 142.7083, 66.3103, 158.5752, 94.5301, 81.7883, 44.4418, 47.632, 95.4719, 186.9699, 57.938, 65.2381, 114.9695, 159.0322, 36.9691, 110.7191, 166.0593, 193.1859, 119.9604, 118.5205, 129.4109, 179.478, 89.1181, 97.0062, 194.1571, 100.9589, 79.6508, 77.517, 94.199, 55.2712, 83.1754, 91.2405, 49.8123, 114.5656, 260.4735, 68.7051, 117.013, 144.8872, 95.039, 126.3244, 142.823, 114.846, 81.7731, 153.4001, 141.4683, 135.8208, 115.3652, 180.8997, 81.8028, 188.1508, 84.8822, 70.9209, 60.8631, 101.3344, 112.4245, 71.8673, 144.4896, 125.3578, 132.9492, 123.5936, 166.6673, 125.4139, 60.1973, 70.1285, 86.4264, 153.9722, 68.142, 66.7375, 81.0681, 54.849, 113.9634, 66.7058, 57.9754, 125.5762, 95.677, 63.2862, 136.1915, 79.1903, 65.4821, 160.4364, 103.6265, 73.2049, 168.8902, 151.7462, 112.5802, 225.2463, 151.6281, 109.8545, 205.1969, 143.8862, 136.3075, 182.9496, 299.8618, 131.6574, 182.5184, 203.2725, 157.3369, 306.3879, 139.7975, 67.4352, 172.5204, 127.2928, 45.0579, 143.4375, 51.3443, 89.0286, 100.9969, 93.6465, 137.727, 73.8677, 99.8393, 165.0763, 74.7473, 161.5908, 186.3127, 111.4573, 224.391, 286.6129, 130.2241, 234.6106, 199.7614, 419.3306, 43.9247, 66.3568, 66.9435, 51.7281, 48.0978, 41.3606, 37.2686, 79.3021, 32.8354, 53.5885, 60.083, 49.2202, 57.9793, 57.7291, 119.9659, 67.8224, 52.0659, 99.4257, 40.3654, 60.4045, 378.2401, 66.9593, 59.0089, 55.6898, 59.0813, 65.4676, 69.0871, 71.7662, 84.544, 53.9029, 68.1653, 71.9533, 44.0067, 59.2797, 49.1226, 61.0919, 59.6195, 49.1047, 60.2551, 162.8709, 60.7301, 59.7871, 64.5986, 54.6536, 51.6686, 65.1097, 43.0407, 41.3464, 56.1957, 74.5442, 10.7849, 45.3582, 53.4167, 42.5166, 54.2728, 54.6065, 82.2876, 34.0261, 57.3161, 62.4567, 60.5646, 52.7936, 45.025, 57.227, 67.147, 97.514, 55.1724, 58.2464, 62.4796, 52.3394, 33.6757, 97.2198, 39.2662, 61.2117, 101.9941, 59.3366, 44.837, 66.9354, 35.2478, 41.4533, 25.9644, 72.9215, 63.3724, 81.4754, 74.412, 69.3121, 48.9189, 56.5694, 44.9915, 109.2027, 34.1024, 68.8948, 55.3621, 50.6762, 80.6902, 49.4067, 66.4027, 48.0788, 16.7511, 77.632, 60.1397, 49.1928, 68.1851, 41.7496, 33.6227, 29.5566, 51.4841, 58.7581, 71.8198, 31.8102, 53.066, 67.2823, 70.2172, 46.7643, 69.3406, 70.5169, 49.6178, 72.134, 37.9234, 53.0106, 51.776, 74.8683, 48.1706, 62.9795, 80.9236, 49.3375, 67.4589, 42.5309, 46.1294, 50.8435, 45.8338, 108.6919, 86.0765, 51.3654, 19.9725, 29.6286, 49.0691, 22.2277, 46.6124, 49.5028]
+   }
+  }
+ }
+}

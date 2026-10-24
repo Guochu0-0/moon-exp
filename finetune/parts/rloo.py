@@ -39,6 +39,14 @@ shape 打分（fine_shape 非空时细化各级改用它，#197），长度参�
 实现照 E18 的开销测试（runs/E18/code/cost.py）：第一遍不求梯度跑完全部链，记下各加噪级的输入、certainty 与抽到的输出；
 第二遍逐级、每 chunk 条链带梯度重算 μ 并立刻反向，细化层参数直接得到梯度，特征上的梯度先累积在叶子上，最后经一个
 替身项随粗级损失一起反向穿过编码器（替身项的值换成细化各级损失之和，日志里的 loss 即粗级 + 细化）。
+
+细化训练方式（#201，fine_mode；默认 chain 即上面的整链抽签）：grad、local 不跑抽签链，levels 里的每一级都从正常推理
+（即拟合参照仿射的那一次）这一级的输入出发，带梯度重算细化层的输出 μ_s（梯度去向同 chain）。
+- grad（精确梯度，诊断用）：loss_s = −mean_像素 r(μ_s)，r 为 level_reward，参照仿射当常数，直接对 μ_s 求导；
+- local（逐级局部抽签）：从同一个 μ_s 抽 fine_group 次 x = μ_s + σε（σ 同 chain），按 r(x) 打分、RLOO，
+  loss_s = −mean(优势 · log π_s)；抽签只在这一级之内，不往下一级传。奖励只当数值用。
+levels 非空时另记正常推理轨迹上尺度 16…1 各级 μ 离参照的距离（dmu_s）；cos_every > 0 时每 cos_every 次调用在第一对图上
+算一次 local 与 grad 两种损失对各级细化层参数的梯度的余弦相似度（grad_cos，只读、不影响训练）。
 """
 from __future__ import annotations
 
@@ -70,11 +78,15 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "fine_shape": "", # 细化各级的奖励形式（#197）；空 = 同 shape
           "levels": [],     # 细化中加高斯噪声的级（16、8、4、2、1 的子集，#192、#197）；空 = 细化不加噪
           "k": 0.5,         # 加噪级的 σ = k × 这一级的尺度（原网格 px，#192）
+          "fine_mode": "chain",  # 细化训练方式（#201）：chain（整链抽签）| grad（精确梯度）| local（逐级局部抽签）
+          "fine_group": 8,  # local：每级每像素的抽签次数
+          "cos_every": 0,   # 每几次调用算一次 local 与 grad 梯度的余弦相似度（0 = 不算，#201）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
 SHAPES = ("ripe", "clip", "gauss", "cauchy")
 BASELINES = ("loo", "none")
+FINE_MODES = ("chain", "grad", "local")
 SCALES = ("16", "8", "4", "2", "1")
 LEVELS = (16, 8, 4, 2, 1)
 
@@ -108,6 +120,12 @@ def check(cfg):
         raise ConfigError("[rloo] levels 只配 reward = 'ref'")
     if p["k"] <= 0:
         raise ConfigError("[rloo] k 应 > 0")
+    if p["fine_mode"] not in FINE_MODES:
+        raise ConfigError(f"[rloo] fine_mode 可选 {FINE_MODES}，得到 {p['fine_mode']!r}")
+    if (p["fine_mode"] != "chain" or p["cos_every"]) and not lv:
+        raise ConfigError("[rloo] fine_mode = 'grad' / 'local' 与 cos_every 要配非空的 levels")
+    if p["fine_group"] < (2 if p["baseline"] == "loo" else 1) or p["cos_every"] < 0:
+        raise ConfigError("[rloo] fine_group 至少为 2（baseline = 'none' 时至少为 1），cos_every 应 ≥ 0")
     if cfg["model"]["train_res"] != "560":
         raise ConfigError("[rloo] 只支持 [model] train_res = '560'")
 
@@ -169,9 +187,10 @@ def anchor_flow(P, k):
 
 
 @torch.no_grad()
-def refine(model, f1, f2, flow, certainty):
+def refine(model, f1, f2, flow, certainty, traj=None):
     """从粗 warp 与粗级 certainty 起，跑尺度 16…1 的细化（同 Decoder.forward：每级加位移与 certainty 增量，
-    上采样到下一级）。f1、f2 的 batch 可以是 1（自动扩到 flow 的 batch）。返回尺度 1 的 (flow, certainty)。"""
+    上采样到下一级）。f1、f2 的 batch 可以是 1（自动扩到 flow 的 batch）。返回尺度 1 的 (flow, certainty)。
+    traj：可选的 dict，填入 尺度 → (这一级的输入 warp, 输入 certainty, 输出 μ)（#201）。"""
     dec = model.model.decoder
     n = flow.shape[0]
     h, w = f1[1].shape[-2:]
@@ -183,6 +202,8 @@ def refine(model, f1, f2, flow, certainty):
         d_flow, d_cert = dec.conv_refiner[s](a, b, flow, scale_factor=1, logits=certainty)
         disp = ins * torch.stack((d_flow[:, 0].float() / (dec.refine_init * w),
                                   d_flow[:, 1].float() / (dec.refine_init * h)), dim=1)
+        if traj is not None:
+            traj[ins] = (flow, certainty, flow + disp)
         flow, certainty = flow + disp, certainty + d_cert
         if s != "1":
             size = f1[ins // 2].shape[-2:]
@@ -272,12 +293,81 @@ def fine_surrogate(dec, f1, f2, rec, adv, sig, chunk, backward, factor, w=1.0):
             loss = -w * (adv[s][i:i + n] * lp).mean() * n / N
             backward(loss)
             val += float(loss)
+    return _surrogate(f1, f2, leaf1, leaf2, factor, val)
+
+
+def _surrogate(f1, f2, leaf1, leaf2, factor, val):
+    """特征叶子上已累积的梯度 → 替身项：随其余损失一起 backward 时把这些梯度传回编码器，值为 val。"""
     sur = sum((f1[s].float() * leaf1[s].grad.float()).sum() + (f2[s].float() * leaf2[s].grad.float()).sum()
-              for s in rec if leaf1[s].grad is not None)
+              for s in leaf1 if leaf1[s].grad is not None)
     if not torch.is_tensor(sur):
         return torch.zeros((), device=f1[1].device) + val
     sur = sur / factor
     return sur - sur.detach() + val
+
+
+# ---------- 细化：精确梯度与逐级局部抽签（#201） ----------
+
+def _mu(dec, s, a, b, fin, cin, H, W):
+    """尺度 s 的细化层从输入 warp fin、certainty cin 算出的输出 μ（带梯度）。"""
+    d_flow, _ = dec.conv_refiner[str(s)](a, b, fin, scale_factor=1, logits=cin)
+    return fin + _disp(dec, s, d_flow, H, W)
+
+
+def level_loss(mu, A, s, sig, p):
+    """一级：带梯度的 μ (1,2,h,w) → (loss, (奖励, 距离))。grad：−mean_像素 r(μ)，对 μ 求导；local：从 μ 抽 fine_group 次
+    x = μ + σε，按 r(x) 打分、advantage，loss = −mean(优势 · log π)，log π = −‖x − μ‖² / 2σ²。"""
+    if p["fine_mode"] == "grad":
+        r, d = level_reward(mu, A, s, p)
+        return -r.mean(), (r.detach(), d.detach())
+    with torch.no_grad():
+        x = mu.detach() + sig * torch.randn((p["fine_group"],) + tuple(mu.shape[1:]), device=mu.device)
+        r, d = level_reward(x, A, s, p)
+        adv = advantage(r, p["baseline"])
+    lp = -(x - mu).square().sum(1) / (2 * sig ** 2)
+    return -(adv * lp).mean(), (r, d)
+
+
+def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0):
+    """fine_mode = grad / local 的细化损失：sig 里的每一级从正常推理轨迹 traj（refine 记下的）这一级的输入起，带梯度
+    重算 μ，loss_s = w · level_loss，立刻 backward(loss_s)；特征上的梯度与替身项同 fine_surrogate。
+    返回 (替身项, {尺度: (奖励, 距离)})。"""
+    H, W = f1[1].shape[-2:]
+    leaf1 = {s: f1[s].detach().requires_grad_() for s in sig}
+    leaf2 = {s: f2[s].detach().requires_grad_() for s in sig}
+    val, out = 0.0, {}
+    for s in sig:
+        fin, cin, _ = traj[s]
+        loss, out[s] = level_loss(_mu(dec, s, leaf1[s], leaf2[s], fin, cin, H, W), A, s, sig[s], p)
+        loss = w * loss
+        backward(loss)
+        val += float(loss)
+    return _surrogate(f1, f2, leaf1, leaf2, factor, val), out
+
+
+def grad_cos(dec, f1, f2, traj, A, sig, p, scale=1024.0):
+    """同一对图、同一轨迹上 local 与 grad 两种细化损失的梯度的余弦相似度（诊断，用 autograd.grad，不碰 .grad）。
+    返回 cos_s（尺度 s 细化层的参数）、cosf_s（尺度 s 的两图特征）、cos（各级细化层参数拼成一个向量）。
+    scale 在求导前乘到损失上（余弦与它无关），免得半精度的细化层里梯度下溢。"""
+    H, W = f1[1].shape[-2:]
+    cos = lambda u, v: float((u * v).sum() / (u.norm() * v.norm()).clamp(min=1e-30))
+    out, tot = {}, {"grad": [], "local": []}
+    for s in sig:
+        a, b = f1[s].detach().requires_grad_(), f2[s].detach().requires_grad_()
+        ps = [q for q in dec.conv_refiner[str(s)].parameters() if q.requires_grad]
+        fin, cin, _ = traj[s]
+        mu = _mu(dec, s, a, b, fin, cin, H, W)
+        g = {}
+        for mode in ("grad", "local"):
+            loss, _ = level_loss(mu, A, s, sig[s], {**p, "fine_mode": mode})
+            gr = torch.autograd.grad(loss * scale, ps + [a, b], retain_graph=True, allow_unused=True)
+            g[mode] = [torch.zeros_like(q).flatten().float() if x is None else x.flatten().float()
+                       for x, q in zip(gr, ps + [a, b])]
+            tot[mode] += g[mode][:len(ps)]
+        out[f"cos_{s}"] = cos(torch.cat(g["grad"][:len(ps)]), torch.cat(g["local"][:len(ps)]))
+        out[f"cosf_{s}"] = cos(torch.cat(g["grad"][len(ps):]), torch.cat(g["local"][len(ps):]))
+    out["cos"] = cos(torch.cat(tot["grad"]), torch.cat(tot["local"]))
+    return out
 
 
 # ---------- reward ----------
@@ -390,9 +480,11 @@ def loo(r):
 class Term:
     def __init__(self, p, model, ds):
         self.p, self.model = p, model
+        self.calls = 0
 
     def __call__(self, st):
         p, model = self.p, self.model
+        self.calls += 1
         i0, i1 = st.images()
         f1, f2 = features(model, i0, i1)
         cls, cert = coarse(model, f1, f2)
@@ -418,7 +510,8 @@ class Term:
                 gb = {s: x[b:b + 1] for s, x in f2.items()}
                 t0 = time.time()
                 if p["reward"] == "ref":    # 只细化不抽签的一份（正常推理）；各份样本只用粗 warp
-                    flow, ce = refine(model, fb, gb, anchor_flow(P, P.argmax(1)), cert[b:b + 1].float())
+                    traj = {} if lv else None
+                    flow, ce = refine(model, fb, gb, anchor_flow(P, P.argmax(1)), cert[b:b + 1].float(), traj)
                 else:
                     flow, ce = rollout(model, fb, gb, P, cert[b:b + 1].float(), k, p["chunk"])
                 torch.cuda.synchronize()
@@ -442,18 +535,17 @@ class Term:
                 else:
                     r = torch.rand(p["group"], h, w, device=cls.device)
                 adv = advantage(r, p["baseline"]).expand(p["group"], h, w)
-                if lv and A_ref is not None:     # 细化加噪（#192）：全部链再跑一遍，各加噪级逐像素打分、各自 RLOO
+                if lv and A_ref is not None:     # 正常推理轨迹上各级 μ 离参照的距离（#201）
+                    for s_, (_, _, mu_) in traj.items():
+                        stats.setdefault(f"dmu_{s_}", []).append(float(level_reward(mu_, A_ref, s_, p)[1].mean()))
+                if lv and A_ref is not None and p["fine_mode"] == "chain":   # 细化加噪（#192）：全部链再跑一遍，各加噪级逐像素打分、各自 RLOO
                     t2 = time.time()
                     rec, _ = rollout_noisy(model, fb, gb, P, cert[b:b + 1].float(), k, sig, p["chunk"])
                     adv_f = {}
                     for s_ in lv:
                         r_s, d_s = level_reward(rec[s_][2], A_ref, s_, p)
                         adv_f[s_] = advantage(r_s, p["baseline"])
-                        stats[f"rew_{s_}"].append(float(r_s.mean()))
-                        stats[f"rew_sd_{s_}"].append(float(r_s.std(0).mean()))
-                        stats[f"d_{s_}"].append(float(d_s.mean()))
-                        stats[f"d90_{s_}"].append(float(torch.quantile(d_s.flatten()[::4].float(), 0.9)))
-                        stats[f"zero_{s_}"].append(float((r_s == 0).float().mean()))   # 奖励下溢为 0 的比例（#197）
+                        _level_stats(stats, s_, r_s, d_s)
                     torch.cuda.synchronize()
                     stats["t_roll_fine"].append(time.time() - t2)
                 mode = q.argmax(0)
@@ -468,16 +560,37 @@ class Term:
             loss = loss - (adv * _logp(logp_all[b], k)).mean() / B
             if lv and A_ref is not None:
                 t3 = time.time()
-                fine = fine + fine_surrogate(model.model.decoder, {s_: x[b:b + 1] for s_, x in f1.items()},
-                                             {s_: x[b:b + 1] for s_, x in f2.items()},
-                                             rec, adv_f, sig, p["chunk"], st.optim.backward, st.optim.factor(),
-                                             p["weight"] / B)
+                fb, gb = {s_: x[b:b + 1] for s_, x in f1.items()}, {s_: x[b:b + 1] for s_, x in f2.items()}
+                dec = model.model.decoder
+                if p["fine_mode"] == "chain":
+                    fine = fine + fine_surrogate(dec, fb, gb, rec, adv_f, sig, p["chunk"], st.optim.backward,
+                                                 st.optim.factor(), p["weight"] / B)
+                else:
+                    sur, rd = fine_direct(dec, fb, gb, traj, A_ref, sig, p, st.optim.backward, st.optim.factor(),
+                                          p["weight"] / B)
+                    fine = fine + sur
+                    for s_, (r_s, d_s) in rd.items():
+                        _level_stats(stats, s_, r_s, d_s)
+                if p["cos_every"] and b == 0 and (self.calls - 1) % p["cos_every"] == 0:
+                    for key, v in grad_cos(dec, fb, gb, traj, A_ref, sig, p).items():
+                        stats.setdefault(key, []).append(v)
                 torch.cuda.synchronize()
                 stats["t_fine"].append(time.time() - t3)
         if lv:
             stats["l_coarse"].append(float(p["weight"] * loss))
             stats["l_fine"].append(float(fine))
         return p["weight"] * loss + fine, {k: round(float(np.mean(v)), 5) for k, v in stats.items() if v}, True
+
+
+def _level_stats(stats, s, r, d):
+    """一级的奖励 r 与距离 d（(N,h,w)，N 为链数 / 抽签次数）记进日志：均值、链间标准差（N > 1 时）、距离 90% 分位、
+    奖励下溢为 0 的比例（#197）。"""
+    stats[f"rew_{s}"].append(float(r.mean()))
+    if r.shape[0] > 1:
+        stats[f"rew_sd_{s}"].append(float(r.std(0).mean()))
+    stats[f"d_{s}"].append(float(d.mean()))
+    stats[f"d90_{s}"].append(float(torch.quantile(d.flatten()[::4].float(), 0.9)))
+    stats[f"zero_{s}"].append(float((r == 0).float().mean()))
 
 
 def _logp(logp, k):

@@ -860,3 +860,110 @@ def test_update_monitor_lora_tiny_change_stays_accurate():
             A += 1e-6 * torch.randn_like(A)
         want = float((2.0 * (B.double() @ A.double() - BA0)).norm() / W.double().norm())
         assert mon.after()["upd_lora"] == pytest.approx(want, rel=1e-2)
+
+
+# ---------- 细化训练方式：精确梯度与逐级局部抽签（#201） ----------
+
+def _traj(model, f1, f2, P, cert):
+    import torch
+    from finetune.parts.rloo import anchor_flow, refine
+
+    traj = {}
+    with torch.no_grad():
+        out, _ = refine(model, f1, f2, anchor_flow(P, P.argmax(1)), cert, traj)
+    return traj, out
+
+
+def test_rloo_refine_records_trajectory():
+    """refine 的 traj 记下每级的输入与输出 μ：尺度 1 的 μ 就是返回的 warp；不给 traj 时返回值不变。"""
+    import torch
+    from finetune.parts.rloo import anchor_flow, refine
+
+    model, dec, theta, feats, P, cert = _fake_roma()
+    f1, f2 = feats()
+    traj, out = _traj(model, f1, f2, P, cert)
+    assert sorted(traj) == [1, 2, 4, 8, 16] and traj[8][0].shape == (1, 2, 8, 8) and traj[8][1].shape == (1, 1, 8, 8)
+    assert torch.allclose(traj[1][2], out)
+    with torch.no_grad():
+        plain, _ = refine(model, f1, f2, anchor_flow(P, P.argmax(1)), cert)
+    assert torch.equal(plain, out)
+
+
+def test_rloo_fine_direct_grad_equals_direct():
+    """grad 方式：分段反向 + 替身项的梯度与直接对 −Σ_s mean r(μ_s) 求导相同（不受 GradScaler 倍数影响），
+    替身项的值等于这个损失；不训练的级没有梯度。"""
+    import torch
+    from finetune.parts.rloo import _disp, fine_direct, level_reward
+
+    model, dec, theta, feats, P, cert = _fake_roma()
+    params = [theta] + list(dec.parameters())
+    with torch.no_grad():
+        traj, _ = _traj(model, *feats(), P, cert)
+    A = np.array([[1.0, 0.02, 3.0], [-0.01, 1.0, -2.0]])
+    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss", "fine_shape": "cauchy", "fine_mode": "grad",
+         "fine_group": 8, "baseline": "loo"}
+    sig = {8: 0.5 * 8 / 256, 2: 0.5 * 2 / 256}
+    w = 0.7
+
+    f1, f2 = feats()
+    L = 0
+    for s in sig:
+        fin, cin, _ = traj[s]
+        d_flow, _ = dec.conv_refiner[str(s)](f1[s], f2[s], fin, scale_factor=1, logits=cin)
+        L = L - w * level_reward(fin + _disp(dec, s, d_flow, 64, 64), A, s, p)[0].mean()
+    L.backward()
+    want = [None if q.grad is None else q.grad.clone() for q in params]
+    for q in params:
+        q.grad = None
+
+    fac = 8.0
+    f1, f2 = feats()
+    sur, rd = fine_direct(dec, f1, f2, traj, A, sig, p, lambda l: (l * fac).backward(), fac, w)
+    (sur * fac).backward()
+    assert float(sur) == pytest.approx(float(L), rel=1e-5)
+    assert rd[8][0].shape == (1, 8, 8) and rd[2][1].shape == (1, 32, 32)
+    for q, g in zip(params, want):
+        assert (q.grad is None) == (g is None)
+        assert g is None or torch.allclose(q.grad / fac, g, rtol=1e-4, atol=1e-7)
+    for s in ("16", "4", "1"):
+        assert all(q.grad is None for q in dec.conv_refiner[s].parameters())
+    assert theta.grad.abs().sum() > 0
+
+
+def test_rloo_local_gradient_agrees_with_exact_for_many_draws():
+    """local 方式：抽签次数很多时，它的梯度方向趋近精确梯度（grad_cos 接近 1）；抽 2 次时余弦明显更小但有定义；
+    local 的损失只经 log π 带梯度，抽到的位置与奖励不带梯度。"""
+    import torch
+    from finetune.parts.rloo import grad_cos, level_loss
+
+    torch.manual_seed(0)
+    model, dec, theta, feats, P, cert = _fake_roma()
+    traj, _ = _traj(model, *feats(), P, cert)
+    A = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss", "fine_shape": "cauchy", "fine_mode": "local",
+         "baseline": "loo"}
+    sig = {8: 0.5 * 8 / 256, 4: 0.5 * 4 / 256}
+    f1, f2 = feats()
+    many = grad_cos(dec, f1, f2, traj, A, sig, {**p, "fine_group": 20000})
+    few = grad_cos(dec, f1, f2, traj, A, sig, {**p, "fine_group": 2})
+    assert set(many) == {"cos_8", "cos_4", "cosf_8", "cosf_4", "cos"}
+    assert many["cos"] > 0.95 and many["cos_8"] > 0.95 and many["cosf_4"] > 0.9
+    assert -1 <= few["cos"] <= 1 and few["cos"] < many["cos"]
+    assert theta.grad is None and all(q.grad is None for q in dec.parameters())   # 诊断不碰 .grad
+    mu = traj[8][2].clone().requires_grad_()
+    loss, (r, d) = level_loss(mu, A, 8, sig[8], {**p, "fine_group": 4})
+    assert r.shape == (4, 8, 8) and not r.requires_grad and loss.requires_grad
+
+
+def test_config_rloo_fine_mode(tmp_path):
+    from finetune import config as C
+
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nlevels = [8]\n'))
+    assert (d["rloo"]["fine_mode"], d["rloo"]["fine_group"], d["rloo"]["cos_every"]) == ("chain", 8, 0)  # 默认整链
+    c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nlevels = [16, 8, 4]\n'
+                                     'fine_mode = "local"\ncos_every = 50\n'))
+    assert c["rloo"]["fine_mode"] == "local" and c["rloo"]["cos_every"] == 50
+    for bad in ('fine_mode = "exact"\nlevels = [8]', 'fine_mode = "grad"', 'cos_every = 50',
+                'fine_mode = "local"\nlevels = [8]\nfine_group = 1', 'levels = [8]\ncos_every = -1'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n[rloo]\nreward = "ref"\n{bad}\n'))

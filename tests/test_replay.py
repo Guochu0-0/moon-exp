@@ -69,6 +69,7 @@ ADDED = {
     "rloo.fine_mode": ("chain", "#201 新增；chain = 整链抽签，即 #192 的细化训练方式"),
     "rloo.fine_group": (8, "#201 与 fine_mode 同批新增；只在 fine_mode = local 时起作用"),
     "rloo.cos_every": (0, "#201 新增；只多记日志，不影响训练"),
+    "rloo.frozen_ref": (False, "#202 新增；false = 参照取当前模型，即之前的做法"),
 }
 
 

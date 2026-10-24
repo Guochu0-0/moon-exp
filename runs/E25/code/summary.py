@@ -65,7 +65,10 @@ o = sweep(MAIN / "E19" / "sweep" / "gauss8")
 ref = o[max(o, key=lambda k: o[k]["summary"]["auc@5"])]
 print("== E19 gauss8 val auc@5:", {k: round(v["summary"]["auc@5"], 3) for k, v in o.items()})
 src = {m: (E / "sweep" / m, E / "ckpt" / m / "log.jsonl") for m in ("fr1_s0", "fr1_s1", "f1_s1")}
-src["E22/f1"] = (MAIN / "E22" / "sweep" / "f1", MAIN / "E22" / "ckpt" / "f1" / "log.jsonl")
+e22 = MAIN / "E22" / "ckpt" / "f1" / "log.jsonl"
+if not e22.exists():   # A6000 的主 checkout 没有 E22 的训练日志，从 gpfs 拷到这里
+    e22 = E / "ckpt" / "_ref" / "E22_f1_log.jsonl"
+src["E22/f1"] = (MAIN / "E22" / "sweep" / "f1", e22)
 curves, logs = {}, {}
 for m, (sw, lg) in src.items():
     if lg.exists():

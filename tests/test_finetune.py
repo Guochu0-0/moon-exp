@@ -871,7 +871,10 @@ def test_config_rloo_frozen_ref(tmp_path):
     assert d["rloo"]["frozen_ref"] is False                                   # 默认参照随当前模型（旧行为）
     c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nfrozen_ref = true\n'))
     assert c["rloo"]["frozen_ref"] is True
-    for bad in ('[rloo]\nreward = "r1"\nfrozen_ref = true', 'dino_unfreeze = 2\n[rloo]\nreward = "ref"\nfrozen_ref = true'):
+    for bad in ('[rloo]\nreward = "r1"\nfrozen_ref = true', 'dino_unfreeze = 2\n[rloo]\nreward = "ref"\nfrozen_ref = true',
+                'lora_r = 8\ndino_ckpt = true\n[rloo]\nreward = "ref"\nfrozen_ref = true',
+                'lora_r = 8\ndrop_path = 0.1\n[rloo]\nreward = "ref"\nfrozen_ref = true',
+                'vgg_dropout = 0.1\n[rloo]\nreward = "ref"\nfrozen_ref = true'):
         with pytest.raises(C.ConfigError):
             C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n{bad}\n'))
 
@@ -908,6 +911,14 @@ def test_rloo_frozen_copy_is_independent_and_frozen():
     assert not torch.allclose(fz.encoder.lin.weight, net.encoder.lin.weight)
     assert not torch.allclose(fz.head.weight, net.head.weight)
     net.head.forward = lambda x: x
+    with pytest.raises(ValueError):
+        frozen_copy(model)
+    del net.head.forward
+    net.encoder.dinov2_vitl14 = [torch.nn.Linear(2, 2)]           # 同 romatch：DINOv2 放在列表里，不是子模块
+    fz = frozen_copy(model).model
+    dv = fz.encoder.dinov2_vitl14[0]
+    assert dv is not net.encoder.dinov2_vitl14[0] and not dv.training and not dv.weight.requires_grad
+    net.head.register_forward_hook(lambda mod, inp, out: out)
     with pytest.raises(ValueError):
         frozen_copy(model)
 

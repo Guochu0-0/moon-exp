@@ -83,6 +83,7 @@ SHAPES = ("ripe", "clip", "gauss", "cauchy")
 BASELINES = ("loo", "none")
 SCALES = ("16", "8", "4", "2", "1")
 LEVELS = (16, 8, 4, 2, 1)
+FROZEN_OFF = ("dino_unfreeze", "dino_ckpt", "drop_path", "lora_dropout", "vgg_dropout", "unc_head")
 
 
 def fill(p):
@@ -114,8 +115,8 @@ def check(cfg):
         raise ConfigError("[rloo] levels 只配 reward = 'ref'")
     if p["frozen_ref"] and p["reward"] != "ref":
         raise ConfigError("[rloo] frozen_ref 只配 reward = 'ref'")
-    if p["frozen_ref"] and (cfg["model"].get("dino_unfreeze", 0) or cfg["model"].get("dino_ckpt", False)):
-        raise ConfigError("[rloo] frozen_ref 不支持 [model] dino_unfreeze、dino_ckpt")
+    if p["frozen_ref"] and any(cfg["model"].get(x) for x in FROZEN_OFF):     # 副本里会带随机性或引用原模型
+        raise ConfigError(f"[rloo] frozen_ref 要求 [model] {', '.join(FROZEN_OFF)} 都关闭")
     if p["k"] <= 0:
         raise ConfigError("[rloo] k 应 > 0")
     if cfg["model"]["train_res"] != "560":
@@ -292,19 +293,23 @@ def fine_surrogate(dec, f1, f2, rec, adv, sig, chunk, backward, factor, w=1.0):
 
 def frozen_copy(model):
     """训练开始时的模型的冻结副本（#202）：深拷贝 model.model，不求梯度、eval 模式，返回与 model 同样可传给 features、
-    coarse、refine 的包装。finetune.models.roma 放开 DINOv2 时给 encoder 实例挂了闭包 forward（引用原模型的 encoder
-    与 DINOv2），拷贝里删掉它，退回 romatch 原实现（同样的计算，DINOv2 在 no_grad 里算）；其余实例级 forward 不支持。"""
+    coarse、refine 的包装。finetune.models.roma 在 lora_r > 0 时给 encoder 实例挂了闭包 forward（引用原模型的 encoder
+    与 DINOv2），拷贝里删掉它，退回 romatch 原实现（同样的计算，DINOv2 在 no_grad 里算）。DINOv2 放在 encoder 的列表里、
+    不是子模块，单独冻结。其余实例级 forward 与 forward 钩子（会引用原模型或带随机性）不支持。"""
     import copy
     import types
     m = copy.deepcopy(model.model)
     enc = getattr(m, "encoder", None)
     if enc is not None and "forward" in vars(enc):
         del enc.forward
-    bad = [n for n, mod in m.named_modules() if "forward" in vars(mod)]
+    mods = [m] + [x for x in getattr(enc, "dinov2_vitl14", []) if isinstance(x, torch.nn.Module)]
+    bad = [n for x in mods for n, mod in x.named_modules()
+           if "forward" in vars(mod) or mod._forward_hooks or mod._forward_pre_hooks]
     if bad:
-        raise ValueError(f"frozen_copy 不支持实例级 forward：{bad[:3]}")
-    m.requires_grad_(False)
-    m.eval()
+        raise ValueError(f"frozen_copy 不支持实例级 forward 与 forward 钩子：{bad[:3]}")
+    for x in mods:
+        x.requires_grad_(False)
+        x.eval()
     return types.SimpleNamespace(model=m)
 
 

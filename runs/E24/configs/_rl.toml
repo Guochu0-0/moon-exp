@@ -1,0 +1,38 @@
+# 细化信号的估计噪声（#201）。粗匹配完全照 E19 gauss8：每对 16 次抽签，温度 0.3，高斯核 δ 8 px，RLOO；学习率 decoder 3e-5、LoRA 1e-4。
+# 细化：尺度 16、8、4 三级训练，尺度 2、1 照常推理、不训练；VGG 放开训练。细化奖励同 E22：1/(1 + ½(d/s)²)。
+# 细化部分（尺度 16、8、4 的细化层与尺度 8、4 的 proj、VGG）的学习率 = [model] refine_lr、vgg_lr × 3e-5，锚点 0.47（同 E22），
+# 倍数与细化训练方式（[rloo] fine_mode）由各方法给出。难版扰动、DINOv2 qkv 加 LoRA r 8、4000 步（warmup 500 + cosine）；
+# 每 500 步存档；不加 KL，不训可信度，不裁梯度。每步记各部分参数的相对改变量（upd_*）。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[run]
+save_every = 500
+save_zero = false
+seed = 0
+log_update = true
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+fine_shape = "cauchy"
+group = 16
+levels = [16, 8, 4]
+k = 0.5

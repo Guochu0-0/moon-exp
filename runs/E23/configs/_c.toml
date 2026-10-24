@@ -1,0 +1,31 @@
+# 只训粗匹配（#200）：完全照 E19 gauss8（RLOO，温度 0.3，高斯核 δ 8 px，不训 VGG，细化照推理跑、不加噪），
+# 另加每 500 步存档、每步记各部分参数的相对改变量（upd_*）。每对抽签次数 [rloo] group 与种子 [run] seed 由各方法给出。
+# 其余同 E19：难版扰动、DINOv2 qkv 加 LoRA r 8、lr 3e-5（LoRA 1e-4）、4000 步（warmup 500 + cosine）。
+[model]
+name = "roma"
+lora_r = 8
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[run]
+save_every = 500
+save_zero = false
+seed = 0
+log_update = true
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0

@@ -37,6 +37,7 @@ RUNS = {
     "f0002_s2": (E, "f0002_s2", "× 0.002 种子 2"),
 }
 AT = [1, 400, 500, 600, 700, 1000, 2000, 3000, 3900]     # 从该步起 100 步的窗口
+FINE = ["c16_s1", "c16_s2"]
 KEYS = ["d_ref", "rew", "H", "pmode", "gnorm", "upd_coarse", "upd_lora", "upd_fine", "upd_ref16", "upd_vgg"]
 
 
@@ -106,6 +107,11 @@ for key, (X, m, lab) in RUNS.items():
         v = {k: np.median([r[k] for r in w if k in r]) for k in KEYS if any(k in r for r in w)}
         if v:
             print(f"  step {a:4d}: " + " ".join(f"{k}={x:.3g}" for k, x in v.items()))
+    if key in FINE:   # 第 500–1000 步逐 50 步看 50 步滑动中位数
+        r = {k: roll(rs, k) for k in ["d_ref", "rew", "H", "pmode", "gnorm", "upd_lora"]}
+        for t in range(500, 1001, 50):
+            i = [j for j, x in enumerate(rs) if x["step"] == t][0]
+            print(f"  滑动中位数 step {t:4d}: " + " ".join(f"{k}={v[i]:.3g}" for k, v in r.items()))
 
 COL = {"c16": "tab:blue", "c8_": "tab:red", "f00": "tab:green"}
 LS = {"s0": "-", "s1": "--", "s2": ":"}
@@ -146,8 +152,9 @@ for k, rs in logs.items():
 for ax, lab in zip(axs, ["粗匹配分数", "粗匹配解码器每步相对改变量", "LoRA 每步相对改变量"]):
     ax.set_xlabel("训练步数")
     ax.set_title(lab, fontsize=9)
-axs[1].set_yscale("log")
-axs[2].set_yscale("log")
+for ax in axs[1:]:
+    ax.set_yscale("log")
+    ax.yaxis.set_major_formatter(PLAIN)
 axs[0].legend(fontsize=7)
 fig.tight_layout()
 fig.savefig(E / "extra" / "curves.png", dpi=150)

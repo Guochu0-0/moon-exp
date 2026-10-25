@@ -82,7 +82,8 @@ def method(m):
                         n_inl=tr["n_inl"], moved=(tr["mode"] != tr["mode_post"]).mean(1))
     first_q0 = {k: next((int(s) for s, a in zip(tr["step"], at.sum(1)) if a >= n), None) for k, n in
                 (("any", 1), ("tenth", 160), ("half", 800))}
-    return {"events": ev, "collapsed": collapsed, "q0": q0, "q0_xy": [float(x) for x in anchor_xy(q0)],
+    failed = not recs[-1]["err_orig"] < 20         # 第 1200 步观察集原图上自估仿射离标注的中位数超过 20 px（含拟合失败）
+    return {"events": ev, "failed": failed, "collapsed": collapsed, "q0": q0, "q0_xy": [float(x) for x in anchor_xy(q0)],
             "q0_first_train": first_q0, "n_obs": len(steps), "last": recs[-1]}
 
 

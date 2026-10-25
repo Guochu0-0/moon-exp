@@ -33,11 +33,11 @@ def label(m):
 
 
 def collapsed():
-    return [m for m, v in SUM.items() if v["collapsed"] and "_r" not in m.split("_s")[-1]]
+    return [m for m, v in SUM.items() if v["failed"] and "_r" not in m.split("_s")[-1]]
 
 
 def healthy():
-    return [m for m, v in SUM.items() if not v["collapsed"] and "_r" not in m.split("_s")[-1]]
+    return [m for m, v in SUM.items() if not v["failed"] and "_r" not in m.split("_s")[-1]]
 
 
 def obs_csv(m):

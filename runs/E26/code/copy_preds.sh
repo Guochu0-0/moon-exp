@@ -16,6 +16,6 @@ for m in $methods; do
   fi
   e=${m%%_*}; e=${e^^}; rest=${m#*_}; step=${rest##*_}; run=${rest%_*}
   cp $MAIN/$e/sweep/$run/S/preds/step$step/val.jsonl $MAIN/$e/sweep/$run/S/preds/step$step/val.meta.json $d/
-  cp $MAIN/$e/sweep/$run/match/step$step/val_matches.npz $d/
+  cp $MAIN/$e/sweep/$run/S/preds/step$step/val_matches.npz $d/
 done
 ls $R/preds | wc -l

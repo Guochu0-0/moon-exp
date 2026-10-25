@@ -255,8 +255,51 @@ def fig_jumps(ms, ref):
     (D / "jumps.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
+LEVELS = (16, 8, 4, 2, 1)
+
+
+def level_series(m):
+    """观察集原图各步：粗匹配与细化各级正常推理输出离自估仿射、离标注的距离（各对中位后再取中位）。"""
+    out = {"step": []}
+    for st in obs_steps(m):
+        o = obs(m, st)
+        sel = o["version"] == 0
+        out["step"].append(st)
+        for k in ["d_self", "d_gt"] + [f"dmu_{s}" for s in LEVELS] + [f"dmu_gt_{s}" for s in LEVELS]:
+            v = np.nanmedian(o[k][sel].astype(float).reshape(sel.sum(), -1), 1)
+            out.setdefault(k, []).append(float(np.median(v)))
+    return {k: np.array(v) for k, v in out.items()}
+
+
+def fig_fine(ms):
+    """失控时各级离自估仿射多远：粗匹配与细化尺度 16…1 的输出（观察集原图）。"""
+    fig, axs = plt.subplots(len(ms), 2, figsize=(13, 2.8 * len(ms)), squeeze=False, sharex=True)
+    for (a, b), m in zip(axs, ms):
+        L = level_series(m)
+        a.plot(L["step"], L["d_self"], "k", label="粗匹配")
+        b.plot(L["step"], L["d_gt"], "k", label="粗匹配")
+        for s, c in zip(LEVELS, plt.get_cmap("plasma")(np.linspace(0, 0.85, len(LEVELS)))):
+            a.plot(L["step"], L[f"dmu_{s}"], color=c, lw=0.9, label=f"细化尺度 {s}")
+            b.plot(L["step"], L[f"dmu_gt_{s}"], color=c, lw=0.9, label=f"细化尺度 {s}")
+        for ax in (a, b):
+            ax.set_yscale("log")
+            bs = break_step(m)
+            if bs is not None:
+                ax.axvline(bs, color="k", ls=":", lw=0.8)
+        a.set_ylabel(label(m), fontsize=9)
+    axs[0, 0].set_title("离自估仿射（px，中位）", fontsize=10)
+    axs[0, 1].set_title("离标注（px，中位）", fontsize=10)
+    axs[0, 0].legend(fontsize=7, ncol=2)
+    for ax in axs[-1]:
+        ax.set_xlabel("训练步")
+    fig.tight_layout()
+    fig.savefig(OUT / "fine.png", dpi=110)
+    plt.close(fig)
+
+
 def main():
     ms = collapsed()
+    fig_fine(ms)
     fig_timeline(ms)
     fig_drift(ms)
     fig_converge(ms)

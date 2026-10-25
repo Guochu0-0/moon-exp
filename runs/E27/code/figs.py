@@ -113,33 +113,40 @@ def offsets(m):
 
 
 def fig_drift(ms):
-    """粗匹配相对标注怎样偏：各对一致的偏移（中位向量）与对内的离散；以及一对图上全部格子的落点随步数的变化。"""
-    fig, axs = plt.subplots(len(ms), 2, figsize=(11, 3.2 * len(ms)), squeeze=False,
-                            gridspec_kw={"width_ratios": [2, 1]})
-    for (a, b), m in zip(axs, ms):
+    """粗匹配相对标注怎样偏：各对一致的偏移（中位向量）与对内的离散；以及一对图上全部格子的落点在四个步数上的样子。"""
+    fig, axs = plt.subplots(len(ms), 5, figsize=(19, 3.2 * len(ms)), squeeze=False,
+                            gridspec_kw={"width_ratios": [2.4, 1, 1, 1, 1]})
+    for row, m in zip(axs, ms):
         off = offsets(m)
-        a.plot(off[:, 0], off[:, 1], label="偏移 x（中位）")
-        a.plot(off[:, 0], off[:, 2], label="偏移 y（中位）")
+        a = row[0]
+        a.plot(off[:, 0], off[:, 1], label="偏移 x（各对中位向量的中位）")
+        a.plot(off[:, 0], off[:, 2], label="偏移 y")
         a.plot(off[:, 0], off[:, 3], label="对内离散（中位）")
         a.axhline(0, color="k", lw=0.5)
         a.set_ylabel(label(m), fontsize=9)
-        a.set_xlabel("训练步")
         bs = break_step(m)
-        steps = [s for s in (0, bs - 20 if bs else None, bs, bs + 20 if bs else None, 1200) if s is not None]
+        a.axvline(bs, color="k", ls=":", lw=0.8)
         o0 = obs(m, 0)
         j = int(np.flatnonzero(o0["version"] == 0)[0])
-        for s, c in zip(steps, plt.get_cmap("viridis")(np.linspace(0, 1, len(steps)))):
-            o = obs(m, s)
-            b.scatter(o["pos"][j, 0].reshape(-1), o["pos"][j, 1].reshape(-1), s=1, color=c, label=f"第 {s} 步")
+        cx, cy = cell_centers()
         x0, y0 = SUM[m]["q0_xy"]
-        b.plot([x0], [y0], "r*", ms=10, label="q0")
-        b.add_patch(plt.Rectangle((0, 0), 512, 512, fill=False, lw=0.8))
-        b.set_xlim(-60, 572)
-        b.set_ylim(572, -60)
-        b.set_aspect("equal")
-        b.set_title(str(o0["pair"][j]), fontsize=8)
+        for ax, s_ in zip(row[1:], (max(0, bs - 20), bs, bs + 30, 1200)):
+            o = obs(m, s_)
+            gx, gy = mapped(o["A_gt"][j], cx, cy)
+            ax.scatter(gx.reshape(-1), gy.reshape(-1), s=0.5, color="0.8")
+            ax.scatter(o["pos"][j, 0].astype(float).reshape(-1), o["pos"][j, 1].astype(float).reshape(-1), s=1.5,
+                       c=np.hypot(o["pos"][j, 0].astype(float) - gx, o["pos"][j, 1].astype(float) - gy).reshape(-1),
+                       cmap="viridis", vmin=0, vmax=300)
+            ax.plot([x0], [y0], "r*", ms=7)
+            ax.add_patch(plt.Rectangle((0, 0), 512, 512, fill=False, lw=0.8))
+            ax.set_xlim(-30, 542), ax.set_ylim(542, -30)
+            ax.set_aspect("equal")
+            ax.set_xticks([]), ax.set_yticks([])
+            ax.set_title(f"第 {s_} 步", fontsize=8)
     axs[0, 0].legend(fontsize=7)
-    axs[0, 1].legend(fontsize=6, markerscale=5, loc="upper left")
+    axs[0, 1].set_title(f"{obs(ms[0], 0)['pair'][0]}：粗匹配落点（颜色为离标注的距离，0–300 px；灰点为标注位置）\n"
+                        + axs[0, 1].get_title(), fontsize=8, loc="left")
+    axs[-1, 0].set_xlabel("训练步")
     fig.tight_layout()
     fig.savefig(OUT / "drift.png", dpi=110)
     plt.close(fig)

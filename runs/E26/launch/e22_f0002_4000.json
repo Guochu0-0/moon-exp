@@ -1,0 +1,19 @@
+[
+ {
+  "start": "2026-10-25 12:53:44 +0800",
+  "end": "2026-10-25 13:06:02 +0800",
+  "status": "ok",
+  "commit": "1cf0da800415db8ad02cb9406f6a524e12b7b25f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-206",
+  "cuda_visible_devices": "4",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E26/code/probe.py",
+   "{morph,learn}_e22_f0002_4000"
+  ]
+ }
+]

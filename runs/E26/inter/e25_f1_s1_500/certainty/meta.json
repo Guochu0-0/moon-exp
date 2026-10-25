@@ -1,0 +1,9 @@
+{
+  "kind": "scalar",
+  "frame": "opt",
+  "desc": "可信度（sigmoid），训练时的正常推理（560 一遍）尺度 1",
+  "unit": "",
+  "splits": [
+    "val"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "kind": "scalar",
+  "frame": "opt",
+  "desc": "粗级每格的熵（温度 1），40×40 格",
+  "unit": "nat",
+  "splits": [
+    "val"
+  ]
+}

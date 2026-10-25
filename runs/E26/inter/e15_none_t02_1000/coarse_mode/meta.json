@@ -1,0 +1,9 @@
+{
+  "kind": "points",
+  "frame": "sar",
+  "desc": "粗级每格最高分位置在 SAR 上的落点（经邻居加权），值为它的概率",
+  "unit": "",
+  "splits": [
+    "val"
+  ]
+}

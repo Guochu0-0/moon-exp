@@ -1,0 +1,112 @@
+id = "E26"
+title = "自洽坍缩的七个运行：坍缩后输出什么、是否还在学习、从健康到坍缩经历了什么"
+parent = "E25"
+date = "2026-10-25"
+
+[methods.e15_loo_t02_1000]
+name = "E15 loo_t02 · 第 1000 步"
+
+[methods.e15_loo_t02_4000]
+name = "E15 loo_t02 · 第 4000 步"
+
+[methods.e15_none_t02_1000]
+name = "E15 none_t02 · 第 1000 步"
+
+[methods.e15_none_t02_4000]
+name = "E15 none_t02 · 第 4000 步"
+
+[methods.e15_none_t05_1000]
+name = "E15 none_t05 · 第 1000 步"
+
+[methods.e15_none_t05_4000]
+name = "E15 none_t05 · 第 4000 步"
+
+[methods.e19_clip_1000]
+name = "E19 clip · 第 1000 步"
+
+[methods.e19_clip_4000]
+name = "E19 clip · 第 4000 步"
+
+[methods.e22_f0002_500]
+name = "E22 f0002 · 第 500 步"
+
+[methods.e22_f0002_1000]
+name = "E22 f0002 · 第 1000 步"
+
+[methods.e22_f0002_1500]
+name = "E22 f0002 · 第 1500 步"
+
+[methods.e22_f0002_2000]
+name = "E22 f0002 · 第 2000 步"
+
+[methods.e22_f0002_2500]
+name = "E22 f0002 · 第 2500 步"
+
+[methods.e22_f0002_3000]
+name = "E22 f0002 · 第 3000 步"
+
+[methods.e22_f0002_3500]
+name = "E22 f0002 · 第 3500 步"
+
+[methods.e22_f0002_4000]
+name = "E22 f0002 · 第 4000 步"
+
+[methods.e23_c16_s1_500]
+name = "E23 c16_s1 · 第 500 步"
+
+[methods.e23_c16_s1_1000]
+name = "E23 c16_s1 · 第 1000 步"
+
+[methods.e23_c16_s1_1500]
+name = "E23 c16_s1 · 第 1500 步"
+
+[methods.e23_c16_s1_2000]
+name = "E23 c16_s1 · 第 2000 步"
+
+[methods.e23_c16_s1_2500]
+name = "E23 c16_s1 · 第 2500 步"
+
+[methods.e23_c16_s1_3000]
+name = "E23 c16_s1 · 第 3000 步"
+
+[methods.e23_c16_s1_3500]
+name = "E23 c16_s1 · 第 3500 步"
+
+[methods.e23_c16_s1_4000]
+name = "E23 c16_s1 · 第 4000 步"
+
+[methods.e25_f1_s1_500]
+name = "E25 f1_s1 · 第 500 步"
+
+[methods.e25_f1_s1_1000]
+name = "E25 f1_s1 · 第 1000 步"
+
+[methods.e25_f1_s1_1500]
+name = "E25 f1_s1 · 第 1500 步"
+
+[methods.e25_f1_s1_2000]
+name = "E25 f1_s1 · 第 2000 步"
+
+[methods.e25_f1_s1_2500]
+name = "E25 f1_s1 · 第 2500 步"
+
+[methods.e25_f1_s1_3000]
+name = "E25 f1_s1 · 第 3000 步"
+
+[methods.e25_f1_s1_3500]
+name = "E25 f1_s1 · 第 3500 步"
+
+[methods.e25_f1_s1_4000]
+name = "E25 f1_s1 · 第 4000 步"
+
+[methods.e19_gauss8_4000]
+name = "E19 gauss8 · 第 4000 步"
+
+[methods.e23_c16_s2_4000]
+name = "E23 c16_s2 · 第 4000 步"
+
+[methods.e25_fr1_s1_4000]
+name = "E25 fr1_s1 · 第 4000 步"
+
+[methods.zs]
+name = "未训练（AnyMatch-RoMa，SAR min–max）"

@@ -191,7 +191,7 @@ def logs():
     (DATA / "events.json").write_text(json.dumps(ev, ensure_ascii=False, indent=1), encoding="utf-8")
     panels = [("pmode", "最高分位置的概率（训练温度）", False), ("H", "粗级熵（训练温度，nat）", False),
               ("d_ref", "离自估仿射的距离（px）", True), ("rew_sd", "同组奖励的标准差", True),
-              ("rew", "平均分数（截平与分级的下限 −0.1，高斯的下限 0）", False),
+              ("rew", "平均分数（截平与分级的下限 -0.1，高斯的下限 0）", False),
               ("nonmode", "抽到的不是最高分位置的比例", False), ("n_inl", "自估仿射的内点数", False),
               ("gnorm", "梯度范数（裁剪前）", True), ("upd_coarse", "粗级 decoder 每步相对改变量", True),
               ("upd_lora", "LoRA 每步相对改变量", True), ("upd_fine", "细化部分每步相对改变量", True)]

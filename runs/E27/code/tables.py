@@ -29,11 +29,15 @@ def around():
         if not SUM[m]["failed"]:
             continue
         o = obs_csv(m)
-        i = int(np.flatnonzero(o["err_orig"] > 20)[0])
+        bad = ~(o["err_orig"] <= 20)
+        i = len(bad) - 1
+        while i > 0 and bad[i - 1]:
+            i -= 1                                      # 从这一步起一直超过 20 px
+        first = int(o["step"][np.flatnonzero(bad)[0]])
         rows = []
         for j in range(max(0, i - 3), min(len(o["step"]), i + 3)):
             rows.append({k: float(o[k][j]) for k in ("step", "err_orig", "d_self", "d_gt", "wrong_gt", "off_self", "cert1")})
-        out[m] = rows
+        out[m] = {"first_excursion": first, "break": int(o["step"][i]), "rows": rows}
     return out
 
 
@@ -58,9 +62,9 @@ def repro():
 def main():
     res = {"around": around(), "repro": repro()}
     (D / "tables.json").write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    for m, rows in res["around"].items():
-        print(m)
-        for r in rows:
+    for m, v in res["around"].items():
+        print(m, "首次越界", v["first_excursion"], "持续失效起点", v["break"])
+        for r in v["rows"]:
             print("  " + "  ".join(f"{k}={v:.3g}" for k, v in r.items()))
     print(json.dumps(res["repro"], ensure_ascii=False, indent=1))
 

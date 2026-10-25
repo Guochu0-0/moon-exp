@@ -47,10 +47,15 @@ def obs_csv(m):
 
 
 def break_step(m):
-    """观察集上原图误差中位数第一次超过 20 px 的步（配准失效的起点）。"""
+    """配准失效的起点：观察集上原图误差中位数从这一步起一直超过 20 px（之前可以有短暂越界后恢复）。"""
     o = obs_csv(m)
-    i = np.flatnonzero(o["err_orig"] > 20)
-    return int(o["step"][i[0]]) if len(i) else None
+    bad = ~(o["err_orig"] <= 20)
+    if not bad[-1]:
+        return None
+    i = len(bad) - 1
+    while i > 0 and bad[i - 1]:
+        i -= 1
+    return int(o["step"][i])
 
 
 def fig_timeline(ms):

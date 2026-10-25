@@ -210,8 +210,7 @@ def fig_converge(ms):
         row[5].set_xticks([]), row[5].set_yticks([])
     axs[0, 0].legend(fontsize=7)
     axs[0, 1].legend(fontsize=7, loc="upper left")
-    axs[0, 2].set_title("有信号格子的最高分位置（按梯度加权）
-" + axs[0, 2].get_title(), fontsize=8)
+    axs[0, 2].set_title("有信号格子的最高分位置（按梯度加权）\n" + axs[0, 2].get_title(), fontsize=8)
     for ax in axs[-1, :2]:
         ax.set_xlabel("训练步")
     fig.tight_layout()
@@ -253,8 +252,7 @@ def fig_jumps(ms, ref):
     fig.tight_layout()
     fig.savefig(OUT / "jumps.png", dpi=110)
     plt.close(fig)
-    (D / "jumps.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "
-", encoding="utf-8")
+    (D / "jumps.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
 def main():

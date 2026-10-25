@@ -1,0 +1,8 @@
+# 可复现检查（#209）：从 clip_s0 第 300 步的存档（带 AdamW 状态与随机数状态）续训到第 400 步，与 clip_s0 原轨迹逐步比较。
+base = "clip_s0"
+
+[run]
+resume = "runs/E27/ckpt/clip_s0/ckpt_300.pt"
+stop_at = 400
+save_at = [400]
+save_optim = false

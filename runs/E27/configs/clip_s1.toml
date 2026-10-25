@@ -1,0 +1,5 @@
+# 种子 1。
+base = "_clip"
+
+[run]
+seed = 1

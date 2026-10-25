@@ -51,8 +51,13 @@ RUN = {
     "split": "train",       # 训练用的 split，可用 + 连接；val / test 只用于有标注的上限参考（#96）
     "select": "val_peak",   # 驱动怎么选正式结果的 ckpt：val_peak 按 Val AUC@5 峰值 / last 最后一个（在 Test 上训练时用，#98）
     "log_update": False,    # 每次更新后把各部分参数的相对改变量记进日志（upd_<部分>，#197）；模型要提供 update_parts
+    "stop_at": 0,           # 训到第几步停下（lr 调度仍按 [optim] steps，#209）；0 = 训满
+    "save_optim": False,    # ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序，#209），供 resume 用
+    "resume": "",           # 从 save_optim 存下的 ckpt 接着训（相对仓库根或绝对路径，#209）；空 = 从头训
+    "sweep": "all",         # 驱动评哪些 ckpt（#209）：all 逐个评 Val 再按 select 补评 Test / last 只评最后一个的 Val、不评 Test
 }
 SELECT = ("val_peak", "last")
+SWEEP = ("all", "last")
 SPLITS = ("train", "val", "test")
 TOP = ("base", "model", "optim", "run")
 
@@ -127,6 +132,12 @@ def expand(raw: dict) -> dict:
         raise ConfigError(f"[run] split 只能由 {SPLITS} 用 + 连接，得到 {out['run']['split']!r}")
     if out["run"]["select"] not in SELECT:
         raise ConfigError(f"[run] select 可选 {SELECT}，得到 {out['run']['select']!r}")
+    if out["run"]["sweep"] not in SWEEP:
+        raise ConfigError(f"[run] sweep 可选 {SWEEP}，得到 {out['run']['sweep']!r}")
+    if out["run"]["stop_at"] < 0 or out["run"]["stop_at"] > out["optim"]["steps"]:
+        raise ConfigError(f"[run] stop_at 应在 0…[optim] steps，得到 {out['run']['stop_at']}")
+    if (out["run"]["resume"] or out["run"]["save_optim"]) and out["optim"]["ema"] > 0:
+        raise ConfigError("[run] save_optim、resume 不支持 [optim] ema（ckpt 存的是 EMA 权重，不是训练中的权重）")
     for name, part in PARTS.items():      # 按登记顺序：每步也按这个顺序算损失
         if name not in raw:
             continue

@@ -32,6 +32,15 @@ class Optim:
         x = loss / self.o["accum"]
         (self.scaler.scale(x) if self.scaler else x).backward()
 
+    def state_dict(self) -> dict:
+        """续训用（#209）：AdamW 与 GradScaler 的状态。"""
+        return {"opt": self.opt.state_dict(), "scaler": self.scaler.state_dict() if self.scaler else None}
+
+    def load_state_dict(self, sd: dict):
+        self.opt.load_state_dict(sd["opt"])
+        if self.scaler:
+            self.scaler.load_state_dict(sd["scaler"])
+
     def factor(self) -> float:
         """backward(loss) 实际反向的是 loss × factor()：GradScaler 的当前 scale（没有时为 1）÷ accum。"""
         return (self.scaler.get_scale() if self.scaler else 1.0) / self.o["accum"]

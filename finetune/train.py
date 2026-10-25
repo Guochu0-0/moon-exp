@@ -8,8 +8,15 @@
 
 产物 <out>/：
   log.jsonl          每步一行：总损失、各成分的监控量、lr、梯度范数、耗时
-  ckpt_<step>.pt     baselines 适配器可直接读（baselines.match --weights）
+  ckpt_<step>.pt     baselines 适配器可直接读（baselines.match --weights）；[run] save_optim 时另有 'train'：
+                     续训状态（步数、AdamW 与 GradScaler、随机数、数据顺序、各成分的状态，#209）
   args.json          展开后的完整配置、推理配置、权重、commit、环境
+  trace/             成分的逐步记录（有成分往 step.trace 里放东西或提供 observe 时，#209，见 finetune/trace.py）
+
+[run] resume 给出 save_optim 存下的 ckpt 时，装回权重与续训状态，从下一步接着训（只支持第一个 epoch 内的存档）；
+[run] stop_at 与 --stop-at 一样提前停下，lr 调度仍按 [optim] steps。
+成分可以提供 after_update(step)（参数更新之后调用）、observe(step)（每步更新之后与训练前调用，返回要存的数组或 None）、
+state_dict() / load_state_dict()（随续训状态存取）。
 """
 from __future__ import annotations
 
@@ -31,6 +38,7 @@ from .data import PairSet
 from .models import MODELS
 from .optim import Optim, UpdateMonitor
 from .parts import PARTS
+from .trace import Loader, TraceWriter, rng_state, set_rng_state
 
 REPO = Path(__file__).resolve().parents[1]
 PRINT_KEYS = ("coarse", "fine", "pairs_used", "epe1_px", "cexp", "lcert", "n_match", "n_inl", "inl_frac", "dist_I",
@@ -46,6 +54,7 @@ class Step:
             model, model_name, batch, device, neg, rng, optim
         self.B = len(batch["pair"])
         self._out = None
+        self.trace = {}     # 成分的逐步记录（#209）：名字 → 数组，第 0 维是 batch 里的第几对
 
     def images(self):
         return self.batch["image0"].to(self.device), self.batch["image1"].to(self.device)
@@ -126,17 +135,49 @@ def main(argv=None):
          "env": env_info()}, ensure_ascii=False, indent=1), encoding="utf-8")
     if r["save_zero"]:
         torch.save(model.state_dict(), out / "ckpt_0.pt")
-    save = lambda st: torch.save(ema.state_dict() if ema else model.state_dict(), out / f"ckpt_{st}.pt")
-
     rng = np.random.default_rng(r["seed"])   # 打乱分数（placebo）、交换方向（RoMa 伪标签）共用
+    loader = Loader(dl, g)
+
+    def save(st):
+        sd = ema.state_dict() if ema else model.state_dict()
+        if r["save_optim"]:
+            sd["train"] = {"step": st, "optim": optim.state_dict(), "rng": rng_state(rng), "loader": loader.state(),
+                           "terms": {n: t.state_dict() for n, t in terms if hasattr(t, "state_dict")}}
+        torch.save(sd, out / f"ckpt_{st}.pt")
+
     neg = "neg" in cfg
-    total = min(o["steps"], args.stop_at) if args.stop_at else o["steps"]
+    stops = [x for x in (args.stop_at, r["stop_at"]) if x]
+    total = min([o["steps"], *stops])
     save_at = set(r["save_at"])
     step, t_start = 0, time.time()
+    if r["resume"]:
+        sd = torch.load(REPO / r["resume"], map_location="cpu")    # 绝对路径时 REPO / 不起作用
+        if "train" not in sd:
+            raise C.ConfigError(f"[run] resume：{r['resume']} 里没有续训状态（存它的运行要开 save_optim）")
+        model.load_state_dict(sd)
+        tr = sd["train"]
+        optim.load_state_dict(tr["optim"])
+        loader.load(tr["loader"])
+        for n, t in terms:
+            if hasattr(t, "load_state_dict"):
+                t.load_state_dict(tr["terms"][n])
+        step = tr["step"]
+        set_rng_state(tr["rng"], rng)
+        del sd, tr
     tbw = ScalarWriter(args.tb) if args.tb else None
+    trw = TraceWriter(out) if any(hasattr(t, "observe") for _, t in terms) else None
+
+    def observe(st):
+        for n, t in terms:
+            o_ = t.observe(st) if hasattr(t, "observe") else None
+            if o_ is not None:
+                trw.obs(st, o_)
+
+    if trw and not r["resume"]:
+        observe(0)
     with open(out / "log.jsonl", "a", encoding="utf-8") as log:
         while step < total:
-            for batch in dl:
+            for batch in loader:
                 t0 = time.time()
                 st = Step(model, mname, batch, args.device, neg, rng, optim)
                 loss, stats, active = torch.zeros((), device=args.device), {}, False
@@ -155,6 +196,12 @@ def main(argv=None):
                     upd.update(mon.after())
                 if ema and upd:
                     ema.update()
+                for n, term in terms:
+                    if hasattr(term, "after_update"):
+                        term.after_update(st)
+                if trw:
+                    trw.add(step, st.trace)
+                    observe(step)
                 rec = {"step": step, "pairs": batch["pair"], "loss": round(float(loss), 5), **stats, **upd,
                        "sec": round(time.time() - t0, 3)}
                 if step == 1 and torch.cuda.is_available():
@@ -173,6 +220,8 @@ def main(argv=None):
                     break
     if tbw:
         tbw.close()
+    if trw:
+        trw.flush()
     if r["save_every"] and step % r["save_every"]:
         save(step)
 

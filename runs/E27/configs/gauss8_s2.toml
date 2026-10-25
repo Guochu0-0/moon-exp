@@ -1,0 +1,5 @@
+# 种子 2。
+base = "_gauss8"
+
+[run]
+seed = 2

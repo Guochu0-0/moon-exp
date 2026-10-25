@@ -278,6 +278,10 @@ class Model:
                 parts.setdefault(f"ref{_refine_level(name)}" if part == "refine" else part, []).append(p)
         return parts, [(l.A, l.B, l.scale, l.base.weight) for l in self.lora.values()]
 
+    def load_state_dict(self, sd):
+        """state_dict 的逆（#209 续训）：网络、LoRA、不确定度头、全参数训练的 DINOv2 块，原样装回。"""
+        load_weights(self, sd)
+
     def state_dict(self):
         """{'model': ...}，RomatchAdapter(weights_key='model') 直接能读；有 LoRA 时另存 'dinov2_lora'
         （每层 A、B、scale），适配器加载时合并进 DINOv2 对应层的权重；有全参数训练的块时另存 'dinov2_blocks'
@@ -292,3 +296,25 @@ class Model:
             sd["dinov2_blocks"] = {f"{b}.{k}": v.detach().cpu() for b, blk in self.dino_blocks.items()
                                    for k, v in blk.state_dict().items()}
         return sd
+
+
+@torch.no_grad()
+def load_weights(m, sd):
+    """把 Model.state_dict() 的输出装回 m（有 model、lora、unc_heads、dino_blocks 属性的对象）。存档里的 LoRA 层、
+    不确定度头、DINOv2 块与 m 的不一致时报错。"""
+    m.model.load_state_dict(sd["model"])
+    lora = sd.get("dinov2_lora", {})
+    if set(lora) != set(m.lora):
+        raise ValueError(f"存档的 LoRA 层与模型不一致：存档 {len(lora)} 层，模型 {len(m.lora)} 层")
+    for k, l in m.lora.items():
+        l.A.copy_(lora[k]["A"])
+        l.B.copy_(lora[k]["B"])
+    if (m.unc_heads is not None) != ("unc_head" in sd):
+        raise ValueError("存档与模型的不确定度头不一致")
+    if m.unc_heads is not None:
+        m.unc_heads.load_state_dict(sd["unc_head"])
+    blocks = {f"{b}.{k}": v for b, blk in m.dino_blocks.items() for k, v in blk.state_dict().items()}
+    if set(blocks) != set(sd.get("dinov2_blocks", {})):
+        raise ValueError("存档与模型的全参数训练 DINOv2 块不一致")
+    for k, v in blocks.items():
+        v.copy_(sd["dinov2_blocks"][k])

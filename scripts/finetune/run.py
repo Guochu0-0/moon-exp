@@ -12,7 +12,7 @@
   tb/<m>/scalars/      训练曲线
   sweep/<m>/S/         逐 ckpt 的工作台记录（方法名 step<N>）；只有 exp.toml、metrics.json 进 git
   sweep/<m>/match/     逐 ckpt 的原始点对（不进 git）
-  sweep/<m>/peak.json  选中的 step 与 Val / Test 指标
+  sweep/<m>/peak.json  选中的 step 与 Val / Test 指标（[run] sweep = "last" 时只评最后一个 ckpt 的 Val、不评 Test，#209）
   sweep/<m>/neg/、collapse.json   负样本对监控（LoFTR，配置含 [cexp] 或 [neg] 时）
   preds/<m>/           选中 step 的 Val、Test 预测，即这个方法的正式结果
 """
@@ -102,19 +102,23 @@ class Job:
         if not self.S.exists():
             self.sh([WB, "-m", "workbench", "--runs", self.sw, "new", "S", "--title", f"{R.name}/{m} ckpt sweep"],
                     "sweep.log", gpu=False)
-        for c in sorted(ck.glob("ckpt_*.pt"), key=lambda p: int(p.stem[5:])):
+        ckpts = sorted(ck.glob("ckpt_*.pt"), key=lambda p: int(p.stem[5:]))
+        val_only = self.cfg["run"]["sweep"] == "last"   # 只评最后一个 ckpt 的 Val、不评 Test（#209）
+        for c in ckpts[-1:] if val_only else ckpts:
             st = c.stem[5:]
             self.evaluate("val", st)
             if online and not (self.sw / "neg" / f"step{st}.jsonl").exists():
                 self.sh([PY, "-m", "finetune.negpairs", self.infer, "--split", "val", "--n", "200",
                          "--weights", f"step{st}={c}", "--out", self.sw / "neg"], "neg.log")
         last = self.cfg["run"]["select"] == "last"   # 在 Test 上训练时不能按 Val 选（#98）
-        st = max(int(c.stem[5:]) for c in ck.glob("ckpt_*.pt")) if last else self.peak()
-        log(f"TEST {m} step{st}")
-        self.evaluate("test", st)
+        st = int(ckpts[-1].stem[5:]) if last or val_only else self.peak()
+        if not val_only:
+            log(f"TEST {m} step{st}")
+            self.evaluate("test", st)
         s = self.metrics()[f"step{st}"]
-        (self.sw / "peak.json").write_text(json.dumps({"step": st, "metric": "last" if last else "val auc@5",
-                                                       "val": s["val"]["summary"], "test": s["test"]["summary"]},
+        metric = "last (val only)" if val_only else "last" if last else "val auc@5"
+        (self.sw / "peak.json").write_text(json.dumps({"step": st, "metric": metric, "val": s["val"]["summary"],
+                                                       "test": None if val_only else s["test"]["summary"]},
                                                       indent=1) + "\n", encoding="utf-8")
         dst = R / "preds" / m   # 选中的 step 即这个方法的正式结果
         dst.mkdir(parents=True, exist_ok=True)

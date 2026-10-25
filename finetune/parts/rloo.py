@@ -51,6 +51,10 @@ eval 模式），每步用它对同一对已扰动的图正常推理、拟合参
   loss_s = −mean(优势 · log π_s)；抽签只在这一级之内，不往下一级传。奖励只当数值用。
 levels 非空时另记正常推理轨迹上尺度 16…1 各级 μ 离参照的距离（dmu_s）；cos_every > 0 时每 cos_every 次调用在第一对图上
 算一次 local 与 grad 两种损失对各级细化层参数的梯度的余弦相似度（grad_cos，只读、不影响训练）。
+
+逐步记录（#209，只配 reward = ref，只读、不影响训练）：trace 打开时每步记训练批次的逐格量、参数更新后同一对图上的粗匹配；
+obs_every > 0 时每 obs_every 步在固定观察集（Val 均匀取 obs_n 对，原图与一组固定扰动各一份）上做一次正常推理。
+记什么、存在哪里见 finetune/parts/rloo_trace.py。
 """
 from __future__ import annotations
 
@@ -65,6 +69,8 @@ from moonlib.ransac import fit_affine
 
 from ..config import ConfigError
 from ..geom import HW
+from ..trace import stack_rows
+from . import rloo_trace as RT
 from .cexp import sample_matches
 from .pseudo import affine_norm, grid
 
@@ -86,6 +92,10 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "fine_mode": "chain",  # 细化训练方式（#201）：chain（整链抽签）| grad（精确梯度）| local（逐级局部抽签）
           "fine_group": 8,  # local：每级每像素的抽签次数
           "cos_every": 0,   # 每几次调用算一次 local 与 grad 梯度的余弦相似度（0 = 不算，#201）
+          "trace": False,   # 每步记训练批次的逐格量（#209，finetune/parts/rloo_trace.py）
+          "obs_every": 0,   # 每几步在固定观察集上做一次正常推理并记录（#209）；0 = 不做
+          "obs_n": 16,      # 观察集的图对数（每对原图与扰动各一份）
+          "obs_seed": 0,    # 观察集扰动与抽点的种子
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -138,6 +148,10 @@ def check(cfg):
         raise ConfigError("[rloo] fine_group 至少为 2（baseline = 'none' 时至少为 1），cos_every 应 ≥ 0")
     if cfg["model"]["train_res"] != "560":
         raise ConfigError("[rloo] 只支持 [model] train_res = '560'")
+    if (p["trace"] or p["obs_every"]) and p["reward"] != "ref":
+        raise ConfigError("[rloo] trace、obs_every 只配 reward = 'ref'")
+    if p["obs_every"] < 0 or p["obs_n"] < 1:
+        raise ConfigError("[rloo] obs_every 应 ≥ 0，obs_n 应 ≥ 1")
 
 
 def data_kw(p):
@@ -423,8 +437,8 @@ def fit(flow, cert, num, thr):
 _POOL = None
 
 
-def fit_many(flows, certs, num, thr):
-    """G 份样本各自抽点、RANSAC。抽点在 GPU 上依次做，RANSAC 用线程并行（cv2 放开 GIL；fit_affine 每次调用前重置
+def fit_many(flows, certs, num, thr, gen=None):
+    """G 份样本各自抽点、RANSAC。抽点在 GPU 上依次做（随机数取自 gen，不给时用全局发生器），RANSAC 用线程并行（cv2 放开 GIL；fit_affine 每次调用前重置
     本线程的随机种子，结果与串行相同）。返回 [(A 或 None, 内点数)]。
     warp 含非有限值、或 certainty 经 sigmoid 后全为 0 / 非有限（模型发散时出现）的样本抽不出点，记为拟合失败 (None, 0)。"""
     global _POOL
@@ -437,7 +451,7 @@ def fit_many(flows, certs, num, thr):
         if not (bool(torch.isfinite(f).all()) and bool(torch.isfinite(pc).all()) and float(pc.sum()) > 0):
             Ms.append(None)
             continue
-        p0, p1, _ = sample_matches(f, c, num)
+        p0, p1, _ = sample_matches(f, c, num, gen=gen)
         Ms.append(np.c_[p0, p1, np.ones(len(p0))].astype(np.float32))
     out = list(_POOL.map(lambda M: (None, None, None) if M is None else fit_affine(M, thr), Ms))
     return [(A, 0 if inl is None else int(inl.sum())) for A, inl, _ in out]
@@ -525,6 +539,33 @@ class Term:
         self.p, self.model = p, model
         self.frozen = frozen_copy(model) if p.get("frozen_ref") else None   # 训练开始时的模型（#202）
         self.calls = 0
+        self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
+
+    def state_dict(self):
+        return {"calls": self.calls}
+
+    def load_state_dict(self, sd):
+        self.calls = sd["calls"]
+
+    def observe(self, step):
+        """每 obs_every 步（含第 0 步）在观察集上记一次（#209）；其余步返回 None。"""
+        if self.obs is None or step % self.p["obs_every"]:
+            return None
+        return self.obs(step)
+
+    @torch.no_grad()
+    def after_update(self, st):
+        """trace：参数更新后在同一批图上再做一次粗匹配，记进 st.trace 的 *_post（#209）。"""
+        if not self.p["trace"]:
+            return
+        i0, i1 = st.images()
+        f1, f2 = features(self.model, i0, i1)
+        cls, cert = coarse(self.model, f1, f2)
+        cls = cls.float()
+        rows = [{f"{x}_post": v.cpu().numpy() for x, v in RT.coarse_state(
+            cls[b].softmax(0), (cls[b] / self.p["temp"]).softmax(0), cert[b], anchor_flow).items()}
+            for b in range(len(cls))]
+        st.trace.update(stack_rows(rows))
 
     def __call__(self, st):
         p, model = self.p, self.model
@@ -550,6 +591,7 @@ class Term:
         if lv:
             stats.update({f"{n}_{s_}": [] for s_ in lv for n in ("rew", "rew_sd", "d", "d90", "zero")},
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
+        rows = []
         for b in range(B):
             with torch.no_grad():
                 q = logp_all[b].exp()                                            # (C,h,w)
@@ -569,14 +611,14 @@ class Term:
                 stats["t_roll"].append(t1 - t0)
                 stats["t_fit"].append(time.time() - t1)
                 if p["reward"] == "ref":
-                    A_ref = fits[0][0]
+                    A_ref, n_ref = fits[0]
                     fc = anchor_flow(P.expand(p["group"], -1, -1, -1), k)
                     if self.frozen is not None:     # 参照换成冻结的初始模型；当前模型的仿射只用来记录
                         A_cur, Pz = A_ref, zcls[b:b + 1].float().softmax(1)
                         zf, zc = refine(self.frozen, {s: x[b:b + 1] for s, x in z1.items()},
                                         {s: x[b:b + 1] for s, x in z2.items()}, anchor_flow(Pz, Pz.argmax(1)),
                                         zcert[b:b + 1].float())
-                        A_ref = fit_many(zf, zc, p["num"], p["ransac"])[0][0]
+                        A_ref, n_ref = fit_many(zf, zc, p["num"], p["ransac"])[0]
                         _, dc = ref_cells(fc, A_cur, p["delta"], p["tau"], p["r_out"], p["shape"])
                         stats["cur_ok"].append(float(A_cur is not None))
                         if dc is not None:
@@ -619,6 +661,18 @@ class Term:
                 stats["pmode"].append(float(q.max(0).values.mean()))
                 stats["nonmode"].append(float((k != mode).float().mean()))
                 stats["d_anchor"].append(float(((G_[k] - G_[mode]).norm(dim=-1) * (HW / 2)).mean()))
+                if p["trace"]:     # 逐步记录（#209）
+                    tr = RT.step_trace(q, P[0], k, r, d, adv, cert[b], ce[0], A_ref, n_ref, p["temp"], anchor_flow)
+                    occ = st.batch.get("occ")
+                    tr.update({x: v.cpu().numpy() for x, v in
+                               RT.sar_masks(i1[b], None if occ is None else occ[b]).items()})
+                    if "T" in st.batch:
+                        tr["T"] = st.batch["T"][b].double().numpy()
+                    if lv and A_ref is not None:
+                        tr.update(RT.traj_trace(traj, A_ref))
+                        if p["fine_mode"] == "chain":
+                            for s_ in lv:
+                                tr.update(RT.level_trace(s_, *level_reward(rec[s_][2], A_ref, s_, p), adv_f[s_]))
             loss = loss - (adv * _logp(logp_all[b], k)).mean() / B
             if lv and A_ref is not None:
                 t3 = time.time()
@@ -633,11 +687,17 @@ class Term:
                     fine = fine + sur
                     for s_, (r_s, d_s) in rd.items():
                         _level_stats(stats, s_, r_s, d_s)
+                        if p["trace"]:
+                            tr.update(RT.level_trace(s_, r_s, d_s))
                 if p["cos_every"] and b == 0 and (self.calls - 1) % p["cos_every"] == 0:
                     for key, v in grad_cos(dec, fb, gb, traj, A_ref, sig, p, self.calls).items():
                         stats.setdefault(key, []).append(v)
                 torch.cuda.synchronize()
                 stats["t_fine"].append(time.time() - t3)
+            if p["trace"]:
+                rows.append(tr)
+        if rows:
+            st.trace.update(stack_rows(rows))
         if lv:
             stats["l_coarse"].append(float(p["weight"] * loss))
             stats["l_fine"].append(float(fine))

@@ -1079,3 +1079,191 @@ def test_config_rloo_fine_mode(tmp_path):
                 'fine_mode = "local"\nlevels = [8]\nfine_group = 1', 'levels = [8]\ncos_every = -1'):
         with pytest.raises(C.ConfigError):
             C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n[rloo]\nreward = "ref"\n{bad}\n'))
+
+
+# ---------- 逐步记录与续训（#209） ----------
+
+def test_config_run_resume_and_trace_options(tmp_path):
+    from finetune import config as C
+
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\n'))
+    assert (d["run"]["stop_at"], d["run"]["save_optim"], d["run"]["resume"], d["run"]["sweep"]) == (0, False, "", "all")
+    assert (d["rloo"]["trace"], d["rloo"]["obs_every"], d["rloo"]["obs_n"]) == (False, 0, 16)   # 默认不记录（旧行为）
+    c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[optim]\nsteps = 4000\n[run]\nstop_at = 1200\n'
+                                     'save_optim = true\nsweep = "last"\n[rloo]\nreward = "ref"\ntrace = true\nobs_every = 10\n'))
+    assert c["run"]["stop_at"] == 1200 and c["run"]["sweep"] == "last" and c["rloo"]["obs_every"] == 10
+    for bad in ('[run]\nsweep = "none"', '[optim]\nsteps = 100\n[run]\nstop_at = 200', '[run]\nstop_at = -1',
+                '[optim]\nema = 0.99\n[run]\nsave_optim = true', '[optim]\nema = 0.99\n[run]\nresume = "x.pt"',
+                '[rloo]\nreward = "r1"\ntrace = true', '[rloo]\nreward = "ncc"\nobs_every = 10',
+                '[rloo]\nreward = "ref"\nobs_every = 10\nobs_n = 0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n{bad}\n'))
+
+
+class _RandSet:
+    """每个样本 = (序号, worker 里抽的随机数)：数据顺序与 worker 的随机数流都要在续训后对得上。"""
+
+    def __len__(self):
+        return 12
+
+    def __getitem__(self, i):
+        import torch
+        return torch.tensor([float(i), float(torch.rand(()))])
+
+
+@pytest.mark.parametrize("workers", [0, 2])
+def test_loader_resume_continues_same_batches(workers):
+    """从第一个 epoch 中途的状态续上，之后的 batch（顺序与 worker 内的随机数）与不中断时相同；第二个 epoch 的状态拒绝续训。"""
+    import itertools
+    import torch
+    from finetune.trace import Loader
+
+    def make():
+        torch.manual_seed(5)                     # workers = 0 时随机数取自主进程的全局流
+        g = torch.Generator().manual_seed(3)
+        dl = torch.utils.data.DataLoader(_RandSet(), batch_size=2, shuffle=True, generator=g, num_workers=workers,
+                                         persistent_workers=workers > 0)
+        return Loader(dl, g)
+
+    full = [b.clone() for b in itertools.islice(iter(make()), 9)]          # 跨过第一个 epoch（6 个 batch）
+    a = make()
+    it = iter(a)
+    head = [next(it).clone() for _ in range(2)]
+    s = a.state()
+    assert s["epoch"] == 0 and s["batch"] == 2
+    b = make()
+    b.load(s)
+    tail = [x.clone() for x in itertools.islice(iter(b), 7)]
+    for x, y in zip(head + tail, full):
+        assert torch.equal(x, y)
+    for _ in range(5):
+        next(it)
+    with pytest.raises(ValueError):
+        make().load(a.state())
+
+
+def test_rng_state_roundtrip():
+    import random
+    import torch
+    from finetune.trace import rng_state, set_rng_state
+
+    rng = np.random.default_rng(0)
+    s = rng_state(rng)
+    first = (float(torch.rand(())), float(np.random.rand()), random.random(), float(rng.random()))
+    set_rng_state(s, rng)
+    assert (float(torch.rand(())), float(np.random.rand()), random.random(), float(rng.random())) == first
+
+
+def test_optim_state_roundtrip():
+    """AdamW 的状态存下再装回，之后的更新与不中断时相同。"""
+    import copy
+    import torch
+    from finetune import config as C
+    from finetune.optim import Optim
+
+    o = {**C.OPTIM, "warmup": 0, "sched": "const", "lr": 1e-2, "wd": 0.01}
+
+    def train(w, opt, steps):
+        for st in steps:
+            (w * torch.arange(1.0, 4.0)).square().sum().backward()
+            opt.step(st)
+
+    w = torch.nn.Parameter(torch.ones(3))
+    opt = Optim([w], o, amp=False)
+    train(w, opt, [1, 2])
+    sd, w_mid = copy.deepcopy(opt.state_dict()), w.detach().clone()
+    train(w, opt, [3, 4])
+    v = torch.nn.Parameter(w_mid.clone())
+    opt2 = Optim([v], o, amp=False)
+    opt2.load_state_dict(sd)
+    train(v, opt2, [3, 4])
+    assert torch.equal(v, w)
+
+
+def test_roma_load_weights_roundtrip():
+    """Model.state_dict 的输出经 load_weights 装回（网络与 LoRA）；LoRA 层对不上时报错。"""
+    import types
+    import torch
+    from finetune.models.roma import LoRA, Model, load_weights
+
+    def make():
+        torch.manual_seed(0)
+        net = torch.nn.Sequential(torch.nn.Linear(4, 4), torch.nn.Linear(4, 2))
+        return types.SimpleNamespace(model=net, lora={"blocks.0.attn.qkv": LoRA(torch.nn.Linear(4, 6), 2, 4.0)},
+                                     unc_heads=None, dino_blocks={})
+
+    a = make()
+    with torch.no_grad():
+        a.model[0].weight.add_(1.0)
+        a.lora["blocks.0.attn.qkv"].B.add_(0.5)
+    sd = Model.state_dict(a)
+    b = make()
+    load_weights(b, sd)
+    assert torch.equal(b.model[0].weight, a.model[0].weight)
+    assert torch.equal(b.lora["blocks.0.attn.qkv"].B, a.lora["blocks.0.attn.qkv"].B)
+    b.lora = {}
+    with pytest.raises(ValueError):
+        load_weights(b, sd)
+
+
+def test_trace_stack_rows_and_writer(tmp_path):
+    """缺的量浮点补 NaN、整数补 −1；每 every 步写一个 npz，末尾不足的由 flush 写出；没有记录时不建目录。"""
+    from finetune.trace import TraceWriter, stack_rows
+
+    out = stack_rows([{"a": np.ones(2, np.float16), "k": np.int16(3)}, {"b": np.zeros((1, 2))}])
+    assert np.isnan(out["a"][1]).all() and out["k"].tolist() == [3, -1] and out["b"].shape == (2, 1, 2)
+    w = TraceWriter(tmp_path, every=2)
+    w.add(1, {})
+    assert not (tmp_path / "trace").exists()
+    for st in (2, 3, 4):
+        w.add(st, {"x": np.full((1, 2), st)})
+    w.flush()
+    names = sorted(p.name for p in (tmp_path / "trace").iterdir())
+    assert names == ["train_00002-00003.npz", "train_00004-00004.npz"]
+    z = np.load(tmp_path / "trace" / names[0])
+    assert z["step"].tolist() == [2, 3] and z["x"].shape == (2, 1, 2)
+
+
+def test_rloo_cell_signal_matches_autograd():
+    """每格的 v = Σ_g a_g (e_k − q) / (G·temp) 等于粗级损失（逐格求和）对 logits 的负梯度；第二个量是它在最高分位置上的分量。"""
+    import torch
+    from finetune.parts.rloo import _logp
+    from finetune.parts.rloo_trace import cell_signal
+
+    torch.manual_seed(0)
+    G, C, h, w, temp = 5, 16, 3, 2, 0.3
+    s = torch.randn(C, h, w, requires_grad=True)
+    k = torch.randint(0, C, (G, h, w))
+    adv = torch.randn(G, h, w)
+    logp = torch.log_softmax(s / temp, 0)
+    (-(adv * _logp(logp, k)).mean(0).sum()).backward()
+    q = logp.detach().exp()
+    norm, up = cell_signal(q, k, adv, temp)
+    v = -s.grad
+    assert torch.allclose(norm, v.norm(dim=0), atol=1e-5)
+    assert torch.allclose(up, v.gather(0, q.argmax(0)[None])[0], atol=1e-5)
+
+
+def test_rloo_trace_mapped_and_pool():
+    """恒等仿射把网格各点中心映射到 512/n·(j + 0.5)；pool 取块均值。"""
+    import torch
+    from finetune.parts.rloo_trace import mapped, pool
+
+    m = mapped(np.c_[np.eye(2), np.zeros(2)], 40, 40, "cpu")
+    assert torch.allclose(m[0, 0], 12.8 * (torch.arange(40) + 0.5), atol=1e-3)
+    assert torch.allclose(m[1, :, 0], 12.8 * (torch.arange(40) + 0.5), atol=1e-3)
+    x = torch.arange(16.0).reshape(4, 4)
+    assert pool(x, 2).tolist() == [[2.5, 4.5], [10.5, 12.5]]
+
+
+def test_rloo_fit_many_with_generator_leaves_global_rng():
+    """给了发生器的抽点不动全局随机数流（观察集的记录不改变训练，#209）。"""
+    import torch
+    from finetune.parts.pseudo import grid
+    from finetune.parts.rloo import fit_many
+
+    flow = grid(32, 32, "cpu").permute(2, 0, 1)[None].clone()
+    cert = torch.zeros(1, 1, 32, 32)
+    s = torch.get_rng_state()
+    out = fit_many(flow, cert, 200, 3.0, gen=torch.Generator().manual_seed(1))
+    assert torch.equal(torch.get_rng_state(), s) and out[0][0] is not None

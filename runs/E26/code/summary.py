@@ -1,5 +1,5 @@
 """E26 汇总（#206）：probe.py 的 raw/ 产物、各存档的正式评测（preds/）、各运行的训练日志 → extra/ 的表与图。
-用法（在仓库根目录、wb 环境）：MOON_DATA=… PYTHONPATH=. python runs/E26/code/summary.py
+用法（在仓库根目录、wb 环境）：MOON_DATA=… PYTHONPATH=. python runs/E26/code/summary.py [logs]（logs：只重画 log.png）
 
 - 表 morph.csv（方法 1）：每个方法在验证集 652 对上各量的中位数。正式评测的仿射（preds，560 → 864、symmetric、抽 10000
   点、RANSAC 3 px）给出奇异值、行列式、图块中心 (256, 256) 映射到的位置及其在各对之间的离散程度（两轴标准差的均方根，px），
@@ -191,9 +191,12 @@ def logs():
     (DATA / "events.json").write_text(json.dumps(ev, ensure_ascii=False, indent=1), encoding="utf-8")
     panels = [("pmode", "最高分位置的概率（训练温度）", False), ("H", "粗级熵（训练温度，nat）", False),
               ("d_ref", "离自估仿射的距离（px）", True), ("rew_sd", "同组奖励的标准差", True),
+              ("rew", "平均分数（截平与分级的下限 -0.1，高斯的下限 0）", False),
+              ("nonmode", "抽到的不是最高分位置的比例", False), ("n_inl", "自估仿射的内点数", False),
               ("gnorm", "梯度范数（裁剪前）", True), ("upd_coarse", "粗级 decoder 每步相对改变量", True),
               ("upd_lora", "LoRA 每步相对改变量", True), ("upd_fine", "细化部分每步相对改变量", True)]
-    fig, axs = plt.subplots(2, 4, figsize=(18, 7.5))
+    fig, axs = plt.subplots(3, 4, figsize=(18, 11))
+    axs.flat[-1].axis("off")
     for ax, (k, title, logy) in zip(axs.flat, panels):
         for i, (e, r) in enumerate(list(HEALTHY) + list(COLLAPSED)):
             step, R = curves[(e, r)]
@@ -201,6 +204,8 @@ def logs():
             if np.isfinite(R[k]).any():
                 ax.plot(step, R[k], lw=0.8 if healthy else 1, color="0.65" if healthy else COLORS[i - len(HEALTHY)],
                         label=("健康对照" if i == 0 else None) if healthy else runkey(e, r))
+        if k == "rew":
+            ax.axhline(-0.1, color="k", ls="--", lw=0.8)
         ax.set_title(title, fontsize=10)
         ax.set_xlim(0, 2000)
         if logy:
@@ -260,6 +265,9 @@ def centers(eval_ctr, G):
 
 def main():
     DATA.mkdir(parents=True, exist_ok=True)
+    if sys.argv[1:] == ["logs"]:      # 只重画 log.png 与 events.json（只读训练日志）
+        logs()
+        return
     ds = Dataset(os.environ["MOON_DATA"])
     T, eval_ctr, G, pairs = morph_table(ds)
     same_table(eval_ctr)

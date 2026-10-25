@@ -6,7 +6,7 @@
   与标注仿射同样算出的离散程度对照；其余列来自 probe.py morph（训练时的正常推理）。
 - same.csv：七个运行最后一个存档两两之间，同一对图上正式评测的仿射把图块中心映射到的位置相距多远（各对的中位数，px）。
 - learn.csv（方法 2）：probe.py learn 在验证集 100 对上各量的中位数。
-- events.json、log_*.png（方法 3）：训练日志的 50 步滑动中位数；各运行最高分概率首次超过 0.99、同组奖励标准差首次低于
+- events.json、log.png（方法 3）：训练日志的 50 步滑动中位数（图只画前 2000 步，健康对照为灰线）；各运行最高分概率首次超过 0.99、同组奖励标准差首次低于
   1e-3、离自估仿射的距离首次超过 100 px 的步，以及验证集 AUC@5 第一次低于 0.1 的存档。
 - trend.png：每 500 步存档的三个运行，方法 1 各量按存档连成走势。
 - centers.png：各运行最后一个存档，正式评测的仿射把图块中心映射到的位置（每对一个点）。
@@ -36,6 +36,7 @@ if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
 plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
+PLAIN = matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}")
 MAIN = Path("/remote-home/xufang/YGC/moon-exp/runs")
 OUT = E / "extra"
 DATA = OUT / "data"
@@ -192,21 +193,25 @@ def logs():
               ("d_ref", "离自估仿射的距离（px）", True), ("rew_sd", "同组奖励的标准差", True),
               ("gnorm", "梯度范数（裁剪前）", True), ("upd_coarse", "粗级 decoder 每步相对改变量", True),
               ("upd_lora", "LoRA 每步相对改变量", True), ("upd_fine", "细化部分每步相对改变量", True)]
-    for tag, group in (("collapsed", COLLAPSED), ("healthy", HEALTHY)):
-        fig, axs = plt.subplots(2, 4, figsize=(18, 7.5))
-        for ax, (k, title, logy) in zip(axs.flat, panels):
-            for i, (e, r) in enumerate(group):
-                step, R = curves[(e, r)]
-                if np.isfinite(R[k]).any():
-                    ax.plot(step, R[k], lw=1, color=COLORS[i], label=runkey(e, r))
-            ax.set_title(title, fontsize=10)
-            if logy:
-                ax.set_yscale("log")
-            ax.set_xlabel("步")
-        axs.flat[0].legend(fontsize=8)
-        fig.tight_layout()
-        fig.savefig(OUT / f"log_{tag}.png", dpi=110)
-        plt.close(fig)
+    fig, axs = plt.subplots(2, 4, figsize=(18, 7.5))
+    for ax, (k, title, logy) in zip(axs.flat, panels):
+        for i, (e, r) in enumerate(list(HEALTHY) + list(COLLAPSED)):
+            step, R = curves[(e, r)]
+            healthy = (e, r) in HEALTHY
+            if np.isfinite(R[k]).any():
+                ax.plot(step, R[k], lw=0.8 if healthy else 1, color="0.65" if healthy else COLORS[i - len(HEALTHY)],
+                        label=("健康对照" if i == 0 else None) if healthy else runkey(e, r))
+        ax.set_title(title, fontsize=10)
+        ax.set_xlim(0, 2000)
+        if logy:
+            ax.set_yscale("log")
+            ax.yaxis.set_major_formatter(PLAIN)
+            ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        ax.set_xlabel("步")
+    axs.flat[0].legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(OUT / "log.png", dpi=110)
+    plt.close(fig)
     return ev
 
 
@@ -227,6 +232,8 @@ def trend(T):
         ax.set_title(title, fontsize=10)
         if logy:
             ax.set_yscale("log")
+            ax.yaxis.set_major_formatter(PLAIN)
+            ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
         ax.set_xlabel("存档（步）")
     axs.flat[0].legend(fontsize=8)
     fig.tight_layout()

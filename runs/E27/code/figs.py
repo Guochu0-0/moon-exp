@@ -145,10 +145,124 @@ def fig_drift(ms):
     plt.close(fig)
 
 
+def windows(m):
+    """三段：配准失效之前 100 步、失效到概率超过 0.99（或第 1200 步）的前半与后半。"""
+    b = break_step(m) or 0
+    e = SUM[m]["events"]["p99"] or 1200
+    mid = (b + e) // 2
+    return [(max(1, b - 100), b), (b, mid), (mid, e)]
+
+
+def signal_maps(m):
+    """每段里有信号的格子的最高分位置在 SAR 画面上的分布（按梯度大小加权，64×64 锚点格）、有信号格子比例、
+    信号集中度（最强的一成格子占全部信号的比例）、更新后移动的格子比例与移动在指向 q0 方向上的分量。"""
+    tr = train_trace(m, ["step", "mode", "gnorm", "pos", "pos_post", "pad"])
+    x0, y0 = SUM[m]["q0_xy"]
+    st = tr["step"]
+    g = np.nan_to_num(tr["gnorm"].astype(float).reshape(len(st), -1))
+    pos, post = tr["pos"].astype(float).reshape(len(st), 2, -1), tr["pos_post"].astype(float).reshape(len(st), 2, -1)
+    mv = post - pos
+    to = np.stack([x0 - pos[:, 0], y0 - pos[:, 1]], 1)
+    to /= np.linalg.norm(to, axis=1, keepdims=True) + 1e-6
+    toward = (mv * to).sum(1)
+    moved = np.hypot(mv[:, 0], mv[:, 1]) > 1
+    per = {"step": st, "signal": (g > 0).mean(1),
+           "top": np.sort(g, 1)[:, -160:].sum(1) / (g.sum(1) + 1e-12),
+           "moved": moved.mean(1),
+           "toward": np.array([np.median(t[mk]) if mk.any() else np.nan for t, mk in zip(toward, moved)])}
+    maps = []
+    for a, b in windows(m):
+        s = (st > a) & (st <= b)
+        h = np.zeros(64 * 64)
+        np.add.at(h, tr["mode"][s].reshape(-1).astype(int), g[s].reshape(-1))
+        maps.append(((a, b), h.reshape(64, 64) / max(h.sum(), 1e-12)))
+    pad = tr["pad"].astype(float).mean(0) / 255
+    return per, maps, pad
+
+
+def fig_converge(ms):
+    fig, axs = plt.subplots(len(ms), 6, figsize=(20, 3.2 * len(ms)), squeeze=False,
+                            gridspec_kw={"width_ratios": [2, 2, 1, 1, 1, 1]})
+    for row, m in zip(axs, ms):
+        per, maps, pad = signal_maps(m)
+        x0, y0 = SUM[m]["q0_xy"]
+        sm = lambda v: rolling_median(v, 20)
+        row[0].plot(per["step"], sm(per["signal"]), label="有信号的格子比例")
+        row[0].plot(per["step"], sm(per["top"]), label="最强一成格子占的信号")
+        row[0].set_ylim(0, 1.02)
+        row[0].set_ylabel(label(m), fontsize=9)
+        row[1].plot(per["step"], sm(per["moved"]), label="更新后粗匹配移动 > 1 px 的格子比例")
+        ax2 = row[1].twinx()
+        ax2.plot(per["step"], sm(per["toward"]), color="C1", lw=0.8, label="移动的格子朝 q0 的分量（px，中位）")
+        ax2.axhline(0, color="C1", lw=0.4)
+        row[1].set_ylim(0, 1.02)
+        for ax in row[:2]:
+            for a, b in windows(m):
+                ax.axvspan(a, b, color="gray", alpha=0.08)
+        for ax, ((a, b), h) in zip(row[2:5], maps):
+            ax.imshow(h, extent=(0, 512, 512, 0), cmap="magma")
+            ax.plot([x0], [y0], "c*", ms=8)
+            ax.set_title(f"第 {a}–{b} 步", fontsize=8)
+            ax.set_xticks([]), ax.set_yticks([])
+        im = row[5].imshow(pad, extent=(0, 512, 512, 0), cmap="gray_r", vmin=0, vmax=1)
+        row[5].plot([x0], [y0], "c*", ms=8)
+        row[5].set_title(f"补零比例（q0 处 {pad[int(y0 // 8), int(x0 // 8)]:.2f}）", fontsize=8)
+        row[5].set_xticks([]), row[5].set_yticks([])
+    axs[0, 0].legend(fontsize=7)
+    axs[0, 1].legend(fontsize=7, loc="upper left")
+    axs[0, 2].set_title("有信号格子的最高分位置（按梯度加权）
+" + axs[0, 2].get_title(), fontsize=8)
+    for ax in axs[-1, :2]:
+        ax.set_xlabel("训练步")
+    fig.tight_layout()
+    fig.savefig(OUT / "converge.png", dpi=110)
+    plt.close(fig)
+
+
+def step_jumps(m, upto):
+    """每步更新后粗匹配移动 > 1 px 的格子比例与梯度范数（训练批次），只取第 upto 步之前。"""
+    tr = train_trace(m, ["step", "pos", "pos_post"])
+    mv = np.hypot(*(tr["pos_post"].astype(float) - tr["pos"].astype(float)).transpose(1, 0, 2, 3))
+    st = tr["step"]
+    gn = dict(zip(*series(log(m), "gnorm")))
+    keep = st < upto
+    return st[keep], (mv > 1).reshape(len(st), -1).mean(1)[keep], np.array([gn.get(s, np.nan) for s in st[keep]])
+
+
+def fig_jumps(ms, ref):
+    """坍缩前每步的更新幅度：坍缩运行与健康运行同一段步数里的分布。"""
+    fig, axs = plt.subplots(len(ms), 1, figsize=(12, 2.4 * len(ms)), squeeze=False)
+    rows = {}
+    for ax, m in zip(axs[:, 0], ms):
+        b = break_step(m)
+        st, mv, gn = step_jumps(m, b + 1)
+        hs = [h for h in ref if h.rsplit("_s", 1)[0] == m.rsplit("_s", 1)[0]]
+        base = np.concatenate([step_jumps(h, b + 1)[1] for h in hs]) if hs else np.array([np.nan])
+        thr = np.nanpercentile(base, 99) if hs else np.nan
+        ax.plot(st, mv, lw=0.6, label="坍缩运行：更新后移动的格子比例")
+        if hs:
+            ax.axhline(thr, color="gray", ls="--", lw=0.8, label=f"同配置健康种子同段步数的 99% 分位（{thr:.2f}）")
+        top = np.argsort(mv)[-5:][::-1]
+        ax.plot(st[top], mv[top], "rv", ms=5)
+        ax.axvline(b, color="k", ls=":", lw=0.8)
+        ax.set_ylabel(label(m), fontsize=9)
+        ax.set_ylim(0, 1)
+        rows[m] = [{"step": int(st[i]), "moved": float(mv[i]), "gnorm": float(gn[i])} for i in top]
+    axs[0, 0].legend(fontsize=7)
+    axs[-1, 0].set_xlabel("训练步")
+    fig.tight_layout()
+    fig.savefig(OUT / "jumps.png", dpi=110)
+    plt.close(fig)
+    (D / "jumps.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "
+", encoding="utf-8")
+
+
 def main():
     ms = collapsed()
     fig_timeline(ms)
     fig_drift(ms)
+    fig_converge(ms)
+    fig_jumps(ms, healthy())
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ import torch
 import torch.nn.functional as F
 
 from ..geom import HW, compose, inv_affine
+from ..trace import stack_rows
 from .pseudo import affine_norm, grid
 
 ANCHOR_GRID = 64     # 锚点格（SAR 网格）
@@ -182,6 +183,6 @@ class Observer:
                        A=affine_arr(A), n_inl=np.int32(n_inl), err=np.float32(err), A_gt=it["A_gt"], T=T,
                        version=np.int8(it["version"]))
             rows.append(row)
-        out = {x: np.stack([r[x] for r in rows]) for x in rows[0]}
+        out = stack_rows(rows)        # 自估仿射拟合失败的样本没有 dmu_*，补 NaN
         out["pair"] = np.array([it["pair"] for it in self.items])
         return out

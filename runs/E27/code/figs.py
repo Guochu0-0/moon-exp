@@ -266,6 +266,9 @@ def level_series(m):
         sel = o["version"] == 0
         out["step"].append(st)
         for k in ["d_self", "d_gt"] + [f"dmu_{s}" for s in LEVELS] + [f"dmu_gt_{s}" for s in LEVELS]:
+            if k not in o.files:
+                out.setdefault(k, []).append(np.nan)
+                continue
             v = np.nanmedian(o[k][sel].astype(float).reshape(sel.sum(), -1), 1)
             out.setdefault(k, []).append(float(np.median(v)))
     return {k: np.array(v) for k, v in out.items()}

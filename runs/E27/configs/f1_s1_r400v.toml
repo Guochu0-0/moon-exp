@@ -1,0 +1,8 @@
+# 可复现检查（#209），训细化的配置、同硬件：从 f1_s1 第 400 步（失控前）的存档续训到第 500 步，与原运行同为 V100。
+base = "f1_s1"
+
+[run]
+resume = "runs/E27/ckpt/f1_s1/ckpt_400.pt"
+stop_at = 500
+save_at = [500]
+save_optim = false

@@ -242,12 +242,12 @@ def fig_jumps(ms, ref):
     for ax, m in zip(axs[:, 0], ms):
         b = break_step(m)
         st, mv, gn = step_jumps(m, b + 1)
-        hs = [h for h in ref if h.rsplit("_s", 1)[0] == m.rsplit("_s", 1)[0]]
+        hs = [h for h in ref if not h.startswith("f1")] if not m.startswith("f1") else []   # 只训粗匹配的健康运行合在一起
         base = np.concatenate([step_jumps(h, b + 1)[1] for h in hs]) if hs else np.array([np.nan])
         thr = np.nanpercentile(base, 99) if hs else np.nan
         ax.plot(st, mv, lw=0.6, label="坍缩运行：更新后移动的格子比例")
         if hs:
-            ax.axhline(thr, color="gray", ls="--", lw=0.8, label=f"同配置健康种子同段步数的 99% 分位（{thr:.2f}）")
+            ax.axhline(thr, color="gray", ls="--", lw=0.8, label=f"只训粗匹配的健康运行同段步数的 99% 分位（{thr:.2f}）")
         top = np.argsort(mv)[-5:][::-1]
         ax.plot(st[top], mv[top], "rv", ms=5)
         ax.axvline(b, color="k", ls=":", lw=0.8)

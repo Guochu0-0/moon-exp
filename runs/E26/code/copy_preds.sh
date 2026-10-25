@@ -5,7 +5,7 @@
 set -euo pipefail
 MAIN=/remote-home/xufang/YGC/moon-exp/runs
 R=runs/E26
-methods=$(/opt/envs/loftr/bin/python -c "import sys; sys.path.insert(0, '$R/code'); import probe; print(' '.join(probe.METHODS))")
+methods=$(/opt/envs/loftr/bin/python -c "import sys; sys.path.insert(0, '$R/code'); import methods; print(' '.join(methods.METHODS))")
 for m in $methods; do
   d=$R/preds/$m
   mkdir -p $d

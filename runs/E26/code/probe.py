@@ -61,24 +61,12 @@ from finetune.parts import rloo                       # noqa: E402
 from finetune.parts.pseudo import affine_norm, grid   # noqa: E402
 from workbench import protocol                        # noqa: E402
 
+sys.path.insert(0, str(HERE))
+from methods import METHODS                            # noqa: E402
+
 MAIN = Path("/remote-home/xufang/YGC/moon-exp/runs")
 
 
-def _methods():
-    out = {}   # 方法 → (实验, 运行, 步；zs 的步为 0)
-    for e, r in (("E15", "loo_t02"), ("E15", "none_t02"), ("E15", "none_t05"), ("E19", "clip")):
-        for s in (1000, 4000):
-            out[f"{e.lower()}_{r}_{s}"] = (e, r, s)
-    for e, r in (("E22", "f0002"), ("E23", "c16_s1"), ("E25", "f1_s1")):
-        for s in range(500, 4001, 500):
-            out[f"{e.lower()}_{r}_{s}"] = (e, r, s)
-    for e, r in (("E19", "gauss8"), ("E23", "c16_s2"), ("E25", "fr1_s1")):
-        out[f"{e.lower()}_{r}_4000"] = (e, r, 4000)
-    out["zs"] = ("E19", "gauss8", 0)
-    return out
-
-
-METHODS = _methods()
 TASKS = [f"{t}_{m}" for t in ("morph", "learn") for m in METHODS]
 LEARN_N = 100
 CELL = 16            # 覆盖率的方格边长（原网格 px）

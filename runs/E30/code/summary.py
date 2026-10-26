@@ -69,7 +69,7 @@ def main():
                          "ref_gap_last100": round(nanmean(x["ref_gap"][-100:]), 2),
                          "H_bar_min_smooth": round(float(np.nanmin(sm["H_bar"])), 3) if np.isfinite(sm["H_bar"]).any() else "",
                          "pmode_last100": round(nanmean(x["pmode"][-100:]), 3)})
-            a.plot(step, sm["in_frame"], color="C0" if ok else "C3", lw=1.1, label=f"种子 {s}")
+            a.plot(step, sm["in_frame"], color=f"C{s}" if ok else "C3", lw=1.1, label=f"种子 {s}")
         a.set_title(g)
         a.axhline(0.427, color="0.6", ls=":", lw=0.8)
         a.legend(fontsize=8, loc="lower left")

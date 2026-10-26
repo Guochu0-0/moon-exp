@@ -60,6 +60,8 @@ obs_every > 0 时每 obs_every 步在固定观察集（Val 均匀取 obs_n 对�
 没有对应位置（in_frame）。frame_mask 打开时这些格子的优势置零，不参与策略梯度；cert_bce > 0 时另加粗级 certainty 对
 这张掩码（画面内 1、画面外 0）的 BCE，权重 cert_bce（照 RoMa 原损失：certainty 的目标是这个像素在另一张图里是否可见，
 romatch robust_loss 的 ce_weight = 0.01，同 [pseudo] 的 CE_WEIGHT）。自估仿射拟合失败的对两者都不做。
+置零的格子仍计入 −mean(权重 · log π) 的分母，所以画面内格子的梯度按画面内比例缩小（"置零"而不是"重新归一化"）。
+不与 frozen_ref 同用：那时 A_ref 来自冻结的初始模型，不再是自估仿射。
 """
 from __future__ import annotations
 
@@ -163,6 +165,8 @@ def check(cfg):
         raise ConfigError("[rloo] frame_mask、cert_bce 只配 reward = 'ref'")
     if p["cert_bce"] < 0:
         raise ConfigError("[rloo] cert_bce 应 ≥ 0")
+    if (p["frame_mask"] or p["cert_bce"]) and p["frozen_ref"]:
+        raise ConfigError("[rloo] frame_mask、cert_bce 不与 frozen_ref 同用（掩码要来自自估仿射）")
 
 
 def data_kw(p):
@@ -489,7 +493,8 @@ def sar_valid(sar):
 
 def in_frame(A, sar, h, w):
     """仿射 A（原网格）把 h×w 格中心映射到的位置是否落在 SAR 画面内、且不在补零区（sar_valid）→ (h,w) bool。
-    sar：SAR 输入 (1,H,W)。"""
+    sar：SAR 输入 (1,H,W)。与 ncc 的重叠区判定是同一个概念，但这里按格心最近邻取一个点（> 0.5），ncc 按像素双线性
+    取、要求完全不沾补零区（> 0.999）。"""
     An = torch.from_numpy(affine_norm(A)).to(sar.device).float()
     x2 = torch.einsum("ij,hwj->hwi", An[:, :2], grid(h, w, sar.device)) + An[:, 2]
     v = F.grid_sample(sar_valid(sar)[None, None].float(), x2[None], mode="nearest", align_corners=False)[0, 0]

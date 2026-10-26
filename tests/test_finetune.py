@@ -576,7 +576,8 @@ def test_config_rloo_frame_mask(tmp_path):
     assert d["rloo"]["frame_mask"] is False and d["rloo"]["cert_bce"] == 0.0      # 默认同旧行为
     c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nframe_mask = true\ncert_bce = 0.01\n'))
     assert c["rloo"]["frame_mask"] is True and c["rloo"]["cert_bce"] == 0.01
-    for bad in ('reward = "r1"\nframe_mask = true', 'reward = "ref"\ncert_bce = -1.0'):
+    for bad in ('reward = "r1"\nframe_mask = true', 'reward = "ref"\ncert_bce = -1.0',
+                'reward = "ref"\nframe_mask = true\nfrozen_ref = true'):
         with pytest.raises(C.ConfigError):
             C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n[rloo]\n{bad}\n'))
 

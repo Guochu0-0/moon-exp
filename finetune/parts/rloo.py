@@ -70,7 +70,7 @@ finetune.augment.warp、图外补 0），各用当前模型正常推理、拟合
 参照：各估计把格子中心映射到的位置逐格取中位数（x、y 各自），再最小二乘拟合成仿射，代替自估仿射（打分、frame_mask、
 cert_bce 都用它）。核对：两两估计之间格心的平均距离（affine_gap）取最大的一对，记为 mp_gap；超过 mp_thr px、或有任一
 份拟合失败时这对图这一步的优势全部置零（cert_bce 照常）。多出来的几份只推理、不求梯度。
-T_i 的随机数取自以 (torch 初始种子, 调用次数, 批内序号) 起的独立发生器，不动训练的随机数流，续训可复现。
+T_i 与这几份抽点的随机数取自以 (torch 初始种子, 调用次数, 批内序号) 起的独立发生器，不动训练的随机数流，续训可复现。
 与图像无关、固定在一处的解在 T_i 下不跟着动，换算回来后彼此差一个 T_i，因而被拦；跟着图像内容一起走的一致偏差看不见。
 """
 from __future__ import annotations
@@ -434,6 +434,17 @@ def consensus(As, h, w):
     return affine_denorm(sol.T.numpy()), gap
 
 
+@torch.no_grad()
+def infer_affine(model, opt, sar, num, thr, gen=None):
+    """一对图（(1,H,W) 输入）正常推理（粗级每格取最高分位置、细化到尺度 1），按可信度抽 num 个点、RANSAC thr px 拟合仿射
+    （同参照的拟合）。返回仿射（原网格）或 None。"""
+    f1, f2 = features(model, opt[None], sar[None])
+    cls, cert = coarse(model, f1, f2)
+    P = cls.float().softmax(1)
+    flow, ce = refine(model, f1, f2, anchor_flow(P, P.argmax(1)), cert.float())
+    return fit_many(flow, ce, num, thr, gen)[0][0]
+
+
 def multi_ref(estimate, sar, A0, Ts, h, w):
     """多扰动互相核对（#217）。estimate(SAR 输入 (1,H,W)) → 仿射（光学 → 这张 SAR，原网格）或 None；sar：已扰动的
     SAR 输入；A0：它自己的估计；Ts：额外的已知扰动（原网格角点约定 2×3）。每个 T 施加到 sar 上再估计 A'，换算回 sar 的
@@ -663,21 +674,16 @@ class Term:
         st.trace.update(stack_rows(rows))
 
     @torch.no_grad()
-    def multi_ref(self, opt, sar, A0, b, h, w):
-        """一对图（opt、sar：(1,H,W) 输入）的多扰动核对（#217）：抽 mp_n 个 T，当前模型正常推理（同参照的拟合），见 multi_ref。"""
+    def cross_check(self, opt, sar, A0, b, h, w):
+        """一对图（opt、sar：(1,H,W) 输入）的多扰动核对（#217）：抽 mp_n 个 T，当前模型正常推理、拟合（同参照），见 multi_ref。
+        T 与抽点的随机数都取自以 (torch 初始种子, 调用次数, 批内序号) 起的独立发生器，不动训练的随机数流。"""
         p, model = self.p, self.model
-        rng = np.random.default_rng([torch.initial_seed() % 2 ** 32, self.calls, b])
+        key = [torch.initial_seed() % 2 ** 32, self.calls, b]
+        rng = np.random.default_rng(key)
+        gen = torch.Generator(device=sar.device).manual_seed(int(np.random.default_rng(key + [1]).integers(2 ** 62)))
         Ts = [augment.sample_T(rng, p["mp_shift"], p["mp_rot"], p["mp_scale"], disk=p["mp_disk"])
               for _ in range(p["mp_n"])]
-
-        def estimate(x):
-            f1, f2 = features(model, opt[None], x[None])
-            cls, cert = coarse(model, f1, f2)
-            P = cls.float().softmax(1)
-            flow, ce = refine(model, f1, f2, anchor_flow(P, P.argmax(1)), cert.float())
-            return fit_many(flow, ce, p["num"], p["ransac"])[0][0]
-
-        return multi_ref(estimate, sar, A0, Ts, h, w)
+        return multi_ref(lambda x: infer_affine(model, opt, x, p["num"], p["ransac"], gen), sar, A0, Ts, h, w)
 
     def __call__(self, st):
         p, model = self.p, self.model
@@ -696,11 +702,11 @@ class Term:
             stats.update(in_frame=[], l_cert=[])
         if self.frozen is not None:
             stats.update(cur_ok=[], d_cur=[], ref_gap=[])
-        if p["mp_n"]:
-            stats.update(mp_gap=[], mp_block=[], mp_fail=[])
             with torch.no_grad():
                 z1, z2 = features(self.frozen, i0, i1)
                 zcls, zcert = coarse(self.frozen, z1, z2)
+        if p["mp_n"]:
+            stats.update(mp_gap=[], mp_block=[], mp_fail=[])
         lv = p["levels"]
         sig = {s_: p["k"] * s_ / (HW / 2) for s_ in lv}       # σ（归一化坐标）
         fine = torch.zeros((), device=cls.device)
@@ -745,7 +751,7 @@ class Term:
                         if gap is not None:
                             stats["ref_gap"].append(gap)
                     if p["mp_n"] and A_ref is not None:     # 多扰动互相核对（#217）
-                        A_mp, gap, As = self.multi_ref(i0[b], i1[b], A_ref, b, h, w)
+                        A_mp, gap, As = self.cross_check(i0[b], i1[b], A_ref, b, h, w)
                         block = not gap <= p["mp_thr"]
                         stats["mp_block"].append(float(block))
                         stats["mp_fail"].append(float(any(A is None for A in As)))

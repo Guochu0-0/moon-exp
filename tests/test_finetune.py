@@ -690,6 +690,56 @@ def test_rloo_multi_ref_recovers_and_rejects():
     assert gap == float("inf")
 
 
+def _fake_term(monkeypatch, **over):
+    """rloo.Term 的整条路径，模型换成假的（#217 review）：粗级 logits = w × 固定随机数（4×4 格、16 个锚点），细化输出全 0，
+    拟合总给恒等仿射（与图像无关），额外扰动固定为平移 40 px。返回 (Term, 一步的输入, w)。"""
+    import types
+    import torch
+    from finetune.parts import rloo as R
+
+    base = torch.randn(1, 16, 4, 4, generator=torch.Generator().manual_seed(0))
+
+    class M(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.w = torch.nn.Parameter(torch.ones(()))
+
+    I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    monkeypatch.setattr(R, "features", lambda model, a, b: ({16: a}, {16: b}))
+    monkeypatch.setattr(R, "coarse", lambda model, f1, f2: (model.model.w * base.expand(len(f1[16]), -1, -1, -1),
+                                                            torch.zeros(len(f1[16]), 1, 4, 4)))
+    monkeypatch.setattr(R, "refine", lambda model, f1, f2, flow, cert, traj=None:
+                        (torch.zeros(len(flow), 2, 32, 32), torch.zeros(len(flow), 1, 32, 32)))
+    monkeypatch.setattr(R, "fit_many", lambda flows, certs, num, thr, gen=None: [(I, 10)] * len(flows))
+    monkeypatch.setattr(R.augment, "sample_T", lambda rng, *a, **k: np.c_[np.eye(2), [40.0, 0.0]])
+    p = {**R.PARAMS, "reward": "ref", "group": 4, "temp": 0.3, "shape": "gauss", **over}
+    model = types.SimpleNamespace(model=M())
+    term = R.Term(p, model, None)
+    img = torch.rand(1, 1, 32, 32) + 0.1
+    st = types.SimpleNamespace(images=lambda: (img, img), batch={}, trace={}, optim=None)
+    return term, st, model.model.w
+
+
+def test_rloo_term_mp_blocks_image_independent(monkeypatch):
+    """mp_n > 0：与图像无关的估计在额外扰动下换算回来差 40 px，超过 mp_thr 时这对图优势置零、粗级没有梯度；放宽 mp_thr 则照常更新。"""
+    term, st, w = _fake_term(monkeypatch, mp_n=2)
+    loss, stats, _ = term(st)
+    loss.backward()
+    assert stats["mp_block"] == 1.0 and abs(stats["mp_gap"] - 40.0) < 0.1 and stats["mp_fail"] == 0.0
+    assert float(w.grad) == 0.0
+    term, st, w = _fake_term(monkeypatch, mp_n=2, mp_thr=100.0)
+    loss, stats, _ = term(st)
+    loss.backward()
+    assert stats["mp_block"] == 0.0 and float(w.grad) != 0.0
+
+
+def test_rloo_term_frozen_ref_without_mp(monkeypatch):
+    """回归（#217 review）：frozen_ref 打开、mp_n = 0 时冻结模型的前向照旧执行。"""
+    term, st, w = _fake_term(monkeypatch, frozen_ref=True)
+    loss, stats, _ = term(st)
+    assert "ref_gap" in stats and "mp_block" not in stats
+
+
 def test_config_rloo_mp(tmp_path):
     from finetune import config as C
     head = '[model]\nname = "roma"\n[rloo]\n'

@@ -3,7 +3,7 @@
   画面内格子比例（in_frame），横轴为参数更新次数；E28 每步 1 对，横轴同样是更新次数。
 - 图 2（curves_rand.png）：随机奖励 rand_s0–2（温度 0.3）与 E13 s0_rand、s1_rand（温度 1）的熵（H，按各自采样温度的分布算）
   与最高分位置的概率。
-曲线与汇总均取 50 步滑动中位数（同 E26–E28）。汇总写 extra/data/summary_b4.csv、summary_rand.csv。
+曲线与汇总均取 50 步滑动中位数（同 E26–E28）；E28 失效的两个种子（fm_s3、fm_s4）画成红色。熵在对数轴上画到 1e-4 为止（更小的按 1e-4 画）。汇总写 extra/data/summary_b4.csv、summary_rand.csv。
 
     /opt/envs/wb/bin/python runs/E29/code/curves.py [--main <主 checkout 的 runs/>]
 """
@@ -24,6 +24,7 @@ if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
 plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
+plt.rcParams["mathtext.fontset"] = "dejavusans"   # 对数轴刻度的负号（SimHei 没有 U+2212）
 R = Path(__file__).resolve().parents[1]
 WIN = 50
 
@@ -56,7 +57,8 @@ def first(step, mask):
 def fig_b4(M):
     keys = ("pmode", "d_ref", "in_frame")
     runs = [(f"b4_s{s}", R / "ckpt" / f"b4_s{s}" / "log.jsonl", f"C{s}", "-", 1200) for s in range(3)]
-    runs += [(f"E28 fm_s{s}", M / f"E28/ckpt/fm_s{s}/log.jsonl", "0.6", ":", 2000) for s in range(5)]
+    runs += [(f"E28 fm_s{s}" + ("（失效）" if s >= 3 else ""), M / f"E28/ckpt/fm_s{s}/log.jsonl",
+              "tab:red" if s >= 3 else "0.6", ":", 2000) for s in range(5)]
     fig, ax = plt.subplots(1, 3, figsize=(15, 4))
     out = []
     for name, p, c, ls, upto in runs:
@@ -100,7 +102,7 @@ def fig_rand(M):
         step, v = load(p, keys, 2000)
         sm = {k: smooth(x) for k, x in v.items()}
         for i, k in enumerate(keys):
-            ax[i].plot(step, sm[k], color=c, ls=ls, lw=1.2, label=name)
+            ax[i].plot(step, np.maximum(sm[k], 1e-4) if k == "H" else sm[k], color=c, ls=ls, lw=1.2, label=name)
         last = step >= step[-1] - 99
         out.append({"run": name, "last_step": int(step[-1]),
                     "H_first100": round(float(np.nanmean(v["H"][step <= 100])), 3),

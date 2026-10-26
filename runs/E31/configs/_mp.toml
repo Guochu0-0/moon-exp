@@ -1,0 +1,41 @@
+# 多扰动互相核对的参照（#217）：底座照 E28 fm（E19 gauss8 + frame_mask + cert_bce 0.01；只训粗匹配，RLOO、温度 0.3、每对 16 份，
+# 高斯分数 δ = 8 px，难版扰动、DINOv2 qkv 加 LoRA r 8、lr 3e-5（LoRA 1e-4）、4000 步的 warmup 500 + cosine），
+# 只加一处：每步在已扰动的 SAR 上再施加 2 个已知随机仿射（平移半径 64 px、旋转 ±10°、缩放 ±10%，补零），连同原图 3 个估计
+# 换算回原 SAR 坐标，逐格中位数再拟合成参照仿射；3 个估计两两格心平均距离的最大值超过 16 px 时这对图这一步优势置零。
+# 训到第 1200 步（lr 调度仍按 4000 步），只存、只评第 1200 步的 Val。
+[model]
+name = "roma"
+lora_r = 8
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+mp_n = 2
+mp_shift = 64.0
+mp_rot = 10.0
+mp_scale = 0.1
+mp_disk = true
+mp_thr = 16.0
+
+[run]
+save_every = 1200
+save_zero = false
+stop_at = 1200
+sweep = "last"

@@ -61,7 +61,19 @@ obs_every > 0 时每 obs_every 步在固定观察集（Val 均匀取 obs_n 对�
 这张掩码（画面内 1、画面外 0）的 BCE，权重 cert_bce（照 RoMa 原损失：certainty 的目标是这个像素在另一张图里是否可见，
 romatch robust_loss 的 ce_weight = 0.01，同 [pseudo] 的 CE_WEIGHT）。自估仿射拟合失败的对两者都不做。
 置零的格子仍计入 −mean(权重 · log π) 的分母，所以画面内格子的梯度按画面内比例缩小（"置零"而不是"重新归一化"）。
-不与 frozen_ref 同用：那时 A_ref 来自冻结的初始模型，不再是自估仿射。
+不与 frozen_ref 同用：那时 A_ref 来自冻结的初始模型，不再是自估仿射。可与 ref_ema 同用：掩码由慢速参照的仿射给出（#216）。
+
+不让参照跑偏（#216，只配 reward = ref；对策与出处见 #214 调研）：
+- 慢速参照（ref_ema = τ > 0）：训练开始时同 frozen_ref 拷一份模型（frozen_copy），此后每次参数更新后
+  θ_slow ← τ·θ_slow + (1−τ)·θ，只平均可训练参数（含 DINOv2 的 LoRA；BN 统计在训练中本就不变）；每步 after_update 时都走一步，
+  GradScaler 因溢出跳过的那一步也走（这时 θ 未变，只是向它多靠近一步）。参照仿射、画面内掩码
+  都由这份慢速模型正常推理得到；当前模型照旧推理一次，记 cur_ok、d_cur、ref_gap（同 frozen_ref）。不与 frozen_ref 同用。
+- 参照合理性检查（gate）：拟合出参照仿射后先看它像不像扰动范围内的仿射，三项任一不过，这对图这一步优势全部置零、
+  也不做 cert_bce（不学）：面积倍数（线性部分的行列式）在 [gate_det_lo, gate_det_hi] 内；两个奇异值之比
+  ≥ gate_sv（相似变换为 1）；画面内格子比例（in_frame）≥ gate_in。日志记 gated（被拦的对的比例）与
+  gate_det、gate_sv、gate_in（各项不过的比例）、ref_det、ref_sv。参照拟合失败的对本来就没有梯度，不计入被拦。
+- 格子分散约束（spread = λ > 0）：画面内格子（无掩码或画面内一格也没有时取全部格子）的抽签概率
+  softmax(gm_cls / temp) 平均成 p̄（4096 维），加损失 λ·max(0, spread_h0 − H(p̄))，梯度经 p̄ 回到粗级。日志记 H_bar、l_spread。
 """
 from __future__ import annotations
 
@@ -105,6 +117,14 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "obs_seed": 0,    # 观察集扰动与抽点的种子
           "frame_mask": False,  # ref：自估仿射映射到 SAR 画面外 / 补零区的格子优势置零
           "cert_bce": 0.0,  # ref：粗级 certainty 对画面内掩码的 BCE 权重（0 = 不训 certainty）
+          "ref_ema": 0.0,   # ref：慢速参照的 τ（#216）；0 = 不用（参照取当前模型或 frozen_ref）
+          "gate": False,    # ref：参照合理性检查（#216）
+          "gate_det_lo": 0.5,   # gate：面积倍数下限
+          "gate_det_hi": 2.0,   # gate：面积倍数上限
+          "gate_sv": 0.7,   # gate：奇异值之比下限
+          "gate_in": 0.0,   # gate：画面内格子比例下限
+          "spread": 0.0,    # ref：格子分散约束的权重 λ（#216）；0 = 不加
+          "spread_h0": 4.0, # spread：H(p̄) 的下限 h₀（nats）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -166,7 +186,21 @@ def check(cfg):
     if p["cert_bce"] < 0:
         raise ConfigError("[rloo] cert_bce 应 ≥ 0")
     if (p["frame_mask"] or p["cert_bce"]) and p["frozen_ref"]:
-        raise ConfigError("[rloo] frame_mask、cert_bce 不与 frozen_ref 同用（掩码要来自自估仿射）")
+        raise ConfigError("[rloo] frame_mask、cert_bce 不与 frozen_ref 同用（掩码要来自自估仿射或慢速参照）")
+    if (p["ref_ema"] or p["gate"] or p["spread"]) and p["reward"] != "ref":
+        raise ConfigError("[rloo] ref_ema、gate、spread 只配 reward = 'ref'")
+    if not 0 <= p["ref_ema"] < 1:
+        raise ConfigError("[rloo] ref_ema 应在 [0, 1)")
+    if p["ref_ema"] and p["frozen_ref"]:
+        raise ConfigError("[rloo] ref_ema 不与 frozen_ref 同用")
+    if p["ref_ema"] and any(cfg["model"].get(x) for x in FROZEN_OFF):
+        raise ConfigError(f"[rloo] ref_ema 要求 [model] {', '.join(FROZEN_OFF)} 都关闭")
+    if p["ref_ema"] and cfg["optim"]["accum"] != 1:
+        raise ConfigError("[rloo] ref_ema 要求 [optim] accum = 1（每步一次参数更新）")
+    if not 0 < p["gate_det_lo"] <= p["gate_det_hi"] or not 0 <= p["gate_sv"] <= 1 or not 0 <= p["gate_in"] <= 1:
+        raise ConfigError("[rloo] 应有 0 < gate_det_lo ≤ gate_det_hi，gate_sv、gate_in 在 [0, 1]")
+    if p["spread"] < 0:
+        raise ConfigError("[rloo] spread 应 ≥ 0")
 
 
 def data_kw(p):
@@ -376,6 +410,73 @@ def affine_gap(A, B, h, w):
               for M in (torch.from_numpy(affine_norm(X)).float() for X in (A, B)))
     return float((pa - pb).norm(dim=-1).mean() * (HW / 2))
 
+class SlowRef:
+    """慢速参照（#216）：slow 为 frozen_copy(model)；每次 update() 令 θ_slow ← τ·θ_slow + (1−τ)·θ，只对 model 里
+    requires_grad 的参数（含 DINOv2 列表里 LoRA 的 A、B），在 fp32 影子里累积再写回 slow。"""
+
+    def __init__(self, model, slow, tau):
+        src, dst = _modules(model.model), _modules(slow.model)
+        self.pairs, seen = [], set()
+        for a, b in zip(src, dst):
+            for (na, pa), (nb, pb) in zip(a.named_parameters(), b.named_parameters()):
+                if na != nb:
+                    raise ValueError(f"慢速参照与原模型的参数对不上：{na} / {nb}")
+                if pa.requires_grad and id(pa) not in seen:
+                    seen.add(id(pa))
+                    self.pairs.append((pa, pb))
+        n_train = len({id(q) for x in src for q in x.parameters() if q.requires_grad})
+        if not self.pairs or len(self.pairs) != n_train:
+            raise ValueError("慢速参照没有对上全部可训练参数")
+        self.tau = tau
+        self.shadow = [b.detach().clone().float() for _, b in self.pairs]
+
+    @torch.no_grad()
+    def update(self):
+        for (a, b), e in zip(self.pairs, self.shadow):
+            e.mul_(self.tau).add_(a.detach().float(), alpha=1 - self.tau)
+            b.copy_(e.to(b.dtype))
+
+    def state_dict(self):
+        return [e.cpu() for e in self.shadow]
+
+    @torch.no_grad()
+    def load_state_dict(self, sd):
+        for (_, b), e, x in zip(self.pairs, self.shadow, sd):
+            e.copy_(x)
+            b.copy_(e.to(b.dtype))
+
+
+def _modules(m):
+    """模型本体 + encoder 列表里的 DINOv2（romatch 把它放在列表里，不是子模块）。"""
+    enc = getattr(m, "encoder", None)
+    return [m] + [x for x in getattr(enc, "dinov2_vitl14", []) if isinstance(x, torch.nn.Module)]
+
+
+def affine_shape(A):
+    """仿射 A（2×3，原网格）线性部分的 (行列式, 小奇异值 / 大奇异值)。两图同尺寸，归一化不改变这两个量。"""
+    L = np.asarray(A, np.float64)[:, :2]
+    sv = np.linalg.svd(L, compute_uv=False)
+    return float(np.linalg.det(L)), float(sv[1] / sv[0]) if sv[0] > 0 else 0.0
+
+
+def gate_check(A, frac_in, p):
+    """参照合理性检查（#216）：{'det', 'sv', 'in'} → 这一项是否不过（True = 不过）。"""
+    det, sv = affine_shape(A)
+    return {"det": not p["gate_det_lo"] <= det <= p["gate_det_hi"], "sv": not sv >= p["gate_sv"],
+            "in": not frac_in >= p["gate_in"]}
+
+
+def spread_loss(logp, m, h0):
+    """格子分散约束（#216）：logp (C,h,w) 为 log softmax(gm_cls / temp)，m (h,w) bool 画面内掩码或 None →
+    (max(0, h0 − H(p̄)), H(p̄))，p̄ 为所取格子的抽签概率的平均（m 为 None 或全 False 时取全部格子）。"""
+    q = logp.exp().flatten(1)                                                   # (C, h·w)
+    if m is not None and bool(m.any()):
+        q = q[:, m.flatten()]
+    pbar = q.mean(1)
+    H = -(pbar * pbar.clamp(min=1e-30).log()).sum()
+    return (h0 - H).clamp(min=0), H
+
+
 # ---------- 细化：精确梯度与逐级局部抽签（#201） ----------
 
 def _mu(dec, s, a, b, fin, cin, H, W):
@@ -562,15 +663,22 @@ def loo(r):
 class Term:
     def __init__(self, p, model, ds):
         self.p, self.model = p, model
-        self.frozen = frozen_copy(model) if p.get("frozen_ref") else None   # 训练开始时的模型（#202）
+        # 参照模型（#202、#216）：frozen_ref 时全程冻结；ref_ema 时同一份拷贝由 self.slow 每步做滑动平均（名字沿用 frozen）
+        self.frozen = frozen_copy(model) if p.get("frozen_ref") or p.get("ref_ema") else None
+        self.slow = SlowRef(model, self.frozen, p["ref_ema"]) if p.get("ref_ema") else None    # 慢速参照（#216）
         self.calls = 0
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
 
     def state_dict(self):
-        return {"calls": self.calls}
+        sd = {"calls": self.calls}
+        if self.slow is not None:
+            sd["slow"] = self.slow.state_dict()
+        return sd
 
     def load_state_dict(self, sd):
         self.calls = sd["calls"]
+        if self.slow is not None:
+            self.slow.load_state_dict(sd["slow"])
 
     def observe(self, step):
         """每 obs_every 步（含第 0 步）在观察集上记一次（#209）；其余步返回 None。"""
@@ -580,7 +688,9 @@ class Term:
 
     @torch.no_grad()
     def after_update(self, st):
-        """trace：参数更新后在同一批图上再做一次粗匹配，记进 st.trace 的 *_post（#209）。"""
+        """慢速参照往当前参数走一步（#216）；trace：参数更新后在同一批图上再做一次粗匹配，记进 st.trace 的 *_post（#209）。"""
+        if self.slow is not None:
+            self.slow.update()
         if not self.p["trace"]:
             return
         i0, i1 = st.images()
@@ -605,8 +715,13 @@ class Term:
         stats = {k: [] for k in ("rew", "rew_sd", "n_inl", "H", "pmode", "nonmode", "d_anchor", "t_roll", "t_fit")}
         if p["reward"] == "ref":
             stats.update(ref_ok=[], d_ref=[], in_tau=[])
-        if p["frame_mask"] or p["cert_bce"]:
+        need_mask = p["frame_mask"] or p["cert_bce"] or p["gate"] or p["spread"]
+        if need_mask:
             stats.update(in_frame=[], l_cert=[])
+        if p["gate"]:
+            stats.update(gated=[], gate_det=[], gate_sv=[], gate_in=[], ref_det=[], ref_sv=[])
+        if p["spread"]:
+            stats.update(H_bar=[], l_spread=[])
         if self.frozen is not None:
             stats.update(cur_ok=[], d_cur=[], ref_gap=[])
             with torch.no_grad():
@@ -620,7 +735,8 @@ class Term:
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         rows = []
         for b in range(B):
-            m = None    # 画面内掩码（frame_mask / cert_bce）
+            m = None    # 画面内掩码（frame_mask / cert_bce / gate / spread）
+            blocked = False     # 参照合理性检查没过（#216）
             with torch.no_grad():
                 q = logp_all[b].exp()                                            # (C,h,w)
                 k = torch.multinomial(q.reshape(C, -1).T, p["group"], replacement=True).T.reshape(-1, h, w)
@@ -659,9 +775,18 @@ class Term:
                     if d is not None:
                         stats["d_ref"].append(float(d.mean()))
                         stats["in_tau"].append(float((d <= p["tau"]).float().mean()))
-                    if (p["frame_mask"] or p["cert_bce"]) and A_ref is not None:
+                    if need_mask and A_ref is not None:
                         m = in_frame(A_ref, i1[b], h, w)
                         stats["in_frame"].append(float(m.float().mean()))
+                    if p["gate"] and A_ref is not None:
+                        bad = gate_check(A_ref, stats["in_frame"][-1], p)
+                        blocked = any(bad.values())
+                        stats["gated"].append(float(blocked))
+                        for key, v in bad.items():
+                            stats[f"gate_{key}"].append(float(v))
+                        det, svr = affine_shape(A_ref)       # 只记录；gate_check 里同样算过一遍，开销可忽略
+                        stats["ref_det"].append(det)
+                        stats["ref_sv"].append(svr)
                 elif p["reward"] == "r1":
                     r = torch.stack([r1_cells(flow[g], A, p["ransac"], (h, w)) for g, (A, _) in enumerate(fits)])
                 elif p["reward"] == "ncc":
@@ -672,6 +797,8 @@ class Term:
                 adv = advantage(r, p["baseline"]).expand(p["group"], h, w)
                 if p["frame_mask"] and m is not None:
                     adv = adv * m
+                if blocked:
+                    adv = adv * 0
                 if lv and A_ref is not None:     # 正常推理轨迹上各级 μ 离参照的距离（#201）
                     for s_, (_, _, mu_) in traj.items():
                         stats.setdefault(f"dmu_{s_}", []).append(float(level_reward(mu_, A_ref, s_, p)[1].mean()))
@@ -707,7 +834,12 @@ class Term:
                             for s_ in lv:
                                 tr.update(RT.level_trace(s_, *level_reward(rec[s_][2], A_ref, s_, p), adv_f[s_]))
             loss = loss - (adv * _logp(logp_all[b], k)).mean() / B
-            if p["cert_bce"] and m is not None:
+            if p["spread"]:     # 格子分散约束（#216）
+                l_sp, H_bar = spread_loss(logp_all[b], m, p["spread_h0"])
+                loss = loss + p["spread"] * l_sp / B
+                stats["H_bar"].append(float(H_bar))
+                stats["l_spread"].append(float(l_sp))
+            if p["cert_bce"] and m is not None and not blocked:
                 l_cert = F.binary_cross_entropy_with_logits(cert[b, 0].float(), m.float())
                 loss = loss + p["cert_bce"] * l_cert / B
                 stats["l_cert"].append(float(l_cert))

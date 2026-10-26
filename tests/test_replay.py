@@ -80,6 +80,14 @@ ADDED = {
     "rloo.obs_seed": (0, "#209 与 obs_every 同批新增；只在 obs_every > 0 时起作用"),
     "rloo.frame_mask": (False, "#212 新增；false = 画面外的格子照常参与策略梯度，即之前的做法"),
     "rloo.cert_bce": (0.0, "#212 新增；0 = 不训粗级 certainty，即之前的做法"),
+    "rloo.ref_ema": (0.0, "#216 新增；0 = 不用慢速参照，即之前的做法"),
+    "rloo.gate": (False, "#216 新增；false = 不做参照合理性检查，即之前的做法"),
+    "rloo.gate_det_lo": (0.5, "#216 与 gate 同批新增；只在 gate 打开时起作用"),
+    "rloo.gate_det_hi": (2.0, "#216 与 gate 同批新增；只在 gate 打开时起作用"),
+    "rloo.gate_sv": (0.7, "#216 与 gate 同批新增；只在 gate 打开时起作用"),
+    "rloo.gate_in": (0.0, "#216 与 gate 同批新增；只在 gate 打开时起作用"),
+    "rloo.spread": (0.0, "#216 新增；0 = 不加格子分散约束，即之前的做法"),
+    "rloo.spread_h0": (4.0, "#216 与 spread 同批新增；只在 spread > 0 时起作用"),
 }
 
 

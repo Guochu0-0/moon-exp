@@ -42,7 +42,7 @@ def main():
     ap.add_argument("--main", default="/remote-home/xufang/YGC/moon-exp/runs")
     a = ap.parse_args()
     M = Path(a.main)
-    runs = [(f"fm_s{s}", R / "ckpt" / f"fm_s{s}" / "log.jsonl", "C0" if s < 3 else "C3", "-") for s in range(5)]
+    runs = [(f"fm_s{s}", R / "ckpt" / f"fm_s{s}" / "log.jsonl", ("C0", "C0", "C0", "C3", "C1")[s], "-") for s in range(5)]
     runs += [("E19 gauss8", M / "E19/ckpt/gauss8/log.jsonl", "k", "--")]
     runs += [(f"E27 gauss8_s{s}", M / f"E27/ckpt/gauss8_s{s}/log.jsonl", "0.5", ":") for s in range(3)]
     fig, ax = plt.subplots(1, 3, figsize=(15, 4))

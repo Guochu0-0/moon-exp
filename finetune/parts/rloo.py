@@ -65,7 +65,8 @@ romatch robust_loss 的 ce_weight = 0.01，同 [pseudo] 的 CE_WEIGHT）。自�
 
 不让参照跑偏（#216，只配 reward = ref；对策与出处见 #214 调研）：
 - 慢速参照（ref_ema = τ > 0）：训练开始时同 frozen_ref 拷一份模型（frozen_copy），此后每次参数更新后
-  θ_slow ← τ·θ_slow + (1−τ)·θ，只平均可训练参数（含 DINOv2 的 LoRA；BN 统计在训练中本就不变）。参照仿射、画面内掩码
+  θ_slow ← τ·θ_slow + (1−τ)·θ，只平均可训练参数（含 DINOv2 的 LoRA；BN 统计在训练中本就不变）；每步 after_update 时都走一步，
+  GradScaler 因溢出跳过的那一步也走（这时 θ 未变，只是向它多靠近一步）。参照仿射、画面内掩码
   都由这份慢速模型正常推理得到；当前模型照旧推理一次，记 cur_ok、d_cur、ref_gap（同 frozen_ref）。不与 frozen_ref 同用。
 - 参照合理性检查（gate）：拟合出参照仿射后先看它像不像扰动范围内的仿射，三项任一不过，这对图这一步优势全部置零、
   也不做 cert_bce（不学）：面积倍数（线性部分的行列式）在 [gate_det_lo, gate_det_hi] 内；两个奇异值之比
@@ -662,7 +663,8 @@ def loo(r):
 class Term:
     def __init__(self, p, model, ds):
         self.p, self.model = p, model
-        self.frozen = frozen_copy(model) if p.get("frozen_ref") or p.get("ref_ema") else None   # 参照模型（#202、#216）
+        # 参照模型（#202、#216）：frozen_ref 时全程冻结；ref_ema 时同一份拷贝由 self.slow 每步做滑动平均（名字沿用 frozen）
+        self.frozen = frozen_copy(model) if p.get("frozen_ref") or p.get("ref_ema") else None
         self.slow = SlowRef(model, self.frozen, p["ref_ema"]) if p.get("ref_ema") else None    # 慢速参照（#216）
         self.calls = 0
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
@@ -777,12 +779,12 @@ class Term:
                         m = in_frame(A_ref, i1[b], h, w)
                         stats["in_frame"].append(float(m.float().mean()))
                     if p["gate"] and A_ref is not None:
-                        bad = gate_check(A_ref, float(m.float().mean()), p)
+                        bad = gate_check(A_ref, stats["in_frame"][-1], p)
                         blocked = any(bad.values())
                         stats["gated"].append(float(blocked))
                         for key, v in bad.items():
                             stats[f"gate_{key}"].append(float(v))
-                        det, svr = affine_shape(A_ref)
+                        det, svr = affine_shape(A_ref)       # 只记录；gate_check 里同样算过一遍，开销可忽略
                         stats["ref_det"].append(det)
                         stats["ref_sv"].append(svr)
                 elif p["reward"] == "r1":

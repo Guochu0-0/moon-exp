@@ -1,0 +1,33 @@
+# 画面外的格子照 RoMa 处理（#212）：完全照 E19 gauss8（只训粗匹配；RLOO、温度 0.3、每对 16 份，高斯分数 δ = 8 px，
+# 自估仿射为当前模型正常推理、RANSAC 3 px；难版扰动、DINOv2 qkv 加 LoRA r 8、lr 3e-5（LoRA 1e-4）、4000 步的 warmup 500 + cosine），
+# 只加两处：自估仿射把格子中心映射到 SAR 画面外或补零区的格子优势置零（frame_mask），粗级 certainty 对画面内掩码加 BCE、权重 0.01（cert_bce）。
+# 训练到第 2000 步（lr 调度仍按 4000 步），每 500 步存档、逐个评 Val，峰值补评 Test；不开逐步记录与观察集。
+[model]
+name = "roma"
+lora_r = 8
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+
+[run]
+save_every = 500
+save_zero = false
+stop_at = 2000

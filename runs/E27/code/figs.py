@@ -149,8 +149,6 @@ def fig_drift(ms):
             ax.set_xticks([]), ax.set_yticks([])
             ax.set_title(f"第 {s_} 步", fontsize=8)
     axs[0, 0].legend(fontsize=7)
-    axs[0, 1].set_title(f"{obs(ms[0], 0)['pair'][0]}：粗匹配落点（颜色为离标注的距离，0–300 px；灰点为标注位置）\n"
-                        + axs[0, 1].get_title(), fontsize=8, loc="left")
     axs[-1, 0].set_xlabel("训练步")
     fig.tight_layout()
     fig.savefig(OUT / "drift.png", dpi=110)

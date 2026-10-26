@@ -1,0 +1,49 @@
+{
+ "protocol": {
+  "auc_thresholds": [3.0, 5.0, 10.0, 20.0],
+  "sr_thresholds": [1.0, 2.0, 3.0, 5.0, 10.0, 20.0],
+  "table_auc": [3.0, 5.0, 10.0],
+  "table_sr": [3.0, 5.0, 10.0],
+  "main": "auc@5",
+  "provisional": false
+ },
+ "methods": {
+  "step1200": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 1.0,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  }
+ }
+}

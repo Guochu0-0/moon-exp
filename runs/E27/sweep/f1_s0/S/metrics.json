@@ -1,0 +1,49 @@
+{
+ "protocol": {
+  "auc_thresholds": [3.0, 5.0, 10.0, 20.0],
+  "sr_thresholds": [1.0, 2.0, 3.0, 5.0, 10.0, 20.0],
+  "table_auc": [3.0, 5.0, 10.0],
+  "table_sr": [3.0, 5.0, 10.0],
+  "main": "auc@5",
+  "provisional": false
+ },
+ "methods": {
+  "step1200": {
+   "val": {
+    "summary": {
+     "n": 652,
+     "fail_rate": 0.8466257668711656,
+     "median": null,
+     "auc@3": 0.0,
+     "auc@5": 0.0,
+     "auc@10": 0.0,
+     "auc@20": 0.0,
+     "sr@1": 0.0,
+     "sr@2": 0.0,
+     "sr@3": 0.0,
+     "sr@5": 0.0,
+     "sr@10": 0.0,
+     "sr@20": 0.0,
+     "auc@3_ci": [0.0, 0.0],
+     "auc@5_ci": [0.0, 0.0],
+     "auc@10_ci": [0.0, 0.0],
+     "auc@20_ci": [0.0, 0.0],
+     "sr@1_ci": [0.0, 0.0],
+     "sr@2_ci": [0.0, 0.0],
+     "sr@3_ci": [0.0, 0.0],
+     "sr@5_ci": [0.0, 0.0],
+     "sr@10_ci": [0.0, 0.0],
+     "sr@20_ci": [0.0, 0.0]
+    },
+    "coverage": {
+     "n_pairs": 825,
+     "n_labelled": 652,
+     "n_pred": 652,
+     "missing": 0,
+     "unknown": []
+    },
+    "errors": [null, null, null, null, null, null, null, null, null, null, null, 397.1586, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 427.6595, null, null, null, null, 348.7819, null, null, null, null, null, 371.7735, null, null, null, null, null, 356.9904, null, null, null, null, null, null, null, 413.9215, 420.0827, null, null, null, null, null, 390.6925, null, null, null, 432.1302, null, null, 432.8313, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 373.2998, 324.7877, null, null, null, null, null, null, 414.5604, null, 427.8106, null, null, 480.154, 446.6946, null, null, 436.3548, null, null, null, null, null, 409.8088, 305.4008, null, null, null, null, null, null, null, null, 356.6918, null, null, null, 392.3333, null, null, null, null, null, 414.4833, null, 309.8358, 407.8225, null, null, null, 323.298, null, null, null, null, null, null, null, 392.1425, null, 479.9378, null, null, null, null, null, null, null, null, null, null, 510.8876, null, null, 311.7908, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 374.6736, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 411.8133, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 417.7192, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 346.4593, null, null, 455.1736, null, null, 334.589, null, null, 340.5087, null, 374.0525, null, null, 411.3687, null, null, null, null, null, 420.9507, 417.9338, null, null, null, null, null, null, null, null, null, null, null, 409.0457, null, 388.3617, 387.8958, null, 327.0718, null, null, null, null, 361.5084, null, null, null, null, null, null, null, null, 402.8294, 354.6958, 341.7416, null, 367.6388, null, null, null, null, null, 349.8577, null, null, null, null, null, 406.028, null, 309.1927, null, null, null, null, 403.201, 369.0867, null, 380.5542, null, null, 410.8765, 411.3284, 360.1305, null, 339.6613, null, null, 357.3103, null, null, null, null, null, null, null, null, null, null, 352.7888, 335.3461, null, null, null, null, null, null, null, null, 358.3931, null, null, null, null, null, null, null, null, null, null, 387.0093, null, 388.4195, null, null, null, null, null, null, 393.0692, null, 392.1349, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 413.0552, null, null, null, null, null, null, null, 344.8445, null, null, null, null, 426.6314, null, null, 410.073, null, null, 449.0738, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 404.4846, null, null, null, null, null, null, null, null, 384.8895, null, null, null, null, 393.187, null, null, null, null, null, null, null, 373.8933, null, 420.1195, null, null, 397.2559, null, null, null, null, 404.6305, null, null, null, null, 392.6761, null, null, null, 448.9444, null, null, null, null, null, 430.1728, 368.7759, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 435.5753, null, 419.6574, 414.1704, 327.0423, 442.9605, null, 418.1292, 402.6447, null, null, null, null, null, null, 409.5356, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 409.4581, null, null, 481.3691, null, null, null, null, null, null, null, 495.1358, 473.3001, null, null, null, null, 422.1317, null, null, null, null, null, null, null, 349.7856, null, null, null, null, null, null, null, null, null, null, null, 385.0373, null, null, 388.5915, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 367.949, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+   }
+  }
+ }
+}

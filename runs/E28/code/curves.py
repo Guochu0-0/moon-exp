@@ -16,6 +16,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+FONT = "/remote-home/xufang/YGC/fonts/simhei.ttf"   # 同 E27 figs.py
+if Path(FONT).exists():
+    matplotlib.font_manager.fontManager.addfont(FONT)
+plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
 R = Path(__file__).resolve().parents[1]
 KEYS = ("pmode", "d_ref", "in_frame")
 WIN = 50
@@ -65,7 +70,6 @@ def main():
         ax[i].set_xlabel("步")
     ax[1].set_yscale("log")
     ax[0].legend(fontsize=7)
-    plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "WenQuanYi Zen Hei", "SimHei", "DejaVu Sans"]
     fig.tight_layout()
     fig.savefig(out / "curves.png", dpi=110)
     with open(out / "data" / "curves.csv", "w", newline="") as f:

@@ -62,6 +62,16 @@ obs_every > 0 时每 obs_every 步在固定观察集（Val 均匀取 obs_n 对�
 romatch robust_loss 的 ce_weight = 0.01，同 [pseudo] 的 CE_WEIGHT）。自估仿射拟合失败的对两者都不做。
 置零的格子仍计入 −mean(权重 · log π) 的分母，所以画面内格子的梯度按画面内比例缩小（"置零"而不是"重新归一化"）。
 不与 frozen_ref 同用：那时 A_ref 来自冻结的初始模型，不再是自估仿射。
+
+多扰动互相核对（#217，只配 reward = ref；mp_n > 0 时打开）：每对图在已扰动的 SAR 上再施加 mp_n 个随机的已知仿射 T_i
+（sample_T，平移半径 mp_shift、旋转 ±mp_rot 度、缩放 ±mp_scale，mp_disk 时平移在圆盘内均匀；用训练扰动同一函数
+finetune.augment.warp、图外补 0），各用当前模型正常推理、拟合仿射 A_i'（光学 → 再扰动后的 SAR），再换算回原 SAR
+的坐标：A_i' = T_i∘A_i，所以 A_i = T_i⁻¹∘A_i'。连同原图的自估仿射共 mp_n + 1 个对同一件事的估计。
+参照：各估计把格子中心映射到的位置逐格取中位数（x、y 各自），再最小二乘拟合成仿射，代替自估仿射（打分、frame_mask、
+cert_bce 都用它）。核对：两两估计之间格心的平均距离（affine_gap）取最大的一对，记为 mp_gap；超过 mp_thr px、或有任一
+份拟合失败时这对图这一步的优势全部置零（cert_bce 照常）。多出来的几份只推理、不求梯度。
+T_i 的随机数取自以 (torch 初始种子, 调用次数, 批内序号) 起的独立发生器，不动训练的随机数流，续训可复现。
+与图像无关、固定在一处的解在 T_i 下不跟着动，换算回来后彼此差一个 T_i，因而被拦；跟着图像内容一起走的一致偏差看不见。
 """
 from __future__ import annotations
 
@@ -74,8 +84,9 @@ import torch.nn.functional as F
 
 from moonlib.ransac import fit_affine
 
+from .. import augment
 from ..config import ConfigError
-from ..geom import HW
+from ..geom import HW, compose, inv_affine
 from ..trace import stack_rows
 from . import rloo_trace as RT
 from .cexp import sample_matches
@@ -105,6 +116,12 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "obs_seed": 0,    # 观察集扰动与抽点的种子
           "frame_mask": False,  # ref：自估仿射映射到 SAR 画面外 / 补零区的格子优势置零
           "cert_bce": 0.0,  # ref：粗级 certainty 对画面内掩码的 BCE 权重（0 = 不训 certainty）
+          "mp_n": 0,        # ref：多扰动互相核对（#217）的额外扰动份数；0 = 不做
+          "mp_shift": 64.0,  # 额外扰动的平移半径（原网格 px）
+          "mp_rot": 10.0,   # 额外扰动的旋转范围（± 度）
+          "mp_scale": 0.1,  # 额外扰动的缩放范围（±）
+          "mp_disk": True,  # 平移在半径 mp_shift 的圆盘内均匀（同 [aug] shift_disk）
+          "mp_thr": 16.0,   # 估计之间最大两两格心平均距离超过它（px）时这对图优势置零
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -167,6 +184,12 @@ def check(cfg):
         raise ConfigError("[rloo] cert_bce 应 ≥ 0")
     if (p["frame_mask"] or p["cert_bce"]) and p["frozen_ref"]:
         raise ConfigError("[rloo] frame_mask、cert_bce 不与 frozen_ref 同用（掩码要来自自估仿射）")
+    if not isinstance(p["mp_n"], int) or p["mp_n"] < 0:
+        raise ConfigError(f"[rloo] mp_n 应为 ≥ 0 的整数，得到 {p['mp_n']!r}")
+    if p["mp_n"] and (p["reward"] != "ref" or p["frozen_ref"] or lv):
+        raise ConfigError("[rloo] mp_n 只配 reward = 'ref'，不与 frozen_ref、levels 同用")
+    if p["mp_shift"] < 0 or p["mp_rot"] < 0 or not 0 <= p["mp_scale"] < 1 or p["mp_thr"] <= 0:
+        raise ConfigError("[rloo] mp_shift、mp_rot 应 ≥ 0，mp_scale 在 [0, 1)，mp_thr 应 > 0")
 
 
 def data_kw(p):
@@ -375,6 +398,53 @@ def affine_gap(A, B, h, w):
     pa, pb = (torch.einsum("ij,hwj->hwi", M[:, :2], g) + M[:, 2]
               for M in (torch.from_numpy(affine_norm(X)).float() for X in (A, B)))
     return float((pa - pb).norm(dim=-1).mean() * (HW / 2))
+
+# ---------- 多扰动互相核对（#217） ----------
+
+def perturb_sar(img, T):
+    """网络输入网格上的 SAR (1,H,W) → 施加已知仿射 T（原网格角点约定，原 → 新）、图外补 0 后的同形张量。
+    角点约定下输入网格只是原网格整体缩放 s = H / HW：L 不变、平移乘 s；warp 用训练扰动同一函数 finetune.augment.warp。"""
+    H, W = img.shape[-2:]
+    if H != W:
+        raise ValueError(f"perturb_sar 只支持方形输入，得到 {H}×{W}")
+    T = np.asarray(T, np.float64)
+    out = augment.warp(img[0].float().cpu().numpy(), np.c_[T[:, :2], T[:, 2] * (H / HW)])
+    return torch.from_numpy(out)[None].to(img.device, img.dtype)
+
+
+def affine_denorm(An):
+    """affine_norm 的逆：归一化坐标下的 2×3 → 原网格角点约定的 2×3。"""
+    An = np.asarray(An, np.float64).reshape(2, 3)
+    L = An[:, :2]
+    return np.c_[L, (An[:, 2] - (L - np.eye(2)) @ np.ones(2)) * (HW / 2)]
+
+
+def consensus(As, h, w):
+    """同一对图的几个仿射估计（原网格，已换算到同一 SAR 坐标）→ (参照仿射, 最大两两格心平均距离 px)。
+    参照：各估计把 h×w 格中心映射到的位置逐格取中位数（x、y 各自），再最小二乘拟合成仿射。任一估计为 None 时 (None, inf)。"""
+    if any(A is None for A in As):
+        return None, math.inf
+    g = grid(h, w, "cpu").double().reshape(-1, 2)
+    pts = torch.stack([g @ torch.from_numpy(An[:, :2]).T + torch.from_numpy(An[:, 2])
+                       for An in (affine_norm(A) for A in As)])            # (n, hw, 2)，归一化坐标
+    med = pts.median(0).values if len(As) > 2 else pts.mean(0)            # 两个估计时中位数取均值
+    X = torch.cat([g, torch.ones(len(g), 1, dtype=g.dtype)], 1)
+    sol = torch.linalg.lstsq(X, med).solution                              # (3, 2)
+    gap = max((affine_gap(a, b, h, w) for i, a in enumerate(As) for b in As[i + 1:]), default=0.0)
+    return affine_denorm(sol.T.numpy()), gap
+
+
+def multi_ref(estimate, sar, A0, Ts, h, w):
+    """多扰动互相核对（#217）。estimate(SAR 输入 (1,H,W)) → 仿射（光学 → 这张 SAR，原网格）或 None；sar：已扰动的
+    SAR 输入；A0：它自己的估计；Ts：额外的已知扰动（原网格角点约定 2×3）。每个 T 施加到 sar 上再估计 A'，换算回 sar 的
+    坐标 T⁻¹∘A'。返回 (参照仿射或 None, 最大两两距离 px, [各估计])，见 consensus。"""
+    As = [A0]
+    for T in Ts:
+        Ap = estimate(perturb_sar(sar, T))
+        As.append(None if Ap is None else compose(inv_affine(T), Ap))
+    A, gap = consensus(As, h, w)
+    return A, gap, As
+
 
 # ---------- 细化：精确梯度与逐级局部抽签（#201） ----------
 
@@ -592,6 +662,23 @@ class Term:
             for b in range(len(cls))]
         st.trace.update(stack_rows(rows))
 
+    @torch.no_grad()
+    def multi_ref(self, opt, sar, A0, b, h, w):
+        """一对图（opt、sar：(1,H,W) 输入）的多扰动核对（#217）：抽 mp_n 个 T，当前模型正常推理（同参照的拟合），见 multi_ref。"""
+        p, model = self.p, self.model
+        rng = np.random.default_rng([torch.initial_seed() % 2 ** 32, self.calls, b])
+        Ts = [augment.sample_T(rng, p["mp_shift"], p["mp_rot"], p["mp_scale"], disk=p["mp_disk"])
+              for _ in range(p["mp_n"])]
+
+        def estimate(x):
+            f1, f2 = features(model, opt[None], x[None])
+            cls, cert = coarse(model, f1, f2)
+            P = cls.float().softmax(1)
+            flow, ce = refine(model, f1, f2, anchor_flow(P, P.argmax(1)), cert.float())
+            return fit_many(flow, ce, p["num"], p["ransac"])[0][0]
+
+        return multi_ref(estimate, sar, A0, Ts, h, w)
+
     def __call__(self, st):
         p, model = self.p, self.model
         self.calls += 1
@@ -609,6 +696,8 @@ class Term:
             stats.update(in_frame=[], l_cert=[])
         if self.frozen is not None:
             stats.update(cur_ok=[], d_cur=[], ref_gap=[])
+        if p["mp_n"]:
+            stats.update(mp_gap=[], mp_block=[], mp_fail=[])
             with torch.no_grad():
                 z1, z2 = features(self.frozen, i0, i1)
                 zcls, zcert = coarse(self.frozen, z1, z2)
@@ -621,6 +710,7 @@ class Term:
         rows = []
         for b in range(B):
             m = None    # 画面内掩码（frame_mask / cert_bce）
+            block = False   # 多扰动核对没通过（#217）：这对图优势置零
             with torch.no_grad():
                 q = logp_all[b].exp()                                            # (C,h,w)
                 k = torch.multinomial(q.reshape(C, -1).T, p["group"], replacement=True).T.reshape(-1, h, w)
@@ -654,6 +744,14 @@ class Term:
                         gap = affine_gap(A_ref, A_cur, h, w)
                         if gap is not None:
                             stats["ref_gap"].append(gap)
+                    if p["mp_n"] and A_ref is not None:     # 多扰动互相核对（#217）
+                        A_mp, gap, As = self.multi_ref(i0[b], i1[b], A_ref, b, h, w)
+                        block = not gap <= p["mp_thr"]
+                        stats["mp_block"].append(float(block))
+                        stats["mp_fail"].append(float(any(A is None for A in As)))
+                        if A_mp is not None:
+                            A_ref = A_mp
+                            stats["mp_gap"].append(gap)
                     r, d = ref_cells(fc, A_ref, p["delta"], p["tau"], p["r_out"], p["shape"])
                     stats["ref_ok"].append(float(A_ref is not None))
                     if d is not None:
@@ -672,6 +770,8 @@ class Term:
                 adv = advantage(r, p["baseline"]).expand(p["group"], h, w)
                 if p["frame_mask"] and m is not None:
                     adv = adv * m
+                if block:
+                    adv = adv * 0
                 if lv and A_ref is not None:     # 正常推理轨迹上各级 μ 离参照的距离（#201）
                     for s_, (_, _, mu_) in traj.items():
                         stats.setdefault(f"dmu_{s_}", []).append(float(level_reward(mu_, A_ref, s_, p)[1].mean()))

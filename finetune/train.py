@@ -165,7 +165,7 @@ def main(argv=None):
         set_rng_state(tr["rng"], rng)
         del sd, tr
     tbw = ScalarWriter(args.tb) if args.tb else None
-    trw = TraceWriter(out) if any(hasattr(t, "observe") for _, t in terms) else None
+    trw = TraceWriter(out)       # 没有成分放记录时什么也不写
 
     def observe(st):
         for n, t in terms:
@@ -173,7 +173,7 @@ def main(argv=None):
             if o_ is not None:
                 trw.obs(st, o_)
 
-    if trw and not r["resume"]:
+    if not r["resume"]:
         observe(0)
     with open(out / "log.jsonl", "a", encoding="utf-8") as log:
         while step < total:
@@ -199,9 +199,8 @@ def main(argv=None):
                 for n, term in terms:
                     if hasattr(term, "after_update"):
                         term.after_update(st)
-                if trw:
-                    trw.add(step, st.trace)
-                    observe(step)
+                trw.add(step, st.trace)
+                observe(step)
                 rec = {"step": step, "pairs": batch["pair"], "loss": round(float(loss), 5), **stats, **upd,
                        "sec": round(time.time() - t0, 3)}
                 if step == 1 and torch.cuda.is_available():
@@ -220,8 +219,7 @@ def main(argv=None):
                     break
     if tbw:
         tbw.close()
-    if trw:
-        trw.flush()
+    trw.flush()
     if r["save_every"] and step % r["save_every"]:
         save(step)
 

@@ -138,6 +138,8 @@ def expand(raw: dict) -> dict:
         raise ConfigError(f"[run] stop_at 应在 0…[optim] steps，得到 {out['run']['stop_at']}")
     if (out["run"]["resume"] or out["run"]["save_optim"]) and out["optim"]["ema"] > 0:
         raise ConfigError("[run] save_optim、resume 不支持 [optim] ema（ckpt 存的是 EMA 权重，不是训练中的权重）")
+    if out["run"]["resume"] and not hasattr(model, "load_weights"):
+        raise ConfigError(f"[run] resume 只支持装得回全部权重的模型（有 load_weights 的），{m} 不支持")
     for name, part in PARTS.items():      # 按登记顺序：每步也按这个顺序算损失
         if name not in raw:
             continue

@@ -1098,6 +1098,8 @@ def test_config_run_resume_and_trace_options(tmp_path):
                 '[rloo]\nreward = "ref"\nobs_every = 10\nobs_n = 0'):
         with pytest.raises(C.ConfigError):
             C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n{bad}\n'))
+    with pytest.raises(C.ConfigError):         # loftr 没有 load_weights，续训装不回全部权重
+        C.load(_write(tmp_path, "l", '[model]\nname = "loftr"\n[run]\nresume = "x.pt"\n'))
 
 
 class _RandSet:
@@ -1222,6 +1224,36 @@ def test_trace_stack_rows_and_writer(tmp_path):
     assert names == ["train_00002-00003.npz", "train_00004-00004.npz"]
     z = np.load(tmp_path / "trace" / names[0])
     assert z["step"].tolist() == [2, 3] and z["x"].shape == (2, 1, 2)
+
+
+def test_rloo_observer_failed_fit_rows_fill_nan(monkeypatch):
+    """观察集里自估仿射拟合失败的样本没有 dmu_* 等量：叠起时补 NaN，不因各样本的键不同而出错（#209 的修复）。"""
+    import torch
+    from finetune.parts import rloo as R
+    from finetune.parts.rloo_trace import Observer
+
+    C, h = 16, 4
+    eye = np.c_[np.eye(2), np.zeros(2)]
+    monkeypatch.setattr(R, "features", lambda model, i0, i1: ({}, {}))
+    monkeypatch.setattr(R, "coarse", lambda model, f1, f2: (torch.randn(1, C, h, h), torch.zeros(1, 1, h, h)))
+    monkeypatch.setattr(R, "anchor_flow", lambda P, k: torch.zeros(P.shape[0], 2, h, h))
+
+    def refine(model, f1, f2, flow, cert, traj):
+        traj[16] = (None, None, torch.zeros(1, 2, 8, 8))
+        return torch.zeros(1, 2, 16, 16), torch.zeros(1, 1, 16, 16)
+
+    fits = iter([[(eye, 50)], [(None, 0)]])
+    monkeypatch.setattr(R, "refine", refine)
+    monkeypatch.setattr(R, "fit_many", lambda *a, **k: next(fits))
+    ob = object.__new__(Observer)
+    ob.p = {"temp": 0.3, "num": 100, "ransac": 3.0, "obs_seed": 0}
+    ob.model = type("M", (), {"device": "cpu"})()
+    pts = np.array([[10.0, 20.0], [100.0, 200.0]])
+    ob.items = [{"pair": f"p{v}", "version": v, "T": eye, "image0": torch.rand(1, 1, 64, 64),
+                 "image1": torch.rand(1, 1, 64, 64), "cp_opt": pts, "cp_sar": pts, "A_gt": eye} for v in (0, 1)]
+    out = ob(10)
+    assert out["dmu_16"].shape[0] == 2 and np.isfinite(out["dmu_16"][0]).all() and np.isnan(out["dmu_16"][1]).all()
+    assert out["err"][0] == 0 and np.isinf(out["err"][1]) and out["pair"].tolist() == ["p0", "p1"]
 
 
 def test_rloo_cell_signal_matches_autograd():

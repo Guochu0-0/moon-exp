@@ -70,6 +70,14 @@ ADDED = {
     "rloo.fine_group": (8, "#201 与 fine_mode 同批新增；只在 fine_mode = local 时起作用"),
     "rloo.cos_every": (0, "#201 新增；只多记日志，不影响训练"),
     "rloo.frozen_ref": (False, "#202 新增；false = 参照取当前模型，即之前的做法"),
+    "run.stop_at": (0, "#209 新增；0 = 训满 [optim] steps，即之前的做法"),
+    "run.save_optim": (False, "#209 新增；false = ckpt 只存权重，即之前的做法"),
+    "run.resume": ("", "#209 新增；空 = 从头训"),
+    "run.sweep": ("all", "#209 新增；all = 逐个 ckpt 评 Val 再补评 Test，即之前驱动的做法"),
+    "rloo.trace": (False, "#209 新增；只多记录，不影响训练"),
+    "rloo.obs_every": (0, "#209 新增；只多记录，不影响训练"),
+    "rloo.obs_n": (16, "#209 与 obs_every 同批新增；只在 obs_every > 0 时起作用"),
+    "rloo.obs_seed": (0, "#209 与 obs_every 同批新增；只在 obs_every > 0 时起作用"),
 }
 
 

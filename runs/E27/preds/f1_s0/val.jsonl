@@ -1,0 +1,652 @@
+{"pair": "ROI_035/patch_0", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 7.782}
+{"pair": "ROI_035/patch_1", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.265}
+{"pair": "ROI_035/patch_2", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.333}
+{"pair": "ROI_035/patch_3", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.293}
+{"pair": "ROI_035/patch_4", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.402}
+{"pair": "ROI_035/patch_5", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.334}
+{"pair": "ROI_035/patch_6", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.358}
+{"pair": "ROI_035/patch_7", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.337}
+{"pair": "ROI_035/patch_8", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.289}
+{"pair": "ROI_035/patch_9", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.224}
+{"pair": "ROI_035/patch_10", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.282}
+{"pair": "ROI_035/patch_11", "A": [[-0.000471, -0.027711, 512.352048], [-0.010259, -1.000079, 522.944536]], "n_matches": 10000, "sec": 1.289, "n_inliers": 2015}
+{"pair": "ROI_035/patch_12", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.233}
+{"pair": "ROI_035/patch_13", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.398}
+{"pair": "ROI_035/patch_14", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.383}
+{"pair": "ROI_035/patch_15", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.423}
+{"pair": "ROI_035/patch_16", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.371}
+{"pair": "ROI_035/patch_17", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.301}
+{"pair": "ROI_035/patch_18", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.245}
+{"pair": "ROI_035/patch_19", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.228}
+{"pair": "ROI_035/patch_20", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.214}
+{"pair": "ROI_035/patch_21", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.262}
+{"pair": "ROI_035/patch_22", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.23}
+{"pair": "ROI_035/patch_23", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.313}
+{"pair": "ROI_035/patch_24", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.255}
+{"pair": "ROI_035/patch_25", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.387}
+{"pair": "ROI_035/patch_26", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.452}
+{"pair": "ROI_035/patch_27", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.232}
+{"pair": "ROI_035/patch_28", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.407}
+{"pair": "ROI_035/patch_29", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.231}
+{"pair": "ROI_035/patch_30", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.233}
+{"pair": "ROI_035/patch_31", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.281}
+{"pair": "ROI_035/patch_32", "A": [[-0.000389, -0.03232, 512.321922], [-0.005928, -0.993955, 520.313292]], "n_matches": 10000, "sec": 1.28, "n_inliers": 1985}
+{"pair": "ROI_035/patch_33", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.383}
+{"pair": "ROI_035/patch_34", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.364}
+{"pair": "ROI_035/patch_35", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.337}
+{"pair": "ROI_035/patch_36", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.256}
+{"pair": "ROI_035/patch_37", "A": [[-0.000632, -0.017204, 512.270487], [-0.018225, -0.999271, 523.047307]], "n_matches": 10000, "sec": 1.273, "n_inliers": 1905}
+{"pair": "ROI_035/patch_38", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.295}
+{"pair": "ROI_035/patch_39", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.212}
+{"pair": "ROI_035/patch_40", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.188}
+{"pair": "ROI_035/patch_41", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.209}
+{"pair": "ROI_035/patch_42", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.273}
+{"pair": "ROI_035/patch_43", "A": [[-7.7e-05, -0.012628, 512.126113], [-0.01565, -1.000338, 524.595233]], "n_matches": 10000, "sec": 1.269, "n_inliers": 1916}
+{"pair": "ROI_035/patch_44", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.24}
+{"pair": "ROI_035/patch_45", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.275}
+{"pair": "ROI_035/patch_46", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.246}
+{"pair": "ROI_035/patch_47", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.392}
+{"pair": "ROI_035/patch_48", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.367}
+{"pair": "ROI_035/patch_49", "A": [[0.00044, -0.013554, 511.970446], [-0.007604, -0.995253, 520.219756]], "n_matches": 10000, "sec": 1.559, "n_inliers": 2092}
+{"pair": "ROI_035/patch_50", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.5}
+{"pair": "ROI_035/patch_51", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.431}
+{"pair": "ROI_035/patch_52", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.354}
+{"pair": "ROI_035/patch_53", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.249}
+{"pair": "ROI_035/patch_54", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.226}
+{"pair": "ROI_035/patch_55", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.177}
+{"pair": "ROI_035/patch_56", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.253}
+{"pair": "ROI_035/patch_57", "A": [[-7.3e-05, -0.026972, 512.254109], [-0.005629, -1.000284, 522.181774]], "n_matches": 10000, "sec": 1.355, "n_inliers": 1967}
+{"pair": "ROI_035/patch_58", "A": [[-0.000598, -0.03718, 512.266742], [-0.005657, -0.984792, 516.555145]], "n_matches": 10000, "sec": 1.313, "n_inliers": 1844}
+{"pair": "ROI_035/patch_59", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.235}
+{"pair": "ROI_035/patch_60", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.304}
+{"pair": "ROI_035/patch_62", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.257}
+{"pair": "ROI_035/patch_63", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.335}
+{"pair": "ROI_035/patch_64", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.222}
+{"pair": "ROI_035/patch_66", "A": [[-0.002136, -0.038359, 512.728313], [-0.017769, -0.992994, 521.527767]], "n_matches": 10000, "sec": 1.279, "n_inliers": 1596}
+{"pair": "ROI_035/patch_67", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.289}
+{"pair": "ROI_035/patch_68", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.233}
+{"pair": "ROI_035/patch_70", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.255}
+{"pair": "ROI_035/patch_71", "A": [[-0.001088, -0.02838, 512.543082], [-0.015262, -1.001596, 524.520824]], "n_matches": 10000, "sec": 1.298, "n_inliers": 1752}
+{"pair": "ROI_035/patch_72", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.376}
+{"pair": "ROI_035/patch_73", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.365}
+{"pair": "ROI_035/patch_74", "A": [[1.1e-05, -0.008208, 512.024489], [0.00132, -0.997352, 514.973747]], "n_matches": 10000, "sec": 1.53, "n_inliers": 1940}
+{"pair": "ROI_035/patch_76", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.444}
+{"pair": "ROI_035/patch_79", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.309}
+{"pair": "ROI_035/patch_81", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.297}
+{"pair": "ROI_035/patch_82", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.36}
+{"pair": "ROI_035/patch_85", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.233}
+{"pair": "ROI_035/patch_87", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.233}
+{"pair": "ROI_035/patch_89", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.393}
+{"pair": "ROI_035/patch_90", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.316}
+{"pair": "ROI_035/patch_93", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.234}
+{"pair": "ROI_035/patch_94", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.225}
+{"pair": "ROI_035/patch_95", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.358}
+{"pair": "ROI_035/patch_96", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.251}
+{"pair": "ROI_035/patch_97", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.229}
+{"pair": "ROI_035/patch_98", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.27}
+{"pair": "ROI_035/patch_99", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.399}
+{"pair": "ROI_035/patch_100", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.335}
+{"pair": "ROI_035/patch_101", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.386}
+{"pair": "ROI_035/patch_102", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.357}
+{"pair": "ROI_035/patch_103", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.475}
+{"pair": "ROI_035/patch_104", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.244}
+{"pair": "ROI_035/patch_105", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.187}
+{"pair": "ROI_035/patch_106", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.361}
+{"pair": "ROI_035/patch_107", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.32}
+{"pair": "ROI_035/patch_109", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.22}
+{"pair": "ROI_035/patch_110", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.276}
+{"pair": "ROI_035/patch_111", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.354}
+{"pair": "ROI_035/patch_112", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.255}
+{"pair": "ROI_035/patch_113", "A": [[-0.000353, -0.02877, 512.25555], [-0.004114, -0.993362, 518.717314]], "n_matches": 10000, "sec": 1.295, "n_inliers": 2100}
+{"pair": "ROI_035/patch_114", "A": [[0.000802, -0.009607, 511.827036], [-0.003345, -0.984502, 515.812383]], "n_matches": 10000, "sec": 1.42, "n_inliers": 1843}
+{"pair": "ROI_035/patch_115", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.444}
+{"pair": "ROI_035/patch_116", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.388}
+{"pair": "ROI_035/patch_117", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.327}
+{"pair": "ROI_035/patch_118", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.371}
+{"pair": "ROI_035/patch_120", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.299}
+{"pair": "ROI_035/patch_121", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.277}
+{"pair": "ROI_035/patch_122", "A": [[0.000254, -0.014914, 512.018609], [-0.018626, -0.996629, 521.62815]], "n_matches": 10000, "sec": 1.28, "n_inliers": 1712}
+{"pair": "ROI_035/patch_123", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.34}
+{"pair": "ROI_035/patch_124", "A": [[0.000826, -0.009887, 511.859962], [-0.000185, -0.991276, 518.208735]], "n_matches": 10000, "sec": 1.307, "n_inliers": 1909}
+{"pair": "ROI_035/patch_125", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.247}
+{"pair": "ROI_035/patch_126", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.224}
+{"pair": "ROI_035/patch_127", "A": [[0.000188, -0.027735, 512.104649], [-0.013573, -0.995255, 521.048395]], "n_matches": 10000, "sec": 1.324, "n_inliers": 1935}
+{"pair": "ROI_035/patch_128", "A": [[-0.000413, -0.022401, 512.322996], [-0.004934, -1.002829, 523.033475]], "n_matches": 10000, "sec": 1.304, "n_inliers": 2013}
+{"pair": "ROI_035/patch_130", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.366}
+{"pair": "ROI_035/patch_131", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.415}
+{"pair": "ROI_035/patch_132", "A": [[-0.000965, -0.040146, 512.531303], [-0.006547, -0.990034, 520.308758]], "n_matches": 10000, "sec": 1.255, "n_inliers": 1915}
+{"pair": "ROI_035/patch_135", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.257}
+{"pair": "ROI_035/patch_136", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.188}
+{"pair": "ROI_035/patch_137", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.399}
+{"pair": "ROI_035/patch_138", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.244}
+{"pair": "ROI_035/patch_139", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.277}
+{"pair": "ROI_035/patch_142", "A": [[-0.000504, -0.036876, 512.34596], [-0.014289, -0.990196, 521.484623]], "n_matches": 10000, "sec": 1.248, "n_inliers": 2000}
+{"pair": "ROI_035/patch_150", "A": [[-0.000218, -0.023688, 512.239728], [-0.01735, -1.002302, 524.278476]], "n_matches": 10000, "sec": 1.326, "n_inliers": 2028}
+{"pair": "ROI_035/patch_152", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.26}
+{"pair": "ROI_035/patch_154", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.501}
+{"pair": "ROI_035/patch_155", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.378}
+{"pair": "ROI_035/patch_156", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.179}
+{"pair": "ROI_035/patch_157", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.202}
+{"pair": "ROI_035/patch_158", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.206}
+{"pair": "ROI_035/patch_160", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.242}
+{"pair": "ROI_035/patch_161", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.228}
+{"pair": "ROI_035/patch_162", "A": [[0.000156, -0.014418, 512.048164], [-0.010314, -0.997544, 520.853517]], "n_matches": 10000, "sec": 1.314, "n_inliers": 1959}
+{"pair": "ROI_035/patch_164", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.248}
+{"pair": "ROI_035/patch_165", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.335}
+{"pair": "ROI_035/patch_166", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.245}
+{"pair": "ROI_035/patch_170", "A": [[-0.001124, -0.025115, 512.422527], [-0.019705, -0.99707, 522.696932]], "n_matches": 10000, "sec": 1.414, "n_inliers": 1851}
+{"pair": "ROI_035/patch_171", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.275}
+{"pair": "ROI_035/patch_172", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.183}
+{"pair": "ROI_035/patch_173", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.369}
+{"pair": "ROI_035/patch_175", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.461}
+{"pair": "ROI_035/patch_176", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.228}
+{"pair": "ROI_035/patch_177", "A": [[-0.000772, -0.03188, 512.456524], [-0.01668, -1.000414, 524.324869]], "n_matches": 10000, "sec": 1.388, "n_inliers": 1905}
+{"pair": "ROI_035/patch_178", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.37}
+{"pair": "ROI_035/patch_179", "A": [[-0.000223, -0.018196, 512.228625], [-0.017778, -1.006664, 526.240222]], "n_matches": 10000, "sec": 1.238, "n_inliers": 1736}
+{"pair": "ROI_035/patch_180", "A": [[-0.000734, -0.023131, 512.32042], [-0.009948, -0.995817, 520.527375]], "n_matches": 10000, "sec": 1.267, "n_inliers": 1771}
+{"pair": "ROI_035/patch_181", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.349}
+{"pair": "ROI_035/patch_183", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.445}
+{"pair": "ROI_035/patch_184", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.249}
+{"pair": "ROI_035/patch_187", "A": [[-0.00053, -0.034506, 512.383789], [-0.014538, -0.995936, 522.876699]], "n_matches": 10000, "sec": 1.211, "n_inliers": 2003}
+{"pair": "ROI_035/patch_188", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.43}
+{"pair": "ROI_035/patch_189", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.312}
+{"pair": "ROI_035/patch_190", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.398}
+{"pair": "ROI_035/patch_191", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.286}
+{"pair": "ROI_035/patch_192", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.264}
+{"pair": "ROI_035/patch_194", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.223}
+{"pair": "ROI_035/patch_195", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.183}
+{"pair": "ROI_035/patch_196", "A": [[-0.000489, -0.032749, 512.304896], [-0.005727, -0.991154, 518.859884]], "n_matches": 10000, "sec": 1.36, "n_inliers": 2114}
+{"pair": "ROI_035/patch_197", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.377}
+{"pair": "ROI_035/patch_198", "A": [[-0.000843, -0.02613, 512.357499], [-0.019542, -0.998121, 522.566779]], "n_matches": 10000, "sec": 1.446, "n_inliers": 1927}
+{"pair": "ROI_035/patch_199", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.32}
+{"pair": "ROI_035/patch_200", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.384}
+{"pair": "ROI_035/patch_201", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.373}
+{"pair": "ROI_035/patch_202", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.326}
+{"pair": "ROI_035/patch_203", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.309}
+{"pair": "ROI_035/patch_205", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.337}
+{"pair": "ROI_035/patch_207", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.272}
+{"pair": "ROI_035/patch_208", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.219}
+{"pair": "ROI_035/patch_209", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.377}
+{"pair": "ROI_035/patch_210", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.31}
+{"pair": "ROI_035/patch_212", "A": [[0.000231, -0.01044, 511.968383], [0.000583, -0.981377, 514.742834]], "n_matches": 10000, "sec": 1.372, "n_inliers": 2118}
+{"pair": "ROI_035/patch_213", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.258}
+{"pair": "ROI_049/patch_0", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.217}
+{"pair": "ROI_049/patch_1", "A": [[-0.000585, -0.034786, 512.44095], [-0.018148, -0.999307, 525.034116]], "n_matches": 10000, "sec": 1.309, "n_inliers": 1826}
+{"pair": "ROI_049/patch_2", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.32}
+{"pair": "ROI_049/patch_3", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.322}
+{"pair": "ROI_049/patch_4", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.347}
+{"pair": "ROI_049/patch_5", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.248}
+{"pair": "ROI_049/patch_6", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.412}
+{"pair": "ROI_049/patch_7", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.402}
+{"pair": "ROI_049/patch_8", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.485}
+{"pair": "ROI_049/patch_10", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.506}
+{"pair": "ROI_049/patch_11", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.396}
+{"pair": "ROI_049/patch_12", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.224}
+{"pair": "ROI_049/patch_13", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.202}
+{"pair": "ROI_049/patch_15", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.282}
+{"pair": "ROI_049/patch_16", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.292}
+{"pair": "ROI_049/patch_17", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.322}
+{"pair": "ROI_049/patch_19", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.259}
+{"pair": "ROI_049/patch_20", "A": [[-0.000645, -0.019408, 512.306856], [-0.019966, -1.000062, 524.35756]], "n_matches": 10000, "sec": 1.278, "n_inliers": 2073}
+{"pair": "ROI_049/patch_21", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.201}
+{"pair": "ROI_049/patch_22", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.259}
+{"pair": "ROI_049/patch_23", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.237}
+{"pair": "ROI_049/patch_24", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.259}
+{"pair": "ROI_049/patch_26", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.234}
+{"pair": "ROI_049/patch_27", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.37}
+{"pair": "ROI_049/patch_28", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.687}
+{"pair": "ROI_049/patch_29", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.494}
+{"pair": "ROI_049/patch_30", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.273}
+{"pair": "ROI_049/patch_31", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.308}
+{"pair": "ROI_049/patch_32", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.366}
+{"pair": "ROI_049/patch_33", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.311}
+{"pair": "ROI_049/patch_34", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.286}
+{"pair": "ROI_049/patch_35", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.456}
+{"pair": "ROI_049/patch_36", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.261}
+{"pair": "ROI_049/patch_37", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.192}
+{"pair": "ROI_049/patch_38", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.178}
+{"pair": "ROI_049/patch_39", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.194}
+{"pair": "ROI_049/patch_41", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.218}
+{"pair": "ROI_049/patch_42", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.183}
+{"pair": "ROI_049/patch_43", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.163}
+{"pair": "ROI_049/patch_44", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.279}
+{"pair": "ROI_049/patch_46", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.233}
+{"pair": "ROI_049/patch_47", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.224}
+{"pair": "ROI_049/patch_48", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.201}
+{"pair": "ROI_049/patch_49", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.295}
+{"pair": "ROI_049/patch_50", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.219}
+{"pair": "ROI_049/patch_51", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.221}
+{"pair": "ROI_049/patch_53", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.29}
+{"pair": "ROI_049/patch_54", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.254}
+{"pair": "ROI_049/patch_56", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.3}
+{"pair": "ROI_049/patch_57", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.211}
+{"pair": "ROI_049/patch_59", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.345}
+{"pair": "ROI_049/patch_60", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.302}
+{"pair": "ROI_049/patch_61", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.295}
+{"pair": "ROI_049/patch_63", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.295}
+{"pair": "ROI_049/patch_64", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.383}
+{"pair": "ROI_049/patch_65", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.242}
+{"pair": "ROI_049/patch_66", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.174}
+{"pair": "ROI_049/patch_67", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.167}
+{"pair": "ROI_049/patch_69", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.276}
+{"pair": "ROI_049/patch_71", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.194}
+{"pair": "ROI_049/patch_72", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.196}
+{"pair": "ROI_049/patch_73", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.234}
+{"pair": "ROI_049/patch_74", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.353}
+{"pair": "ROI_049/patch_75", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.29}
+{"pair": "ROI_049/patch_77", "A": [[0.000197, -0.010445, 511.996183], [-0.009767, -0.989687, 519.051939]], "n_matches": 10000, "sec": 1.22, "n_inliers": 2030}
+{"pair": "ROI_049/patch_80", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.231}
+{"pair": "ROI_049/patch_82", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.196}
+{"pair": "ROI_049/patch_83", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.199}
+{"pair": "ROI_049/patch_84", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.176}
+{"pair": "ROI_049/patch_85", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.281}
+{"pair": "ROI_049/patch_86", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.314}
+{"pair": "ROI_049/patch_88", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.229}
+{"pair": "ROI_049/patch_90", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.247}
+{"pair": "ROI_049/patch_91", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.266}
+{"pair": "ROI_049/patch_93", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.449}
+{"pair": "ROI_049/patch_96", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.29}
+{"pair": "ROI_049/patch_98", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.195}
+{"pair": "ROI_049/patch_99", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.371}
+{"pair": "ROI_049/patch_103", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.204}
+{"pair": "ROI_049/patch_104", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.122}
+{"pair": "ROI_049/patch_105", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.135}
+{"pair": "ROI_049/patch_106", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.35}
+{"pair": "ROI_049/patch_107", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.302}
+{"pair": "ROI_049/patch_108", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.191}
+{"pair": "ROI_049/patch_109", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.216}
+{"pair": "ROI_049/patch_110", "A": [[0.000189, -0.018136, 512.017641], [-0.006847, -0.991779, 517.411445]], "n_matches": 10000, "sec": 1.379, "n_inliers": 1951}
+{"pair": "ROI_049/patch_111", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.239}
+{"pair": "ROI_049/patch_112", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.312}
+{"pair": "ROI_070/patch_0", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.37}
+{"pair": "ROI_070/patch_1", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.187}
+{"pair": "ROI_070/patch_2", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.32}
+{"pair": "ROI_070/patch_3", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.238}
+{"pair": "ROI_070/patch_4", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.191}
+{"pair": "ROI_070/patch_5", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.179}
+{"pair": "ROI_070/patch_6", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.386}
+{"pair": "ROI_070/patch_7", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.427}
+{"pair": "ROI_070/patch_8", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.314}
+{"pair": "ROI_070/patch_9", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.538}
+{"pair": "ROI_070/patch_10", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.336}
+{"pair": "ROI_070/patch_11", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.305}
+{"pair": "ROI_070/patch_12", "A": [[-0.000896, -0.03194, 512.423653], [-0.007137, -0.993099, 519.510082]], "n_matches": 10000, "sec": 1.354, "n_inliers": 1946}
+{"pair": "ROI_070/patch_13", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.269}
+{"pair": "ROI_070/patch_14", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.333}
+{"pair": "ROI_070/patch_15", "A": [[-0.000108, -0.023214, 512.216364], [-0.009803, -1.001018, 522.672968]], "n_matches": 10000, "sec": 1.316, "n_inliers": 1982}
+{"pair": "ROI_070/patch_16", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.287}
+{"pair": "ROI_070/patch_17", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.305}
+{"pair": "ROI_070/patch_18", "A": [[-6.7e-05, -0.018153, 512.08953], [-0.005216, -0.99254, 517.308416]], "n_matches": 10000, "sec": 1.325, "n_inliers": 2032}
+{"pair": "ROI_070/patch_19", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.247}
+{"pair": "ROI_070/patch_20", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.212}
+{"pair": "ROI_070/patch_21", "A": [[-0.000675, -0.020755, 512.300571], [-0.011725, -0.996103, 520.89692]], "n_matches": 10000, "sec": 1.345, "n_inliers": 2058}
+{"pair": "ROI_070/patch_22", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.305}
+{"pair": "ROI_070/patch_23", "A": [[9.8e-05, -0.01725, 512.085277], [-0.011485, -0.99824, 521.546046]], "n_matches": 10000, "sec": 1.279, "n_inliers": 2047}
+{"pair": "ROI_070/patch_24", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.243}
+{"pair": "ROI_070/patch_25", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.253}
+{"pair": "ROI_070/patch_26", "A": [[4.9e-05, -0.018589, 512.073718], [-0.0119, -0.993784, 519.665083]], "n_matches": 10000, "sec": 1.231, "n_inliers": 2006}
+{"pair": "ROI_070/patch_27", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.216}
+{"pair": "ROI_070/patch_28", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.33}
+{"pair": "ROI_070/patch_29", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.305}
+{"pair": "ROI_070/patch_31", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.238}
+{"pair": "ROI_070/patch_33", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.315}
+{"pair": "ROI_070/patch_35", "A": [[-0.00035, -0.01498, 512.231746], [-0.013752, -1.004397, 524.954459]], "n_matches": 10000, "sec": 1.417, "n_inliers": 1754}
+{"pair": "ROI_070/patch_36", "A": [[6e-06, -0.025261, 512.162067], [-0.007858, -0.996053, 520.550943]], "n_matches": 10000, "sec": 1.334, "n_inliers": 1970}
+{"pair": "ROI_070/patch_37", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.278}
+{"pair": "ROI_070/patch_38", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.175}
+{"pair": "ROI_070/patch_39", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.322}
+{"pair": "ROI_070/patch_40", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.324}
+{"pair": "ROI_070/patch_41", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.263}
+{"pair": "ROI_070/patch_42", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.253}
+{"pair": "ROI_070/patch_43", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.217}
+{"pair": "ROI_070/patch_45", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.247}
+{"pair": "ROI_070/patch_46", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.299}
+{"pair": "ROI_070/patch_47", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.284}
+{"pair": "ROI_070/patch_48", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.215}
+{"pair": "ROI_070/patch_49", "A": [[-4.9e-05, -0.022554, 512.169496], [-0.005562, -0.997427, 520.384378]], "n_matches": 10000, "sec": 1.281, "n_inliers": 1928}
+{"pair": "ROI_070/patch_50", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.223}
+{"pair": "ROI_070/patch_51", "A": [[9.2e-05, -0.021816, 512.09123], [-0.005693, -0.994454, 518.779914]], "n_matches": 10000, "sec": 1.23, "n_inliers": 2029}
+{"pair": "ROI_070/patch_52", "A": [[-0.000228, -0.027486, 512.290898], [-0.005114, -0.999308, 521.75273]], "n_matches": 10000, "sec": 1.272, "n_inliers": 1999}
+{"pair": "ROI_070/patch_53", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.351}
+{"pair": "ROI_070/patch_54", "A": [[0.000448, -0.02576, 512.106726], [-0.015634, -1.005299, 526.436489]], "n_matches": 10000, "sec": 1.267, "n_inliers": 1578}
+{"pair": "ROI_070/patch_57", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.242}
+{"pair": "ROI_070/patch_58", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.248}
+{"pair": "ROI_070/patch_59", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.311}
+{"pair": "ROI_070/patch_60", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.399}
+{"pair": "ROI_070/patch_61", "A": [[-0.000821, -0.036335, 512.416065], [-0.013231, -0.991358, 520.914675]], "n_matches": 10000, "sec": 1.276, "n_inliers": 1947}
+{"pair": "ROI_070/patch_62", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.296}
+{"pair": "ROI_070/patch_63", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.288}
+{"pair": "ROI_070/patch_66", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.297}
+{"pair": "ROI_070/patch_67", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.343}
+{"pair": "ROI_070/patch_69", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.282}
+{"pair": "ROI_070/patch_70", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.239}
+{"pair": "ROI_070/patch_71", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.408}
+{"pair": "ROI_070/patch_72", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.287}
+{"pair": "ROI_070/patch_73", "A": [[-7.4e-05, -0.021055, 512.138773], [-0.004727, -0.995187, 518.877151]], "n_matches": 10000, "sec": 1.396, "n_inliers": 2053}
+{"pair": "ROI_070/patch_74", "A": [[0.00037, -0.010042, 511.936254], [-0.003206, -0.984624, 515.676646]], "n_matches": 10000, "sec": 1.374, "n_inliers": 1883}
+{"pair": "ROI_070/patch_77", "A": [[-0.000893, -0.017318, 512.283225], [-0.014641, -0.993072, 519.555927]], "n_matches": 10000, "sec": 1.441, "n_inliers": 1616}
+{"pair": "ROI_070/patch_78", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.397}
+{"pair": "ROI_070/patch_87", "A": [[0.000622, -0.020341, 511.936578], [-0.011643, -0.993057, 519.404406]], "n_matches": 10000, "sec": 1.294, "n_inliers": 1795}
+{"pair": "ROI_070/patch_90", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.346}
+{"pair": "ROI_070/patch_92", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.201}
+{"pair": "ROI_070/patch_93", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.208}
+{"pair": "ROI_070/patch_96", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.167}
+{"pair": "ROI_070/patch_97", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.382}
+{"pair": "ROI_070/patch_98", "A": [[0.000104, -0.018247, 512.089997], [-0.007421, -0.997264, 520.339575]], "n_matches": 10000, "sec": 1.286, "n_inliers": 1956}
+{"pair": "ROI_070/patch_99", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.28}
+{"pair": "ROI_070/patch_100", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.282}
+{"pair": "ROI_070/patch_102", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.171}
+{"pair": "ROI_070/patch_103", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.228}
+{"pair": "ROI_070/patch_105", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.377}
+{"pair": "ROI_070/patch_106", "A": [[0.00034, -0.009201, 511.973373], [-0.016162, -0.996385, 523.256933]], "n_matches": 10000, "sec": 1.293, "n_inliers": 1997}
+{"pair": "ROI_070/patch_108", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.349}
+{"pair": "ROI_070/patch_109", "A": [[-0.004064, -0.355571, 516.260283], [-0.011279, -0.988446, 523.839927]], "n_matches": 10000, "sec": 1.265, "n_inliers": 1767}
+{"pair": "ROI_070/patch_110", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.221}
+{"pair": "ROI_070/patch_112", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.187}
+{"pair": "ROI_070/patch_113", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.27}
+{"pair": "ROI_070/patch_114", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.299}
+{"pair": "ROI_070/patch_115", "A": [[-0.000424, -0.032763, 512.268612], [-0.004448, -0.990095, 517.967795]], "n_matches": 10000, "sec": 1.313, "n_inliers": 1924}
+{"pair": "ROI_070/patch_117", "A": [[-0.000263, -0.01351, 512.18205], [-0.013779, -0.999535, 523.976537]], "n_matches": 10000, "sec": 1.362, "n_inliers": 1913}
+{"pair": "ROI_070/patch_118", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.426}
+{"pair": "ROI_070/patch_120", "A": [[-0.000223, -0.025145, 512.293972], [-0.01385, -1.002561, 525.15578]], "n_matches": 10000, "sec": 1.211, "n_inliers": 1768}
+{"pair": "ROI_070/patch_121", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.314}
+{"pair": "ROI_070/patch_122", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.304}
+{"pair": "ROI_070/patch_123", "A": [[5.7e-05, -0.023305, 512.110409], [-0.005549, -0.99416, 518.802583]], "n_matches": 10000, "sec": 1.251, "n_inliers": 1968}
+{"pair": "ROI_070/patch_125", "A": [[-0.001055, -0.03441, 512.614591], [-0.009099, -1.000829, 523.891994]], "n_matches": 10000, "sec": 1.219, "n_inliers": 1759}
+{"pair": "ROI_070/patch_126", "A": [[-0.001213, -0.028771, 512.52981], [-0.001952, -0.995137, 519.296163]], "n_matches": 10000, "sec": 1.37, "n_inliers": 1644}
+{"pair": "ROI_070/patch_127", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.277}
+{"pair": "ROI_070/patch_129", "A": [[-0.000517, -0.01577, 512.25503], [-0.01086, -0.99881, 522.441465]], "n_matches": 10000, "sec": 1.252, "n_inliers": 1884}
+{"pair": "ROI_070/patch_131", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.447}
+{"pair": "ROI_070/patch_133", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.263}
+{"pair": "ROI_070/patch_135", "A": [[-0.001123, -0.141061, 513.396371], [-0.007915, -1.002288, 521.911243]], "n_matches": 10000, "sec": 1.301, "n_inliers": 1807}
+{"pair": "ROI_070/patch_137", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.23}
+{"pair": "ROI_070/patch_151", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.178}
+{"pair": "ROI_070/patch_152", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.365}
+{"pair": "ROI_070/patch_155", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.208}
+{"pair": "ROI_070/patch_157", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.307}
+{"pair": "ROI_070/patch_158", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.369}
+{"pair": "ROI_070/patch_159", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.301}
+{"pair": "ROI_070/patch_160", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.175}
+{"pair": "ROI_070/patch_161", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.219}
+{"pair": "ROI_070/patch_163", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.314}
+{"pair": "ROI_070/patch_164", "A": [[-0.000481, -0.032848, 512.42264], [-0.006811, -0.998815, 522.836301]], "n_matches": 10000, "sec": 1.356, "n_inliers": 1944}
+{"pair": "ROI_070/patch_167", "A": [[-8e-05, -0.01712, 512.154849], [-0.006705, -1.000235, 521.577126]], "n_matches": 10000, "sec": 1.326, "n_inliers": 1860}
+{"pair": "ROI_071/patch_0", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.335}
+{"pair": "ROI_071/patch_1", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.147}
+{"pair": "ROI_071/patch_2", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.223}
+{"pair": "ROI_071/patch_3", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.325}
+{"pair": "ROI_071/patch_4", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.32}
+{"pair": "ROI_071/patch_5", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.382}
+{"pair": "ROI_071/patch_6", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.46}
+{"pair": "ROI_071/patch_7", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.33}
+{"pair": "ROI_071/patch_8", "A": [[-0.000319, -0.014121, 512.196964], [-0.010873, -0.999473, 522.95072]], "n_matches": 10000, "sec": 1.568, "n_inliers": 2012}
+{"pair": "ROI_071/patch_9", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.491}
+{"pair": "ROI_071/patch_15", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.22}
+{"pair": "ROI_071/patch_16", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.31}
+{"pair": "ROI_071/patch_17", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.434}
+{"pair": "ROI_071/patch_18", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.399}
+{"pair": "ROI_071/patch_19", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.185}
+{"pair": "ROI_071/patch_20", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.211}
+{"pair": "ROI_071/patch_21", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.34}
+{"pair": "ROI_071/patch_22", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.26}
+{"pair": "ROI_071/patch_23", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.234}
+{"pair": "ROI_071/patch_24", "A": [[-0.000564, -0.032859, 512.490809], [-0.004092, -1.001471, 523.549362]], "n_matches": 10000, "sec": 1.297, "n_inliers": 1806}
+{"pair": "ROI_071/patch_25", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.206}
+{"pair": "ROI_071/patch_26", "A": [[-0.000262, -0.018913, 512.232308], [-0.006639, -1.001979, 522.428426]], "n_matches": 10000, "sec": 1.332, "n_inliers": 2061}
+{"pair": "ROI_071/patch_27", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.243}
+{"pair": "ROI_071/patch_28", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.241}
+{"pair": "ROI_071/patch_29", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.156}
+{"pair": "ROI_071/patch_35", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.343}
+{"pair": "ROI_071/patch_36", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.223}
+{"pair": "ROI_071/patch_37", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.522}
+{"pair": "ROI_071/patch_38", "A": [[-0.000595, -0.036096, 512.261777], [-0.003071, -0.984768, 515.771568]], "n_matches": 10000, "sec": 1.303, "n_inliers": 2047}
+{"pair": "ROI_071/patch_39", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.483}
+{"pair": "ROI_075/patch_0", "A": [[-0.000366, -0.020986, 512.195004], [-0.010199, -0.994521, 519.396628]], "n_matches": 10000, "sec": 1.338, "n_inliers": 2001}
+{"pair": "ROI_075/patch_1", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.41}
+{"pair": "ROI_075/patch_2", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.265}
+{"pair": "ROI_075/patch_3", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.261}
+{"pair": "ROI_075/patch_4", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.218}
+{"pair": "ROI_075/patch_5", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.197}
+{"pair": "ROI_075/patch_6", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.418}
+{"pair": "ROI_075/patch_7", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.325}
+{"pair": "ROI_075/patch_8", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.216}
+{"pair": "ROI_075/patch_10", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.407}
+{"pair": "ROI_075/patch_11", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.271}
+{"pair": "ROI_075/patch_12", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.176}
+{"pair": "ROI_075/patch_13", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.228}
+{"pair": "ROI_075/patch_14", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.282}
+{"pair": "ROI_075/patch_15", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.232}
+{"pair": "ROI_075/patch_16", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.253}
+{"pair": "ROI_075/patch_17", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.187}
+{"pair": "ROI_075/patch_18", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.24}
+{"pair": "ROI_075/patch_19", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.259}
+{"pair": "ROI_075/patch_20", "A": [[-0.000368, -0.038016, 512.293892], [-0.008078, -0.988582, 519.243314]], "n_matches": 10000, "sec": 1.454, "n_inliers": 2037}
+{"pair": "ROI_075/patch_21", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.232}
+{"pair": "ROI_075/patch_22", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.145}
+{"pair": "ROI_075/patch_23", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.177}
+{"pair": "ROI_075/patch_24", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.276}
+{"pair": "ROI_075/patch_25", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.334}
+{"pair": "ROI_075/patch_26", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.327}
+{"pair": "ROI_075/patch_27", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.247}
+{"pair": "ROI_075/patch_28", "A": [[5e-05, -0.023333, 512.075799], [-0.007517, -0.992053, 517.736144]], "n_matches": 10000, "sec": 1.267, "n_inliers": 1916}
+{"pair": "ROI_075/patch_29", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.426}
+{"pair": "ROI_075/patch_30", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.248}
+{"pair": "ROI_075/patch_31", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.238}
+{"pair": "ROI_075/patch_32", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.167}
+{"pair": "ROI_075/patch_33", "A": [[-0.000309, -0.020534, 512.260086], [-0.014456, -1.004812, 524.589871]], "n_matches": 10000, "sec": 1.345, "n_inliers": 1970}
+{"pair": "ROI_075/patch_34", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.324}
+{"pair": "ROI_075/patch_35", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.174}
+{"pair": "ROI_075/patch_36", "A": [[1.8e-05, -0.018798, 512.128464], [-0.009907, -0.998604, 521.71733]], "n_matches": 10000, "sec": 1.356, "n_inliers": 1968}
+{"pair": "ROI_075/patch_37", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.33}
+{"pair": "ROI_075/patch_38", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.182}
+{"pair": "ROI_075/patch_39", "A": [[0.000375, -0.023837, 512.005621], [-0.012125, -0.992862, 518.572952]], "n_matches": 10000, "sec": 1.336, "n_inliers": 1739}
+{"pair": "ROI_075/patch_40", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.252}
+{"pair": "ROI_075/patch_41", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.241}
+{"pair": "ROI_075/patch_42", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.186}
+{"pair": "ROI_075/patch_43", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.304}
+{"pair": "ROI_075/patch_44", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.181}
+{"pair": "ROI_075/patch_45", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.169}
+{"pair": "ROI_075/patch_46", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.261}
+{"pair": "ROI_075/patch_47", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.224}
+{"pair": "ROI_075/patch_48", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.409}
+{"pair": "ROI_075/patch_49", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.298}
+{"pair": "ROI_075/patch_50", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.3}
+{"pair": "ROI_075/patch_51", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.247}
+{"pair": "ROI_075/patch_52", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.371}
+{"pair": "ROI_075/patch_53", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.407}
+{"pair": "ROI_075/patch_54", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.259}
+{"pair": "ROI_075/patch_55", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.343}
+{"pair": "ROI_075/patch_56", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.258}
+{"pair": "ROI_075/patch_57", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.204}
+{"pair": "ROI_075/patch_58", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.22}
+{"pair": "ROI_075/patch_59", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.364}
+{"pair": "ROI_075/patch_60", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.24}
+{"pair": "ROI_075/patch_61", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.388}
+{"pair": "ROI_075/patch_62", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.437}
+{"pair": "ROI_075/patch_63", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.24}
+{"pair": "ROI_075/patch_64", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.192}
+{"pair": "ROI_075/patch_65", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.249}
+{"pair": "ROI_075/patch_66", "A": [[-0.000221, -0.013652, 512.107472], [-0.009063, -0.990796, 518.036791]], "n_matches": 10000, "sec": 1.261, "n_inliers": 1917}
+{"pair": "ROI_075/patch_67", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.197}
+{"pair": "ROI_075/patch_68", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.22}
+{"pair": "ROI_075/patch_69", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.441}
+{"pair": "ROI_075/patch_70", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.441}
+{"pair": "ROI_075/patch_71", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.441}
+{"pair": "ROI_075/patch_72", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.287}
+{"pair": "ROI_075/patch_73", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.162}
+{"pair": "ROI_075/patch_74", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.226}
+{"pair": "ROI_075/patch_75", "A": [[-0.000439, -0.017356, 512.172454], [-0.013731, -0.994276, 519.263769]], "n_matches": 10000, "sec": 1.213, "n_inliers": 1787}
+{"pair": "ROI_075/patch_76", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.193}
+{"pair": "ROI_075/patch_77", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.202}
+{"pair": "ROI_075/patch_78", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.274}
+{"pair": "ROI_075/patch_79", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.235}
+{"pair": "ROI_075/patch_80", "A": [[-0.000487, -0.02085, 512.305105], [-0.008829, -1.001637, 522.785982]], "n_matches": 10000, "sec": 1.195, "n_inliers": 1934}
+{"pair": "ROI_075/patch_81", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.216}
+{"pair": "ROI_075/patch_82", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.265}
+{"pair": "ROI_075/patch_83", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.257}
+{"pair": "ROI_075/patch_84", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.402}
+{"pair": "ROI_075/patch_85", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.18}
+{"pair": "ROI_075/patch_86", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.226}
+{"pair": "ROI_075/patch_87", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.199}
+{"pair": "ROI_075/patch_88", "A": [[-0.0001, -0.028103, 512.287714], [-0.005832, -1.000646, 522.84195]], "n_matches": 10000, "sec": 1.277, "n_inliers": 1949}
+{"pair": "ROI_075/patch_89", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.22}
+{"pair": "ROI_075/patch_90", "A": [[-0.000658, -0.022387, 512.361308], [-0.013817, -1.001842, 524.107467]], "n_matches": 10000, "sec": 1.345, "n_inliers": 1926}
+{"pair": "ROI_075/patch_91", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.335}
+{"pair": "ROI_075/patch_92", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.272}
+{"pair": "ROI_075/patch_93", "A": [[0.000373, -0.013442, 511.987184], [-0.014903, -0.997912, 522.418319]], "n_matches": 10000, "sec": 1.271, "n_inliers": 2075}
+{"pair": "ROI_075/patch_94", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.293}
+{"pair": "ROI_075/patch_95", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.329}
+{"pair": "ROI_075/patch_96", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.232}
+{"pair": "ROI_075/patch_97", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.287}
+{"pair": "ROI_075/patch_98", "A": [[-0.000331, -0.019167, 512.146228], [-0.004354, -0.990815, 516.29285]], "n_matches": 10000, "sec": 1.394, "n_inliers": 2022}
+{"pair": "ROI_075/patch_99", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.344}
+{"pair": "ROI_075/patch_101", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.442}
+{"pair": "ROI_075/patch_102", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.358}
+{"pair": "ROI_075/patch_103", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.222}
+{"pair": "ROI_075/patch_104", "A": [[0.00053, -0.024997, 512.097131], [-0.013147, -1.006046, 525.88871]], "n_matches": 10000, "sec": 1.253, "n_inliers": 1643}
+{"pair": "ROI_075/patch_105", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.31}
+{"pair": "ROI_075/patch_106", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.429}
+{"pair": "ROI_075/patch_107", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.244}
+{"pair": "ROI_075/patch_108", "A": [[0.000341, -0.020075, 512.061606], [-0.006462, -0.999751, 521.492074]], "n_matches": 10000, "sec": 1.273, "n_inliers": 1888}
+{"pair": "ROI_075/patch_109", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.291}
+{"pair": "ROI_075/patch_110", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.248}
+{"pair": "ROI_075/patch_111", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.254}
+{"pair": "ROI_075/patch_112", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.297}
+{"pair": "ROI_075/patch_116", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.329}
+{"pair": "ROI_075/patch_117", "A": [[5.2e-05, -0.028507, 512.078196], [-0.007324, -0.988078, 516.873109]], "n_matches": 10000, "sec": 1.352, "n_inliers": 1841}
+{"pair": "ROI_075/patch_118", "A": [[-0.000287, -0.033236, 512.279371], [-0.011197, -0.993994, 521.053219]], "n_matches": 10000, "sec": 1.489, "n_inliers": 2069}
+{"pair": "ROI_075/patch_119", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.323}
+{"pair": "ROI_075/patch_120", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.387}
+{"pair": "ROI_075/patch_121", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.283}
+{"pair": "ROI_075/patch_122", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.206}
+{"pair": "ROI_075/patch_123", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.277}
+{"pair": "ROI_075/patch_124", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.278}
+{"pair": "ROI_075/patch_125", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.304}
+{"pair": "ROI_075/patch_127", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.247}
+{"pair": "ROI_075/patch_128", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.249}
+{"pair": "ROI_075/patch_129", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.203}
+{"pair": "ROI_075/patch_130", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.299}
+{"pair": "ROI_075/patch_131", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.264}
+{"pair": "ROI_075/patch_132", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.352}
+{"pair": "ROI_075/patch_133", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.271}
+{"pair": "ROI_075/patch_134", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.281}
+{"pair": "ROI_075/patch_135", "A": [[-0.000274, -0.027672, 512.192796], [-0.009303, -0.990888, 518.770161]], "n_matches": 10000, "sec": 1.27, "n_inliers": 2109}
+{"pair": "ROI_075/patch_137", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.306}
+{"pair": "ROI_075/patch_138", "A": [[0.000901, -0.011991, 511.87049], [-0.009977, -1.003798, 525.124386]], "n_matches": 10000, "sec": 1.3, "n_inliers": 1649}
+{"pair": "ROI_075/patch_139", "A": [[-0.000441, -0.036161, 512.375175], [-0.006808, -0.993851, 520.920449]], "n_matches": 10000, "sec": 1.361, "n_inliers": 2014}
+{"pair": "ROI_075/patch_140", "A": [[-0.000734, -0.033355, 512.449274], [-0.008442, -0.996587, 521.962764]], "n_matches": 10000, "sec": 1.369, "n_inliers": 1714}
+{"pair": "ROI_075/patch_141", "A": [[-0.000762, -0.018584, 512.367574], [-0.013275, -1.002517, 524.37118]], "n_matches": 10000, "sec": 1.349, "n_inliers": 1906}
+{"pair": "ROI_075/patch_142", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.409}
+{"pair": "ROI_075/patch_143", "A": [[-0.000282, -0.018039, 512.181216], [-0.006092, -0.996507, 519.492251]], "n_matches": 10000, "sec": 1.42, "n_inliers": 1898}
+{"pair": "ROI_075/patch_144", "A": [[-0.000248, -0.014214, 512.147899], [-0.01384, -0.994973, 521.414629]], "n_matches": 10000, "sec": 1.45, "n_inliers": 1926}
+{"pair": "ROI_075/patch_145", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.218}
+{"pair": "ROI_075/patch_146", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.298}
+{"pair": "ROI_075/patch_147", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.211}
+{"pair": "ROI_075/patch_148", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.244}
+{"pair": "ROI_075/patch_149", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.225}
+{"pair": "ROI_075/patch_150", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.304}
+{"pair": "ROI_075/patch_151", "A": [[0.00052, -0.011867, 511.951665], [-0.016131, -0.999437, 523.696139]], "n_matches": 10000, "sec": 1.354, "n_inliers": 1993}
+{"pair": "ROI_075/patch_152", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.46}
+{"pair": "ROI_075/patch_153", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.381}
+{"pair": "ROI_075/patch_154", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.432}
+{"pair": "ROI_075/patch_155", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.361}
+{"pair": "ROI_075/patch_156", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.471}
+{"pair": "ROI_075/patch_157", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.468}
+{"pair": "ROI_075/patch_158", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.359}
+{"pair": "ROI_075/patch_159", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.57}
+{"pair": "ROI_075/patch_160", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.602}
+{"pair": "ROI_075/patch_161", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.358}
+{"pair": "ROI_075/patch_162", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.629}
+{"pair": "ROI_075/patch_163", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.54}
+{"pair": "ROI_075/patch_164", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.409}
+{"pair": "ROI_075/patch_165", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.428}
+{"pair": "ROI_075/patch_166", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.308}
+{"pair": "ROI_075/patch_167", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.242}
+{"pair": "ROI_075/patch_168", "A": [[-0.000558, -0.029838, 512.309299], [-0.005674, -0.992338, 518.887873]], "n_matches": 10000, "sec": 1.341, "n_inliers": 1997}
+{"pair": "ROI_075/patch_169", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.229}
+{"pair": "ROI_075/patch_170", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.334}
+{"pair": "ROI_075/patch_171", "A": [[-0.000848, -0.031356, 512.486236], [-0.014851, -1.000137, 524.230724]], "n_matches": 10000, "sec": 1.4, "n_inliers": 1925}
+{"pair": "ROI_075/patch_172", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.817}
+{"pair": "ROI_075/patch_173", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.302}
+{"pair": "ROI_075/patch_174", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.291}
+{"pair": "ROI_075/patch_175", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.236}
+{"pair": "ROI_075/patch_177", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.205}
+{"pair": "ROI_075/patch_178", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.334}
+{"pair": "ROI_075/patch_179", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.277}
+{"pair": "ROI_075/patch_180", "A": [[0.000319, -0.013106, 511.99], [-0.016276, -0.995964, 521.092813]], "n_matches": 10000, "sec": 1.409, "n_inliers": 1859}
+{"pair": "ROI_075/patch_181", "A": [[6.8e-05, -0.026497, 512.097732], [-0.010469, -0.991283, 519.028949]], "n_matches": 10000, "sec": 1.443, "n_inliers": 1941}
+{"pair": "ROI_080/patch_1", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.284}
+{"pair": "ROI_080/patch_3", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.267}
+{"pair": "ROI_080/patch_4", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.234}
+{"pair": "ROI_080/patch_5", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.243}
+{"pair": "ROI_080/patch_7", "A": [[0.000596, -0.011785, 511.90998], [-0.01181, -0.997337, 521.203204]], "n_matches": 10000, "sec": 1.267, "n_inliers": 1940}
+{"pair": "ROI_080/patch_8", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.33}
+{"pair": "ROI_080/patch_9", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.256}
+{"pair": "ROI_080/patch_11", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.234}
+{"pair": "ROI_080/patch_14", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.219}
+{"pair": "ROI_080/patch_18", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.26}
+{"pair": "ROI_080/patch_19", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.248}
+{"pair": "ROI_080/patch_22", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.315}
+{"pair": "ROI_080/patch_24", "A": [[-0.000516, -0.028558, 512.389933], [-0.012195, -0.999498, 524.092089]], "n_matches": 10000, "sec": 1.246, "n_inliers": 1860}
+{"pair": "ROI_080/patch_25", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.328}
+{"pair": "ROI_080/patch_28", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.274}
+{"pair": "ROI_080/patch_29", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.301}
+{"pair": "ROI_080/patch_30", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.258}
+{"pair": "ROI_080/patch_32", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.257}
+{"pair": "ROI_080/patch_33", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.225}
+{"pair": "ROI_080/patch_34", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.343}
+{"pair": "ROI_080/patch_35", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.26}
+{"pair": "ROI_080/patch_38", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.298}
+{"pair": "ROI_080/patch_39", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.21}
+{"pair": "ROI_080/patch_44", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.352}
+{"pair": "ROI_080/patch_45", "A": [[-0.000135, -0.010636, 512.101885], [-0.019082, -0.993733, 523.193625]], "n_matches": 10000, "sec": 1.292, "n_inliers": 1954}
+{"pair": "ROI_080/patch_46", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.393}
+{"pair": "ROI_080/patch_48", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.327}
+{"pair": "ROI_080/patch_50", "A": [[-0.000256, -0.019361, 512.164228], [-0.011447, -0.995064, 519.989402]], "n_matches": 10000, "sec": 1.368, "n_inliers": 1979}
+{"pair": "ROI_080/patch_51", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.383}
+{"pair": "ROI_080/patch_52", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.345}
+{"pair": "ROI_080/patch_53", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.456}
+{"pair": "ROI_080/patch_54", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.403}
+{"pair": "ROI_080/patch_55", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.264}
+{"pair": "ROI_080/patch_57", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.308}
+{"pair": "ROI_080/patch_58", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.282}
+{"pair": "ROI_080/patch_59", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.342}
+{"pair": "ROI_080/patch_61", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.25}
+{"pair": "ROI_080/patch_63", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.297}
+{"pair": "ROI_080/patch_65", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.305}
+{"pair": "ROI_080/patch_67", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.271}
+{"pair": "ROI_080/patch_69", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.329}
+{"pair": "ROI_080/patch_70", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.37}
+{"pair": "ROI_080/patch_71", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.366}
+{"pair": "ROI_080/patch_72", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.28}
+{"pair": "ROI_080/patch_73", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.29}
+{"pair": "ROI_080/patch_74", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.306}
+{"pair": "ROI_080/patch_75", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.31}
+{"pair": "ROI_080/patch_76", "A": [[-0.00084, -0.02537, 512.449186], [-0.020904, -1.00481, 526.101762]], "n_matches": 10000, "sec": 1.369, "n_inliers": 1601}
+{"pair": "ROI_080/patch_77", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.306}
+{"pair": "ROI_080/patch_78", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.392}
+{"pair": "ROI_080/patch_79", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.242}
+{"pair": "ROI_080/patch_80", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.27}
+{"pair": "ROI_080/patch_83", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.269}
+{"pair": "ROI_080/patch_84", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.323}
+{"pair": "ROI_080/patch_85", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.242}
+{"pair": "ROI_080/patch_86", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.318}
+{"pair": "ROI_080/patch_87", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.351}
+{"pair": "ROI_080/patch_88", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.315}
+{"pair": "ROI_080/patch_89", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.27}
+{"pair": "ROI_080/patch_90", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.327}
+{"pair": "ROI_080/patch_91", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.32}
+{"pair": "ROI_080/patch_92", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.373}
+{"pair": "ROI_080/patch_93", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.258}
+{"pair": "ROI_080/patch_94", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.402}
+{"pair": "ROI_080/patch_95", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.367}
+{"pair": "ROI_080/patch_96", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.322}
+{"pair": "ROI_080/patch_98", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.276}
+{"pair": "ROI_080/patch_99", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.391}
+{"pair": "ROI_080/patch_100", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.417}
+{"pair": "ROI_080/patch_101", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.375}
+{"pair": "ROI_080/patch_102", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.298}
+{"pair": "ROI_080/patch_103", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.34}
+{"pair": "ROI_080/patch_104", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.282}
+{"pair": "ROI_080/patch_105", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.395}
+{"pair": "ROI_080/patch_106", "A": null, "fail": "error: RuntimeError: invalid multinomial distribution (sum of probabilities <= 0)", "sec": 1.398}

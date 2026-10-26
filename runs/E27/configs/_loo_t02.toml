@@ -1,0 +1,6 @@
+# E15 loo_t02（RLOO、温度 0.2、分级奖励），原运行（种子 0）第 658 步坍缩。
+base = "_e15"
+
+[rloo]
+baseline = "loo"
+temp = 0.2

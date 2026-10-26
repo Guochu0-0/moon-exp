@@ -1,0 +1,42 @@
+# 训细化的配置（#209）：完全照 E25 的 _rl（即 E22 f1：细化部分学习率 = 锚点 0.47 × 1；粗级照 E19 gauss8，RLOO、温度 0.3、高斯核 δ 8 px；
+# 细化尺度 16、8、4 加 σ = 0.5 × s px 的高斯，逐像素按 cauchy（δ = s px）打分、各级各自 RLOO；每对 8 条链；VGG 放开训练；
+# 自估仿射为当前模型正常推理，即 E25 f1_s1 的设置），4000 步的 lr 调度不变。本实验的训练长度、存档与记录同 _e19。
+[model]
+name = "roma"
+refine_lr = 0.47
+vgg_lr = 0.47
+lora_r = 8
+train_vgg = true
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+fine_shape = "cauchy"
+group = 8
+levels = [16, 8, 4]
+k = 0.5
+trace = true
+obs_every = 10
+
+[run]
+save_every = 0
+save_at = [200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200]
+save_optim = true
+stop_at = 1200
+sweep = "last"
+log_update = true

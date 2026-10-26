@@ -1,0 +1,6 @@
+# E19 gauss8（高斯核 exp(−½(d/8)²)），健康对照，原运行（种子 0）不坍缩。
+base = "_e19"
+
+[rloo]
+shape = "gauss"
+delta = 8.0

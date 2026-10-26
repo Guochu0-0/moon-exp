@@ -47,6 +47,7 @@ def main():
     torch.manual_seed(0)
     names = [f"{e.lower()}_{r}_4000" for e, r in COLLAPSED + HEALTHY] + ["zs"]
     out = R / "extra" / "data" / "gap_check.csv"
+    out.parent.mkdir(parents=True, exist_ok=True)
     rows = []
     for name in names:
         t = time.time()

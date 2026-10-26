@@ -24,7 +24,7 @@ if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
 plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
-plt.rcParams["mathtext.fontset"] = "dejavusans"   # 对数轴刻度的负号（SimHei 没有 U+2212）
+PLAIN = matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}")   # 对数轴刻度写成 0.01 这样：SimHei 没有 mathtext 的负号
 R = Path(__file__).resolve().parents[1]
 WIN = 50
 
@@ -83,6 +83,7 @@ def fig_b4(M):
         ax[i].set_title(t)
         ax[i].set_xlabel("参数更新次数")
     ax[1].set_yscale("log")
+    ax[1].yaxis.set_major_formatter(PLAIN)
     ax[0].legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(R / "extra" / "curves_b4.png", dpi=110)
@@ -113,6 +114,7 @@ def fig_rand(M):
                     "pmode_last100": round(float(np.nanmean(v["pmode"][last])), 3)})
     ax[0].set_title("熵（按采样温度的分布，nat）")
     ax[0].set_yscale("log")
+    ax[0].yaxis.set_major_formatter(PLAIN)
     ax[0].axhline(0.1, color="k", lw=0.6, ls="--")
     ax[1].set_title("最高分位置的概率")
     for a in ax:

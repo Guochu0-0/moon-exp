@@ -78,6 +78,8 @@ ADDED = {
     "rloo.obs_every": (0, "#209 新增；只多记录，不影响训练"),
     "rloo.obs_n": (16, "#209 与 obs_every 同批新增；只在 obs_every > 0 时起作用"),
     "rloo.obs_seed": (0, "#209 与 obs_every 同批新增；只在 obs_every > 0 时起作用"),
+    "rloo.frame_mask": (False, "#212 新增；false = 画面外的格子照常参与策略梯度，即之前的做法"),
+    "rloo.cert_bce": (0.0, "#212 新增；0 = 不训粗级 certainty，即之前的做法"),
 }
 
 

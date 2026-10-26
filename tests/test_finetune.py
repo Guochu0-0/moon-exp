@@ -555,6 +555,32 @@ def test_rloo_ref_cells_shape():
     assert torch.allclose(r, distance_reward(d, "gauss", 4.0)) and r.min() < r.max() <= 1
 
 
+def test_rloo_in_frame():
+    """画面外的格子：自估仿射把格子中心映射到 SAR 画面外、或补零区时为 False。"""
+    import torch
+    from finetune.parts.rloo import in_frame
+
+    sar = torch.ones(1, 64, 64)
+    I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    assert in_frame(I, sar, 4, 4).all()
+    m = in_frame(np.array([[1.0, 0, 256], [0, 1.0, 0]]), sar, 4, 4)     # 右移半幅：右半落到画面外
+    assert m[:, :2].all() and not m[:, 2:].any()
+    sar[:, :, :16] = 0                                                 # 左边 1/4 补零
+    m = in_frame(I, sar, 4, 4)
+    assert not m[:, 0].any() and m[:, 1:].all()
+
+
+def test_config_rloo_frame_mask(tmp_path):
+    from finetune import config as C
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\n'))
+    assert d["rloo"]["frame_mask"] is False and d["rloo"]["cert_bce"] == 0.0      # 默认同旧行为
+    c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nframe_mask = true\ncert_bce = 0.01\n'))
+    assert c["rloo"]["frame_mask"] is True and c["rloo"]["cert_bce"] == 0.01
+    for bad in ('reward = "r1"\nframe_mask = true', 'reward = "ref"\ncert_bce = -1.0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n[rloo]\n{bad}\n'))
+
+
 def test_rloo_advantage_baselines():
     import torch
     from finetune.parts.rloo import advantage

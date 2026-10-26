@@ -55,6 +55,11 @@ levels 非空时另记正常推理轨迹上尺度 16…1 各级 μ 离参照的�
 逐步记录（#209，只配 reward = ref，只读、不影响训练）：trace 打开时每步记训练批次的逐格量、参数更新后同一对图上的粗匹配；
 obs_every > 0 时每 obs_every 步在固定观察集（Val 均匀取 obs_n 对，原图与一组固定扰动各一份）上做一次正常推理。
 记什么、存在哪里见 finetune/parts/rloo_trace.py。
+
+画面外的格子（只配 reward = ref）：自估仿射把格子中心映射到 SAR 画面外、或 SAR 的补零区（sar_valid）时，这一格在 SAR 上
+没有对应位置（in_frame）。frame_mask 打开时这些格子的优势置零，不参与策略梯度；cert_bce > 0 时另加粗级 certainty 对
+这张掩码（画面内 1、画面外 0）的 BCE，权重 cert_bce（照 RoMa 原损失：certainty 的目标是这个像素在另一张图里是否可见，
+romatch robust_loss 的 ce_weight = 0.01，同 [pseudo] 的 CE_WEIGHT）。自估仿射拟合失败的对两者都不做。
 """
 from __future__ import annotations
 
@@ -96,6 +101,8 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "obs_every": 0,   # 每几步在固定观察集上做一次正常推理并记录（#209）；0 = 不做
           "obs_n": 16,      # 观察集的图对数（每对原图与扰动各一份）
           "obs_seed": 0,    # 观察集扰动与抽点的种子
+          "frame_mask": False,  # ref：自估仿射映射到 SAR 画面外 / 补零区的格子优势置零
+          "cert_bce": 0.0,  # ref：粗级 certainty 对画面内掩码的 BCE 权重（0 = 不训 certainty）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -152,6 +159,10 @@ def check(cfg):
         raise ConfigError("[rloo] trace、obs_every 只配 reward = 'ref'")
     if p["obs_every"] < 0 or p["obs_n"] < 1:
         raise ConfigError("[rloo] obs_every 应 ≥ 0，obs_n 应 ≥ 1")
+    if (p["frame_mask"] or p["cert_bce"]) and p["reward"] != "ref":
+        raise ConfigError("[rloo] frame_mask、cert_bce 只配 reward = 'ref'")
+    if p["cert_bce"] < 0:
+        raise ConfigError("[rloo] cert_bce 应 ≥ 0")
 
 
 def data_kw(p):
@@ -476,6 +487,15 @@ def sar_valid(sar):
     return F.max_pool2d(bad, 9, 1, 4)[0, 0] < 0.5
 
 
+def in_frame(A, sar, h, w):
+    """仿射 A（原网格）把 h×w 格中心映射到的位置是否落在 SAR 画面内、且不在补零区（sar_valid）→ (h,w) bool。
+    sar：SAR 输入 (1,H,W)。"""
+    An = torch.from_numpy(affine_norm(A)).to(sar.device).float()
+    x2 = torch.einsum("ij,hwj->hwi", An[:, :2], grid(h, w, sar.device)) + An[:, 2]
+    v = F.grid_sample(sar_valid(sar)[None, None].float(), x2[None], mode="nearest", align_corners=False)[0, 0]
+    return (x2.abs() < 1).all(-1) & (v > 0.5)
+
+
 def ncc(opt, sar, valid, A, min_px=1000):
     """用 A 把 SAR 拉到光学网格，在重叠区（落在 SAR 画面内且不在补零区）上算灰度 NCC。A 为 None 或重叠太少时为 −1。"""
     if A is None:
@@ -580,6 +600,8 @@ class Term:
         stats = {k: [] for k in ("rew", "rew_sd", "n_inl", "H", "pmode", "nonmode", "d_anchor", "t_roll", "t_fit")}
         if p["reward"] == "ref":
             stats.update(ref_ok=[], d_ref=[], in_tau=[])
+        if p["frame_mask"] or p["cert_bce"]:
+            stats.update(in_frame=[], l_cert=[])
         if self.frozen is not None:
             stats.update(cur_ok=[], d_cur=[], ref_gap=[])
             with torch.no_grad():
@@ -593,6 +615,7 @@ class Term:
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         rows = []
         for b in range(B):
+            m = None    # 画面内掩码（frame_mask / cert_bce）
             with torch.no_grad():
                 q = logp_all[b].exp()                                            # (C,h,w)
                 k = torch.multinomial(q.reshape(C, -1).T, p["group"], replacement=True).T.reshape(-1, h, w)
@@ -631,6 +654,9 @@ class Term:
                     if d is not None:
                         stats["d_ref"].append(float(d.mean()))
                         stats["in_tau"].append(float((d <= p["tau"]).float().mean()))
+                    if (p["frame_mask"] or p["cert_bce"]) and A_ref is not None:
+                        m = in_frame(A_ref, i1[b], h, w)
+                        stats["in_frame"].append(float(m.float().mean()))
                 elif p["reward"] == "r1":
                     r = torch.stack([r1_cells(flow[g], A, p["ransac"], (h, w)) for g, (A, _) in enumerate(fits)])
                 elif p["reward"] == "ncc":
@@ -639,6 +665,8 @@ class Term:
                 else:
                     r = torch.rand(p["group"], h, w, device=cls.device)
                 adv = advantage(r, p["baseline"]).expand(p["group"], h, w)
+                if p["frame_mask"] and m is not None:
+                    adv = adv * m
                 if lv and A_ref is not None:     # 正常推理轨迹上各级 μ 离参照的距离（#201）
                     for s_, (_, _, mu_) in traj.items():
                         stats.setdefault(f"dmu_{s_}", []).append(float(level_reward(mu_, A_ref, s_, p)[1].mean()))
@@ -674,6 +702,10 @@ class Term:
                             for s_ in lv:
                                 tr.update(RT.level_trace(s_, *level_reward(rec[s_][2], A_ref, s_, p), adv_f[s_]))
             loss = loss - (adv * _logp(logp_all[b], k)).mean() / B
+            if p["cert_bce"] and m is not None:
+                l_cert = F.binary_cross_entropy_with_logits(cert[b, 0].float(), m.float())
+                loss = loss + p["cert_bce"] * l_cert / B
+                stats["l_cert"].append(float(l_cert))
             if lv and A_ref is not None:
                 t3 = time.time()
                 fb, gb = {s_: x[b:b + 1] for s_, x in f1.items()}, {s_: x[b:b + 1] for s_, x in f2.items()}

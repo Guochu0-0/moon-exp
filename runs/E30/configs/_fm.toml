@@ -1,0 +1,34 @@
+# E30（#216）底座：同 E28 `fm`（E19 gauss8 + frame_mask + cert_bce 0.01），只把训练截到第 1200 步（lr 调度仍按 4000 步），
+# 只存、只评第 1200 步的 Val。各组在此之上只加一项（见各组的 base）。
+[model]
+name = "roma"
+lora_r = 8
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+
+[run]
+save_every = 0
+save_at = [1200]
+save_zero = false
+stop_at = 1200
+sweep = "last"
+

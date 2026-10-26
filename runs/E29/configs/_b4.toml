@@ -1,0 +1,36 @@
+# 每步 4 对图（#215）：完全照 E28 fm（只训粗匹配；RLOO、温度 0.3、每对 16 份，高斯分数 δ = 8 px，自估仿射为当前模型正常推理、
+# RANSAC 3 px；画面外格子优势置零 frame_mask、粗级 certainty 加 BCE 0.01；难版扰动、DINOv2 qkv 加 LoRA r 8、lr 3e-5（LoRA 1e-4）、
+# 4000 次更新的 warmup 500 + cosine），只把每步图对数从 1 改为 4（[optim] batch = 4），学习率不变。
+# 训到第 1200 次参数更新（lr 调度仍按 4000），只存第 1200 次的存档、只评它的 Val。
+[model]
+name = "roma"
+lora_r = 8
+
+[optim]
+lr = 3e-5
+steps = 4000
+batch = 4
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+
+[run]
+save_every = 0
+save_at = [1200]
+save_zero = false
+stop_at = 1200
+sweep = "last"

@@ -1829,6 +1829,17 @@ def test_dist_mean_stats_and_single_process_noops():
     assert D.init(0) == 0
 
 
+def test_dist_init_rejects_mismatched_process_count(monkeypatch):
+    import pytest
+    from finetune import dist as D
+
+    monkeypatch.setenv("WORLD_SIZE", "2")
+    with pytest.raises(RuntimeError, match="ddp = 0"):        # torchrun 起了 2 个进程，配置却是单卡
+        D.init(0)
+    with pytest.raises(RuntimeError, match="WORLD_SIZE = 2"):  # 配置 4 卡，torchrun 只起了 2 个
+        D.init(4)
+
+
 DDP_SCRIPT = r'''
 import json, os, sys
 sys.path.insert(0, sys.argv[1])

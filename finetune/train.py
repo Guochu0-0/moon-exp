@@ -112,7 +112,8 @@ class Halt:
     窗口满后中位数 > above[k] 或 < below[k] 就返回 {key, op, thr, median, window}，否则 None。NaN 不进窗口。
     攒满 window 个记录后仍有量一次也没出现（多半是键名写错），打印一次警告。窗口不随续训状态保存，resume 后重新攒。"""
 
-    def __init__(self, above: dict, below: dict, window: int):
+    def __init__(self, above: dict, below: dict, window: int, verbose: bool = True):
+        self.verbose = verbose            # 多卡时只让主进程打印警告（#226）
         self.rules = [(k, ">", float(v)) for k, v in above.items()] + [(k, "<", float(v)) for k, v in below.items()]
         self.window = window
         self.buf = {k: collections.deque(maxlen=window) for k, _, _ in self.rules}
@@ -128,7 +129,7 @@ class Halt:
             for k, _, _ in self.rules:
                 if k in stats and not math.isnan(float(stats[k])):
                     self.buf[k].append(float(stats[k]))
-        if before < self.window <= self.calls and any(not b for b in self.buf.values()):
+        if self.verbose and before < self.window <= self.calls and any(not b for b in self.buf.values()):
             print(f"WARNING halt：前 {self.window} 个记录里没有 {[k for k, b in self.buf.items() if not b]}", flush=True)
         for k, op, thr in self.rules:
             b = self.buf[k]
@@ -155,6 +156,7 @@ def main(argv=None):
     o, r, mname = cfg["optim"], cfg["run"], cfg["model"]["name"]
     rank = D.init(r["ddp"])      # 多卡（#226）：每个进程绑一张卡；单卡时为 0
     main_ = rank == 0
+    seed_r = r["seed"] + 1000 * rank   # 本卡的随机数种子：各卡的抽签、加噪、读图顺序各不相同；单卡时即 [run] seed
     names = C.parts_of(cfg)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -164,7 +166,7 @@ def main(argv=None):
     model = mod.Model(cfg, args.weights_root, device=args.device)
     if r["ddp"]:
         D.broadcast(model.params)       # 各卡从同一份参数起步（LoRA 的 A 是随机初始化的）
-        seed_all(r["seed"] + 1000 * rank)   # 之后各卡的抽签、加噪各不相同
+        seed_all(seed_r)   # 之后各卡的抽签、加噪各不相同
 
     kw = {}
     for n in names:
@@ -174,7 +176,7 @@ def main(argv=None):
     terms = [(n, PARTS[n].Term(cfg[n], model, ds)) for n in names if PARTS[n].Term is not None]
     if r["limit"]:
         ds.pairs = ds.pairs[:: max(1, len(ds.pairs) // r["limit"])][: r["limit"]]   # 均匀取样，覆盖各 ROI
-    g = torch.Generator().manual_seed(r["seed"] + 1000 * rank)
+    g = torch.Generator().manual_seed(seed_r)
     # 多卡：DistributedSampler 按 (seed, epoch) 打乱后分给各卡，各卡读不同的图；训练集补齐到卡数的整数倍（#226）
     smp = torch.utils.data.distributed.DistributedSampler(ds, shuffle=True, seed=r["seed"]) if r["ddp"] else None
     dl = torch.utils.data.DataLoader(ds, batch_size=o["batch"], shuffle=smp is None, sampler=smp, generator=g,
@@ -191,7 +193,7 @@ def main(argv=None):
              "env": env_info(), "world": D.world()}, ensure_ascii=False, indent=1), encoding="utf-8")
     if r["save_zero"] and main_:
         torch.save(model.state_dict(), out / "ckpt_0.pt")
-    rng = np.random.default_rng(r["seed"] + 1000 * rank)   # 打乱分数（placebo）、交换方向（RoMa 伪标签）共用
+    rng = np.random.default_rng(seed_r)   # 打乱分数（placebo）、交换方向（RoMa 伪标签）共用
     loader = Loader(dl, g)
 
     def sync_check(st):
@@ -222,7 +224,7 @@ def main(argv=None):
     stops = [x for x in (args.stop_at, r["stop_at"]) if x]
     total = min([o["steps"], *stops])
     save_at = set(r["save_at"])
-    halt, halted = Halt(r["halt_above"], r["halt_below"], r["halt_window"]), None
+    halt, halted = Halt(r["halt_above"], r["halt_below"], r["halt_window"], verbose=main_), None
     step, t_start = 0, time.time()
     if r["resume"]:
         sd = torch.load(REPO / r["resume"], map_location="cpu")    # 绝对路径时 REPO / 不起作用

@@ -49,7 +49,8 @@ PARAMS = {"config": "configs/baselines/anymatch_roma__minmax.json",
           "unc_head": False,     # 只在训练时用的不确定度头（#127）：每个细化层输出卷积的输入上接 1×1 卷积，出 2 通道
                                  # （混合权重 logit、β），放进 corresps[s]["unc"]；不进 'model' 权重，推理结构不变
           "sdpa": False}         # 训练时 DINOv2 的注意力改用 torch 的 scaled_dot_product_attention（#226 提速）：同一个公式
-                                 # softmax(q kᵀ / √d) v，由融合的 kernel 算，不存注意力矩阵；只换训练进程里的实现，评测不变
+                                 # softmax(q kᵀ / √d) v，由融合的 kernel 算，不存注意力矩阵；只换训练进程里的实现，评测不变。
+                                 # E33 梯度核对没通过（8 对图逐对余弦 0.51–0.996，未全部 ≥ 0.99），E33 没有用它
 OPTIM = {"wd": 0.01}             # romatch 原配置
 RUN = {"save_zero": False}
 TORCH_HOME = "/remote-home/xufang/YGC/weights/torch_home"   # DINOv2 缓存

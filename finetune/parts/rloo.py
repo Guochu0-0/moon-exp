@@ -139,6 +139,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "frame_mask": False,  # ref：自估仿射映射到 SAR 画面外 / 补零区的格子优势置零
           "cert_bce": 0.0,  # ref：粗级 certainty 对画面内掩码的 BCE 权重（0 = 不训 certainty）
           "ref_ema": 0.0,   # ref：EMA 参照的 τ（#216）；0 = 不用（参照取当前模型或 frozen_ref）
+          "ema_foreach": False,  # EMA 参照的更新一次算全部参数（torch._foreach_*，#226 提速）；同一个公式
           "gate": False,    # ref：参照合理性检查（#216）
           "gate_det_lo": 0.5,   # gate：面积倍数下限
           "gate_det_hi": 2.0,   # gate：面积倍数上限
@@ -225,6 +226,8 @@ def check(cfg):
         raise ConfigError("[rloo] ref_ema 不与 frozen_ref 同用")
     if p["ref_ema"] and any(cfg["model"].get(x) for x in FROZEN_OFF):
         raise ConfigError(f"[rloo] ref_ema 要求 [model] {', '.join(FROZEN_OFF)} 都关闭")
+    if (p["trace"] or p["obs_every"]) and cfg["run"]["ddp"]:
+        raise ConfigError("[rloo] trace、obs_every 不支持多卡（[run] ddp）")
     if p["ref_ema"] and cfg["optim"]["accum"] != 1:
         raise ConfigError("[rloo] ref_ema 要求 [optim] accum = 1（每步一次参数更新）")
     if not 0 < p["gate_det_lo"] <= p["gate_det_hi"] or not 0 <= p["gate_sv"] <= 1 or not 0 <= p["gate_in"] <= 1:
@@ -455,7 +458,9 @@ class SlowRef:
     """EMA 参照（#216）：slow 为 frozen_copy(model)；每次 update() 令 θ_slow ← τ·θ_slow + (1−τ)·θ，只对 model 里
     requires_grad 的参数（含 DINOv2 列表里 LoRA 的 A、B），在 fp32 影子里累积再写回 slow。"""
 
-    def __init__(self, model, slow, tau):
+    def __init__(self, model, slow, tau, foreach=False):
+        """foreach（#226）：用 torch._foreach_* 一次更新全部参数；fp32 的参数直接当影子（不另存一份、不再写回），
+        其余 dtype 照旧另存 fp32 影子、更新后写回。算的是同一个公式。"""
         src, dst = _modules(model.model), _modules(slow.model)
         self.pairs, seen = [], set()
         for a, b in zip(src, dst):
@@ -468,11 +473,19 @@ class SlowRef:
         n_train = len({id(q) for x in src for q in x.parameters() if q.requires_grad})
         if not self.pairs or len(self.pairs) != n_train:
             raise ValueError("EMA 参照没有对上全部可训练参数")
-        self.tau = tau
-        self.shadow = [b.detach().clone().float() for _, b in self.pairs]
+        self.tau, self.foreach = tau, foreach
+        self.shadow = [b.detach() if foreach and b.dtype == torch.float32 else b.detach().clone().float()
+                       for _, b in self.pairs]
 
     @torch.no_grad()
     def update(self):
+        if self.foreach:
+            torch._foreach_mul_(self.shadow, self.tau)
+            torch._foreach_add_(self.shadow, [a.detach().float() for a, _ in self.pairs], alpha=1 - self.tau)
+            for (_, b), e in zip(self.pairs, self.shadow):
+                if b.data_ptr() != e.data_ptr():
+                    b.copy_(e.to(b.dtype))
+            return
         for (a, b), e in zip(self.pairs, self.shadow):
             e.mul_(self.tau).add_(a.detach().float(), alpha=1 - self.tau)
             b.copy_(e.to(b.dtype))
@@ -779,7 +792,8 @@ class Term:
         self.p, self.model = p, model
         # 参照模型（#202、#216）：frozen_ref 时全程冻结；ref_ema 时同一份拷贝由 self.slow 每步做滑动平均（名字沿用 frozen）
         self.frozen = frozen_copy(model) if p.get("frozen_ref") or p.get("ref_ema") else None
-        self.slow = SlowRef(model, self.frozen, p["ref_ema"]) if p.get("ref_ema") else None    # EMA 参照（#216）
+        self.slow = (SlowRef(model, self.frozen, p["ref_ema"], p.get("ema_foreach", False)) if p.get("ref_ema")
+                     else None)    # EMA 参照（#216）
         self.calls = 0
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
 
@@ -793,6 +807,10 @@ class Term:
         self.calls = sd["calls"]
         if self.slow is not None:
             self.slow.load_state_dict(sd["slow"])
+
+    def ddp_tensors(self):
+        """多卡时要检查各卡一致的张量（#226）：EMA 参照的 fp32 影子权重。"""
+        return self.slow.shadow if self.slow is not None else []
 
     def observe(self, step):
         """每 obs_every 步（含第 0 步）在观察集上记一次（#209）；其余步返回 None。"""

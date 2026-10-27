@@ -1801,3 +1801,183 @@ def test_rloo_term_fine_bce_skipped_on_gate_but_kept_on_mp(monkeypatch):
         loss.backward()
         assert float(w.grad) == 0.0 and (_fine_grad(dec, 16) > 0) == has, over
         assert ("l_cert_16" in stats) == has
+
+
+# ---------- 多卡数据并行（#226） ----------
+
+def test_halt_takes_all_records_of_an_update():
+    """多卡时一次更新进 N 个记录（各卡各一对），全部进窗口后再判断一次。"""
+    from finetune.train import Halt
+
+    h = Halt({"d_ref": 100.0}, {}, 4)
+    assert h({"d_ref": 150.0}, {"d_ref": 150.0}) is None          # 窗口 4 个记录，还差 2 个
+    assert h({"d_ref": 50.0}, {"d_ref": 150.0})["median"] == 150.0
+    h = Halt({"d_ref": 100.0}, {}, 4)
+    assert h({"d_ref": 150.0}, {"d_ref": 150.0}) is None and h({"d_ref": 50.0}, {"d_ref": 50.0}) is None   # 中位数 100
+
+
+def test_dist_mean_stats_and_single_process_noops():
+    import torch
+    from finetune import dist as D
+
+    assert D.mean_stats([{"a": 1.0, "b": 2.0}, {"a": 3.0}]) == {"a": 2.0, "b": 2.0}   # 只对有这个键的卡平均
+    p = torch.nn.Parameter(torch.ones(3))
+    p.grad = torch.full((3,), 2.0)
+    D.average_grads([p])
+    assert D.world() == 1 and D.gather({"x": 1}) == [{"x": 1}] and D.max_diff([p]) == 0.0
+    assert torch.equal(p.grad, torch.full((3,), 2.0))
+    assert D.init(0) == 0
+
+
+DDP_SCRIPT = r'''
+import json, os, sys
+sys.path.insert(0, sys.argv[1])
+import torch, torch.distributed as dist
+from finetune import dist as D
+from finetune.data import PairSet
+dist.init_process_group("gloo")
+r = dist.get_rank()
+a = torch.nn.Parameter(torch.zeros(4))            # 两卡都有梯度
+b = torch.nn.Parameter(torch.zeros(2, dtype=torch.float64))   # 只有 rank 0 有梯度（另一种 dtype，分桶）
+c = torch.nn.Parameter(torch.zeros(3))            # 都没有
+a.grad = torch.full((4,), float(r + 1))
+if r == 0:
+    b.grad = torch.full((2,), 4.0, dtype=torch.float64)
+w = torch.full((2,), float(r))
+D.broadcast([w])
+d0 = D.max_diff([a, w])
+a.data += r                                       # rank 1 的参数故意偏 1
+out = {"a": a.grad.tolist(), "b": b.grad.tolist(), "c": c.grad is None, "w": w.tolist(), "d0": d0,
+       "d1": D.max_diff([a]), "g": D.gather(r)}
+D.average_grads([a, b, c])
+out.update(a=a.grad.tolist(), b=b.grad.tolist(), c=c.grad is None)
+ds = list(range(7))
+smp = torch.utils.data.distributed.DistributedSampler(ds, shuffle=True, seed=0)
+from finetune.trace import Loader
+dl = torch.utils.data.DataLoader(ds, batch_size=1, sampler=smp, generator=torch.Generator().manual_seed(r))
+it = iter(Loader(dl, torch.Generator()))
+out["ep"] = [[int(next(it)) for _ in range(4)] for _ in range(2)]
+json.dump(out, open(sys.argv[2] + f"/r{r}.json", "w"))
+dist.destroy_process_group()
+'''
+
+
+def test_dist_two_processes_average_and_sampler(tmp_path):
+    """两个进程（gloo，CPU）：梯度取平均，某卡没有梯度的参数按 0 参与，全都没有的保持 None；广播、最大差、gather；
+    DistributedSampler 各卡分到不同的图，Loader 每个 epoch 调 set_epoch 换顺序。"""
+    import subprocess
+    import sys
+    (tmp_path / "w.py").write_text(DDP_SCRIPT, encoding="utf-8")
+    subprocess.run([sys.executable, "-m", "torch.distributed.run", "--standalone", "--nproc_per_node=2",
+                    str(tmp_path / "w.py"), str(REPO), str(tmp_path)], check=True, timeout=300)
+    o = [json.loads((tmp_path / f"r{i}.json").read_text()) for i in range(2)]
+    for x in o:
+        assert x["a"] == [1.5] * 4 and x["b"] == [2.0, 2.0] and x["c"] is True
+        assert x["w"] == [0.0, 0.0] and x["d0"] == 0.0 and x["d1"] == 1.0 and x["g"] == [0, 1]
+    e0, e1 = o[0]["ep"], o[1]["ep"]
+    assert sorted(e0[0] + e1[0]) == list(range(7)) + [e0[0][0]]   # 7 张补齐到 8：各卡 4 张，第 1 张重复一次
+    assert e0[0] != e0[1]                                            # 第二个 epoch 顺序不同
+
+
+def test_config_ddp(tmp_path):
+    from finetune import config as C
+    base = '[model]\nname = "roma"\n'
+    assert C.load(_write(tmp_path, "d", base))["run"]["ddp"] == 0
+    assert C.load(_write(tmp_path, "c", base + "[run]\nddp = 4\n"))["run"]["ddp"] == 4
+    for bad in ("ddp = -1", "ddp = 2\nsave_optim = true", "ddp = 2\nlog_update = true"):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", base + f"[run]\n{bad}\n"))
+    with pytest.raises(C.ConfigError):
+        C.load(_write(tmp_path, "b", base + '[run]\nddp = 2\n[rloo]\nreward = "ref"\ntrace = true\n'))
+
+
+def test_optim_reduce_runs_before_update():
+    """Optim 的 reduce 在更新前、对全部参数调用一次（多卡平均梯度的接口）；不是更新步时不调用。"""
+    import torch
+    from finetune.config import OPTIM
+    from finetune.optim import Optim
+
+    p = torch.nn.Parameter(torch.zeros(2))
+    seen = []
+
+    def reduce(ps):
+        seen.append([float(q.grad[0]) for q in ps])
+        for q in ps:
+            q.grad.mul_(0.5)
+    o = Optim([p], {**OPTIM, "accum": 2, "warmup": 0, "lr": 0.1}, amp=False, reduce=reduce)
+    p.grad = torch.ones(2)
+    o.step(1)
+    assert seen == []
+    o.step(2)
+    assert seen == [[1.0]] and p.grad is None
+
+
+# ---------- 单卡提速的开关（#226）：与原写法算的是同一个东西 ----------
+
+def test_rloo_slow_ref_foreach_matches_loop():
+    """ema_foreach：多次更新、存取之后，EMA 参照的权重与逐个参数的原写法一致；含一个 fp16 参数（另存影子、写回）。"""
+    import torch
+    from finetune.parts.rloo import SlowRef, frozen_copy
+
+    def run(foreach):
+        torch.manual_seed(0)
+        model = _toy_roma()
+        model.model.half_p = torch.nn.Parameter(torch.randn(3).half())
+        sr = SlowRef(model, frozen_copy(model), 0.9, foreach)
+        for i in range(5):
+            with torch.no_grad():
+                for p in model.model.parameters():
+                    if p.requires_grad:
+                        p.add_(torch.randn_like(p) * 0.1)
+            sr.update()
+            if i == 2:
+                sd = sr.state_dict()
+                sr.load_state_dict(sd)
+        return [b.detach().clone() for _, b in sr.pairs], [e.clone() for e in sr.shadow]
+
+    (b0, e0), (b1, e1) = run(False), run(True)
+    assert len(b0) == 5 and all(torch.allclose(x, y, atol=1e-6) for x, y in zip(b0 + e0, b1 + e1))
+    assert any(x.dtype == torch.float16 for x in b1)
+
+
+def test_roma_sdpa_forward_matches_attention():
+    """sdpa_forward 与 DINOv2 Attention 原写法（q·d^-1/2 kᵀ → softmax → v）输出相同、梯度相同。"""
+    import types
+    import torch
+    from finetune.models.roma import sdpa_forward, use_sdpa
+
+    class Attention(torch.nn.Module):          # 照 romatch/models/transformer/layers/attention.py
+        def __init__(self, dim=32, num_heads=4):
+            super().__init__()
+            self.num_heads, self.scale = num_heads, (dim // num_heads) ** -0.5
+            self.qkv, self.proj = torch.nn.Linear(dim, dim * 3), torch.nn.Linear(dim, dim)
+            self.attn_drop, self.proj_drop = torch.nn.Dropout(0.0), torch.nn.Dropout(0.0)
+
+        def forward(self, x):
+            B, N, C = x.shape
+            qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+            q, k, v = qkv[0] * self.scale, qkv[1], qkv[2]
+            attn = self.attn_drop((q @ k.transpose(-2, -1)).softmax(dim=-1))
+            return self.proj_drop(self.proj((attn @ v).transpose(1, 2).reshape(B, N, C)))
+
+    torch.manual_seed(0)
+    a = Attention().double()
+    x = torch.randn(2, 7, 32, dtype=torch.float64, requires_grad=True)
+    y0 = a(x)
+    g0 = torch.autograd.grad(y0.square().sum(), [x, a.qkv.weight])
+    y1 = sdpa_forward(a, x)
+    g1 = torch.autograd.grad(y1.square().sum(), [x, a.qkv.weight])
+    assert torch.allclose(y0, y1) and all(torch.allclose(u, v) for u, v in zip(g0, g1))
+    dv = types.SimpleNamespace(blocks=[types.SimpleNamespace(attn=a)])
+    use_sdpa(dv)
+    assert Attention.forward is sdpa_forward
+    a.attn_drop.p = 0.1
+    with pytest.raises(ValueError):
+        use_sdpa(dv)
+
+
+def test_config_speed_switches_default_off(tmp_path):
+    from finetune import config as C
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nref_ema = 0.999\n'))
+    assert (d["model"]["sdpa"], d["optim"]["fused"], d["run"]["cudnn_benchmark"], d["rloo"]["ema_foreach"]) == \
+        (False, False, False, False)

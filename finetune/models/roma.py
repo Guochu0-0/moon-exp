@@ -46,8 +46,10 @@ PARAMS = {"config": "configs/baselines/anymatch_roma__minmax.json",
                                  # 按块线性从 0 增到这个值，逐样本丢掉注意力、MLP 残差支路；只在训练前向，lora_r > 0 时可用
           "dino_unfreeze": 0,    # DINOv2 最后几块全参数训练（#124），lr 同 [optim] lr；这几块不挂 LoRA
           "dino_ckpt": False,    # DINOv2 各块用梯度检查点（省显存，lora_r > 0 时才有意义）
-          "unc_head": False}     # 只在训练时用的不确定度头（#127）：每个细化层输出卷积的输入上接 1×1 卷积，出 2 通道
+          "unc_head": False,     # 只在训练时用的不确定度头（#127）：每个细化层输出卷积的输入上接 1×1 卷积，出 2 通道
                                  # （混合权重 logit、β），放进 corresps[s]["unc"]；不进 'model' 权重，推理结构不变
+          "sdpa": False}         # 训练时 DINOv2 的注意力改用 torch 的 scaled_dot_product_attention（#226 提速）：同一个公式
+                                 # softmax(q kᵀ / √d) v，由融合的 kernel 算，不存注意力矩阵；只换训练进程里的实现，评测不变
 OPTIM = {"wd": 0.01}             # romatch 原配置
 RUN = {"save_zero": False}
 TORCH_HOME = "/remote-home/xufang/YGC/weights/torch_home"   # DINOv2 缓存
@@ -129,6 +131,28 @@ class DropPath(torch.nn.Module):
         return y * keep.to(y.dtype) / (1 - self.p)
 
 
+def sdpa_forward(self, x, attn_bias=None):
+    """DINOv2 Attention.forward 的等价写法（#226）：q kᵀ · d^-1/2 → softmax → · v 交给 F.scaled_dot_product_attention
+    （缩放同 self.scale = d^-1/2，没有 dropout、没有掩码）。"""
+    if attn_bias is not None:
+        raise ValueError("sdpa 不支持 attn_bias")
+    B, N, C = x.shape
+    qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+    y = torch.nn.functional.scaled_dot_product_attention(qkv[0], qkv[1], qkv[2])
+    return self.proj_drop(self.proj(y.transpose(1, 2).reshape(B, N, C)))
+
+
+def use_sdpa(dinov2):
+    """把 dinov2 各块注意力所属的类的 forward 换成 sdpa_forward（类级替换：这个进程里同一个类的实例都换，包括 EMA 参照
+    的深拷贝；frozen_copy 不接受实例级 forward，所以不挂在实例上）。注意力不能有 dropout。"""
+    for b in dinov2.blocks:
+        a = b.attn
+        if not all(hasattr(a, k) for k in ("qkv", "num_heads", "proj", "proj_drop", "attn_drop")) or a.attn_drop.p > 0:
+            raise ValueError(f"sdpa：{type(a).__name__} 不是不带 dropout 的 DINOv2 Attention")
+    for cls in {type(b.attn) for b in dinov2.blocks}:
+        cls.forward = sdpa_forward
+
+
 class Model:
     amp = True
 
@@ -161,6 +185,8 @@ class Model:
                 mod.eval()
         dec, refine, vgg = _split(self.model.named_parameters(), m)
         self.lora, self.dino_blocks = ({}, {}) if m["lora_r"] <= 0 and m["dino_unfreeze"] <= 0 else self._open_dino(m)
+        if m["sdpa"]:
+            use_sdpa(self.model.encoder.dinov2_vitl14[0])
         lora = [p for l in self.lora.values() for p in (l.A, l.B)]
         dino = [p for b in self.dino_blocks.values() for p in b.parameters()]
         self.unc_heads, self._unc = None, {}

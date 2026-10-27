@@ -70,6 +70,8 @@ class Loader:
     def __iter__(self):
         while True:
             self.g0, self.i = self.g.get_state(), 0
+            if hasattr(self.dl.sampler, "set_epoch"):    # 多卡的 DistributedSampler 按 epoch 换顺序（#226）
+                self.dl.sampler.set_epoch(self.epoch)
             for b in self.dl:
                 self.i += 1
                 if self.skip:

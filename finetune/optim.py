@@ -19,13 +19,13 @@ def lr_at(step, total, lr, warmup=0, warmup_start=0.1, sched="const", lr_min=0.0
 
 
 class Optim:
-    def __init__(self, params, o: dict, amp: bool, groups=None):
+    def __init__(self, params, o: dict, amp: bool, groups=None, reduce=None):
         """groups：可选，[{"params": [...], "lr_scale": x}, ...]，每组的 lr = 调度出的 lr × lr_scale（#120 分模块学习率）；
-        不给时全部参数一组。"""
-        self.params, self.o = params, o
+        不给时全部参数一组。reduce：可选，更新前对 params 的梯度调用一次（多卡时各卡梯度取平均，#226）。"""
+        self.params, self.o, self.reduce = params, o, reduce
         groups = groups or [{"params": params, "lr_scale": 1.0}]
         self.opt = torch.optim.AdamW([{"params": g["params"], "lr_scale": g["lr_scale"]} for g in groups],
-                                     lr=o["lr"], weight_decay=o["wd"])
+                                     lr=o["lr"], weight_decay=o["wd"], **({"fused": True} if o.get("fused") else {}))
         self.scaler = torch.cuda.amp.GradScaler() if amp else None
 
     def backward(self, loss):
@@ -50,6 +50,8 @@ class Optim:
         o, upd = self.o, {}
         if step % o["accum"]:
             return upd
+        if self.reduce:
+            self.reduce(self.params)
         if any(p.grad is not None for p in self.params):
             lr = lr_at(step, o["steps"], o["lr"], o["warmup"], o["warmup_start"], o["sched"], o["lr_min"])
             for g in self.opt.param_groups:

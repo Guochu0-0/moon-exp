@@ -1847,7 +1847,7 @@ w = torch.full((2,), float(r))
 D.broadcast([w])
 d0 = D.max_diff([a, w])
 a.data += r                                       # rank 1 的参数故意偏 1
-out = {"a": a.grad.tolist(), "b": b.grad.tolist(), "c": c.grad is None, "w": w.tolist(), "d0": d0,
+out = {"w": w.tolist(), "d0": d0,
        "d1": D.max_diff([a]), "g": D.gather(r)}
 D.average_grads([a, b, c])
 out.update(a=a.grad.tolist(), b=b.grad.tolist(), c=c.grad is None)

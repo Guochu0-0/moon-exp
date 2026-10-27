@@ -71,14 +71,19 @@ def main():
     grads, total, stats = [], None, []
     for j, i in enumerate(idx):
         batch = torch.utils.data.default_collate([ds[int(i)]])
-        seed_all(1000 + j)
-        st = Step(model, mname, batch, "cuda", False, np.random.default_rng(j), optim)
-        loss = torch.zeros((), device="cuda")
-        for _, term in terms:
-            l_, s_, _ = term(st)
-            loss = loss + l_
-        optim.backward(loss)
-        g = flat(model.params, optim.factor())
+        while True:     # 半精度反向溢出时（GradScaler 起步的 scale 偏大），同训练一样把 scale 减半，同一种子重算
+            seed_all(1000 + j)
+            st = Step(model, mname, batch, "cuda", False, np.random.default_rng(j), optim)
+            loss = torch.zeros((), device="cuda")
+            for _, term in terms:
+                l_, s_, _ = term(st)
+                loss = loss + l_
+            optim.backward(loss)
+            g = flat(model.params, optim.factor())
+            if bool(torch.isfinite(g).all()):
+                break
+            optim.opt.zero_grad(set_to_none=True)
+            optim.scaler.update(optim.scaler.get_scale() / 2)
         grads.append(g.cpu())
         total = g.clone() if total is None else total + g
         stats.append({"pair": batch["pair"][0], "loss": float(loss), "d_ref": s_.get("d_ref"),

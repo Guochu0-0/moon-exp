@@ -18,6 +18,15 @@ def lr_at(step, total, lr, warmup=0, warmup_start=0.1, sched="const", lr_min=0.0
     return lr * (lr_min + (1 - lr_min) * 0.5 * (1 + math.cos(math.pi * t)))
 
 
+def match_strides(params):
+    """融合的 AdamW 要求梯度与参数的 strides 完全相同；有大小为 1 的维时两者可能只在这一维的 stride 上不同（内存排布
+    相同）。这样的梯度按参数的 strides 另存一份（#226）。"""
+    for p in params:
+        g = p.grad
+        if g is not None and g.stride() != p.stride():
+            p.grad = torch.empty_strided(p.size(), p.stride(), dtype=g.dtype, device=g.device).copy_(g)
+
+
 class Optim:
     def __init__(self, params, o: dict, amp: bool, groups=None, reduce=None):
         """groups：可选，[{"params": [...], "lr_scale": x}, ...]，每组的 lr = 调度出的 lr × lr_scale（#120 分模块学习率）；
@@ -59,6 +68,8 @@ class Optim:
             if self.scaler:
                 self.scaler.unscale_(self.opt)
             gn = torch.nn.utils.clip_grad_norm_(self.params, o["clip"] if o["clip"] > 0 else float("inf"))
+            if o.get("fused"):
+                match_strides(self.params)
             if self.scaler:
                 self.scaler.step(self.opt)
                 self.scaler.update()

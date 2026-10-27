@@ -2006,3 +2006,19 @@ def test_rloo_autocast_does_not_stringify_features(monkeypatch):
     x = torch.zeros(2).as_subclass(NoStr)
     ac, on = rloo._autocast(types.SimpleNamespace(amp_dtype=torch.float16), x)
     assert on is False
+
+
+def test_optim_match_strides():
+    """融合 AdamW 前把梯度的 strides 对齐到参数（大小为 1 的维上 strides 可以不同），值不变。"""
+    import torch
+    from finetune.optim import match_strides
+
+    p = torch.nn.Parameter(torch.zeros(3, 1, 2))
+    g = torch.arange(6.0).reshape(3, 2, 1).permute(0, 2, 1)       # 形状 (3,1,2)，strides (2,1,1) ≠ 参数的 (2,2,1)
+    assert g.stride() != p.stride()
+    p.grad = g
+    q = torch.nn.Parameter(torch.zeros(2))
+    q.grad = torch.ones(2)
+    gq = q.grad
+    match_strides([p, q])
+    assert p.grad.stride() == p.stride() and torch.equal(p.grad, g) and q.grad is gq

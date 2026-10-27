@@ -1,0 +1,59 @@
+# E34（#228）底座：E32 `ema` 原样（runs/E32/configs/_e32.toml 与 ema.toml 合并：E28 `fm` 的粗匹配 + 细化尺度 16、8、4 逐级抽签，
+# w_f = 4.2，画面外处理，细化与 VGG 学习率为主学习率的 0.47 倍、VGG 放开，难版扰动，DINOv2 qkv LoRA r 8，
+# EMA 参照 τ = 0.999），改一处：warmup 500 次更新之后学习率恒定（sched = "const"），不再余弦下降。
+# 单卡、每次更新 1 对（accum = 1，EMA 参照要求）。种子 0。
+# 学习率：各组只改主学习率 lr 与 LoRA 学习率 lora_lr，两者同比例缩放（默认 3e-5 对应 LoRA 1e-4）。
+# refine_lr、vgg_lr 是相对主学习率的倍数（finetune/models/roma.py），随 lr 自动缩放，保持 0.47 不动；lora_lr 是绝对值，按比例改。
+# 第 1 轮：训到第 1000 次更新，第 500、1000 次存档，存档带续训状态（save_optim），供第 2 轮从第 1000 次接着训。
+# 只评 Val（code/eval_queue.py 逐存档评），不评 Test。
+# 提前停照 E32：离参照距离的 50 次更新滑动中位数 > 100 px，或画面内格子比例的滑动中位数 < 0.5。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.47
+vgg_lr = 0.47
+lora_lr = 1e-4
+
+[optim]
+lr = 3e-5
+steps = 4000
+warmup = 500
+sched = "const"
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+fine_shape = "cauchy"
+levels = [16, 8, 4]
+k = 0.5
+fine_mode = "local"
+fine_group = 8
+fine_mask = true
+fine_cert_bce = 0.01
+fine_w = 4.2
+ref_ema = 0.999
+
+[run]
+seed = 0
+save_every = 500
+save_zero = false
+save_optim = true
+stop_at = 1000
+sweep = "last"
+halt_above = {d_ref = 100.0}
+halt_below = {in_frame = 0.5}
+halt_window = 50

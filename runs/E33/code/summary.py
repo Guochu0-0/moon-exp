@@ -10,7 +10,8 @@
 - 长训练：gpu4（4 卡，每次更新 4 对）、gpu1（单卡，每次更新 1 对）。横轴统一为已训的图对数。判据量为离参照的距离
   d_ref 与画面内格子比例 in_frame 的滑动中位数，窗口 50 次更新（gpu4 为 200 个记录）。
 - Val：sweep/<组>/S/metrics.json 各存档 AUC@5；E32 `ema`（gpfs 主 checkout）的 4 个存档一并画上。
-  gpu4 与 gpu1 在相同图对数的存档上做配对自助法（同一批 Val 图对有放回重抽 2000 次，同 E32 summary.py）。
+  gpu4 与 gpu1 在相同图对数的存档上做配对自助法（同一批 Val 图对有放回重抽 2000 次，同 E32 summary.py）；
+  同一个运行里，最后一个存档与最高的存档、与第一个存档也做同样的比较（last_vs_best.csv）。
 """
 from __future__ import annotations
 
@@ -176,8 +177,26 @@ def long_runs():
             cmp.append({"pairs": p, "auc5_gpu4": round(vals["gpu4"][p]["summary"]["auc@5"], 3),
                         "auc5_gpu1": round(vals["gpu1"][p]["summary"]["auc@5"], 3), "diff": round(d, 3),
                         "ci_lo": round(ci[0], 3), "ci_hi": round(ci[1], 3)})
+        p4, p1 = max(vals["gpu4"]), max(vals["gpu1"])      # 最后一个存档：15816 对与 15814 对，按同一处比
+        d, ci = paired(vals["gpu4"][p4]["errors"], vals["gpu1"][p1]["errors"])
+        cmp.append({"pairs": f"{p4}/{p1}", "auc5_gpu4": round(vals["gpu4"][p4]["summary"]["auc@5"], 3),
+                    "auc5_gpu1": round(vals["gpu1"][p1]["summary"]["auc@5"], 3), "diff": round(d, 3),
+                    "ci_lo": round(ci[0], 3), "ci_hi": round(ci[1], 3)})
         if cmp:
             write("gpu4_vs_gpu1.csv", cmp)
+    # 同一个运行里：最后一个存档减去最高的存档，以及减去第一个存档（配对自助法）
+    within = []
+    for m, val in vals.items():
+        if not val:
+            continue
+        last, best, first = max(val), max(val, key=lambda q: val[q]["summary"]["auc@5"]), min(val)
+        for ref in (best, first):
+            d, ci = paired(val[last]["errors"], val[ref]["errors"])
+            within.append({"run": m, "last": last, "ref": ref, "auc5_last": round(val[last]["summary"]["auc@5"], 3),
+                           "auc5_ref": round(val[ref]["summary"]["auc@5"], 3), "diff": round(d, 3),
+                           "ci_lo": round(ci[0], 3), "ci_hi": round(ci[1], 3)})
+    if within:
+        write("last_vs_best.csv", within)
     ax[0].axhline(D_MAX, color="0.5", ls="--", lw=0.8)
     ax[0].set_yscale("log")
     ax[0].set_ylabel("离参照的距离（px，50 次更新滑动中位数）")

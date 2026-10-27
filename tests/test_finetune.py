@@ -582,6 +582,179 @@ def test_config_rloo_frame_mask(tmp_path):
             C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n[rloo]\n{bad}\n'))
 
 
+def _blobs(pts, H, peaks, sig=4.0):
+    """原网格（中心约定）上若干点处的高斯斑（宽 sig 原网格 px），画在 H×H 的网络输入网格上 → (1,H,H) 张量。"""
+    import torch
+    from finetune.geom import HW, orig_to_in
+    yy, xx = np.mgrid[0:H, 0:H].astype(np.float64)
+    img = np.zeros((H, H))
+    for (x, y), a in zip(orig_to_in(np.asarray(pts, np.float64), HW / H), peaks):
+        img += a * np.exp(-((xx - x) ** 2 + (yy - y) ** 2) / (2 * (sig * H / HW) ** 2))
+    return torch.from_numpy(img.astype(np.float32))[None]
+
+
+def _blob_estimator(opt_pts, peaks):
+    """只看图像的估计器：找出各高斯斑（按峰值认出是哪一个）、取亮度加权质心，换回原网格，与光学上的已知位置拟合仿射。"""
+    import cv2
+    from finetune.geom import HW, in_to_orig
+
+    def est(x):
+        a = x[0].numpy().astype(np.float64)
+        H = a.shape[0]
+        n, lab = cv2.connectedComponents((a > 0.05).astype(np.uint8))
+        found = {}
+        for i in range(1, n):
+            m = lab == i
+            k = int(np.argmin([abs(a[m].max() - pk) for pk in peaks]))
+            ys, xs = np.nonzero(m)
+            wgt = a[m]
+            found[k] = in_to_orig(np.array([(xs * wgt).sum(), (ys * wgt).sum()]) / wgt.sum(), HW / H)
+        if len(found) != len(peaks):
+            return None
+        P = np.array([found[k] for k in range(len(peaks))]) + 0.5        # 角点约定
+        Q = np.asarray(opt_pts, np.float64) + 0.5
+        return np.linalg.lstsq(np.c_[Q, np.ones(len(Q))], P, rcond=None)[0].T
+    return est
+
+
+def test_rloo_perturb_sar_direction():
+    """额外扰动（#217）：在输入网格（560）上施加原网格的 T 后，原 SAR 上 p 处的内容出现在 T(p) 处（与训练扰动同一约定）；图外补 0。"""
+    import torch
+    import torch.nn.functional as F
+    from finetune.geom import HW, apply_affine, orig_to_in
+    from finetune.parts.rloo import perturb_sar
+
+    H = 560
+    rng = np.random.default_rng(0)
+    img = torch.from_numpy(rng.random((1, H, H)).astype(np.float32))
+    img = F.avg_pool2d(F.avg_pool2d(img[None], 9, 1, 4), 9, 1, 4)[0]       # 平滑，便于插值比较
+    th = np.deg2rad(8.0)
+    L = 1.07 * np.array([[np.cos(th), -np.sin(th)], [np.sin(th), np.cos(th)]])
+    c = np.array([HW / 2, HW / 2])
+    T = np.c_[L, c - L @ c + [30.0, -45.0]]
+    out = perturb_sar(img, T)
+    p = rng.uniform(150, 360, (200, 2))                                     # 原网格中心约定，映射后仍在图内
+    q = apply_affine(T, p)
+
+    def at(im, pts):
+        xy = (orig_to_in(pts, HW / H) + 0.5) / H * 2 - 1
+        g = torch.from_numpy(xy).float()[None, None]
+        return F.grid_sample(im[None], g, align_corners=False)[0, 0, 0].numpy()
+    assert np.abs(at(out, q) - at(img, p)).max() < 0.01
+    assert np.abs(at(out, q) - at(img, q)).mean() > 0.02                    # 不是原样返回
+    assert float((out == 0).float().mean()) > 0.02 and float((img == 0).float().mean()) == 0.0   # 图外补 0
+
+
+def test_rloo_consensus():
+    """参照取逐格中位数再拟合；距离取最大的一对；有拟合失败时 (None, inf)。"""
+    from finetune.parts.rloo import affine_denorm, consensus
+    from finetune.parts.pseudo import affine_norm
+
+    A = np.array([[1.02, 0.05, 10.0], [-0.03, 0.98, -7.0]])
+    assert np.allclose(affine_denorm(affine_norm(A)), A)
+    B = A.copy()
+    B[0, 2] += 20.0                                                         # 右移 20 px
+    ref, gap = consensus([A, A, B], 40, 40)
+    assert np.allclose(ref, A, atol=1e-6) and abs(gap - 20.0) < 1e-3
+    ref, gap = consensus([A, A, A], 40, 40)
+    assert np.allclose(ref, A, atol=1e-6) and gap < 1e-6
+    assert consensus([A, None, A], 40, 40) == (None, float("inf"))
+
+
+def test_rloo_multi_ref_recovers_and_rejects():
+    """对同一张图施加已知 T、估计后换算回来，与原估计一致（#217）；与图像无关、固定在一处的估计被拦。"""
+    from finetune.augment import sample_T
+    from finetune.geom import HW, apply_affine
+    from finetune.parts.rloo import multi_ref
+
+    H = 560
+    A = np.array([[0.95, 0.08, 20.0], [-0.06, 1.03, -12.0]])                # 光学 → SAR（角点约定）
+    opt = np.array([[200.0, 210.0], [300.0, 190.0], [250.0, 320.0]])
+    peaks = (0.3, 0.6, 0.9)
+    sar = _blobs(apply_affine(A, opt), H, peaks)
+    est = _blob_estimator(opt, peaks)
+    A0 = est(sar)
+    assert np.abs(A0[:, :2] - A[:, :2]).max() < 0.01 and np.abs(A0[:, 2] - A[:, 2]).max() < 1.0   # 估计器本身可用
+    rng = np.random.default_rng(1)
+    Ts = [sample_T(rng, 64.0, 10.0, 0.1, HW, disk=True) for _ in range(2)]
+    ref, gap, As = multi_ref(est, sar, A0, Ts, 40, 40)
+    assert gap < 0.5 and all(a is not None for a in As)
+    assert np.abs(ref - A0).max() < 0.5
+    c = np.array([HW / 2, HW / 2])
+    th = np.deg2rad(8.0)
+    R = np.array([[np.cos(th), -np.sin(th)], [np.sin(th), np.cos(th)]])
+    Ts = [np.c_[np.eye(2), [40.0, 0.0]], np.c_[R, c - R @ c]]               # 平移 40 px；绕中心转 8°
+    ref, gap, _ = multi_ref(lambda x: A, sar, A, Ts, 40, 40)                # 不看图像、总给同一个仿射
+    assert gap > 16.0
+    _, gap, _ = multi_ref(lambda x: None, sar, A0, Ts, 40, 40)
+    assert gap == float("inf")
+
+
+def _fake_term(monkeypatch, **over):
+    """rloo.Term 的整条路径，模型换成假的（#217 review）：粗级 logits = w × 固定随机数（4×4 格、16 个锚点），细化输出全 0，
+    拟合总给恒等仿射（与图像无关），额外扰动固定为平移 40 px。返回 (Term, 一步的输入, w)。"""
+    import types
+    import torch
+    from finetune.parts import rloo as R
+
+    base = torch.randn(1, 16, 4, 4, generator=torch.Generator().manual_seed(0))
+
+    class M(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.w = torch.nn.Parameter(torch.ones(()))
+
+    I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    monkeypatch.setattr(R, "features", lambda model, a, b: ({16: a}, {16: b}))
+    monkeypatch.setattr(R, "coarse", lambda model, f1, f2: (model.model.w * base.expand(len(f1[16]), -1, -1, -1),
+                                                            torch.zeros(len(f1[16]), 1, 4, 4)))
+    monkeypatch.setattr(R, "refine", lambda model, f1, f2, flow, cert, traj=None:
+                        (torch.zeros(len(flow), 2, 32, 32), torch.zeros(len(flow), 1, 32, 32)))
+    monkeypatch.setattr(R, "fit_many", lambda flows, certs, num, thr, gen=None: [(I, 10)] * len(flows))
+    monkeypatch.setattr(R.augment, "sample_T", lambda rng, *a, **k: np.c_[np.eye(2), [40.0, 0.0]])
+    monkeypatch.setattr(torch.cuda, "synchronize", lambda *a, **k: None)     # 全量测试不给 GPU（close_ticket 的 TEST_CMD）
+    p = {**R.PARAMS, "reward": "ref", "group": 4, "temp": 0.3, "shape": "gauss", **over}
+    model = types.SimpleNamespace(model=M())
+    term = R.Term(p, model, None)
+    img = torch.rand(1, 1, 32, 32) + 0.1
+    st = types.SimpleNamespace(images=lambda: (img, img), batch={}, trace={}, optim=None)
+    return term, st, model.model.w
+
+
+def test_rloo_term_mp_blocks_image_independent(monkeypatch):
+    """mp_n > 0：与图像无关的估计在额外扰动下换算回来差 40 px，超过 mp_thr 时这对图优势置零、粗级没有梯度；放宽 mp_thr 则照常更新。"""
+    term, st, w = _fake_term(monkeypatch, mp_n=2)
+    loss, stats, _ = term(st)
+    loss.backward()
+    assert stats["mp_block"] == 1.0 and abs(stats["mp_gap"] - 40.0) < 0.1 and stats["mp_fail"] == 0.0
+    assert float(w.grad) == 0.0
+    term, st, w = _fake_term(monkeypatch, mp_n=2, mp_thr=100.0)
+    loss, stats, _ = term(st)
+    loss.backward()
+    assert stats["mp_block"] == 0.0 and float(w.grad) != 0.0
+
+
+def test_rloo_term_frozen_ref_without_mp(monkeypatch):
+    """回归（#217 review）：frozen_ref 打开、mp_n = 0 时冻结模型的前向照旧执行。"""
+    term, st, w = _fake_term(monkeypatch, frozen_ref=True)
+    loss, stats, _ = term(st)
+    assert "ref_gap" in stats and "mp_block" not in stats
+
+
+def test_config_rloo_mp(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n[rloo]\n'
+    d = C.load(_write(tmp_path, "d", head + 'reward = "ref"\n'))
+    assert d["rloo"]["mp_n"] == 0                                           # 默认不做，同旧行为
+    c = C.load(_write(tmp_path, "c", head + 'reward = "ref"\nmp_n = 2\n'))
+    assert (c["rloo"]["mp_n"], c["rloo"]["mp_shift"], c["rloo"]["mp_thr"]) == (2, 64.0, 16.0)
+    for bad in ('reward = "r1"\nmp_n = 2', 'reward = "ref"\nmp_n = -1', 'reward = "ref"\nmp_n = 2\nfrozen_ref = true',
+                'reward = "ref"\nmp_n = 2\nlevels = [8]', 'reward = "ref"\nmp_n = 2\nref_ema = 0.99',
+                'reward = "ref"\nmp_n = 2\nmp_thr = 0.0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
 def test_rloo_advantage_baselines():
     import torch
     from finetune.parts.rloo import advantage

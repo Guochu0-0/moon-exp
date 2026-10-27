@@ -1,0 +1,4 @@
+base = "_mp"
+
+[run]
+seed = 0

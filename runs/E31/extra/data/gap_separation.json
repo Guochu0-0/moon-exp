@@ -1,0 +1,13 @@
+{
+ "pooled_auc_collapsed_vs_healthy": 0.99,
+ "healthy_pairs_ok": 298,
+ "healthy_pairs_bad": 2,
+ "healthy_ok_blocked": 0.064,
+ "healthy_bad_blocked": 1.0,
+ "auc_bad_vs_ok_in_healthy": 0.992,
+ "zs_pairs_ok": 79,
+ "zs_pairs_bad": 21,
+ "zs_ok_blocked": 0.215,
+ "zs_bad_blocked": 1.0,
+ "auc_bad_vs_ok_in_zs": 0.886
+}

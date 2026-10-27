@@ -88,6 +88,12 @@ ADDED = {
     "rloo.gate_in": (0.0, "#216 与 gate 同批新增；只在 gate 打开时起作用"),
     "rloo.spread": (0.0, "#216 新增；0 = 不加格子分散约束，即之前的做法"),
     "rloo.spread_h0": (4.0, "#216 与 spread 同批新增；只在 spread > 0 时起作用"),
+    "rloo.mp_n": (0, "#217 新增；0 = 不做多扰动核对，即之前的做法"),
+    "rloo.mp_shift": (64.0, "#217 与 mp_n 同批新增；只在 mp_n > 0 时起作用"),
+    "rloo.mp_rot": (10.0, "#217 与 mp_n 同批新增；只在 mp_n > 0 时起作用"),
+    "rloo.mp_scale": (0.1, "#217 与 mp_n 同批新增；只在 mp_n > 0 时起作用"),
+    "rloo.mp_disk": (True, "#217 与 mp_n 同批新增；只在 mp_n > 0 时起作用"),
+    "rloo.mp_thr": (16.0, "#217 与 mp_n 同批新增；只在 mp_n > 0 时起作用"),
 }
 
 

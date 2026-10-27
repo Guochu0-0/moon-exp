@@ -1501,7 +1501,7 @@ def test_rloo_fit_many_with_generator_leaves_global_rng():
     assert torch.equal(torch.get_rng_state(), s) and out[0][0] is not None
 
 
-# ---------- 不让参照跑偏（#216）：慢速参照、参照合理性检查、格子分散约束 ----------
+# ---------- 不让参照跑偏（#216）：EMA 参照、参照合理性检查、格子分散约束 ----------
 
 def test_config_rloo_ref_guards(tmp_path):
     from finetune import config as C
@@ -1540,7 +1540,7 @@ def _toy_roma():
 
 
 def test_rloo_slow_ref_is_ema_of_trainable_params():
-    """慢速参照：每次 update 后 θ_slow = τ·θ_slow + (1−τ)·θ，只动可训练参数（含列表里 DINOv2 的可训支路）；
+    """EMA 参照：每次 update 后 θ_slow = τ·θ_slow + (1−τ)·θ，只动可训练参数（含列表里 DINOv2 的可训支路）；
     冻结参数保持拷贝时的值；存取后照样接着平均。"""
     import torch
     from finetune.parts.rloo import SlowRef, frozen_copy

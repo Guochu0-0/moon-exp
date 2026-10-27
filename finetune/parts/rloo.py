@@ -61,13 +61,13 @@ obs_every > 0 时每 obs_every 步在固定观察集（Val 均匀取 obs_n 对�
 这张掩码（画面内 1、画面外 0）的 BCE，权重 cert_bce（照 RoMa 原损失：certainty 的目标是这个像素在另一张图里是否可见，
 romatch robust_loss 的 ce_weight = 0.01，同 [pseudo] 的 CE_WEIGHT）。自估仿射拟合失败的对两者都不做。
 置零的格子仍计入 −mean(权重 · log π) 的分母，所以画面内格子的梯度按画面内比例缩小（"置零"而不是"重新归一化"）。
-不与 frozen_ref 同用：那时 A_ref 来自冻结的初始模型，不再是自估仿射。可与 ref_ema 同用：掩码由慢速参照的仿射给出（#216）。
+不与 frozen_ref 同用：那时 A_ref 来自冻结的初始模型，不再是自估仿射。可与 ref_ema 同用：掩码由EMA 参照的仿射给出（#216）。
 
 不让参照跑偏（#216，只配 reward = ref；对策与出处见 #214 调研）：
-- 慢速参照（ref_ema = τ > 0）：训练开始时同 frozen_ref 拷一份模型（frozen_copy），此后每次参数更新后
+- EMA 参照（ref_ema = τ > 0）：训练开始时同 frozen_ref 拷一份模型（frozen_copy），此后每次参数更新后
   θ_slow ← τ·θ_slow + (1−τ)·θ，只平均可训练参数（含 DINOv2 的 LoRA；BN 统计在训练中本就不变）；每步 after_update 时都走一步，
   GradScaler 因溢出跳过的那一步也走（这时 θ 未变，只是向它多靠近一步）。参照仿射、画面内掩码
-  都由这份慢速模型正常推理得到；当前模型照旧推理一次，记 cur_ok、d_cur、ref_gap（同 frozen_ref）。不与 frozen_ref 同用。
+  都由这份EMA 模型正常推理得到；当前模型照旧推理一次，记 cur_ok、d_cur、ref_gap（同 frozen_ref）。不与 frozen_ref 同用。
 - 参照合理性检查（gate）：拟合出参照仿射后先看它像不像扰动范围内的仿射，三项任一不过，这对图这一步优势全部置零、
   也不做 cert_bce（不学）：面积倍数（线性部分的行列式）在 [gate_det_lo, gate_det_hi] 内；两个奇异值之比
   ≥ gate_sv（相似变换为 1）；画面内格子比例（in_frame）≥ gate_in。日志记 gated（被拦的对的比例）与
@@ -138,7 +138,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "obs_seed": 0,    # 观察集扰动与抽点的种子
           "frame_mask": False,  # ref：自估仿射映射到 SAR 画面外 / 补零区的格子优势置零
           "cert_bce": 0.0,  # ref：粗级 certainty 对画面内掩码的 BCE 权重（0 = 不训 certainty）
-          "ref_ema": 0.0,   # ref：慢速参照的 τ（#216）；0 = 不用（参照取当前模型或 frozen_ref）
+          "ref_ema": 0.0,   # ref：EMA 参照的 τ（#216）；0 = 不用（参照取当前模型或 frozen_ref）
           "gate": False,    # ref：参照合理性检查（#216）
           "gate_det_lo": 0.5,   # gate：面积倍数下限
           "gate_det_hi": 2.0,   # gate：面积倍数上限
@@ -216,7 +216,7 @@ def check(cfg):
     if p["cert_bce"] < 0:
         raise ConfigError("[rloo] cert_bce 应 ≥ 0")
     if (p["frame_mask"] or p["cert_bce"]) and p["frozen_ref"]:
-        raise ConfigError("[rloo] frame_mask、cert_bce 不与 frozen_ref 同用（掩码要来自自估仿射或慢速参照）")
+        raise ConfigError("[rloo] frame_mask、cert_bce 不与 frozen_ref 同用（掩码要来自自估仿射或EMA 参照）")
     if (p["ref_ema"] or p["gate"] or p["spread"]) and p["reward"] != "ref":
         raise ConfigError("[rloo] ref_ema、gate、spread 只配 reward = 'ref'")
     if not 0 <= p["ref_ema"] < 1:
@@ -241,7 +241,7 @@ def check(cfg):
         raise ConfigError("[rloo] fine_w、fine_cert_bce 应 ≥ 0")
     if (p["fine_mask"] or p["fine_cert_bce"]) and (not lv or p["fine_mode"] == "chain" or p["frozen_ref"]):
         raise ConfigError("[rloo] fine_mask、fine_cert_bce 要配非空的 levels 与 fine_mode = 'grad' / 'local'，"
-                          "不与 frozen_ref 同用（掩码要来自自估仿射、慢速参照或多扰动核对的参照）")
+                          "不与 frozen_ref 同用（掩码要来自自估仿射、EMA 参照或多扰动核对的参照）")
 
 
 def data_kw(p):
@@ -452,7 +452,7 @@ def affine_gap(A, B, h, w):
     return float((pa - pb).norm(dim=-1).mean() * (HW / 2))
 
 class SlowRef:
-    """慢速参照（#216）：slow 为 frozen_copy(model)；每次 update() 令 θ_slow ← τ·θ_slow + (1−τ)·θ，只对 model 里
+    """EMA 参照（#216）：slow 为 frozen_copy(model)；每次 update() 令 θ_slow ← τ·θ_slow + (1−τ)·θ，只对 model 里
     requires_grad 的参数（含 DINOv2 列表里 LoRA 的 A、B），在 fp32 影子里累积再写回 slow。"""
 
     def __init__(self, model, slow, tau):
@@ -461,13 +461,13 @@ class SlowRef:
         for a, b in zip(src, dst):
             for (na, pa), (nb, pb) in zip(a.named_parameters(), b.named_parameters()):
                 if na != nb:
-                    raise ValueError(f"慢速参照与原模型的参数对不上：{na} / {nb}")
+                    raise ValueError(f"EMA 参照与原模型的参数对不上：{na} / {nb}")
                 if pa.requires_grad and id(pa) not in seen:
                     seen.add(id(pa))
                     self.pairs.append((pa, pb))
         n_train = len({id(q) for x in src for q in x.parameters() if q.requires_grad})
         if not self.pairs or len(self.pairs) != n_train:
-            raise ValueError("慢速参照没有对上全部可训练参数")
+            raise ValueError("EMA 参照没有对上全部可训练参数")
         self.tau = tau
         self.shadow = [b.detach().clone().float() for _, b in self.pairs]
 
@@ -779,7 +779,7 @@ class Term:
         self.p, self.model = p, model
         # 参照模型（#202、#216）：frozen_ref 时全程冻结；ref_ema 时同一份拷贝由 self.slow 每步做滑动平均（名字沿用 frozen）
         self.frozen = frozen_copy(model) if p.get("frozen_ref") or p.get("ref_ema") else None
-        self.slow = SlowRef(model, self.frozen, p["ref_ema"]) if p.get("ref_ema") else None    # 慢速参照（#216）
+        self.slow = SlowRef(model, self.frozen, p["ref_ema"]) if p.get("ref_ema") else None    # EMA 参照（#216）
         self.calls = 0
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
 
@@ -802,7 +802,7 @@ class Term:
 
     @torch.no_grad()
     def after_update(self, st):
-        """慢速参照往当前参数走一步（#216）；trace：参数更新后在同一批图上再做一次粗匹配，记进 st.trace 的 *_post（#209）。"""
+        """EMA 参照往当前参数走一步（#216）；trace：参数更新后在同一批图上再做一次粗匹配，记进 st.trace 的 *_post（#209）。"""
         if self.slow is not None:
             self.slow.update()
         if not self.p["trace"]:

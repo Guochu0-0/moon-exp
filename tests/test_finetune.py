@@ -749,7 +749,7 @@ def test_config_rloo_mp(tmp_path):
     c = C.load(_write(tmp_path, "c", head + 'reward = "ref"\nmp_n = 2\n'))
     assert (c["rloo"]["mp_n"], c["rloo"]["mp_shift"], c["rloo"]["mp_thr"]) == (2, 64.0, 16.0)
     for bad in ('reward = "r1"\nmp_n = 2', 'reward = "ref"\nmp_n = -1', 'reward = "ref"\nmp_n = 2\nfrozen_ref = true',
-                'reward = "ref"\nmp_n = 2\nlevels = [8]', 'reward = "ref"\nmp_n = 2\nref_ema = 0.99',
+                'reward = "ref"\nmp_n = 2\nref_ema = 0.99',
                 'reward = "ref"\nmp_n = 2\nmp_thr = 0.0'):
         with pytest.raises(C.ConfigError):
             C.load(_write(tmp_path, "b", head + bad + "\n"))
@@ -1189,7 +1189,7 @@ def test_rloo_fine_direct_grad_equals_direct():
 
     fac = 8.0
     f1, f2 = feats()
-    sur, rd = fine_direct(dec, f1, f2, traj, A, sig, p, lambda l: (l * fac).backward(), fac, w)
+    sur, rd, _ = fine_direct(dec, f1, f2, traj, A, sig, p, lambda l: (l * fac).backward(), fac, w)
     (sur * fac).backward()
     assert float(sur) == pytest.approx(float(L), rel=1e-5)
     assert rd[8][0].shape == (1, 8, 8) and rd[2][1].shape == (1, 32, 32)
@@ -1259,7 +1259,7 @@ def test_rloo_fine_direct_local_equals_direct():
 
     torch.manual_seed(5)
     f1, f2 = feats()
-    sur, rd = fine_direct(dec, f1, f2, traj, A, sig, p, lambda l: (l * 4.0).backward(), 4.0)
+    sur, rd, _ = fine_direct(dec, f1, f2, traj, A, sig, p, lambda l: (l * 4.0).backward(), 4.0)
     (sur * 4.0).backward()
     assert float(sur) == pytest.approx(float(L), rel=1e-5) and rd[16][0].shape == (6, 4, 4)
     for q, g in zip(params, want):
@@ -1611,3 +1611,193 @@ def test_rloo_spread_loss():
     assert float(H) < 8.0
     l.backward()
     assert float(x.grad.abs().sum()) > 0
+
+
+# ---------- 细化与防坍缩办法同用（#221） ----------
+
+def test_config_rloo_fine_w_mask_and_mp_with_levels(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n[rloo]\nreward = "ref"\n'
+    d = C.load(_write(tmp_path, "d", head + 'levels = [16]\nfine_mode = "local"\n'))
+    assert (d["rloo"]["fine_w"], d["rloo"]["fine_mask"], d["rloo"]["fine_cert_bce"]) == (1.0, False, 0.0)  # 默认同旧行为
+    c = C.load(_write(tmp_path, "c", head + 'levels = [16, 8, 4]\nfine_mode = "local"\nfine_w = 0.3\nfine_mask = true\n'
+                                            'fine_cert_bce = 0.01\nmp_n = 2\n'))
+    assert (c["rloo"]["fine_w"], c["rloo"]["fine_mask"], c["rloo"]["fine_cert_bce"], c["rloo"]["mp_n"]) == \
+        (0.3, True, 0.01, 2)                                                  # mp_n 与 levels 可以同开
+    for bad in ('fine_mask = true', 'levels = [8]\nfine_mask = true', 'levels = [8]\nfine_cert_bce = 0.01',
+                'levels = [8]\nfine_mode = "local"\nfine_w = -1.0',
+                'levels = [8]\nfine_mode = "local"\nfine_cert_bce = -0.1',
+                'levels = [8]\nfine_mode = "local"\nfine_mask = true\nfrozen_ref = true'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
+def test_rloo_fine_direct_keep_and_cert_bce_equal_direct():
+    """keep（逐像素权重）与细化 certainty 的 BCE：分段反向 + 替身项的梯度与直接求
+    Σ_s [w · −mean(keep · 优势 · log π_s) + bce · BCE(cin + Δcert, 掩码)] 的梯度相同；keep 全 0 时只剩 BCE 的梯度。"""
+    import torch
+    import torch.nn.functional as F
+    from finetune.parts.rloo import _disp, advantage, fine_direct, level_reward
+
+    model, dec, theta, feats, P, cert = _fake_roma()
+    params = [theta] + list(dec.parameters())
+    with torch.no_grad():
+        traj, _ = _traj(model, *feats(), P, cert)
+    A = np.array([[1.0, 0.02, 3.0], [-0.01, 1.0, -2.0]])
+    p = {"delta": 8.0, "tau": 16.0, "r_out": -0.1, "shape": "gauss", "fine_shape": "cauchy", "fine_mode": "local",
+         "fine_group": 6, "baseline": "loo"}
+    sig = {16: 0.5 * 16 / 256, 4: 0.5 * 4 / 256}
+    g = torch.Generator().manual_seed(1)
+    masks = {s: torch.rand(traj[s][0].shape[-2:], generator=g) > 0.3 for s in sig}
+    w, bce = 0.7, 0.05
+
+    def direct(keep):
+        torch.manual_seed(5)
+        f1, f2 = feats()
+        L = 0
+        for s in sig:
+            fin, cin, _ = traj[s]
+            d_flow, d_cert = dec.conv_refiner[str(s)](f1[s], f2[s], fin, scale_factor=1, logits=cin)
+            mu = fin + _disp(dec, s, d_flow, 64, 64)
+            x = mu.detach() + sig[s] * torch.randn((6,) + tuple(mu.shape[1:]))
+            adv = advantage(level_reward(x, A, s, p)[0], "loo") * keep[s]
+            L = L - w * (adv * (-(x - mu).square().sum(1) / (2 * sig[s] ** 2))).mean()
+            L = L + bce * F.binary_cross_entropy_with_logits((cin + d_cert)[0, 0], masks[s].float())
+        L.backward()
+        out = [None if q.grad is None else q.grad.clone() for q in params]
+        for q in params:
+            q.grad = None
+        return float(L), out
+
+    for keep in ({s: m.float() for s, m in masks.items()},
+                 {s: torch.zeros(m.shape) for s, m in masks.items()}):
+        L, want = direct(keep)
+        torch.manual_seed(5)
+        f1, f2 = feats()
+        sur, rd, lc = fine_direct(dec, f1, f2, traj, A, sig, p, lambda l: (l * 4.0).backward(), 4.0, w, keep, masks, bce)
+        (sur * 4.0).backward()
+        assert float(sur) == pytest.approx(L, rel=1e-5) and set(lc) == {16, 4}
+        for q, gw in zip(params, want):
+            assert (q.grad is None) == (gw is None)
+            assert gw is None or torch.allclose(q.grad / 4.0, gw, rtol=1e-4, atol=1e-7)
+            q.grad = None
+    sur, rd, lc = fine_direct(dec, *feats(), traj, A, sig, p, lambda l: l.backward(), 1.0)   # 默认：不加 BCE
+    assert lc == {}
+
+
+def _fake_term_fine(monkeypatch, **over):
+    """rloo.Term 的整条路径、带细化（#221）：粗级同 _fake_term（4×4 格、16 个锚点，拟合总给同一个仿射、与图像无关），
+    细化用 _fake_roma 的小卷积细化层、照 refine 真跑。返回 (Term, 一步的输入, 粗级参数 w, 细化层)。"""
+    import types
+    import torch
+    from finetune.parts import rloo as R
+
+    _, dec, theta, feats, _, _ = _fake_roma()
+    base = torch.randn(1, 16, 4, 4, generator=torch.Generator().manual_seed(0))
+
+    class M(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.w = torch.nn.Parameter(torch.ones(()))
+            self.decoder = dec
+
+    I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    monkeypatch.setattr(R, "features", lambda model, a, b: feats())
+    monkeypatch.setattr(R, "coarse", lambda model, f1, f2: (model.model.w * base, torch.zeros(1, 1, 4, 4)))
+    monkeypatch.setattr(R, "fit_many", lambda flows, certs, num, thr, gen=None: [(I, 10)] * len(flows))
+    monkeypatch.setattr(R.augment, "sample_T", lambda rng, *a, **k: np.c_[np.eye(2), [40.0, 0.0]])
+    monkeypatch.setattr(torch.cuda, "synchronize", lambda *a, **k: None)
+    p = {**R.PARAMS, "reward": "ref", "group": 4, "temp": 0.3, "shape": "gauss", "fine_shape": "cauchy",
+         "levels": [16, 8], "fine_mode": "local", "fine_group": 4, **over}
+    model = types.SimpleNamespace(model=M())
+    term = R.Term(p, model, None)
+    img = torch.rand(1, 1, 64, 64) + 0.1
+    optim = types.SimpleNamespace(backward=lambda l: l.backward(), factor=lambda: 1.0)
+    st = types.SimpleNamespace(images=lambda: (img, img), batch={}, trace={}, optim=optim)
+    return term, st, model.model.w, dec
+
+
+def _fine_grad(dec, s):
+    return sum(float(q.grad.abs().sum()) for q in dec.conv_refiner[str(s)].parameters() if q.grad is not None)
+
+
+def test_rloo_term_fine_stops_when_mp_or_gate_fails(monkeypatch):
+    """检查没过时细化也不学（#221）：多扰动核对没过（与图像无关的估计差 40 px > mp_thr）或参照合理性检查没过
+    （面积倍数 1 不在 [1.5, 2] 内）时，粗级与训练的细化层都没有梯度；放宽时都有。未训练的级始终没有梯度。"""
+    for over, stopped in (({"mp_n": 2}, True), ({"mp_n": 2, "mp_thr": 100.0}, False),
+                          ({"gate": True, "gate_det_lo": 1.5}, True), ({"gate": True}, False)):
+        term, st, w, dec = _fake_term_fine(monkeypatch, **over)
+        loss, stats, _ = term(st)
+        loss.backward()
+        assert (float(w.grad) == 0.0) == stopped, over
+        assert (_fine_grad(dec, 16) == 0.0) == stopped and (_fine_grad(dec, 8) == 0.0) == stopped, over
+        assert _fine_grad(dec, 4) == 0.0
+        assert "rew_16" in stats and "d_8" in stats
+
+
+def test_rloo_term_fine_mask_bce_and_fine_w(monkeypatch):
+    """fine_mask、fine_cert_bce（#221）：参照仿射把整张图移出画面时细化掩码全 0 —— fine_mask 下细化策略项没有梯度，
+    加上 fine_cert_bce 后细化层又有梯度（来自 BCE），日志记各级画面内比例与 BCE；fine_w 按比例缩放细化损失。"""
+    import torch
+    from finetune.parts import rloo as R
+
+    term, st, w, dec = _fake_term_fine(monkeypatch, fine_mask=True)
+    _, stats, _ = term(st)
+    assert stats["in_16"] == 1.0 and stats["in_8"] == 1.0 and _fine_grad(dec, 16) > 0     # 恒等仿射：全在画面内
+    out = np.array([[1.0, 0, 600.0], [0, 1.0, 0]])                                          # 平移 600 px：全在画面外
+    for over, has in (({"fine_mask": True}, False), ({"fine_mask": True, "fine_cert_bce": 0.01}, True)):
+        term, st, w, dec = _fake_term_fine(monkeypatch, **over)
+        monkeypatch.setattr(R, "fit_many", lambda flows, certs, num, thr, gen=None: [(out, 10)] * len(flows))
+        _, stats, _ = term(st)
+        assert stats["in_16"] == 0.0 and (_fine_grad(dec, 16) > 0) == has, over
+        assert ("l_cert_16" in stats) == has
+    vals = []
+    for fw in (1.0, 0.25):
+        term, st, w, dec = _fake_term_fine(monkeypatch, fine_w=fw)
+        torch.manual_seed(3)
+        _, stats, _ = term(st)
+        vals.append((stats["l_fine"], _fine_grad(dec, 16)))
+    assert vals[1][0] == pytest.approx(0.25 * vals[0][0], abs=1e-5)                     # 日志只留 5 位小数
+    assert vals[1][1] == pytest.approx(0.25 * vals[0][1], rel=1e-3)
+
+
+# ---------- 提前停（#221） ----------
+
+def test_halt_window_median():
+    """窗口满之前不停；中位数越线才停（单个尖峰不停）；缺这个量的步不进窗口；NaN 不触发。"""
+    from finetune.train import Halt
+
+    h = Halt({"d_ref": 100.0}, {"in_frame": 0.5}, 3)
+    assert h({"d_ref": 500.0, "in_frame": 0.9}) is None and h({"d_ref": 50.0}) is None   # 窗口未满
+    assert h({"d_ref": 50.0, "in_frame": 0.9}) is None                                   # 中位数 50，尖峰不停
+    assert h({"d_ref": 150.0}) is None and h({}) is None
+    hit = h({"d_ref": 150.0, "in_frame": 0.9})
+    assert hit["key"] == "d_ref" and hit["op"] == ">" and hit["median"] == 150.0
+    h = Halt({}, {"in_frame": 0.5}, 2)
+    assert h({"in_frame": 0.4}) is None and h({"in_frame": 0.3})["key"] == "in_frame"
+    h = Halt({"d_ref": 1.0}, {}, 1)
+    assert h({"d_ref": float("nan")}) is None
+    assert not Halt({}, {}, 50)
+
+
+def test_config_run_halt(tmp_path):
+    from finetune import config as C
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n'))
+    assert (d["run"]["halt_above"], d["run"]["halt_below"], d["run"]["halt_window"]) == ({}, {}, 50)  # 默认不停
+    c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[run]\nhalt_above = {d_ref = 100}\n'
+                                     'halt_below = {in_frame = 0.5}\nhalt_window = 200\n'))
+    assert c["run"]["halt_above"] == {"d_ref": 100} and c["run"]["halt_window"] == 200
+    for bad in ('halt_above = {d_ref = "x"}', 'halt_below = {in_frame = true}', 'halt_window = 0', 'halt_above = 3'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n[run]\n{bad}\n'))
+
+
+def test_rloo_term_fine_bce_skipped_on_gate_but_kept_on_mp(monkeypatch):
+    """细化 certainty 的 BCE 同粗级 cert_bce（#221 review）：参照合理性检查没过时不做（细化层没有梯度），
+    多扰动核对没过时照常做（策略项置零，细化层的梯度只来自 BCE）。"""
+    for over, has in (({"gate": True, "gate_det_lo": 1.5}, False), ({"mp_n": 2}, True)):
+        term, st, w, dec = _fake_term_fine(monkeypatch, fine_mask=True, fine_cert_bce=0.01, **over)
+        loss, stats, _ = term(st)
+        loss.backward()
+        assert float(w.grad) == 0.0 and (_fine_grad(dec, 16) > 0) == has, over
+        assert ("l_cert_16" in stats) == has

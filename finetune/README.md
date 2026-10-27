@@ -74,7 +74,7 @@ geo = false
 
 单独训练（调试）：`python -m finetune.train runs/<id>/configs/<方法>.toml --out <目录> [--stop-at N]`；`--stop-at` 提前停下，lr 调度仍按配置的总步数。
 
-只训一段、从中间续训（#209）：`[run] stop_at` 与 `--stop-at` 相同；`save_optim = true` 时 ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序），`resume = "<ckpt 路径>"` 从这样的 ckpt 接着训（只支持第一个 epoch 内的存档）；`sweep = "last"` 让驱动只评最后一个 ckpt 的 Val、不评 Test。成分的逐步记录写在 `ckpt/<方法>/trace/`（`finetune/trace.py`，RLOO 的见 `parts/rloo_trace.py`）。
+只训一段、从中间续训（#209）：`[run] stop_at` 与 `--stop-at` 相同；`save_optim = true` 时 ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序），`resume = "<ckpt 路径>"` 从这样的 ckpt 接着训（只支持第一个 epoch 内的存档）；`sweep = "last"` 让驱动只评最后一个 ckpt 的 Val、不评 Test。提前停（#221）：`halt_above = {d_ref = 100.0}`、`halt_below = {in_frame = 0.5}` 让某个日志量最近 `halt_window`（默认 50）个记录的中位数越线时停训，写 `ckpt/<方法>/halt.json`，不另存 ckpt。成分的逐步记录写在 `ckpt/<方法>/trace/`（`finetune/trace.py`，RLOO 的见 `parts/rloo_trace.py`）。
 
 ## 单独评测一个 ckpt（loftr 环境）
 

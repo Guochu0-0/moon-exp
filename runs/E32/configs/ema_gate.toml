@@ -1,0 +1,7 @@
+# 慢速参照 + 检查（同 E30 c_ema999g）。
+base = "_e32"
+
+[rloo]
+ref_ema = 0.999
+gate = true
+gate_in = 0.427

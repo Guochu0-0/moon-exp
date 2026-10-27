@@ -55,6 +55,9 @@ RUN = {
     "save_optim": False,    # ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序，#209），供 resume 用
     "resume": "",           # 从 save_optim 存下的 ckpt 接着训（相对仓库根或绝对路径，#209）；空 = 从头训
     "sweep": "all",         # 驱动评哪些 ckpt（#209）：all 逐个评 Val 再按 select 补评 Test / last 只评最后一个的 Val、不评 Test
+    "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训（不另存 ckpt）
+    "halt_below": {},       # 同上，中位数低于阈值就停
+    "halt_window": 50,      # 提前停的滑动窗口（日志里有这个量的步数）
 }
 SELECT = ("val_peak", "last")
 SWEEP = ("all", "last")
@@ -136,6 +139,12 @@ def expand(raw: dict) -> dict:
         raise ConfigError(f"[run] sweep 可选 {SWEEP}，得到 {out['run']['sweep']!r}")
     if out["run"]["stop_at"] < 0 or out["run"]["stop_at"] > out["optim"]["steps"]:
         raise ConfigError(f"[run] stop_at 应在 0…[optim] steps，得到 {out['run']['stop_at']}")
+    for k in ("halt_above", "halt_below"):
+        bad = {n: v for n, v in out["run"][k].items() if isinstance(v, bool) or not isinstance(v, (int, float))}
+        if bad:
+            raise ConfigError(f"[run] {k} 的阈值应为数，得到 {bad}")
+    if out["run"]["halt_window"] < 1:
+        raise ConfigError(f"[run] halt_window 应 ≥ 1，得到 {out['run']['halt_window']}")
     if (out["run"]["resume"] or out["run"]["save_optim"]) and out["optim"]["ema"] > 0:
         raise ConfigError("[run] save_optim、resume 不支持 [optim] ema（ckpt 存的是 EMA 权重，不是训练中的权重）")
     if out["run"]["resume"] and not hasattr(model, "load_weights"):

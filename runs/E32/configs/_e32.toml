@@ -1,0 +1,55 @@
+# E32（#221）底座：E28 `fm`（E19 gauss8：只训粗匹配的那部分照旧——RLOO、温度 0.3、每对 16 份，高斯分数 δ = 8 px，
+# 自估仿射为当前模型正常推理、RANSAC 3 px；画面外格子优势置零 frame_mask、粗级 certainty 的 BCE 0.01）
+# + 同时训细化：尺度 16、8、4 逐级抽签（fine_mode = "local"，同 E24 `_l`）：每级从正常推理这一级的输入出发、只在这一级里
+# 抽 8 次，σ = 0.5 × s px，cauchy 分数 δ = s px，RLOO；细化损失乘 w_f = 4.2（fine_w；code/wf_grad.py 测得粗匹配与细化损失在 LoRA + proj16
+# 上的梯度范数之比，未训练模型与 E19 gauss8 第 1000 步共 200 对的中位数 4.17，两个模型各自 2.78、6.41，见 Notes）；
+# 细化各级画面外像素优势置零（fine_mask）、各级 certainty 对画面内掩码的 BCE 0.01（fine_cert_bce）。
+# 细化部分学习率取锚点 1 倍（refine_lr = vgg_lr = 0.47，即 1.4e-5，E22），VGG 放开训练。
+# 难版扰动、DINOv2 qkv 加 LoRA r 8、lr 3e-5（LoRA 1e-4），4000 步的 warmup 500 + cosine；训到第 2000 步，每 500 步存档，
+# 每个存档评 Val、不评 Test。提前停：离参照距离（d_ref）的 50 步滑动中位数 > 100 px，或画面内格子比例（in_frame）的
+# 50 步滑动中位数 < 0.5。种子 0。各组在此之上只加一项。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.47
+vgg_lr = 0.47
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+fine_shape = "cauchy"
+levels = [16, 8, 4]
+k = 0.5
+fine_mode = "local"
+fine_group = 8
+fine_mask = true
+fine_cert_bce = 0.01
+fine_w = 4.2
+
+[run]
+seed = 0
+save_every = 500
+save_zero = false
+stop_at = 2000
+sweep = "last"
+halt_above = {d_ref = 100.0}
+halt_below = {in_frame = 0.5}
+halt_window = 50

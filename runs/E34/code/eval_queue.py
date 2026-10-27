@@ -28,6 +28,17 @@ from finetune import config as C  # noqa: E402
 from workbench import launch  # noqa: E402
 
 SETTLE = 120     # ckpt 写完后至少放这么多秒再读（torch.save 不是原子写）
+QUIET = 300      # 没有完成标记的 Val 预测，最后一次写入后至少过这么多秒才算写完
+
+
+def evaluated(job, claims, m, st):
+    """这个存档的 Val 已评完：评它的进程写了完成标记（.evalclaims/<方法>_<step>/done），或（标记加上之前评的）预测文件
+    已有一段时间没再写。只看 val.jsonl 在不在不够：baselines.fit 一开始就建好空文件，别的卡上的进程会把半截文件当成结果
+    （2026-10-28 lr3e-6 第 1000 次存档：正式结果抄成了空文件，AUC@5 记成 0）。"""
+    f = job.S / "preds" / f"step{st}" / "val.jsonl"
+    if (claims / f"{m}_{st}" / "done").exists():
+        return True
+    return f.exists() and f.stat().st_size > 0 and time.time() - f.stat().st_mtime > QUIET
 
 
 def last_status(m):
@@ -66,10 +77,11 @@ def main():
                         job.sh([D.WB, "-m", "workbench", "--runs", job.sw, "new", "S", "--title",
                                 f"{R.name}/{m} ckpt sweep"], "sweep.log", gpu=False)
                     job.evaluate("val", st)
+                    (claims / f"{m}_{st}" / "done").touch()
                 except subprocess.CalledProcessError as e:
                     D.log(f"FAIL {m} step{st}: {e}")
                     (claims / f"{m}_{st}").rmdir()
-            if not done or any(not (job.S / "preds" / f"step{c.stem[5:]}" / "val.jsonl").exists() for c in ckpts):
+            if not done or any(not evaluated(job, claims, m, c.stem[5:]) for c in ckpts):
                 continue
             try:
                 (claims / m).mkdir()

@@ -1757,7 +1757,7 @@ def test_rloo_term_fine_mask_bce_and_fine_w(monkeypatch):
         torch.manual_seed(3)
         _, stats, _ = term(st)
         vals.append((stats["l_fine"], _fine_grad(dec, 16)))
-    assert vals[1][0] == pytest.approx(0.25 * vals[0][0], rel=1e-3, abs=1e-6)
+    assert vals[1][0] == pytest.approx(0.25 * vals[0][0], abs=1e-5)                     # 日志只留 5 位小数
     assert vals[1][1] == pytest.approx(0.25 * vals[0][1], rel=1e-3)
 
 

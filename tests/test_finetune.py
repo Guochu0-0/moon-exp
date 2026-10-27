@@ -1875,7 +1875,7 @@ def test_dist_two_processes_average_and_sampler(tmp_path):
         assert x["a"] == [1.5] * 4 and x["b"] == [2.0, 2.0] and x["c"] is True
         assert x["w"] == [0.0, 0.0] and x["d0"] == 0.0 and x["d1"] == 1.0 and x["g"] == [0, 1]
     e0, e1 = o[0]["ep"], o[1]["ep"]
-    assert sorted(e0[0] + e1[0]) == list(range(7)) + [e0[0][0]]   # 7 张补齐到 8：各卡 4 张，第 1 张重复一次
+    assert sorted(e0[0] + e1[0]) == sorted(list(range(7)) + [e0[0][0]])   # 7 张补齐到 8：各卡 4 张，第 1 张重复一次
     assert e0[0] != e0[1]                                            # 第二个 epoch 顺序不同
 
 

@@ -125,7 +125,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("config")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--mode", choices=("plain", "detail", "ops"), default="plain")
+    ap.add_argument("--mode", choices=("plain", "detail", "ops", "sync"), default="plain")
     ap.add_argument("--steps", type=int, default=60)
     ap.add_argument("--skip", type=int, default=10, help="前几步不计（热身）")
     a, rest = ap.parse_known_args()
@@ -136,6 +136,18 @@ def main():
     T.Loader = TimedLoader
     if a.mode == "detail":
         patch()
+    if a.mode == "sync":     # 每个会让 CPU 等 GPU 的操作都发一条警告，按调用处（第一个不在 torch 里的栈帧）计数
+        import traceback
+        import warnings
+        cnt = collections.Counter()
+
+        def show(msg, cat, fn, ln, file=None, line=None):
+            fr = [f for f in traceback.extract_stack()[:-1] if "/torch/" not in f.filename and "warnings" not in f.filename]
+            if fr and "synchroniz" in str(msg).lower():
+                cnt[f"{Path(fr[-1].filename).name}:{fr[-1].lineno} {fr[-1].name}"] += 1
+        warnings.showwarning = show
+        warnings.simplefilter("always")
+        torch.cuda.set_sync_debug_mode(1)
     gpu = os.environ.get("GPU", os.environ.get("CUDA_VISIBLE_DEVICES", "0")).split(",")[0]
     p = smi(gpu, out / f"smi_{a.mode}.csv")
     t0 = time.time()
@@ -158,6 +170,13 @@ def main():
         sy.sort(key=lambda e: -e.count)
         txt += "\n\n同步按调用栈：\n" + "\n".join(f"{e.count:6d} {e.key} <- " + " | ".join(e.stack) for e in sy[:30])
         (out / "ops.txt").write_text(txt, encoding="utf-8")
+        print(txt)
+        return
+    if a.mode == "sync":
+        torch.cuda.set_sync_debug_mode(0)
+        txt = "\n".join(f"{n / a.steps:8.1f}  {k}" for k, n in cnt.most_common(40))
+        (out / "sync.txt").write_text(f"每步同步次数（共 {a.steps} 步的平均）与调用处：\n" + txt + "\n",
+                                      encoding="utf-8")
         print(txt)
         return
     for k, v in CUR.items():

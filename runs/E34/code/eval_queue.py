@@ -31,6 +31,15 @@ SETTLE = 120     # ckpt 写完后至少放这么多秒再读（torch.save 不是
 QUIET = 300      # 没有完成标记的 Val 预测，最后一次写入后至少过这么多秒才算写完
 
 
+
+def now():
+    """文件系统上的当前时间：新写一个文件，取它的修改时间。A6000 的 NFS 给文件记的时间比容器时钟快约 8 小时，
+    拿 time.time() 和文件的修改时间相减会是负数，存档永远等不满 SETTLE（2026-10-28）。"""
+    f = R / ".evalclaims" / ".now"
+    f.touch()
+    return f.stat().st_mtime
+
+
 def evaluated(job, claims, m, st):
     """这个存档的 Val 已评完：评它的进程写了完成标记（.evalclaims/<方法>_<step>/done），或（标记加上之前评的）预测文件
     已有一段时间没再写。只看 val.jsonl 在不在不够：baselines.fit 一开始就建好空文件，别的卡上的进程会把半截文件当成结果
@@ -38,7 +47,7 @@ def evaluated(job, claims, m, st):
     f = job.S / "preds" / f"step{st}" / "val.jsonl"
     if (claims / f"{m}_{st}" / "done").exists():
         return True
-    return f.exists() and f.stat().st_size > 0 and time.time() - f.stat().st_mtime > QUIET
+    return f.exists() and f.stat().st_size > 0 and now() - f.stat().st_mtime > QUIET
 
 
 def last_status(m):
@@ -65,7 +74,7 @@ def main():
             ckpts = sorted(job.ck.glob("ckpt_*.pt"), key=lambda p: int(p.stem[5:]))
             for c in ckpts:                     # 中间存档先评
                 st = c.stem[5:]
-                if (job.S / "preds" / f"step{st}" / "val.jsonl").exists() or time.time() - c.stat().st_mtime < SETTLE:
+                if (job.S / "preds" / f"step{st}" / "val.jsonl").exists() or now() - c.stat().st_mtime < SETTLE:
                     continue
                 try:
                     (claims / f"{m}_{st}").mkdir()

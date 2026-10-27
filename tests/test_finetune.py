@@ -1790,3 +1790,14 @@ def test_config_run_halt(tmp_path):
     for bad in ('halt_above = {d_ref = "x"}', 'halt_below = {in_frame = true}', 'halt_window = 0', 'halt_above = 3'):
         with pytest.raises(C.ConfigError):
             C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n[run]\n{bad}\n'))
+
+
+def test_rloo_term_fine_bce_skipped_on_gate_but_kept_on_mp(monkeypatch):
+    """细化 certainty 的 BCE 同粗级 cert_bce（#221 review）：参照合理性检查没过时不做（细化层没有梯度），
+    多扰动核对没过时照常做（策略项置零，细化层的梯度只来自 BCE）。"""
+    for over, has in (({"gate": True, "gate_det_lo": 1.5}, False), ({"mp_n": 2}, True)):
+        term, st, w, dec = _fake_term_fine(monkeypatch, fine_mask=True, fine_cert_bce=0.01, **over)
+        loss, stats, _ = term(st)
+        loss.backward()
+        assert float(w.grad) == 0.0 and (_fine_grad(dec, 16) > 0) == has, over
+        assert ("l_cert_16" in stats) == has

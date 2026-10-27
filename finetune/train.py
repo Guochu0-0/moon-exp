@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import collections
 import json
+import math
 import os
 import time
 from pathlib import Path
@@ -96,20 +97,25 @@ class Ema:
 
 class Halt:
     """提前停（#221）：above、below 为 日志量 → 阈值。每步把 stats 里有的量记进各自最近 window 个的窗口；
-    窗口满后中位数 > above[k] 或 < below[k] 就返回 {key, op, thr, median, window}，否则 None。NaN 不触发。"""
+    窗口满后中位数 > above[k] 或 < below[k] 就返回 {key, op, thr, median, window}，否则 None。NaN 不进窗口。
+    跑满 window 步后仍有量一次也没出现（多半是键名写错），打印一次警告。窗口不随续训状态保存，resume 后重新攒。"""
 
     def __init__(self, above: dict, below: dict, window: int):
         self.rules = [(k, ">", float(v)) for k, v in above.items()] + [(k, "<", float(v)) for k, v in below.items()]
         self.window = window
         self.buf = {k: collections.deque(maxlen=window) for k, _, _ in self.rules}
+        self.calls = 0
 
     def __bool__(self):
         return bool(self.rules)
 
     def __call__(self, stats: dict):
+        self.calls += 1
         for k, _, _ in self.rules:
-            if k in stats:
+            if k in stats and not math.isnan(float(stats[k])):
                 self.buf[k].append(float(stats[k]))
+        if self.calls == self.window and any(not b for b in self.buf.values()):
+            print(f"WARNING halt：前 {self.window} 步日志里没有 {[k for k, b in self.buf.items() if not b]}", flush=True)
         for k, op, thr in self.rules:
             b = self.buf[k]
             if len(b) == self.window:

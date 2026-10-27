@@ -94,6 +94,12 @@ ADDED = {
     "rloo.mp_scale": (0.1, "#217 与 mp_n 同批新增；只在 mp_n > 0 时起作用"),
     "rloo.mp_disk": (True, "#217 与 mp_n 同批新增；只在 mp_n > 0 时起作用"),
     "rloo.mp_thr": (16.0, "#217 与 mp_n 同批新增；只在 mp_n > 0 时起作用"),
+    "rloo.fine_w": (1.0, "#221 新增细化损失系数；1 = 不缩放，即之前的做法"),
+    "rloo.fine_mask": (False, "#221 新增；之前细化各级不管画面外"),
+    "rloo.fine_cert_bce": (0.0, "#221 新增；之前不训细化 certainty"),
+    "run.halt_above": ({}, "#221 新增提前停；空 = 不停"),
+    "run.halt_below": ({}, "#221 新增提前停；空 = 不停"),
+    "run.halt_window": (50, "#221 与 halt_above 同批新增；只在设了阈值时起作用"),
 }
 
 

@@ -33,7 +33,7 @@ if Path(FONT).exists():
 plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 E28 = Path("/remote-home/xufang/YGC/moon-exp/runs/E28/metrics.json")
-GROUPS = {"base": "底座", "gate": "检查", "ema": "慢速参照", "ema_gate": "慢速参照 + 检查", "mp": "变换一致性检验",
+GROUPS = {"base": "底座", "gate": "检查", "ema": "EMA 参照", "ema_gate": "EMA 参照 + 检查", "mp": "变换一致性检验",
           "acc4": "每步 4 对"}
 ACCUM = {"acc4": 4}
 D_MAX, IN_MIN, AUC_MIN, N_CKPT, UPDATES = 100.0, 0.5, 0.29, 4, 2000

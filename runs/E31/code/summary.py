@@ -135,6 +135,11 @@ def gap_table():
              "healthy_ok_blocked": r3(np.mean(~(good <= THR))),
              "healthy_bad_blocked": r3(np.mean(~(bad <= THR))) if len(bad) else "",
              "auc_bad_vs_ok_in_healthy": r3(auc(np.nan_to_num(bad, nan=1e9), good)) if len(bad) else ""}
+    zr = [r for r in rows if r["ckpt"] == "zs"]      # 未训练模型：配错的对与配对的对
+    zg = np.array([float(r["gap"]) for r in zr if float(r["err0"]) <= FAIL_PX])
+    zb = np.array([float(r["gap"]) for r in zr if not float(r["err0"]) <= FAIL_PX])
+    extra.update(zs_pairs_ok=len(zg), zs_pairs_bad=len(zb), zs_ok_blocked=r3(np.mean(~(zg <= THR))),
+                 zs_bad_blocked=r3(np.mean(~(zb <= THR))), auc_bad_vs_ok_in_zs=r3(auc(np.nan_to_num(zb, nan=1e9), zg)))
 
     fig, a = plt.subplots(figsize=(11, 4.6))
     col = {"坍缩": "C3", "健康": "C2", "未训练": "C7"}

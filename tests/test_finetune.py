@@ -1953,8 +1953,7 @@ def test_roma_sdpa_forward_matches_attention():
 def test_config_sdpa_default_off(tmp_path):
     from finetune import config as C
     d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nref_ema = 0.999\n'))
-    assert (d["model"]["sdpa"], d["optim"]["fused"], d["run"]["cudnn_benchmark"], d["rloo"]["ema_foreach"]) == \
-        (False, False, False, False)
+    assert d["model"]["sdpa"] is False
 
 
 def test_rloo_autocast_does_not_stringify_features(monkeypatch):

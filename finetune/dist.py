@@ -26,10 +26,6 @@ def rank() -> int:
     return dist.get_rank() if dist.is_available() and dist.is_initialized() else 0
 
 
-def is_main() -> bool:
-    return rank() == 0
-
-
 def init(n: int) -> int:
     """[run] ddp = n > 0 时初始化进程组（NCCL），把本进程绑到 LOCAL_RANK 那张卡；返回 rank。n = 0 时什么也不做、返回 0。
     torchrun 起的进程数与 n 不同时报错。"""

@@ -1,9 +1,9 @@
 # E33（#226）底座：E32 `ema` 原样（runs/E32/configs/_e32.toml 与 ema.toml 合并：E28 `fm` 的粗匹配 + 细化尺度 16、8、4 逐级抽签，
 # w_f = 4.2，画面外处理，细化学习率 1.4e-5、VGG 放开，难版扰动，DINOv2 qkv LoRA r 8，lr 3e-5（LoRA 1e-4），
-# EMA 参照 τ = 0.999），改三处：
+# EMA 参照 τ = 0.999），改两处：
 # - warmup 之后学习率恒定（sched = "const"），不再余弦下降；
 # - 训 2 遍训练集（7907 对 × 2 = 15814 对），每 1000 对存档；只评 Val（评测由 code/eval_queue.py 做，不评 Test）；
-# - 训练时 DINOv2 的注意力用 SDPA（sdpa = true，梯度核对见 Notes）；其余提速办法按用户决定不用。
+# - 单卡提速不用：SDPA 没有通过梯度核对（见 Notes），其余提速办法按用户决定不试。
 # 提前停照 E32：离参照距离的 50 次更新滑动中位数 > 100 px，或画面内格子比例的滑动中位数 < 0.5。种子 0。
 [model]
 name = "roma"
@@ -11,7 +11,6 @@ lora_r = 8
 train_vgg = true
 refine_lr = 0.47
 vgg_lr = 0.47
-sdpa = true
 
 [optim]
 lr = 3e-5

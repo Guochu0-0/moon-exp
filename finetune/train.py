@@ -154,7 +154,6 @@ def main(argv=None):
     cfg = C.load(args.config)
     o, r, mname = cfg["optim"], cfg["run"], cfg["model"]["name"]
     rank = D.init(r["ddp"])      # 多卡（#226）：每个进程绑一张卡；单卡时为 0
-    torch.backends.cudnn.benchmark = r["cudnn_benchmark"]
     main_ = rank == 0
     names = C.parts_of(cfg)
     out = Path(args.out)

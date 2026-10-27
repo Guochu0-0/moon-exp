@@ -18,15 +18,6 @@ def lr_at(step, total, lr, warmup=0, warmup_start=0.1, sched="const", lr_min=0.0
     return lr * (lr_min + (1 - lr_min) * 0.5 * (1 + math.cos(math.pi * t)))
 
 
-def match_strides(params):
-    """融合的 AdamW 要求梯度与参数的 strides 完全相同；有大小为 1 的维时两者可能只在这一维的 stride 上不同（内存排布
-    相同）。这样的梯度按参数的 strides 另存一份（#226）。"""
-    for p in params:
-        g = p.grad
-        if g is not None and g.stride() != p.stride():
-            p.grad = torch.empty_strided(p.size(), p.stride(), dtype=g.dtype, device=g.device).copy_(g)
-
-
 class Optim:
     def __init__(self, params, o: dict, amp: bool, groups=None, reduce=None):
         """groups：可选，[{"params": [...], "lr_scale": x}, ...]，每组的 lr = 调度出的 lr × lr_scale（#120 分模块学习率）；
@@ -34,7 +25,7 @@ class Optim:
         self.params, self.o, self.reduce = params, o, reduce
         groups = groups or [{"params": params, "lr_scale": 1.0}]
         self.opt = torch.optim.AdamW([{"params": g["params"], "lr_scale": g["lr_scale"]} for g in groups],
-                                     lr=o["lr"], weight_decay=o["wd"], **({"fused": True} if o.get("fused") else {}))
+                                     lr=o["lr"], weight_decay=o["wd"])
         self.scaler = torch.cuda.amp.GradScaler() if amp else None
 
     def backward(self, loss):
@@ -68,8 +59,6 @@ class Optim:
             if self.scaler:
                 self.scaler.unscale_(self.opt)
             gn = torch.nn.utils.clip_grad_norm_(self.params, o["clip"] if o["clip"] > 0 else float("inf"))
-            if o.get("fused"):
-                match_strides(self.params)
             if self.scaler:
                 self.scaler.step(self.opt)
                 self.scaler.update()

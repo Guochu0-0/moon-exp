@@ -1,5 +1,0 @@
-# E33 测速用（#226）：E32 `ema` + 提速开关 fused。
-base = "e32ema"
-
-[optim]
-fused = true

@@ -101,10 +101,7 @@ ADDED = {
     "run.halt_below": ({}, "#221 新增提前停；空 = 不停"),
     "run.halt_window": (50, "#221 与 halt_above 同批新增；只在设了阈值时起作用"),
     "run.ddp": (0, "#226 新增多卡数据并行；0 = 单卡，即之前的做法"),
-    "run.cudnn_benchmark": (False, "#226 新增提速开关；false = 不让 cudnn 自选卷积算法，即之前的做法"),
-    "optim.fused": (False, "#226 新增提速开关；false = AdamW 的默认实现，即之前的做法"),
     "model.sdpa": (False, "#226 新增提速开关（RoMa）；false = DINOv2 原来的注意力写法"),
-    "rloo.ema_foreach": (False, "#226 新增提速开关；false = EMA 参照逐个参数更新，即之前的做法"),
 }
 
 

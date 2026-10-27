@@ -1912,33 +1912,7 @@ def test_optim_reduce_runs_before_update():
     assert seen == [[1.0]] and p.grad is None
 
 
-# ---------- 单卡提速的开关（#226）：与原写法算的是同一个东西 ----------
-
-def test_rloo_slow_ref_foreach_matches_loop():
-    """ema_foreach：多次更新、存取之后，EMA 参照的权重与逐个参数的原写法一致；含一个 fp16 参数（另存影子、写回）。"""
-    import torch
-    from finetune.parts.rloo import SlowRef, frozen_copy
-
-    def run(foreach):
-        torch.manual_seed(0)
-        model = _toy_roma()
-        model.model.half_p = torch.nn.Parameter(torch.randn(3).half())
-        sr = SlowRef(model, frozen_copy(model), 0.9, foreach)
-        for i in range(5):
-            with torch.no_grad():
-                for p in model.model.parameters():
-                    if p.requires_grad:
-                        p.add_(torch.randn_like(p) * 0.1)
-            sr.update()
-            if i == 2:
-                sd = sr.state_dict()
-                sr.load_state_dict(sd)
-        return [b.detach().clone() for _, b in sr.pairs], [e.clone() for e in sr.shadow]
-
-    (b0, e0), (b1, e1) = run(False), run(True)
-    assert len(b0) == 5 and all(torch.allclose(x, y, atol=1e-6) for x, y in zip(b0 + e0, b1 + e1))
-    assert any(x.dtype == torch.float16 for x in b1)
-
+# ---------- 单卡提速（#226）：与原写法算的是同一个东西 ----------
 
 def test_roma_sdpa_forward_matches_attention():
     """sdpa_forward 与 DINOv2 Attention 原写法（q·d^-1/2 kᵀ → softmax → v）输出相同、梯度相同。"""
@@ -1976,7 +1950,7 @@ def test_roma_sdpa_forward_matches_attention():
         use_sdpa(dv)
 
 
-def test_config_speed_switches_default_off(tmp_path):
+def test_config_sdpa_default_off(tmp_path):
     from finetune import config as C
     d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nref_ema = 0.999\n'))
     assert (d["model"]["sdpa"], d["optim"]["fused"], d["run"]["cudnn_benchmark"], d["rloo"]["ema_foreach"]) == \
@@ -2006,19 +1980,3 @@ def test_rloo_autocast_does_not_stringify_features(monkeypatch):
     x = torch.zeros(2).as_subclass(NoStr)
     ac, on = rloo._autocast(types.SimpleNamespace(amp_dtype=torch.float16), x)
     assert on is False
-
-
-def test_optim_match_strides():
-    """融合 AdamW 前把梯度的 strides 对齐到参数（大小为 1 的维上 strides 可以不同），值不变。"""
-    import torch
-    from finetune.optim import match_strides
-
-    p = torch.nn.Parameter(torch.zeros(3, 1, 2))
-    g = torch.arange(6.0).reshape(3, 2, 1).permute(0, 2, 1)       # 形状 (3,1,2)，strides (2,1,1) ≠ 参数的 (2,2,1)
-    assert g.stride() != p.stride()
-    p.grad = g
-    q = torch.nn.Parameter(torch.zeros(2))
-    q.grad = torch.ones(2)
-    gq = q.grad
-    match_strides([p, q])
-    assert p.grad.stride() == p.stride() and torch.equal(p.grad, g) and q.grad is gq

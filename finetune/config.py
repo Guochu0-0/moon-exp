@@ -40,7 +40,6 @@ OPTIM = {
     "clip": 0.0,            # 梯度范数裁剪阈值；0 = 不裁
     "accum": 1,             # 梯度累积：每 accum 步更新一次；步数、存 ckpt 仍按前向步计
     "ema": 0.0,             # 权重 EMA 的 decay；>0 时 ckpt 存 EMA 权重（#120）；0 = 不用
-    "fused": False,         # AdamW 用融合的 CUDA 实现（torch 的 fused=True，#226 提速）：同一个更新公式，一个 kernel 更新全部参数
 }
 RUN = {
     "seed": 0,
@@ -59,7 +58,6 @@ RUN = {
     "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训（不另存 ckpt）
     "halt_below": {},       # 同上，中位数低于阈值就停
     "halt_window": 50,      # 提前停的滑动窗口（日志里有这个量的步数）
-    "cudnn_benchmark": False,  # 打开 cudnn 的卷积算法自动选择（torch.backends.cudnn.benchmark，#226 提速）
     "ddp": 0,               # 单机多卡数据并行的卡数（#226，由 torchrun 起这么多个进程，见 finetune/train.py）；0 = 单卡
 }
 SELECT = ("val_peak", "last")

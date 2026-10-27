@@ -53,7 +53,6 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     cfg = C.load(a.config)
     o, r, mname = cfg["optim"], cfg["run"], cfg["model"]["name"]
-    torch.backends.cudnn.benchmark = r["cudnn_benchmark"]
     seed_all(r["seed"])
     mod = MODELS[mname]
     os.environ.setdefault("TORCH_HOME", mod.TORCH_HOME)

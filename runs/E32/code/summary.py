@@ -6,7 +6,7 @@
 - 判据（#221）：到第 2000 次更新同时满足——d_ref 滑动中位数始终 ≤ 100 px、in_frame 滑动中位数始终 ≥ 0.5、4 个存档 Val AUC@5 都 ≥ 0.29。
 在 gpfs 上跑（ckpt 不同步到本机）：
 
-    /opt/envs/wb/bin/python runs/E32/code/summary.py
+    /opt/envs/loftr/bin/python runs/E32/code/summary.py
 写 extra/data/summary.csv、extra/curves.png，并打印表格。
 """
 from __future__ import annotations

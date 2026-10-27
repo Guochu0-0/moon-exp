@@ -254,8 +254,11 @@ def data_kw(p):
 # ---------- 前向：粗级（带梯度）与细化（照抄 romatch Decoder.forward 的非 upsample 分支） ----------
 
 def _autocast(dec, x):
+    """同 romatch Decoder.forward 的 autocast 设置：get_autocast_params 只看设备，cuda 上恒为打开（fp16），enabled 参数
+    不起作用。romatch 原写法在 enabled 处传 str(f1_s) == 'cuda'，这里原先照抄；它要把整张特征图转成字符串，每步约
+    1900 次 GPU 同步（#226 实测）。现在不传，返回值不变。"""
     from romatch.utils.utils import get_autocast_params
-    dev, on, dt = get_autocast_params(x.device, str(x) == "cuda", dec.amp_dtype)
+    dev, on, dt = get_autocast_params(x.device, dtype=dec.amp_dtype)
     return torch.autocast(dev, enabled=on, dtype=dt), on
 
 

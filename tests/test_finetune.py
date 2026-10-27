@@ -1981,3 +1981,28 @@ def test_config_speed_switches_default_off(tmp_path):
     d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nref_ema = 0.999\n'))
     assert (d["model"]["sdpa"], d["optim"]["fused"], d["run"]["cudnn_benchmark"], d["rloo"]["ema_foreach"]) == \
         (False, False, False, False)
+
+
+def test_rloo_autocast_does_not_stringify_features(monkeypatch):
+    """_autocast 不再把特征图转成字符串（#226）；返回的设置与 romatch get_autocast_params 只按设备给出的相同。"""
+    import sys
+    import types
+    import torch
+    from finetune.parts import rloo
+
+    def gap(device=None, enabled=False, dtype=None):       # romatch.utils.utils.get_autocast_params 的行为：只看设备
+        on = "cuda" in str(device)
+        return str(device).split(":")[0] if on else "cpu", on, dtype if on else torch.bfloat16
+    mod = types.ModuleType("romatch.utils.utils")
+    mod.get_autocast_params = gap
+    for name in ("romatch", "romatch.utils"):
+        monkeypatch.setitem(sys.modules, name, sys.modules.get(name) or types.ModuleType(name))
+    monkeypatch.setitem(sys.modules, "romatch.utils.utils", mod)
+
+    class NoStr(torch.Tensor):
+        def __repr__(self):
+            raise AssertionError("不应把特征图转成字符串")
+        __str__ = __repr__
+    x = torch.zeros(2).as_subclass(NoStr)
+    ac, on = rloo._autocast(types.SimpleNamespace(amp_dtype=torch.float16), x)
+    assert on is False

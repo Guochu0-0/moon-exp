@@ -142,7 +142,7 @@ def main():
     if a.mode == "ops":
         from torch.profiler import ProfilerActivity, profile, schedule
         PROF["p"] = profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-                            schedule=schedule(wait=a.skip, warmup=1, active=5, repeat=1))
+                            schedule=schedule(wait=a.skip, warmup=1, active=5, repeat=1), with_stack=True)
         PROF["p"].__enter__()
     try:
         T.main([a.config, "--out", str(out), "--stop-at", str(a.steps), *rest])
@@ -153,6 +153,10 @@ def main():
         ka = PROF["p"].key_averages()
         txt = (ka.table(sort_by="cuda_time_total", row_limit=40) + "\n\n"
                + ka.table(sort_by="self_cpu_time_total", row_limit=40))
+        sy = [e for e in PROF["p"].key_averages(group_by_stack_n=6)
+              if e.key in ("aten::item", "cudaStreamSynchronize", "cudaMemcpyAsync")]
+        sy.sort(key=lambda e: -e.count)
+        txt += "\n\n同步按调用栈：\n" + "\n".join(f"{e.count:6d} {e.key} <- " + " | ".join(e.stack) for e in sy[:30])
         (out / "ops.txt").write_text(txt, encoding="utf-8")
         print(txt)
         return

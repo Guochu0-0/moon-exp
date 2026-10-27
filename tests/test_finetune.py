@@ -748,7 +748,8 @@ def test_config_rloo_mp(tmp_path):
     c = C.load(_write(tmp_path, "c", head + 'reward = "ref"\nmp_n = 2\n'))
     assert (c["rloo"]["mp_n"], c["rloo"]["mp_shift"], c["rloo"]["mp_thr"]) == (2, 64.0, 16.0)
     for bad in ('reward = "r1"\nmp_n = 2', 'reward = "ref"\nmp_n = -1', 'reward = "ref"\nmp_n = 2\nfrozen_ref = true',
-                'reward = "ref"\nmp_n = 2\nlevels = [8]', 'reward = "ref"\nmp_n = 2\nmp_thr = 0.0'):
+                'reward = "ref"\nmp_n = 2\nlevels = [8]', 'reward = "ref"\nmp_n = 2\nref_ema = 0.99',
+                'reward = "ref"\nmp_n = 2\nmp_thr = 0.0'):
         with pytest.raises(C.ConfigError):
             C.load(_write(tmp_path, "b", head + bad + "\n"))
 

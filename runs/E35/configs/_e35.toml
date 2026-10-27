@@ -1,0 +1,58 @@
+# E35（#230）底座：E34 的配置原样（runs/E34/configs/_e34.toml：E32 `ema` + warmup 500 次更新后恒定学习率；主学习率 3e-5、
+# LoRA 学习率 1e-4，是 E34 定下的学习率），种子 0，单卡、每次更新 1 对（accum = 1，EMA 参照要求）。
+# 各组只改 [rloo] ref_ema = τ。EMA 模型每次参数更新后变为 τ × 旧 EMA 参数 + (1 − τ) × 当前参数，
+# 大致等于最近 1/(1 − τ) 次更新的平均；τ 按这个记忆长度在对数尺度上取 30、100、300、1000、3000 次更新。
+# 直接训到 4000 次更新，每 1000 次存档并评 Val（code/eval_queue.py），不做逐轮减半，存档不带续训状态。不评 Test。
+# 提前停照 E32：离参照距离的 50 次更新滑动中位数 > 100 px，或画面内格子比例的滑动中位数 < 0.5。
+# 日志里的 ref_gap 即当前模型与 EMA 参照的距离（finetune/parts/rloo.py，同 E30）。
+
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.47
+vgg_lr = 0.47
+lora_lr = 1e-4
+
+[optim]
+lr = 3e-5
+steps = 4000
+warmup = 500
+sched = "const"
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+fine_shape = "cauchy"
+levels = [16, 8, 4]
+k = 0.5
+fine_mode = "local"
+fine_group = 8
+fine_mask = true
+fine_cert_bce = 0.01
+fine_w = 4.2
+ref_ema = 0.999
+
+[run]
+seed = 0
+save_every = 1000
+save_zero = false
+save_optim = false
+stop_at = 0
+sweep = "last"
+halt_above = {d_ref = 100.0}
+halt_below = {in_frame = 0.5}
+halt_window = 50

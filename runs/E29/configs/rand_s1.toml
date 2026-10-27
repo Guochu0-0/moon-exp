@@ -1,0 +1,4 @@
+base = "_rand"
+
+[run]
+seed = 1

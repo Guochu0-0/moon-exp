@@ -1497,3 +1497,115 @@ def test_rloo_fit_many_with_generator_leaves_global_rng():
     s = torch.get_rng_state()
     out = fit_many(flow, cert, 200, 3.0, gen=torch.Generator().manual_seed(1))
     assert torch.equal(torch.get_rng_state(), s) and out[0][0] is not None
+
+
+# ---------- 不让参照跑偏（#216）：慢速参照、参照合理性检查、格子分散约束 ----------
+
+def test_config_rloo_ref_guards(tmp_path):
+    from finetune import config as C
+
+    d = C.load(_write(tmp_path, "d", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\n'))
+    r = d["rloo"]
+    assert (r["ref_ema"], r["gate"], r["spread"]) == (0.0, False, 0.0)                # 默认同旧行为
+    c = C.load(_write(tmp_path, "c", '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nframe_mask = true\n'
+                                     'cert_bce = 0.01\nref_ema = 0.99\ngate = true\ngate_in = 0.43\nspread = 0.1\n'))
+    assert (c["rloo"]["ref_ema"], c["rloo"]["gate_in"], c["rloo"]["spread_h0"]) == (0.99, 0.43, 4.0)
+    for bad in ('[rloo]\nreward = "r1"\nref_ema = 0.99', '[rloo]\nreward = "r1"\ngate = true',
+                '[rloo]\nreward = "r1"\nspread = 0.1', '[rloo]\nreward = "ref"\nref_ema = 1.0',
+                '[rloo]\nreward = "ref"\nref_ema = 0.99\nfrozen_ref = true',
+                'vgg_dropout = 0.1\n[rloo]\nreward = "ref"\nref_ema = 0.99',
+                '[optim]\naccum = 2\n[rloo]\nreward = "ref"\nref_ema = 0.99',
+                '[rloo]\nreward = "ref"\ngate = true\ngate_det_lo = 3.0', '[rloo]\nreward = "ref"\ngate_sv = 1.5',
+                '[rloo]\nreward = "ref"\nspread = -0.1',
+                '[rloo]\nreward = "ref"\nframe_mask = true\nfrozen_ref = true'):     # 冻结参照仍不配掩码
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", f'[model]\nname = "roma"\n{bad}\n'))
+
+
+def _toy_roma():
+    """frozen_copy 能处理的小模型：本体一个可训层、一个冻结层，encoder 的列表里放一个「DINOv2」（冻结底座 + 可训支路）。"""
+    import types
+    import torch
+
+    net = torch.nn.Module()
+    net.encoder, net.head, net.fixed = torch.nn.Module(), torch.nn.Linear(2, 2), torch.nn.Linear(2, 2)
+    net.fixed.requires_grad_(False)
+    dv = torch.nn.Module()
+    dv.base, dv.lora = torch.nn.Linear(2, 2), torch.nn.Linear(2, 2)
+    dv.base.requires_grad_(False)
+    net.encoder.dinov2_vitl14 = [dv]
+    return types.SimpleNamespace(model=net)
+
+
+def test_rloo_slow_ref_is_ema_of_trainable_params():
+    """慢速参照：每次 update 后 θ_slow = τ·θ_slow + (1−τ)·θ，只动可训练参数（含列表里 DINOv2 的可训支路）；
+    冻结参数保持拷贝时的值；存取后照样接着平均。"""
+    import torch
+    from finetune.parts.rloo import SlowRef, frozen_copy
+
+    model = _toy_roma()
+    slow = frozen_copy(model)
+    sr = SlowRef(model, slow, 0.9)
+    assert len(sr.pairs) == 4                                   # head.weight/bias、lora.weight/bias
+    net, sm = model.model, slow.model
+    sdv, dv = sm.encoder.dinov2_vitl14[0], net.encoder.dinov2_vitl14[0]
+    w0, l0, f0, b0 = (x.detach().clone() for x in (net.head.weight, dv.lora.weight, net.fixed.weight, dv.base.weight))
+    with torch.no_grad():
+        for x in (net.head.weight, dv.lora.weight, net.fixed.weight, dv.base.weight):
+            x.add_(1.0)
+    sr.update()
+    assert torch.allclose(sm.head.weight, w0 + 0.1) and torch.allclose(sdv.lora.weight, l0 + 0.1)
+    assert torch.equal(sm.fixed.weight, f0) and torch.equal(sdv.base.weight, b0)
+    sd = sr.state_dict()
+    sr2 = SlowRef(model, frozen_copy(model), 0.9)               # 新副本从当前参数起，装回存档后与 sr 相同
+    sr2.load_state_dict(sd)
+    sr.update()
+    sr2.update()
+    assert torch.allclose(sr2.pairs[0][1], sr.pairs[0][1])
+    assert torch.allclose(sm.head.weight, w0 + 0.1 + 0.09)
+
+
+def test_rloo_gate_check():
+    """参照合理性检查：恒等、扰动范围内的相似变换通过；面积倍数、压扁程度、画面内比例各自超限时只那一项不过。"""
+    from finetune.parts.rloo import affine_shape, gate_check
+
+    p = {"gate_det_lo": 0.5, "gate_det_hi": 2.0, "gate_sv": 0.7, "gate_in": 0.43}
+    c, s_ = np.cos(0.3), np.sin(0.3)
+    sim = np.array([[1.2 * c, -1.2 * s_, 50.0], [1.2 * s_, 1.2 * c, -20.0]])     # 缩放 1.2、旋转、平移
+    assert affine_shape(sim) == pytest.approx((1.44, 1.0))
+    assert gate_check(sim, 0.8, p) == {"det": False, "sv": False, "in": False}
+    assert gate_check(np.array([[0.6, 0, 0], [0, 0.6, 0.0]]), 0.8, p) == {"det": True, "sv": False, "in": False}
+    assert gate_check(np.array([[1.0, 0, 0], [0, 0.6, 0.0]]), 0.8, p) == {"det": False, "sv": True, "in": False}
+    assert gate_check(np.array([[1.0, 0, 0], [0, -1.0, 0.0]]), 0.8, p)["det"]                # 镜像：行列式为负
+    assert gate_check(np.array([[1.0, 2.0, 0], [0.5, 1.0, 0.0]]), 0.8, p)["det"]             # 退成一条线
+    assert gate_check(sim, 0.3, p) == {"det": False, "sv": False, "in": True}
+
+
+def test_rloo_spread_loss():
+    """格子分散约束：各格挤到同一锚点时 H(p̄) ≈ 0、损失为 h0；各格分到不同锚点时 H(p̄) = log(格数) ≥ h0、损失为 0；
+    掩码只取画面内格子；H(p̄) < h0 时梯度不为 0。"""
+    import torch
+    import torch.nn.functional as F
+    from finetune.parts.rloo import spread_loss
+
+    C_, h, w = 256, 8, 8
+    same = torch.full((C_, h, w), -30.0)
+    same[5] = 30.0
+    l, H = spread_loss(F.log_softmax(same, 0), None, 4.0)
+    assert float(H) == pytest.approx(0.0, abs=1e-4) and float(l) == pytest.approx(4.0, abs=1e-4)
+    diff = torch.full((C_, h, w), -30.0)
+    for i in range(h * w):
+        diff[i, i // w, i % w] = 30.0
+    l, H = spread_loss(F.log_softmax(diff, 0), None, 4.0)
+    assert float(H) == pytest.approx(np.log(h * w), abs=1e-3) and float(l) == 0.0
+    m = torch.zeros(h, w, dtype=torch.bool)
+    m[0, :2] = True                                                 # 只取两格：p̄ 平摊在两个锚点上
+    _, H = spread_loss(F.log_softmax(diff, 0), m, 4.0)
+    assert float(H) == pytest.approx(np.log(2), abs=1e-3)
+    _, H0 = spread_loss(F.log_softmax(diff, 0), torch.zeros(h, w, dtype=torch.bool), 4.0)   # 全 False：取全部格子
+    assert float(H0) == pytest.approx(np.log(h * w), abs=1e-3)
+    x = torch.randn(C_, h, w, requires_grad=True)
+    l, H = spread_loss(F.log_softmax(x * 10, 0), None, 8.0)
+    assert float(H) < 8.0
+    l.backward()
+    assert float(x.grad.abs().sum()) > 0

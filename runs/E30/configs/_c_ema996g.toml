@@ -1,0 +1,7 @@
+# 慢速参照 τ = 0.996 + 参照合理性检查（同 a_gate）（#216）
+base = "_fm"
+
+[rloo]
+ref_ema = 0.996
+gate = true
+gate_in = 0.427

@@ -84,6 +84,16 @@ cert_bce 都用它）。核对：两两估计之间格心的平均距离（affin
 份拟合失败时这对图这一步的优势全部置零（cert_bce 照常）。多出来的几份只推理、不求梯度。
 T_i 与这几份抽点的随机数取自以 (torch 初始种子, 调用次数, 批内序号) 起的独立发生器，不动训练的随机数流，续训可复现。
 与图像无关、固定在一处的解在 T_i 下不跟着动，换算回来后彼此差一个 T_i，因而被拦；跟着图像内容一起走的一致偏差看不见。
+可与 levels 同用（#221）：细化各级同样对核对得到的参照打分。
+
+细化与防坍缩办法同用（#221，levels 非空时）：
+- fine_w：细化各级策略梯度项之和乘 w_f（与 weight 相乘）。AdamW 逐参数归一化，它实际改变的是细化与粗级信号在共用参数
+  （DINOv2 的 LoRA、尺度 16 的 proj）里的比例。
+- 参照合理性检查没过（gate）或多扰动核对没过（mp_n）时，细化各级的优势也置零（整链 chain 与 grad / local 都是）。
+- fine_mask（只配 grad / local）：参照仿射把这一级像素中心映射到 SAR 画面外或补零区（in_frame，按这一级的网格）的像素，
+  优势置零（grad 方式乘在奖励上），分母不变，同粗级 frame_mask。
+- fine_cert_bce > 0（只配 grad / local）：每个训练级输出的 certainty（这一级的输入 certainty + 细化层算出的增量，带梯度）
+  对这张掩码加 BCE，权重 fine_cert_bce，不乘 fine_w；同粗级 cert_bce，参照合理性检查没过时不做，多扰动核对没过时照常。
 """
 from __future__ import annotations
 
@@ -142,6 +152,9 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "mp_scale": 0.1,  # 额外扰动的缩放范围（±）
           "mp_disk": True,  # 平移在半径 mp_shift 的圆盘内均匀（同 [aug] shift_disk）
           "mp_thr": 16.0,   # 估计之间最大两两格心平均距离超过它（px）时这对图优势置零
+          "fine_w": 1.0,    # 细化损失（各级策略梯度项之和）的系数 w_f（#221）
+          "fine_mask": False,   # 细化各级：参照仿射映射到 SAR 画面外 / 补零区的像素优势置零（#221，只配 grad / local）
+          "fine_cert_bce": 0.0,  # 细化各级 certainty 对画面内掩码的 BCE 权重（#221，只配 grad / local）；0 = 不训
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -220,10 +233,15 @@ def check(cfg):
         raise ConfigError("[rloo] spread 应 ≥ 0")
     if not isinstance(p["mp_n"], int) or p["mp_n"] < 0:
         raise ConfigError(f"[rloo] mp_n 应为 ≥ 0 的整数，得到 {p['mp_n']!r}")
-    if p["mp_n"] and (p["reward"] != "ref" or p["frozen_ref"] or p["ref_ema"] or lv):
-        raise ConfigError("[rloo] mp_n 只配 reward = 'ref'，不与 frozen_ref、ref_ema、levels 同用")
+    if p["mp_n"] and (p["reward"] != "ref" or p["frozen_ref"] or p["ref_ema"]):
+        raise ConfigError("[rloo] mp_n 只配 reward = 'ref'，不与 frozen_ref、ref_ema 同用")
     if p["mp_shift"] < 0 or p["mp_rot"] < 0 or not 0 <= p["mp_scale"] < 1 or p["mp_thr"] <= 0:
         raise ConfigError("[rloo] mp_shift、mp_rot 应 ≥ 0，mp_scale 在 [0, 1)，mp_thr 应 > 0")
+    if p["fine_w"] < 0 or p["fine_cert_bce"] < 0:
+        raise ConfigError("[rloo] fine_w、fine_cert_bce 应 ≥ 0")
+    if (p["fine_mask"] or p["fine_cert_bce"]) and (not lv or p["fine_mode"] == "chain" or p["frozen_ref"]):
+        raise ConfigError("[rloo] fine_mask、fine_cert_bce 要配非空的 levels 与 fine_mode = 'grad' / 'local'，"
+                          "不与 frozen_ref 同用（掩码要来自自估仿射、慢速参照或多扰动核对的参照）")
 
 
 def data_kw(p):
@@ -562,40 +580,55 @@ def multi_ref(estimate, sar, A0, Ts, h, w):
 
 def _mu(dec, s, a, b, fin, cin, H, W):
     """尺度 s 的细化层从输入 warp fin、certainty cin 算出的输出 μ（带梯度）。"""
-    d_flow, _ = dec.conv_refiner[str(s)](a, b, fin, scale_factor=1, logits=cin)
-    return fin + _disp(dec, s, d_flow, H, W)
+    return _mu_cert(dec, s, a, b, fin, cin, H, W)[0]
 
 
-def level_loss(mu, A, s, sig, p, mode, gen=None):
+def _mu_cert(dec, s, a, b, fin, cin, H, W):
+    """同 _mu，另返回这一级输出的 certainty logits cin + Δcert（带梯度；即 refine 里这一级之后的 certainty，#221）。"""
+    d_flow, d_cert = dec.conv_refiner[str(s)](a, b, fin, scale_factor=1, logits=cin)
+    return fin + _disp(dec, s, d_flow, H, W), cin + d_cert
+
+
+def level_loss(mu, A, s, sig, p, mode, gen=None, keep=None):
     """一级：带梯度的 μ (1,2,h,w) → (loss, (奖励, 距离))。mode = grad：−mean_像素 r(μ)，对 μ 求导；local：从 μ 抽
     fine_group 次 x = μ + σε（随机数取自 gen，不给时用全局发生器），按 r(x) 打分、advantage，
-    loss = −mean(优势 · log π)，log π = −‖x − μ‖² / 2σ²。"""
+    loss = −mean(优势 · log π)，log π = −‖x − μ‖² / 2σ²。keep：可选的 (h,w) 逐像素权重（#221：画面外像素、
+    检查没过的对置 0），乘在 r（grad）或优势（local）上；分母不变（"置零"而不是"重新归一化"，同粗级 frame_mask）。"""
     if mode == "grad":
         r, d = level_reward(mu, A, s, p)
-        return -r.mean(), (r.detach(), d.detach())
+        return -(r if keep is None else r * keep).mean(), (r.detach(), d.detach())
     with torch.no_grad():
         x = mu.detach() + sig * torch.randn((p["fine_group"],) + tuple(mu.shape[1:]), device=mu.device, generator=gen)
         r, d = level_reward(x, A, s, p)
         adv = advantage(r, p["baseline"])
+        if keep is not None:
+            adv = adv * keep
     lp = -(x - mu).square().sum(1) / (2 * sig ** 2)
     return -(adv * lp).mean(), (r, d)
 
 
-def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0):
+def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0, keep=None, masks=None, bce=0.0):
     """fine_mode = grad / local 的细化损失：sig 里的每一级从正常推理轨迹 traj（refine 记下的）这一级的输入起，带梯度
     重算 μ，loss_s = w · level_loss，立刻 backward(loss_s)；特征上的梯度与替身项同 fine_surrogate。
-    返回 (替身项, {尺度: (奖励, 距离)})。"""
+    keep：可选，尺度 → (h,w) 逐像素权重（见 level_loss）。bce > 0 时（#221）loss_s 另加 bce · BCE(这一级输出的
+    certainty logits, masks[s])，masks：尺度 → (h,w) 画面内掩码；这一项不乘 w。
+    返回 (替身项, {尺度: (奖励, 距离)}, {尺度: BCE 值}（bce = 0 时为空）)。"""
     H, W = f1[1].shape[-2:]
     leaf1 = {s: f1[s].detach().requires_grad_() for s in sig}
     leaf2 = {s: f2[s].detach().requires_grad_() for s in sig}
-    val, out = 0.0, {}
+    val, out, lc = 0.0, {}, {}
     for s in sig:
         fin, cin, _ = traj[s]
-        loss, out[s] = level_loss(_mu(dec, s, leaf1[s], leaf2[s], fin, cin, H, W), A, s, sig[s], p, p["fine_mode"])
+        mu, ce = _mu_cert(dec, s, leaf1[s], leaf2[s], fin, cin, H, W)
+        loss, out[s] = level_loss(mu, A, s, sig[s], p, p["fine_mode"], keep=None if keep is None else keep[s])
         loss = w * loss
+        if bce:
+            l_c = F.binary_cross_entropy_with_logits(ce[0, 0].float(), masks[s].float())
+            lc[s] = float(l_c)
+            loss = loss + bce * l_c
         backward(loss)
         val += float(loss)
-    return _surrogate(f1, f2, leaf1, leaf2, factor, val), out
+    return _surrogate(f1, f2, leaf1, leaf2, factor, val), out, lc
 
 
 def grad_cos(dec, f1, f2, traj, A, sig, p, seed=0):
@@ -951,13 +984,29 @@ class Term:
                 t3 = time.time()
                 fb, gb = {s_: x[b:b + 1] for s_, x in f1.items()}, {s_: x[b:b + 1] for s_, x in f2.items()}
                 dec = model.model.decoder
+                stop = blocked or block     # 检查或多扰动核对没过：细化的策略梯度项也置零（#221）
                 if p["fine_mode"] == "chain":
+                    if stop:
+                        adv_f = {s_: a_ * 0 for s_, a_ in adv_f.items()}
                     fine = fine + fine_surrogate(dec, fb, gb, rec, adv_f, sig, p["chunk"], st.optim.backward,
-                                                 st.optim.factor(), p["weight"] / B)
+                                                 st.optim.factor(), p["weight"] * p["fine_w"] / B)
                 else:
-                    sur, rd = fine_direct(dec, fb, gb, traj, A_ref, sig, p, st.optim.backward, st.optim.factor(),
-                                          p["weight"] / B)
+                    masks = keep = None     # 细化各级的画面内掩码（#221）：参照仿射把这一级的像素中心映射到画面内
+                    if p["fine_mask"] or p["fine_cert_bce"]:
+                        masks = {s_: in_frame(A_ref, i1[b], *traj[s_][0].shape[-2:]) for s_ in lv}
+                        for s_, m_ in masks.items():
+                            stats.setdefault(f"in_{s_}", []).append(float(m_.float().mean()))
+                    if p["fine_mask"] or stop:
+                        keep = {s_: (masks[s_].float() if p["fine_mask"]
+                                     else torch.ones(traj[s_][0].shape[-2:], device=cls.device)) * (0.0 if stop else 1.0)
+                                for s_ in lv}
+                    # 细化 certainty 的 BCE 同粗级 cert_bce：只有参照合理性检查没过时不做，多扰动核对没过时照常
+                    bce = 0.0 if blocked or masks is None else p["weight"] * p["fine_cert_bce"] / B
+                    sur, rd, lc = fine_direct(dec, fb, gb, traj, A_ref, sig, p, st.optim.backward, st.optim.factor(),
+                                              p["weight"] * p["fine_w"] / B, keep, masks, bce)
                     fine = fine + sur
+                    for s_, v in lc.items():
+                        stats.setdefault(f"l_cert_{s_}", []).append(v)
                     for s_, (r_s, d_s) in rd.items():
                         _level_stats(stats, s_, r_s, d_s)
                         if p["trace"]:

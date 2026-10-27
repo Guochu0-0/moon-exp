@@ -15,12 +15,15 @@
 
 [run] resume 给出 save_optim 存下的 ckpt 时，装回权重与续训状态，从下一步接着训（只支持第一个 epoch 内的存档）；
 [run] stop_at 与 --stop-at 一样提前停下，lr 调度仍按 [optim] steps。
+[run] halt_above / halt_below（#221）：某个日志量最近 halt_window 个记录的中位数越过阈值时停训，写 <out>/halt.json
+（停在第几步、哪个量、中位数），不另存 ckpt（最后一个存档仍是越线前按 save_every / save_at 存的）；正常退出。
 成分可以提供 after_update(step)（参数更新之后调用）、observe(step)（每步更新之后与训练前调用，返回要存的数组或 None）、
 state_dict() / load_state_dict()（随续训状态存取）。
 """
 from __future__ import annotations
 
 import argparse
+import collections
 import json
 import os
 import time
@@ -91,6 +94,31 @@ class Ema:
         return sd
 
 
+class Halt:
+    """提前停（#221）：above、below 为 日志量 → 阈值。每步把 stats 里有的量记进各自最近 window 个的窗口；
+    窗口满后中位数 > above[k] 或 < below[k] 就返回 {key, op, thr, median, window}，否则 None。NaN 不触发。"""
+
+    def __init__(self, above: dict, below: dict, window: int):
+        self.rules = [(k, ">", float(v)) for k, v in above.items()] + [(k, "<", float(v)) for k, v in below.items()]
+        self.window = window
+        self.buf = {k: collections.deque(maxlen=window) for k, _, _ in self.rules}
+
+    def __bool__(self):
+        return bool(self.rules)
+
+    def __call__(self, stats: dict):
+        for k, _, _ in self.rules:
+            if k in stats:
+                self.buf[k].append(float(stats[k]))
+        for k, op, thr in self.rules:
+            b = self.buf[k]
+            if len(b) == self.window:
+                med = float(np.median(b))
+                if (med > thr) if op == ">" else (med < thr):
+                    return {"key": k, "op": op, "thr": thr, "median": round(med, 5), "window": self.window}
+        return None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("config", help="runs/<id>/configs/<方法>.toml")
@@ -149,6 +177,7 @@ def main(argv=None):
     stops = [x for x in (args.stop_at, r["stop_at"]) if x]
     total = min([o["steps"], *stops])
     save_at = set(r["save_at"])
+    halt, halted = Halt(r["halt_above"], r["halt_below"], r["halt_window"]), None
     step, t_start = 0, time.time()
     if r["resume"]:
         sd = torch.load(REPO / r["resume"], map_location="cpu")    # 绝对路径时 REPO / 不起作用
@@ -215,12 +244,19 @@ def main(argv=None):
                           + f" elapsed={(time.time() - t_start) / 60:.1f}min", flush=True)
                 if (r["save_every"] and step % r["save_every"] == 0) or step in save_at:
                     save(step)
-                if step >= total:
+                halted = halt(stats) if halt else None
+                if halted:
+                    halted["step"] = step
+                    (out / "halt.json").write_text(json.dumps(halted, ensure_ascii=False) + "\n", encoding="utf-8")
+                    print(f"HALT step {step}: {halted}", flush=True)
+                if step >= total or halted:
                     break
+            if halted:
+                break
     if tbw:
         tbw.close()
     trw.flush()
-    if r["save_every"] and step % r["save_every"]:
+    if r["save_every"] and step % r["save_every"] and not halted:
         save(step)
 
 

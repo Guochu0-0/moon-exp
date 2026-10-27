@@ -1,0 +1,7 @@
+# 第 2 轮：1e-4 组从第 1 轮第 1000 次更新的存档接着训到 4000 次，每 1000 次存档。
+base = "lr1e-4"
+
+[run]
+resume = "runs/E34/ckpt/lr1e-4/ckpt_1000.pt"
+stop_at = 0
+save_every = 1000

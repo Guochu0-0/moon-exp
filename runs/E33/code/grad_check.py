@@ -92,7 +92,7 @@ def main():
         p.grad = (total[k:k + m] * sc).view_as(p).to(p.dtype)
         k += m
     th0 = torch.cat([p.detach().float().reshape(-1) for p in model.params]).cpu()
-    slow = [t for _, t in terms if getattr(t, "slow", None) is not None]
+    slow = [t.slow for _, t in terms if getattr(t, "slow", None) is not None]
     sh0 = torch.cat([e.detach().float().reshape(-1) for e in slow[0].shadow]).cpu() if slow else None
     upd = optim.step(o["accum"])
     for _, t in terms:

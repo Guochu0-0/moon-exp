@@ -712,6 +712,7 @@ def _fake_term(monkeypatch, **over):
                         (torch.zeros(len(flow), 2, 32, 32), torch.zeros(len(flow), 1, 32, 32)))
     monkeypatch.setattr(R, "fit_many", lambda flows, certs, num, thr, gen=None: [(I, 10)] * len(flows))
     monkeypatch.setattr(R.augment, "sample_T", lambda rng, *a, **k: np.c_[np.eye(2), [40.0, 0.0]])
+    monkeypatch.setattr(torch.cuda, "synchronize", lambda *a, **k: None)     # 全量测试不给 GPU（close_ticket 的 TEST_CMD）
     p = {**R.PARAMS, "reward": "ref", "group": 4, "temp": 0.3, "shape": "gauss", **over}
     model = types.SimpleNamespace(model=M())
     term = R.Term(p, model, None)

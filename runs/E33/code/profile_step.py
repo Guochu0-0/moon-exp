@@ -151,9 +151,7 @@ def main():
     if a.mode == "ops":
         PROF["p"].__exit__(None, None, None)
         ka = PROF["p"].key_averages()
-        txt = (ka.table(sort_by="cuda_time_total", row_limit=40) + "
-
-"
+        txt = (ka.table(sort_by="cuda_time_total", row_limit=40) + "\n\n"
                + ka.table(sort_by="self_cpu_time_total", row_limit=40))
         (out / "ops.txt").write_text(txt, encoding="utf-8")
         print(txt)

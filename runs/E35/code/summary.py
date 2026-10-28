@@ -11,7 +11,7 @@
 在 gpfs 上跑（ckpt 不同步到本机）：
 
     /opt/envs/loftr/bin/python runs/E35/code/summary.py
-写 extra/data/summary.csv、extra/data/val.csv、extra/curves.png，并打印表格。
+写 extra/data/summary.csv、extra/data/val.csv、extra/data/segments.csv（每 1000 次更新一段的日志中位数）、extra/curves.png，并打印表格。
 """
 from __future__ import annotations
 
@@ -158,7 +158,14 @@ def main():
     fig.tight_layout()
     (R / "extra" / "data").mkdir(parents=True, exist_ok=True)
     fig.savefig(R / "extra" / "curves.png", dpi=110)
-    for fn, rs in (("summary.csv", rows), ("val.csv", vrows)):
+    seg = []     # 每 1000 次更新一段，各量逐次记录的中位数（不滑动）
+    for g, (val, steps, x, halt) in data.items():
+        for a in range(0, 4000, 1000):
+            sel = (steps > a) & (steps <= a + 1000)
+            if sel.any():
+                seg.append({"tau": g, "updates": f"{a + 1}-{a + 1000}",
+                            **{f"{k}_median": r3(np.nanmedian(x[k][sel])) for k in ("ref_gap", "d_ref", "in_frame")}})
+    for fn, rs in (("summary.csv", rows), ("val.csv", vrows), ("segments.csv", seg)):
         with open(R / "extra" / "data" / fn, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=list(rs[0]))
             w.writeheader()

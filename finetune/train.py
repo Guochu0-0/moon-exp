@@ -18,7 +18,18 @@
 [run] halt_above / halt_below（#221）：某个日志量最近 halt_window 个记录的中位数越过阈值时停训，写 <out>/halt.json
 （停在第几步、哪个量、中位数），不另存 ckpt（最后一个存档仍是越线前按 save_every / save_at 存的）；正常退出。
 成分可以提供 after_update(step)（参数更新之后调用）、observe(step)（每步更新之后与训练前调用，返回要存的数组或 None）、
-state_dict() / load_state_dict()（随续训状态存取）。
+state_dict() / load_state_dict()（随续训状态存取）、ddp_tensors()（多卡时要检查各卡一致的张量，如 EMA 参照的权重）。
+
+[run] ddp = N > 0（#226）：单机 N 卡数据并行，由 torchrun 起 N 个进程（finetune/dist.py）：
+
+    torchrun --standalone --nproc_per_node=N -m finetune.train <配置> --out ...
+
+每个进程一张卡、每步读 1 个 batch（DistributedSampler 把训练集分给各卡），全部反向做完后各卡梯度取平均，再做同一次
+参数更新，所以一次更新用 N × batch 对图。步数、warmup、存档、stop_at 都按更新次数（每个进程的步数）计；
+halt_window 按记录计，每次更新进 N 个记录（各卡各一对图的日志量），即 halt_window = 50 × N 时窗口为 50 次更新。
+日志 log.jsonl 每次更新一行，日志量为各卡的平均，pairs 为各卡的图对。只有 rank 0 写日志、存档；参数在开训前从 rank 0
+广播，每次存档与训练结束时检查各卡参数（及成分的 ddp_tensors）与 rank 0 的最大差，写进 <out>/ddp_sync.jsonl。
+提前停由全部记录在各卡上同样算出，所以各卡同时停。
 """
 from __future__ import annotations
 
@@ -38,6 +49,7 @@ from workbench.launch import require_clean
 from workbench.tbwriter import ScalarWriter
 
 from . import config as C
+from . import dist as D
 from .data import PairSet
 from .models import MODELS
 from .optim import Optim, UpdateMonitor
@@ -98,9 +110,10 @@ class Ema:
 class Halt:
     """提前停（#221）：above、below 为 日志量 → 阈值。每步把 stats 里有的量记进各自最近 window 个的窗口；
     窗口满后中位数 > above[k] 或 < below[k] 就返回 {key, op, thr, median, window}，否则 None。NaN 不进窗口。
-    跑满 window 步后仍有量一次也没出现（多半是键名写错），打印一次警告。窗口不随续训状态保存，resume 后重新攒。"""
+    攒满 window 个记录后仍有量一次也没出现（多半是键名写错），打印一次警告。窗口不随续训状态保存，resume 后重新攒。"""
 
-    def __init__(self, above: dict, below: dict, window: int):
+    def __init__(self, above: dict, below: dict, window: int, verbose: bool = True):
+        self.verbose = verbose            # 多卡时只让主进程打印警告（#226）
         self.rules = [(k, ">", float(v)) for k, v in above.items()] + [(k, "<", float(v)) for k, v in below.items()]
         self.window = window
         self.buf = {k: collections.deque(maxlen=window) for k, _, _ in self.rules}
@@ -109,13 +122,15 @@ class Halt:
     def __bool__(self):
         return bool(self.rules)
 
-    def __call__(self, stats: dict):
-        self.calls += 1
-        for k, _, _ in self.rules:
-            if k in stats and not math.isnan(float(stats[k])):
-                self.buf[k].append(float(stats[k]))
-        if self.calls == self.window and any(not b for b in self.buf.values()):
-            print(f"WARNING halt：前 {self.window} 步日志里没有 {[k for k, b in self.buf.items() if not b]}", flush=True)
+    def __call__(self, *records: dict):
+        """一次更新的日志量：单卡时一个 dict；多卡时每卡一个（#226），都进窗口后再判断一次。"""
+        before, self.calls = self.calls, self.calls + len(records)     # calls 按记录计
+        for stats in records:
+            for k, _, _ in self.rules:
+                if k in stats and not math.isnan(float(stats[k])):
+                    self.buf[k].append(float(stats[k]))
+        if self.verbose and before < self.window <= self.calls and any(not b for b in self.buf.values()):
+            print(f"WARNING halt：前 {self.window} 个记录里没有 {[k for k, b in self.buf.items() if not b]}", flush=True)
         for k, op, thr in self.rules:
             b = self.buf[k]
             if len(b) == self.window:
@@ -139,6 +154,9 @@ def main(argv=None):
 
     cfg = C.load(args.config)
     o, r, mname = cfg["optim"], cfg["run"], cfg["model"]["name"]
+    rank = D.init(r["ddp"])      # 多卡（#226）：每个进程绑一张卡；单卡时为 0
+    main_ = rank == 0
+    seed_r = r["seed"] + 1000 * rank   # 本卡的随机数种子：各卡的抽签、加噪、读图顺序各不相同；单卡时即 [run] seed
     names = C.parts_of(cfg)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -146,6 +164,9 @@ def main(argv=None):
     mod = MODELS[mname]
     os.environ.setdefault("TORCH_HOME", mod.TORCH_HOME)
     model = mod.Model(cfg, args.weights_root, device=args.device)
+    if r["ddp"]:
+        D.broadcast(model.params)       # 各卡从同一份参数起步（LoRA 的 A 是随机初始化的）
+        seed_all(seed_r)   # 之后各卡的抽签、加噪各不相同
 
     kw = {}
     for n in names:
@@ -155,24 +176,44 @@ def main(argv=None):
     terms = [(n, PARTS[n].Term(cfg[n], model, ds)) for n in names if PARTS[n].Term is not None]
     if r["limit"]:
         ds.pairs = ds.pairs[:: max(1, len(ds.pairs) // r["limit"])][: r["limit"]]   # 均匀取样，覆盖各 ROI
-    g = torch.Generator().manual_seed(r["seed"])
-    dl = torch.utils.data.DataLoader(ds, batch_size=o["batch"], shuffle=True, generator=g, num_workers=r["workers"],
-                                     drop_last=True, persistent_workers=r["workers"] > 0)
-    optim = Optim(model.params, o, model.amp, getattr(model, "groups", None))
+    g = torch.Generator().manual_seed(seed_r)
+    # 多卡：DistributedSampler 按 (seed, epoch) 打乱后分给各卡，各卡读不同的图；训练集补齐到卡数的整数倍（#226）
+    smp = torch.utils.data.distributed.DistributedSampler(ds, shuffle=True, seed=r["seed"]) if r["ddp"] else None
+    dl = torch.utils.data.DataLoader(ds, batch_size=o["batch"], shuffle=smp is None, sampler=smp, generator=g,
+                                     num_workers=r["workers"], drop_last=True, persistent_workers=r["workers"] > 0)
+    optim = Optim(model.params, o, model.amp, getattr(model, "groups", None), reduce=D.average_grads)
     ema = Ema(model, o["ema"]) if o["ema"] > 0 else None
     if r["log_update"] and not hasattr(model, "update_parts"):
         raise C.ConfigError(f"[run] log_update 要求模型提供 update_parts，{mname} 没有")
     mon = UpdateMonitor(*model.update_parts()) if r["log_update"] else None
-    (out / "args.json").write_text(json.dumps(
-        {"config": cfg, "source": str(args.config), "infer_config": model.infer_cfg, "weights": model.weights,
-         "n_train": len(ds), "n_params": sum(p.numel() for p in model.params), "commit": git_head(REPO),
-         "env": env_info()}, ensure_ascii=False, indent=1), encoding="utf-8")
-    if r["save_zero"]:
+    if main_:
+        (out / "args.json").write_text(json.dumps(
+            {"config": cfg, "source": str(args.config), "infer_config": model.infer_cfg, "weights": model.weights,
+             "n_train": len(ds), "n_params": sum(p.numel() for p in model.params), "commit": git_head(REPO),
+             "env": env_info(), "world": D.world()}, ensure_ascii=False, indent=1), encoding="utf-8")
+    if r["save_zero"] and main_:
         torch.save(model.state_dict(), out / "ckpt_0.pt")
-    rng = np.random.default_rng(r["seed"])   # 打乱分数（placebo）、交换方向（RoMa 伪标签）共用
+    rng = np.random.default_rng(seed_r)   # 打乱分数（placebo）、交换方向（RoMa 伪标签）共用
     loader = Loader(dl, g)
 
+    def sync_check(st):
+        """多卡：各卡参数（及成分的 ddp_tensors）与 rank 0 的最大差，记进 ddp_sync.jsonl（#226）。"""
+        if not r["ddp"]:
+            return
+        rec = {"step": st, "params": D.max_diff(model.params)}
+        for n, t in terms:
+            ts = t.ddp_tensors() if hasattr(t, "ddp_tensors") else []
+            if ts:
+                rec[n] = D.max_diff(ts)
+        if main_:
+            with open(out / "ddp_sync.jsonl", "a", encoding="utf-8") as f:
+                f.write(json.dumps(rec) + "\n")
+            print(f"ddp sync step {st}: {rec}", flush=True)
+
     def save(st):
+        sync_check(st)
+        if not main_:
+            return
         sd = ema.state_dict() if ema else model.state_dict()
         if r["save_optim"]:
             sd["train"] = {"step": st, "optim": optim.state_dict(), "rng": rng_state(rng), "loader": loader.state(),
@@ -183,7 +224,7 @@ def main(argv=None):
     stops = [x for x in (args.stop_at, r["stop_at"]) if x]
     total = min([o["steps"], *stops])
     save_at = set(r["save_at"])
-    halt, halted = Halt(r["halt_above"], r["halt_below"], r["halt_window"]), None
+    halt, halted = Halt(r["halt_above"], r["halt_below"], r["halt_window"], verbose=main_), None
     step, t_start = 0, time.time()
     if r["resume"]:
         sd = torch.load(REPO / r["resume"], map_location="cpu")    # 绝对路径时 REPO / 不起作用
@@ -199,8 +240,8 @@ def main(argv=None):
         step = tr["step"]
         set_rng_state(tr["rng"], rng)
         del sd, tr
-    tbw = ScalarWriter(args.tb) if args.tb else None
-    trw = TraceWriter(out)       # 没有成分放记录时什么也不写
+    tbw = ScalarWriter(args.tb) if args.tb and main_ else None
+    trw = TraceWriter(out)       # 没有成分放记录时什么也不写（多卡时成分不放记录，见 [rloo] 的检查）
 
     def observe(st):
         for n, t in terms:
@@ -210,7 +251,7 @@ def main(argv=None):
 
     if not r["resume"]:
         observe(0)
-    with open(out / "log.jsonl", "a", encoding="utf-8") as log:
+    with open(out / "log.jsonl" if main_ else os.devnull, "a", encoding="utf-8") as log:
         while step < total:
             for batch in loader:
                 t0 = time.time()
@@ -236,25 +277,34 @@ def main(argv=None):
                         term.after_update(st)
                 trw.add(step, st.trace)
                 observe(step)
-                rec = {"step": step, "pairs": batch["pair"], "loss": round(float(loss), 5), **stats, **upd,
+                pairs, loss_v, rows = batch["pair"], round(float(loss), 5), [stats]
+                if r["ddp"]:    # 各卡的日志量：日志里取平均，提前停的窗口逐卡都进（#226）
+                    rows = D.gather({"pairs": batch["pair"], "loss": float(loss), "stats": stats})
+                    pairs = [q for x in rows for q in x["pairs"]]
+                    loss_v = round(float(np.mean([x["loss"] for x in rows])), 5)
+                    rows = [x["stats"] for x in rows]
+                    stats = D.mean_stats(rows)
+                rec = {"step": step, "pairs": pairs, "loss": loss_v, **stats, **upd,
                        "sec": round(time.time() - t0, 3)}
                 if step == 1 and torch.cuda.is_available():
                     rec["mem_gb"] = round(torch.cuda.max_memory_allocated() / 2 ** 30, 2)
                 log.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 if tbw:
                     tbw.add_dict(rec, step)
-                if step % 50 == 0:
+                if step % 50 == 0 and main_:
                     log.flush()
-                    print(f"step {step}: loss={float(loss):.4f} "
+                    print(f"step {step}: loss={loss_v:.4f} "
                           + " ".join(f"{k}={stats[k]}" for k in PRINT_KEYS if k in stats)
                           + f" elapsed={(time.time() - t_start) / 60:.1f}min", flush=True)
                 if (r["save_every"] and step % r["save_every"] == 0) or step in save_at:
                     save(step)
-                halted = halt(stats) if halt else None
+                halted = halt(*rows) if halt else None
                 if halted:
                     halted["step"] = step
-                    (out / "halt.json").write_text(json.dumps(halted, ensure_ascii=False) + "\n", encoding="utf-8")
-                    print(f"HALT step {step}: {halted}", flush=True)
+                    if main_:
+                        (out / "halt.json").write_text(json.dumps(halted, ensure_ascii=False) + "\n",
+                                                       encoding="utf-8")
+                        print(f"HALT step {step}: {halted}", flush=True)
                 if step >= total or halted:
                     break
             if halted:
@@ -264,6 +314,9 @@ def main(argv=None):
     trw.flush()
     if r["save_every"] and step % r["save_every"] and not halted:
         save(step)
+    elif not (r["save_every"] and step % r["save_every"] == 0):
+        sync_check(step)        # 最后一步没有存档时也检查一次（多卡）
+    D.close()
 
 
 if __name__ == "__main__":

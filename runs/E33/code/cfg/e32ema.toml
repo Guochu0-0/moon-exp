@@ -1,0 +1,47 @@
+# E33 测速用（#226）：E32 `ema` 的完整配置（runs/E32/configs/_e32.toml + ema.toml 合并，内容不变）。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.47
+vgg_lr = 0.47
+
+[optim]
+lr = 3e-5
+steps = 4000
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+fine_shape = "cauchy"
+levels = [16, 8, 4]
+k = 0.5
+fine_mode = "local"
+fine_group = 8
+fine_mask = true
+fine_cert_bce = 0.01
+fine_w = 4.2
+ref_ema = 0.999
+
+[run]
+seed = 0
+save_every = 500
+save_zero = false
+stop_at = 2000
+sweep = "last"
+halt_above = {d_ref = 100.0}
+halt_below = {in_frame = 0.5}
+halt_window = 50

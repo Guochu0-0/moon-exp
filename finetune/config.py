@@ -58,6 +58,7 @@ RUN = {
     "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训（不另存 ckpt）
     "halt_below": {},       # 同上，中位数低于阈值就停
     "halt_window": 50,      # 提前停的滑动窗口（日志里有这个量的步数）
+    "ddp": 0,               # 单机多卡数据并行的卡数（#226，由 torchrun 起这么多个进程，见 finetune/train.py）；0 = 单卡
 }
 SELECT = ("val_peak", "last")
 SWEEP = ("all", "last")
@@ -147,6 +148,9 @@ def expand(raw: dict) -> dict:
         raise ConfigError(f"[run] halt_window 应 ≥ 1，得到 {out['run']['halt_window']}")
     if (out["run"]["resume"] or out["run"]["save_optim"]) and out["optim"]["ema"] > 0:
         raise ConfigError("[run] save_optim、resume 不支持 [optim] ema（ckpt 存的是 EMA 权重，不是训练中的权重）")
+    if out["run"]["ddp"] < 0 or (out["run"]["ddp"] and (out["run"]["save_optim"] or out["run"]["resume"]
+                                                          or out["run"]["log_update"])):
+        raise ConfigError("[run] ddp 应 ≥ 0；多卡时不支持 save_optim、resume、log_update")
     if out["run"]["resume"] and not hasattr(model, "load_weights"):
         raise ConfigError(f"[run] resume 只支持装得回全部权重的模型（有 load_weights 的），{m} 不支持")
     for name, part in PARTS.items():      # 按登记顺序：每步也按这个顺序算损失

@@ -15,6 +15,7 @@
 | 模块 | 作用 |
 |---|---|
 | `train.py` | 公共训练循环：读配置 → 建模型、数据、各成分 → 每步按登记顺序求各成分损失、求和、反向 → 写 `log.jsonl`、ckpt、`args.json` |
+| `dist.py` | 单机多卡数据并行（`[run] ddp = N`，#226）：torchrun 起 N 个进程，每卡每步 1 个 batch，全部反向之后各卡梯度取平均再做同一次更新；日志、存档、`halt.json` 只由 0 号进程写，各卡参数与 0 号卡的差记进 `ddp_sync.jsonl` |
 | `config.py` | 读 `runs/<id>/configs/<方法>.toml`、同实验内 `base` 继承、展开默认值、校验（未知的表或键直接报错） |
 | `optim.py` | 优化配方：AdamW、warmup + const / cosine、梯度累积、裁剪；RoMa 用 GradScaler |
 | `models/loftr.py` | AnyMatch-LoFTR：模块保持 `eval()`、只开梯度（原因见 docstring） |

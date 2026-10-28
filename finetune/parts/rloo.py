@@ -225,6 +225,8 @@ def check(cfg):
         raise ConfigError("[rloo] ref_ema 不与 frozen_ref 同用")
     if p["ref_ema"] and any(cfg["model"].get(x) for x in FROZEN_OFF):
         raise ConfigError(f"[rloo] ref_ema 要求 [model] {', '.join(FROZEN_OFF)} 都关闭")
+    if (p["trace"] or p["obs_every"]) and cfg["run"]["ddp"]:
+        raise ConfigError("[rloo] trace、obs_every 不支持多卡（[run] ddp）")
     if p["ref_ema"] and cfg["optim"]["accum"] != 1:
         raise ConfigError("[rloo] ref_ema 要求 [optim] accum = 1（每步一次参数更新）")
     if not 0 < p["gate_det_lo"] <= p["gate_det_hi"] or not 0 <= p["gate_sv"] <= 1 or not 0 <= p["gate_in"] <= 1:
@@ -251,8 +253,11 @@ def data_kw(p):
 # ---------- 前向：粗级（带梯度）与细化（照抄 romatch Decoder.forward 的非 upsample 分支） ----------
 
 def _autocast(dec, x):
+    """同 romatch Decoder.forward 的 autocast 设置：get_autocast_params 只看设备，cuda 上恒为打开（fp16），enabled 参数
+    不起作用。romatch 原写法在 enabled 处传 str(f1_s) == 'cuda'，这里原先照抄；它要把整张特征图转成字符串，每步约
+    1900 次 GPU 同步（#226 实测）。现在不传，返回值不变。"""
     from romatch.utils.utils import get_autocast_params
-    dev, on, dt = get_autocast_params(x.device, str(x) == "cuda", dec.amp_dtype)
+    dev, on, dt = get_autocast_params(x.device, dtype=dec.amp_dtype)
     return torch.autocast(dev, enabled=on, dtype=dt), on
 
 
@@ -793,6 +798,10 @@ class Term:
         self.calls = sd["calls"]
         if self.slow is not None:
             self.slow.load_state_dict(sd["slow"])
+
+    def ddp_tensors(self):
+        """多卡时要检查各卡一致的张量（#226）：EMA 参照的 fp32 影子权重。"""
+        return self.slow.shadow if self.slow is not None else []
 
     def observe(self, step):
         """每 obs_every 步（含第 0 步）在观察集上记一次（#209）；其余步返回 None。"""

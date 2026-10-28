@@ -100,6 +100,8 @@ ADDED = {
     "run.halt_above": ({}, "#221 新增提前停；空 = 不停"),
     "run.halt_below": ({}, "#221 新增提前停；空 = 不停"),
     "run.halt_window": (50, "#221 与 halt_above 同批新增；只在设了阈值时起作用"),
+    "run.ddp": (0, "#226 新增多卡数据并行；0 = 单卡，即之前的做法"),
+    "model.sdpa": (False, "#226 新增提速开关（RoMa）；false = DINOv2 原来的注意力写法"),
 }
 
 

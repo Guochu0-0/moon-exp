@@ -1,0 +1,58 @@
+# E37（#236）底座：E36 `_e36` 原样（E32 `ema` + warmup 后恒定学习率，160 式 4 卡数据并行，每次更新 4 对；粗匹配照 E28 `fm`，
+# 细化逐级局部抽签、每级抽 8 次，cauchy 奖励，画面外处理，可信度一起学，细化损失系数 4.2，难版扰动，DINOv2 qkv LoRA r 8，
+# VGG 放开），改三处：
+# - 学习率按单卡基准 5e-5 线性放大 × 4：主学习率 2e-4；LoRA 单卡基准 1e-4 × 4 = 4e-4；细化层与 VGG 仍为主学习率的 0.47 倍；
+# - τ = 0.999^4 ≈ 0.996（Busbridge et al. 2023），同 E36；
+# - 训练集 4 遍 = 31628 对 = 7907 次更新。warmup 125 次更新（500 对），每 250 次更新（1000 对）存档，提前停同 E33。
+# 两组只差 [rloo] levels。种子 0。只评 Val（code/eval_queue.py 逐存档评，随训随测），不评 Test。
+# 本文件以 _ 开头，只当 base，不训练。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.47
+vgg_lr = 0.47
+lora_lr = 4e-4
+
+[optim]
+lr = 2e-4
+steps = 7907
+warmup = 125
+sched = "const"
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+fine_shape = "cauchy"
+levels = [16, 8, 4]
+k = 0.5
+fine_mode = "local"
+fine_group = 8
+fine_mask = true
+fine_cert_bce = 0.01
+fine_w = 4.2
+ref_ema = 0.996
+
+[run]
+seed = 0
+ddp = 4
+save_every = 250
+save_zero = false
+save_optim = false
+sweep = "last"
+halt_above = {d_ref = 100.0}
+halt_below = {in_frame = 0.5}
+halt_window = 200

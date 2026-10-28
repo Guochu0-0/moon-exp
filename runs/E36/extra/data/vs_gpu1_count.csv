@@ -1,0 +1,5 @@
+run,n_ckpt,n_ci_excludes_0,n_below,n_above,mean_diff,mean_abs_diff
+gpu4,8,4,4,0,-0.0063,0.0063
+ema_only,8,3,3,0,-0.0047,0.0047
+sqrt,8,2,2,0,-0.0009,0.0029
+linear,8,1,1,0,-0.0005,0.0023

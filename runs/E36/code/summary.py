@@ -110,7 +110,8 @@ def main():
         vs1 += rs
         if rs:
             count.append({"run": m, "n_ckpt": len(rs), "n_ci_excludes_0": sum(r["ci_excludes_0"] for r in rs),
-                          "n_below": sum(r["ci_hi"] < 0 for r in rs), "n_above": sum(r["ci_lo"] > 0 for r in rs),
+                          "n_below": sum(r["ci_excludes_0"] and r["diff"] < 0 for r in rs),
+                          "n_above": sum(r["ci_excludes_0"] and r["diff"] > 0 for r in rs),
                           "mean_diff": round(float(np.mean([r["diff"] for r in rs])), 4),
                           "mean_abs_diff": round(float(np.mean([abs(r["diff"]) for r in rs])), 4)})
     if vs1:

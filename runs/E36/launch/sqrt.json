@@ -1,0 +1,157 @@
+[
+ {
+  "start": "2026-10-28 09:13:12 +0000",
+  "end": "2026-10-28 18:20:47 +0800",
+  "status": "ok",
+  "commit": "98ce47828e7362e2a68d6e3e6f5d8dfb82d90c86",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-233",
+  "cuda_visible_devices": "0,1,2,3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E36/code/train_queue.py"
+  ],
+  "entry": "runs/E36/code/train_queue.py",
+  "config_file": "runs/E36/configs/sqrt.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.47,
+    "refine_lr": 0.47,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 8,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0002,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 2000,
+    "batch": 1,
+    "lr": 6e-05,
+    "wd": 0.01,
+    "warmup": 125,
+    "warmup_start": 0.1,
+    "sched": "const",
+    "lr_min": 0.0,
+    "clip": 0.0,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 4,
+    "save_every": 250,
+    "save_at": [],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "val_peak",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": false,
+    "resume": "",
+    "sweep": "last",
+    "halt_above": {
+     "d_ref": 100.0
+    },
+    "halt_below": {
+     "in_frame": 0.5
+    },
+    "halt_window": 200,
+    "ddp": 4
+   },
+   "aug": {
+    "geo": true,
+    "photo": false,
+    "shift": 128.0,
+    "rot": 20.0,
+    "scale": 0.2,
+    "shift_disk": true,
+    "erase": true,
+    "erase_n": 3,
+    "erase_min": 0.1,
+    "erase_max": 0.25,
+    "blockmask": false,
+    "mask_block": 32,
+    "mask_ratio": 0.3
+   },
+   "rloo": {
+    "reward": "ref",
+    "group": 16,
+    "temp": 0.3,
+    "num": 5000,
+    "ransac": 3.0,
+    "chunk": 8,
+    "baseline": "loo",
+    "delta": 8.0,
+    "tau": 16.0,
+    "r_out": -0.1,
+    "shape": "gauss",
+    "fine_shape": "cauchy",
+    "levels": [
+     16,
+     8,
+     4
+    ],
+    "k": 0.5,
+    "frozen_ref": false,
+    "fine_mode": "local",
+    "fine_group": 8,
+    "cos_every": 0,
+    "trace": false,
+    "obs_every": 0,
+    "obs_n": 16,
+    "obs_seed": 0,
+    "frame_mask": true,
+    "cert_bce": 0.01,
+    "ref_ema": 0.996,
+    "gate": false,
+    "gate_det_lo": 0.5,
+    "gate_det_hi": 2.0,
+    "gate_sv": 0.7,
+    "gate_in": 0.0,
+    "spread": 0.0,
+    "spread_h0": 4.0,
+    "mp_n": 0,
+    "mp_shift": 64.0,
+    "mp_rot": 10.0,
+    "mp_scale": 0.1,
+    "mp_disk": true,
+    "mp_thr": 16.0,
+    "fine_w": 4.2,
+    "fine_mask": true,
+    "fine_cert_bce": 0.01,
+    "weight": 1.0
+   }
+  },
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  }
+ }
+]

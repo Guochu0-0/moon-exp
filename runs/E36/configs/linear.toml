@@ -1,0 +1,11 @@
+# 线性缩放（对照）：学习率 × 4 = 1.2e-4（LoRA 4e-4），τ = 0.996。
+base = "_e36"
+
+[model]
+lora_lr = 4e-4
+
+[optim]
+lr = 1.2e-4
+
+[rloo]
+ref_ema = 0.996

@@ -1,0 +1,6 @@
+best_pairs,last_pairs,a,b,auc5_a,auc5_b,diff,ci_lo,ci_hi,ci_excludes_0
+7000,8000,gpu1,gpu1,0.319,0.319,-0.0,-0.004,0.004,False
+6000,8000,gpu4,gpu4,0.311,0.312,-0.001,-0.006,0.003,False
+5000,8000,ema_only,ema_only,0.31,0.313,-0.003,-0.008,0.002,False
+8000,8000,sqrt,sqrt,0.317,0.317,0.0,0.0,0.0,False
+6000,8000,linear,linear,0.313,0.319,-0.006,-0.012,-0.001,True

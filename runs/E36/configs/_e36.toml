@@ -1,0 +1,60 @@
+# E36（#233）底座：E33 `gpu4` 原样（runs/E33/configs/_e33.toml 与 gpu4.toml 合并：E32 `ema` + warmup 后恒定学习率；
+# 160 的 4 张卡数据并行（finetune/dist.py），每张卡每步 1 对，梯度平均后更新，每次更新 4 对），改一处：只训 2000 次更新
+# （8000 对，覆盖 E33 单卡在 7000–8000 对的最高点和之后的回落）。warmup 125 次更新（500 对），每 250 次更新（1000 对）存档，
+# 提前停的窗口 200 个记录（50 次更新），同 E33 `gpu4`。种子 0。只评 Val（code/eval_queue.py 逐存档评，150 上随训随测），不评 Test。
+# 各组按缩放规则改学习率和 EMA 参照的 τ（k = 每次更新的对数 = 4）：
+# - 学习率：主学习率 lr 与 LoRA 学习率 lora_lr 同比例改（写法同 E34）；refine_lr、vgg_lr 是主学习率的倍数
+#   （finetune/models/roma.py），保持 0.47 不动。AdamW 用平方根缩放 × √k（Malladi et al. 2022），SGD 的线性缩放 × k
+#   （Goyal et al. 2017）作对照。
+# - τ：[rloo] ref_ema（写法同 E35），0.999 换成 0.999^k ≈ 0.996（Busbridge et al. 2023），参照仍记住约 1000 对图。
+# 本文件以 _ 开头，只当 base，不训练。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.47
+vgg_lr = 0.47
+lora_lr = 1e-4
+
+[optim]
+lr = 3e-5
+steps = 2000
+warmup = 125
+sched = "const"
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+fine_shape = "cauchy"
+levels = [16, 8, 4]
+k = 0.5
+fine_mode = "local"
+fine_group = 8
+fine_mask = true
+fine_cert_bce = 0.01
+fine_w = 4.2
+ref_ema = 0.999
+
+[run]
+seed = 0
+ddp = 4
+save_every = 250
+save_zero = false
+save_optim = false
+sweep = "last"
+halt_above = {d_ref = 100.0}
+halt_below = {in_frame = 0.5}
+halt_window = 200

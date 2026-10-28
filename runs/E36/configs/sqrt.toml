@@ -1,0 +1,11 @@
+# 平方根缩放：学习率 × √4 = 6e-5（LoRA 2e-4），τ = 0.996。
+base = "_e36"
+
+[model]
+lora_lr = 2e-4
+
+[optim]
+lr = 6e-5
+
+[rloo]
+ref_ema = 0.996

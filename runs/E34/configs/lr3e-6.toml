@@ -1,0 +1,8 @@
+# 第 1 轮：主学习率 3e-6，LoRA 学习率 1e-5（与默认 3e-5 / 1e-4 同比例）。
+base = "_e34"
+
+[model]
+lora_lr = 1e-5
+
+[optim]
+lr = 3e-6

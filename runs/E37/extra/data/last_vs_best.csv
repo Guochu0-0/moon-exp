@@ -1,0 +1,3 @@
+best_pairs,last_pairs,a,b,auc5_a,auc5_b,diff,ci_lo,ci_hi
+21000,31628,all,all,0.321,0.323,-0.003,-0.008,0.003
+23000,31628,three,three,0.307,0.321,-0.013,-0.02,-0.007

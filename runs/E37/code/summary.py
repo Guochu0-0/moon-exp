@@ -7,7 +7,8 @@
 - Val：sweep/<组>/S/metrics.json 各存档的逐对误差与 AUC@5；横轴为已训图对数（更新次数 × 4）。
 - 比较用配对自助法：同一批 Val 图对有放回重抽 2000 次，取 AUC@5 之差的 2.5% 与 97.5% 分位（同 E33、E36）。
   1. 每个存档上 all 减 three；
-  2. 同一个运行里，最后一个存档与最高的存档比。
+  2. 按训练集遍数分段（每遍 7907 对，各 7–9 个存档）：两组的平均 AUC@5、平均差、区间在 0 以上 / 以下的存档数；
+  3. 同一个运行里，最后一个存档与最高的存档比。
 - 判据量：离参照的距离 d_ref、画面内格子比例 in_frame，50 次更新的滑动中位数（多卡日志每次更新一行，为各卡平均）。
 """
 from __future__ import annotations
@@ -32,7 +33,7 @@ if Path(FONT).exists():
 plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 RUNS = {"all": ("五级（16、8、4、2、1）", "C3"), "three": ("三级（16、8、4）", "C0")}
-N, D_MAX, IN_MIN, WIN = 4, 100.0, 0.5, 50
+N, D_MAX, IN_MIN, WIN, EPOCH = 4, 100.0, 0.5, 50, 7907
 OUT = R / "extra" / "data"
 
 
@@ -89,6 +90,15 @@ def main():
     diff = [cmp_row("all", "three", val["all"][p], val["three"][p], pairs=p) for p in ps]
     if diff:
         write("all_vs_three.csv", diff)
+        by_pass = []
+        for k in range(1, 5):
+            rs = [r for r in diff if (k - 1) * EPOCH < r["pairs"] <= k * EPOCH]
+            by_pass.append({"pass": k, "n_ckpt": len(rs),
+                            "auc5_all": round(float(np.mean([r["auc5_a"] for r in rs])), 4),
+                            "auc5_three": round(float(np.mean([r["auc5_b"] for r in rs])), 4),
+                            "mean_diff": round(float(np.mean([r["diff"] for r in rs])), 4),
+                            "n_above": sum(r["ci_lo"] > 0 for r in rs), "n_below": sum(r["ci_hi"] < 0 for r in rs)})
+        write("by_pass.csv", by_pass)
 
     within = []
     for m in RUNS:
@@ -137,8 +147,10 @@ def main():
         a.errorbar(x, y, yerr=[y - [r["ci_lo"] for r in diff], [r["ci_hi"] for r in diff] - y], fmt="o", color="k",
                    ms=3, capsize=2, lw=0.8)
         a.axhline(0, color="0.5", ls=":", lw=0.8)
+        for k in range(1, 4):
+            a.axvline(k * EPOCH, color="0.8", lw=0.8)
         a.set_xlabel("已训图对数")
-        a.set_ylabel("Val AUC@5 之差（五级 − 三级）")
+        a.set_ylabel("Val AUC@5 之差（五级减三级）")
         fig.tight_layout()
         fig.savefig(R / "extra" / "diff.png", dpi=110)
 

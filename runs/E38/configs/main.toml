@@ -1,0 +1,55 @@
+# E38（#238）：从 E37 `all` 的最后一个存档（7907 次更新 = 31628 对）续训 4 遍。配置照 E37 `_e37` + `all`
+# （levels = [16, 8, 4, 2, 1]）原样，只改：种子 1；[model] init 指向 E37 all 的 ckpt_7907.pt（装入时 LoRA 合并进
+# DINOv2，再挂一套从零开始的新 LoRA）；save_zero = true，起点也存一份并评 Val。warmup 仍为 125 次更新：E37 没存
+# 优化器状态，续训时 AdamW 动量从零开始、EMA 参照重置为起点。只评 Val（code/eval_queue.py），不评 Test。
+[model]
+name = "roma"
+init = "/remote-home/xufang/YGC/moon-exp/runs/E37/ckpt/all/ckpt_7907.pt"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.47
+vgg_lr = 0.47
+lora_lr = 4e-4
+
+[optim]
+lr = 2e-4
+steps = 7907
+warmup = 125
+sched = "const"
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+fine_shape = "cauchy"
+levels = [16, 8, 4, 2, 1]
+k = 0.5
+fine_mode = "local"
+fine_group = 8
+fine_mask = true
+fine_cert_bce = 0.01
+fine_w = 4.2
+ref_ema = 0.996
+
+[run]
+seed = 1
+ddp = 4
+save_every = 250
+save_zero = true
+save_optim = false
+sweep = "last"
+halt_above = {d_ref = 100.0}
+halt_below = {in_frame = 0.5}
+halt_window = 200

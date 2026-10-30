@@ -174,6 +174,10 @@ class Model:
         self.adapter = RomatchAdapter(REPO / self.infer_cfg["repo"], self.weights, device=device,
                                       weights_key=prm.get("weights_key"), long_side=self.long_side)
         self.model, self.device = self.adapter.model, device
+        if self.adapter.blocks_loaded:
+            raise ValueError("[model] init 的存档含全参数训练的 DINOv2 块，从这种存档起步时新存档存不下这些块，不支持")
+        # 起点存档已合并进 DINOv2 的各份 LoRA；DINOv2 不在 state_dict 里，存档时要另存，否则评测时丢掉起点的改动（#238）
+        self.lora_base = self.adapter.lora_merged
         self.input = self.infer_cfg["input"]
         self.s = HW / RES
         self.train_res = m["train_res"]
@@ -311,12 +315,15 @@ class Model:
 
     def state_dict(self):
         """{'model': ...}，RomatchAdapter(weights_key='model') 直接能读；有 LoRA 时另存 'dinov2_lora'
-        （每层 A、B、scale），适配器加载时合并进 DINOv2 对应层的权重；有全参数训练的块时另存 'dinov2_blocks'
+        （每层 A、B、scale），适配器加载时合并进 DINOv2 对应层的权重；从带 LoRA 的存档起步（[model] init）时另存
+        'dinov2_lora_base'（起点已合并进 DINOv2 的各份 LoRA，按顺序），适配器先合并它们（#238）；有全参数训练的块时另存 'dinov2_blocks'
         （块内参数，fp32），适配器加载时覆盖进 DINOv2。推理结构不变。"""
         sd = {"model": {k: v.detach().cpu() for k, v in self.model.state_dict().items()}}
         if self.lora:
             sd["dinov2_lora"] = {k: {"A": l.A.detach().cpu(), "B": l.B.detach().cpu(), "scale": l.scale}
                                  for k, l in self.lora.items()}
+        if getattr(self, "lora_base", None):
+            sd["dinov2_lora_base"] = self.lora_base
         if self.unc_heads is not None:   # 只作记录，评测适配器不读
             sd["unc_head"] = {k: v.detach().cpu() for k, v in self.unc_heads.state_dict().items()}
         if self.dino_blocks:

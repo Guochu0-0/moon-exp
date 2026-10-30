@@ -1990,3 +1990,47 @@ def test_rloo_autocast_does_not_stringify_features(monkeypatch):
     x = torch.zeros(2).as_subclass(NoStr)
     ac, on = rloo._autocast(types.SimpleNamespace(amp_dtype=torch.float16), x)
     assert on is False
+
+
+def test_roma_state_dict_keeps_init_lora():
+    """从带 LoRA 的存档起步时（#238），新存档记下起点已合并进 DINOv2 的 LoRA；评测适配器照存档装回的 DINOv2
+    与训练时的等效权重（起点合并后 + 本次 LoRA）相同。DINOv2 不在 state_dict 里，漏存起点的 LoRA 会让评测丢掉起点的改动。"""
+    import types
+    import torch
+    from baselines.adapters.romatch import merge_lora, merge_saved
+    from finetune.models.roma import LoRA, Model
+
+    def dino():
+        torch.manual_seed(0)
+        d = torch.nn.Module()
+        d.blocks = torch.nn.ModuleList([torch.nn.Module()])
+        d.blocks[0].attn = torch.nn.Module()
+        d.blocks[0].attn.qkv = torch.nn.Linear(4, 6)
+        return d
+
+    def lora(seed):
+        g = torch.Generator().manual_seed(seed)
+        return {"blocks.0.attn.qkv": {"A": torch.randn(2, 4, generator=g), "B": torch.randn(6, 2, generator=g), "scale": 2.0}}
+
+    l0, l1 = lora(1), lora(2)
+    base = dino()                                    # 训练时：适配器装入起点存档，合并起点的 LoRA
+    assert merge_saved(base, {"model": {}, "dinov2_lora": l0}) == ([l0], False)
+    cur = LoRA(base.blocks[0].attn.qkv, 2, 4.0)      # 再挂一套新 LoRA，训练后取 l1 的值
+    with torch.no_grad():
+        cur.A.copy_(l1["blocks.0.attn.qkv"]["A"])
+        cur.B.copy_(l1["blocks.0.attn.qkv"]["B"])
+    cur.scale = 2.0
+    m = types.SimpleNamespace(model=torch.nn.Linear(1, 1), lora={"blocks.0.attn.qkv": cur}, unc_heads=None,
+                              dino_blocks={}, lora_base=[l0])
+    sd = Model.state_dict(m)
+    assert len(sd["dinov2_lora_base"]) == 1
+    ev = dino()                                      # 评测时：原始 DINOv2 + 存档
+    chain, _ = merge_saved(ev, sd)
+    assert len(chain) == 2
+    x = torch.randn(3, 4)
+    assert torch.allclose(ev.blocks[0].attn.qkv(x), cur(x), atol=1e-5)
+    ref = dino()                                     # 等效权重 = W + 起点 LoRA + 本次 LoRA
+    merge_lora(ref, l0)
+    merge_lora(ref, l1)
+    assert torch.allclose(ev.blocks[0].attn.qkv.weight, ref.blocks[0].attn.qkv.weight)
+    assert "dinov2_lora_base" not in Model.state_dict(types.SimpleNamespace(**{**vars(m), "lora_base": []}))

@@ -35,14 +35,8 @@ class RomatchAdapter:
         res = {k: v for k, v in (("coarse_res", coarse_res), ("upsample_res", upsample_res)) if v is not None}
         self.model = roma_outdoor(device=device, weights=sd, **res)
         self.swap = swap
-        lora = ckpt.get("dinov2_lora") if weights_key else None
-        if lora:   # 训练时在 DINOv2 上加的 LoRA（#122、#124，finetune/models/roma.py），合并后结构与原模型相同
-            merge_lora(self.model.encoder.dinov2_vitl14[0], lora)
-        blocks = ckpt.get("dinov2_blocks") if weights_key else None
-        if blocks:   # 训练时全参数训练的 DINOv2 块（#124），按原 dtype 覆盖
-            bad = self.model.encoder.dinov2_vitl14[0].load_state_dict(blocks, strict=False).unexpected_keys
-            if bad:
-                raise KeyError(f"dinov2_blocks 里有 DINOv2 没有的键：{bad[:5]}")
+        # 合并进 DINOv2 的各份 LoRA（按合并顺序），finetune/models/roma.py 从本存档起步时把它们记进新存档
+        self.lora_merged, self.blocks_loaded = merge_saved(self.model.encoder.dinov2_vitl14[0], ckpt) if weights_key             else ([], False)
         self.model.eval()
         self.device, self.long_side = device, long_side
         self.notes = (f"long_side={long_side}, uint8 PIL at 640 grid (official match() only takes PIL RGB), "
@@ -78,6 +72,22 @@ class RomatchAdapter:
         kp0 = to_original(k0.float().cpu().numpy() - 0.5, *g0)
         kp1 = to_original(k1.float().cpu().numpy() - 0.5, *g1)
         return kp0, kp1, conf.float().cpu().numpy()
+
+
+def merge_saved(dinov2, ckpt: dict):
+    """把训练存档里 DINOv2 的改动装进 dinov2（romatch 把 DINOv2 放在列表里，不在 state_dict 中，只能另存）：
+    先按顺序合并 'dinov2_lora_base'（从别的存档起步时，起点已合并进来的各份 LoRA，#238），再合并本次训练的
+    'dinov2_lora'（#122、#124），最后按原 dtype 覆盖 'dinov2_blocks'（全参数训练的块，#124）。合并后结构与原模型相同。
+    返回（合并过的各份 LoRA 按顺序的列表，是否装了 dinov2_blocks）。"""
+    chain = list(ckpt.get("dinov2_lora_base") or []) + ([ckpt["dinov2_lora"]] if ckpt.get("dinov2_lora") else [])
+    for lora in chain:
+        merge_lora(dinov2, lora)
+    blocks = ckpt.get("dinov2_blocks")
+    if blocks:
+        bad = dinov2.load_state_dict(blocks, strict=False).unexpected_keys
+        if bad:
+            raise KeyError(f"dinov2_blocks 里有 DINOv2 没有的键：{bad[:5]}")
+    return chain, bool(blocks)
 
 
 def merge_lora(dinov2, lora: dict):

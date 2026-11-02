@@ -89,6 +89,12 @@ def row_report(e0, e1, recs, pairs, row, rng):
         m = (ch >= lo) & (ch < hi)
         out["change_vs_gain"]["bins"][name] = {"n": int(m.sum()), "better": float((imp[m] > 0).mean()) if m.any() else None,
                                                 "median_gain": float(np.median(imp[m])) if m.any() else None}
+    # 相似度的变化能否预示误差的变化
+    n0 = np.array([recs[p]["model"]["ncc"] for p in pairs if row in recs[p]])
+    n1 = np.array([recs[p][row]["ncc"] for p in pairs if row in recs[p]])
+    out["ncc_gain_vs_err_gain"] = spearman(n1 - n0, imp)[0]
+    out["ncc_row_gt_model"] = float((n1 > n0).mean())
+    out["ncc_medians"] = [float(np.median(n0)), float(np.median(n1))]
     if row != "gt_linear":
         edge = {}
         ps = [recs[p][row]["p"] for p in pairs if row in recs[p]]

@@ -199,6 +199,15 @@ def main():
                         "disc_ratio_p90": round(float(np.quantile(disc, 0.9)), 3) if len(disc) else None,
                         "disc_fit_fail": int((disc == 0).sum())})
         write("screen_by_segment.csv", seg)
+        early = []
+        for lo, hi in ((0, 100), (100, 200), (200, 300), (300, 500), (500, 750), (750, 1000), (1000, 1500),
+                       (1500, 1977), (1977, UPD)):
+            sr = [r for r in scr if lo < r["step"] <= hi]
+            ra = np.array([r["ratio"] for r in sr])
+            early.append({"updates": f"{lo + 1}-{hi}", "drawn": len(sr), "discarded": sum(not r["keep"] for r in sr),
+                          "keep_ratio": round(sum(r["keep"] for r in sr) / max(1, len(sr)), 3),
+                          "ratio_median_all": round(float(np.median(ra)), 3)})
+        write("screen_early.csv", early)
 
         fig, ax = plt.subplots(1, 3, figsize=(17, 4.4))
         ax[0].plot(st, roll(keep, 200, np.nanmean), color="C3", lw=1.1)

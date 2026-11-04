@@ -9,7 +9,7 @@
    AUC@5 之差与配对自助法 95% 区间（同一批 Val 图对有放回重抽 2000 次，同 E37）；按训练集遍数（每 1977 次更新）分段的平均。
 2. 训练曲线：每次更新的保留比例 = 4 ÷ 四张卡共取到的对数（日志 scr_drawn 为各卡平均，故 = 1 ÷ scr_drawn），
    200 次更新滑动平均；被丢掉的对的内点比例分布（ckpt/main/screen_r*.jsonl，按训练进程分四段）；离参照的距离、
-   画面内格子比例、粗级奖励与 E37 all 叠画（50 次更新滑动中位数）。
+   画面内格子比例、训练图对上当前模型自身拟合的内点比例（日志 n_inl ÷ 5000）与 E37 all 叠画（50 次更新滑动中位数）。
 3. 开销：两边日志 sec（每次更新的耗时，E41 含被丢掉的对的参照推理）之和与训练的墙钟时间；平均每次更新取了几对。
 4. 每个存档在 Val 上，模型自身的内点比例与真实误差的 Spearman 相关：点对（val_matches.npz，按可信度取前 2000 个）
    到这对图估计仿射的距离 ≤ 3 px 的比例（同工作台逐对视图的内点判定），估计失败记 0；真实误差同评测（失败记 ∞）。
@@ -243,13 +243,14 @@ def main():
         if k in logs:
             log = logs[k]
             st = np.array([r["step"] for r in log])
-            for a, key in zip(ax[:3], ("d_ref", "in_frame", "rew")):
-                a.plot(st, roll([r.get(key, np.nan) for r in log], 50), color=c, lw=1.0, label=name)
+            for a, key in zip(ax[:3], ("d_ref", "in_frame", "n_inl")):
+                v = [r.get(key, np.nan) / (5000.0 if key == "n_inl" else 1.0) for r in log]
+                a.plot(st, roll(v, 50), color=c, lw=1.0, label=name)
         if val[k]:
             s_ = sorted(val[k])
             ax[3].plot(s_, [val[k][s]["summary"]["auc@5"] for s in s_], "o-", color=c, lw=1.1, ms=3, label=name)
     ax[0].set_yscale("log")
-    for a, lab in zip(ax, ("离参照的距离（px）", "画面内格子比例", "粗级奖励均值", "Val AUC@5")):
+    for a, lab in zip(ax, ("离参照的距离（px）", "画面内格子比例", "训练图对上模型自身拟合的内点比例", "Val AUC@5")):
         a.set_ylabel(lab)
         a.set_xlabel("更新次数")
         a.legend(fontsize=8)

@@ -1,0 +1,22 @@
+[
+ {
+  "start": "2026-11-04 11:16:34 +0000",
+  "end": "2026-11-04 11:54:33 +0000",
+  "status": "ok",
+  "commit": "eb4b15362dd7ad35842ddd262a5fba0f288a1262",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-242b",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "env",
+   "MODE=resample",
+   "bash",
+   "runs/E40/code/run.sh",
+   "0",
+   "2"
+  ]
+ }
+]

@@ -1,0 +1,5 @@
+segment,keep_ratio,drawn_per_update,kept_ratio_median,disc_ratio_median,disc_ratio_p90,disc_fit_fail
+1,0.936,4.27,0.686,0.115,0.142,0
+2,0.998,4.01,0.828,0.134,0.144,0
+3,0.999,4.0,0.881,0.123,0.145,0
+4,0.999,4.0,0.9,0.133,0.142,0

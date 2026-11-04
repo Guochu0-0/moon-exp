@@ -21,3 +21,11 @@ ref = "E40/main"
 [methods.all]
 name = "三项合用取平均"
 ref = "E40/main"
+
+[methods.resample]
+name = "只换随机种子取平均（9 个估计）"
+ref = "E40/main"
+
+[methods.resample2]
+name = "只换随机种子取平均（2 个估计）"
+ref = "E40/main"

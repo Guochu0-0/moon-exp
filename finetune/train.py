@@ -23,7 +23,8 @@ state_dict() / load_state_dict()（随续训状态存取）、ddp_tensors()（�
 样本筛选（#245）：成分有 screening = True 时，训练循环每取到一个 batch 先调它的 screen(batch, device) →
 (是否学, 记录)；不学就丢掉、接着取下一个（数据取完一遍照常进入下一遍），直到取到要学的才做这一步（screened）。
 每个取到的 batch 一行写进 <out>/screen_r<rank>.jsonl：{step（这一步是第几次更新）, pair, ratio, keep}。多卡时各卡
-各自筛、各自写，取到的对数可以不同，梯度平均时汇合。日志的 sec 从这一步取到第一个 batch 时算起，含被丢掉的对。
+各自筛、各自写，取到的对数可以不同，梯度平均时汇合；各卡读完自己那份数据的时刻因此错开，进入下一遍
+（DistributedSampler 按 epoch 重新打乱）的时刻也不同，所以错开以后各卡读到的图不再互不重叠，同一步里两张卡可能学到同一对。日志的 sec 从这一步取到第一个 batch 时算起，含被丢掉的对。
 
 [run] ddp = N > 0（#226）：单机 N 卡数据并行，由 torchrun 起 N 个进程（finetune/dist.py）：
 

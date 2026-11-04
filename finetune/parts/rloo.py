@@ -106,6 +106,7 @@ from __future__ import annotations
 
 import math
 import time
+from typing import NamedTuple
 
 import numpy as np
 import torch
@@ -792,6 +793,19 @@ def loo(r):
 
 # ---------- 训练成分 ----------
 
+class Kept(NamedTuple):
+    """样本筛选（#245）选中的一对：pair 标识、参照仿射（或 None）、内点数、内点比例。"""
+    pair: str
+    A: object
+    n: int
+    ratio: float
+
+
+def _scr_fresh():
+    """样本筛选的逐步计数：这一步本卡取了几对、被丢对的内点比例、参照推理耗时、选中的一对。"""
+    return {"drawn": 0, "disc": [], "t": 0.0, "kept": None}
+
+
 class Term:
     def __init__(self, p, model, ds):
         self.p, self.model = p, model
@@ -801,7 +815,7 @@ class Term:
         self.calls = 0
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
         self.screening = bool(p.get("screen"))      # 样本筛选（#245）：训练循环取到每对图先调 screen
-        self._scr = {"drawn": 0, "disc": [], "t": 0.0, "kept": None}
+        self._scr = _scr_fresh()
 
     @torch.no_grad()
     def ref_fit(self, i0, i1):
@@ -825,7 +839,7 @@ class Term:
         s["drawn"] += 1
         s["t"] += time.time() - t0
         if keep:
-            s["kept"] = (pair, A, n, ratio)
+            s["kept"] = Kept(pair, A, n, ratio)
         else:
             s["disc"].append(ratio)
         return keep, {"pair": pair, "ratio": round(ratio, 5), "keep": keep}
@@ -903,18 +917,14 @@ class Term:
         if self.screening:
             sc = self._scr
             kept = sc["kept"]
-            if B != 1 or kept is None or kept[0] != st.batch["pair"][0]:
+            if B != 1 or kept is None or kept.pair != st.batch["pair"][0]:
                 raise RuntimeError("[rloo] screen 打开时每对图要先经 screen 选中（训练循环 finetune/train.py 的 screened）")
-            stats.update(scr_ratio=[kept[3]], scr_drawn=[sc["drawn"]], t_scr=[sc["t"]])
+            stats.update(scr_ratio=[kept.ratio], scr_drawn=[sc["drawn"]], t_scr=[sc["t"]])
             if sc["disc"]:
                 stats["scr_disc"] = [float(np.mean(sc["disc"]))]
-            self._scr = {"drawn": 0, "disc": [], "t": 0.0, "kept": None}
+            self._scr = _scr_fresh()
         if self.frozen is not None:
             stats.update(cur_ok=[], d_cur=[], ref_gap=[])
-            if kept is None:
-                with torch.no_grad():
-                    z1, z2 = features(self.frozen, i0, i1)
-                    zcls, zcert = coarse(self.frozen, z1, z2)
         if p["mp_n"]:
             stats.update(mp_gap=[], mp_block=[], mp_fail=[])
         lv = p["levels"]
@@ -950,14 +960,7 @@ class Term:
                     fc = anchor_flow(P.expand(p["group"], -1, -1, -1), k)
                     if self.frozen is not None:     # 参照换成冻结的初始模型；当前模型的仿射只用来记录
                         A_cur = A_ref
-                        if kept is not None:        # 样本筛选时已拟合过（#245）
-                            _, A_ref, n_ref, _ = kept
-                        else:
-                            Pz = zcls[b:b + 1].float().softmax(1)
-                            zf, zc = refine(self.frozen, {s: x[b:b + 1] for s, x in z1.items()},
-                                            {s: x[b:b + 1] for s, x in z2.items()}, anchor_flow(Pz, Pz.argmax(1)),
-                                            zcert[b:b + 1].float())
-                            A_ref, n_ref = fit_many(zf, zc, p["num"], p["ransac"])[0]
+                        A_ref, n_ref = (kept.A, kept.n) if kept is not None else                             self.ref_fit(i0[b:b + 1], i1[b:b + 1])     # 样本筛选时已拟合过（#245）
                         _, dc = ref_cells(fc, A_cur, p["delta"], p["tau"], p["r_out"], p["shape"])
                         stats["cur_ok"].append(float(A_cur is not None))
                         if dc is not None:

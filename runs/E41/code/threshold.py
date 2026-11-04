@@ -71,11 +71,12 @@ def main():
         w.writerows(rows)
     x = np.array([r["ratio"] for r in rows])
     med = float(np.median(x))
+    thr = round(round(med / STEP) * STEP, 2)
     res = {"n": N, "seed": SEED, "num": num, "ransac": cfg["rloo"]["ransac"],
            "fit_fail": int(sum(not r["fit"] for r in rows)), "mean": round(float(x.mean()), 4),
            "quantiles": {str(q): round(float(np.quantile(x, q)), 4) for q in QS},
-           "median": round(med, 4), "threshold": round(round(med / STEP) * STEP, 2),
-           "pass_frac_at_threshold": round(float((x >= round(round(med / STEP) * STEP, 2)).mean()), 4)}
+           "median": round(med, 4), "threshold": thr,
+           "pass_frac_at_threshold": round(float((x >= thr).mean()), 4)}
     (out / "threshold.json").write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(json.dumps(res, ensure_ascii=False))
 

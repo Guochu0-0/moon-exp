@@ -10,7 +10,7 @@
 2. 训练曲线：每次更新的保留比例 = 4 ÷ 四张卡共取到的对数（日志 scr_drawn 为各卡平均，故 = 1 ÷ scr_drawn），
    200 次更新滑动平均；被丢掉的对的内点比例分布（ckpt/main/screen_r*.jsonl，按训练进程分四段）；离参照的距离、
    画面内格子比例、粗级奖励与 E37 all 叠画（50 次更新滑动中位数）。
-3. 开销：两边日志 sec（每次更新的耗时，E41 含被丢掉的对的参照推理）之和与启动记录的起止时间；平均每次更新取了几对。
+3. 开销：两边日志 sec（每次更新的耗时，E41 含被丢掉的对的参照推理）之和与训练的墙钟时间；平均每次更新取了几对。
 4. 每个存档在 Val 上，模型自身的内点比例与真实误差的 Spearman 相关：点对（val_matches.npz，按可信度取前 2000 个）
    到这对图估计仿射的距离 ≤ 3 px 的比例（同工作台逐对视图的内点判定），估计失败记 0；真实误差同评测（失败记 ∞）。
 5. 训练中被丢掉次数最多的对：次数、被取到的次数、丢掉时内点比例的中位数（csv），前 6 对的光学与 SAR 原图（图）。
@@ -21,7 +21,6 @@ import collections
 import csv
 import json
 import sys
-from datetime import datetime
 from pathlib import Path
 
 import matplotlib
@@ -90,9 +89,21 @@ def load_val(d, m):
             if k.startswith("step") and "val" in v}
 
 
+def rank(x):
+    """平均秩（并列取平均；∞ 照常排在最后）。"""
+    x = np.asarray(x, float)
+    o = np.argsort(x, kind="stable")
+    r = np.empty(len(x))
+    r[o] = np.arange(len(x), dtype=float)
+    for v in np.unique(x):
+        m = x == v
+        if m.sum() > 1:
+            r[m] = r[m].mean()
+    return r
+
+
 def spearman(x, y):
-    from scipy.stats import spearmanr
-    return float(spearmanr(x, y).correlation)
+    return float(np.corrcoef(rank(x), rank(y))[0, 1])
 
 
 def own_ratio(d, m, st, ds, pairs):
@@ -119,15 +130,13 @@ def own_ratio(d, m, st, ds, pairs):
     return np.array(ratio), np.array(err, float)
 
 
-def launch_hours(d, m):
-    f = d / "launch" / f"{m}.json"
-    if not f.exists():
+def train_hours(d, m):
+    """训练的墙钟时间：args.json（开训时写）到最后一个存档的修改时间。启动记录的起止含等评测的时间，不用它。"""
+    ck = d / "ckpt" / m
+    last = max(ck.glob("ckpt_*.pt"), key=lambda q: int(q.stem[5:]), default=None)
+    if last is None or not (ck / "args.json").exists():
         return None
-    rec = json.loads(f.read_text(encoding="utf-8"))[-1]
-    if not rec.get("end"):
-        return None
-    t = lambda s: datetime.strptime(s, "%Y-%m-%d %H:%M:%S %z")      # noqa: E731
-    return (t(rec["end"]) - t(rec["start"])).total_seconds() / 3600
+    return (last.stat().st_mtime - (ck / "args.json").stat().st_mtime) / 3600
 
 
 def main():
@@ -170,7 +179,7 @@ def main():
                      "mean_drawn_per_update": round(float(drawn.mean()), 2),
                      "sec_sum_h": round(sum(r["sec"] for r in log) / 3600, 2),
                      "median_sec": round(float(np.median([r["sec"] for r in log])), 3),
-                     "launch_h": None if launch_hours(*RUNS[k][:2]) is None else round(launch_hours(*RUNS[k][:2]), 2)})
+                     "wall_h": None if train_hours(*RUNS[k][:2]) is None else round(train_hours(*RUNS[k][:2]), 2)})
     if cost:
         write("cost.csv", cost)
     if "E41" in logs:

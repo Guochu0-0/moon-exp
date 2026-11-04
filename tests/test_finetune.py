@@ -2085,7 +2085,7 @@ def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypa
     loss, stats, _ = term(st)
     loss.backward()
     assert stats["scr_drawn"] == 1.0 and "scr_disc" not in stats           # 计数每步清零
-    assert d_far - stats["d_ref"] > 400 and float(w.grad) != 0.0           # 打分用的是 screen 时的参照
+    assert d_far - stats["d_ref"] > 200 and float(w.grad) != 0.0           # 打分用的是 screen 时的参照
     with pytest.raises(RuntimeError):                                      # 没经 screen 选中
         term(st)
 

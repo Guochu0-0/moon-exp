@@ -165,6 +165,16 @@ def main():
                            "mean_diff": round(float(np.mean([r["diff"] for r in rs])), 4),
                            "n_above": sum(r["ci_lo"] > 0 for r in rs), "n_below": sum(r["ci_hi"] < 0 for r in rs)})
         write("by_segment.csv", bp)
+        fig, a_ = plt.subplots(figsize=(7, 4.2))
+        x = [r["update"] for r in diff]
+        y = np.array([r["diff"] for r in diff])
+        a_.errorbar(x, y, yerr=[y - [r["ci_lo"] for r in diff], [r["ci_hi"] for r in diff] - y], fmt="o", color="k",
+                    ms=3, capsize=2, lw=0.8)
+        a_.axhline(0, color="0.5", ls=":", lw=0.8)
+        a_.set_xlabel("更新次数")
+        a_.set_ylabel("Val AUC@5 之差（加筛选减不筛选）")
+        fig.tight_layout()
+        fig.savefig(R / "extra" / "diff.png", dpi=110)
 
     # 2–3. 训练日志
     logs = {k: jl(d / "ckpt" / m / "log.jsonl") for k, (d, m, _, _) in RUNS.items()

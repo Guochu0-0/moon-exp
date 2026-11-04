@@ -18,6 +18,10 @@
   这张图自己的全图均值、标准差，截到 [0, 1]。
 
 T、遮挡位置、噪声的随机数只由 (视角, pair) 决定（crc32 作种子），每对固定、与分片无关。
+
+--mode resample（抽样噪声对照，写 raw/resample_s<k>.jsonl）：原输入不变，推理前把随机种子分别设为 1–8，各推理一次（rs1–rs8）；
+网络的前向计算相同，变的只是从稠密对应里抽哪 10000 对点（以及因此 RANSAC 拿到的点）。另用种子 0 重跑一次（rs0），
+只用来核对与 constraints 模式的 orig 是否相同。
 """
 from __future__ import annotations
 
@@ -43,7 +47,7 @@ from moonlib.ransac import fit_affine  # noqa: E402
 
 CFG = json.loads((REPO / "configs/baselines/anymatch_roma__minmax.json").read_text(encoding="utf-8"))
 HW = 512
-N_EQ = N_OC = 8
+N_EQ = N_OC = N_RS = 8
 EQ = dict(shift=128.0, rot=20.0, scale=0.2, disk=True)       # 同 E37 [aug]（难版，同 E9）
 OC_SIDE = int(round(np.sqrt(0.2) * HW))                        # 229 px，面积约 20%
 RANSAC = 3.0
@@ -87,6 +91,7 @@ def main():
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--data", default=os.environ.get("MOON_DATA"))
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
+    ap.add_argument("--mode", default="constraints", choices=("constraints", "resample"))
     a = ap.parse_args()
 
     k, n = map(int, a.shard.split("/"))
@@ -96,7 +101,7 @@ def main():
         pairs = pairs[:a.limit]
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    rows_f = out / f"rows_s{k}.jsonl"
+    rows_f = out / (f"rows_s{k}.jsonl" if a.mode == "constraints" else f"resample_s{k}.jsonl")
     done = set()
     if rows_f.exists():
         done = {json.loads(l)["pair"] for l in rows_f.read_text(encoding="utf-8").splitlines() if l.strip()}
@@ -108,13 +113,31 @@ def main():
                                             **CFG["params"])
     print(f"shard {k}/{n}: {len(pairs)} pairs, {len(done)} done; lora merged {len(matcher.lora_merged)}", flush=True)
 
-    def run(opt, sar, swap=False):
+    def run(opt, sar, swap=False, seed=CFG["seed"]):
         matcher.swap = swap
-        seed_all(CFG["seed"])
+        seed_all(seed)
         kp0, kp1, conf = matcher.match(opt, sar)
         return np.c_[np.asarray(kp0).reshape(-1, 2), np.asarray(kp1).reshape(-1, 2), np.asarray(conf).reshape(-1)]
 
     t0 = time.time()
+    if a.mode == "resample":
+        with open(rows_f, "a", encoding="utf-8", newline="\n") as f:
+            for i, pair in enumerate(p for p in pairs if p not in done):
+                t = time.time()
+                opt = map_opt(data.optical("val", pair)).astype(np.float32)
+                sar = map_sar(data.sar("val", pair)).astype(np.float32)
+                views = {}
+                for s in range(N_RS + 1):            # rs0 = 种子 0 重跑一次，只用来核对与 orig 是否逐位相同，不参与平均
+                    A, ni, fl = fit(run(opt, sar, seed=s))
+                    views[f"rs{s}"] = {"A": None if A is None else np.round(A, 8).tolist(), "n_inliers": ni}
+                    if fl:
+                        views[f"rs{s}"]["fail"] = fl
+                f.write(json.dumps({"pair": pair, "sec": round(time.time() - t, 2), "views": views}) + "\n")
+                f.flush()
+                if (i + 1) % 20 == 0:
+                    print(f"  {i + 1}  {time.time() - t0:.0f}s", flush=True)
+        print("done", time.time() - t0, flush=True)
+        return
     orig_store = {}
     with open(rows_f, "a", encoding="utf-8", newline="\n") as f:
         for i, pair in enumerate(p for p in pairs if p not in done):

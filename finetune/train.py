@@ -20,6 +20,11 @@
 成分可以提供 after_update(step)（参数更新之后调用）、observe(step)（每步更新之后与训练前调用，返回要存的数组或 None）、
 state_dict() / load_state_dict()（随续训状态存取）、ddp_tensors()（多卡时要检查各卡一致的张量，如 EMA 参照的权重）。
 
+样本筛选（#245）：成分有 screening = True 时，训练循环每取到一个 batch 先调它的 screen(batch, device) →
+(是否学, 记录)；不学就丢掉、接着取下一个（数据取完一遍照常进入下一遍），直到取到要学的才做这一步（screened）。
+每个取到的 batch 一行写进 <out>/screen_r<rank>.jsonl：{step（这一步是第几次更新）, pair, ratio, keep}。多卡时各卡
+各自筛、各自写，取到的对数可以不同，梯度平均时汇合。日志的 sec 从这一步取到第一个 batch 时算起，含被丢掉的对。
+
 [run] ddp = N > 0（#226）：单机 N 卡数据并行，由 torchrun 起 N 个进程（finetune/dist.py）：
 
     torchrun --standalone --nproc_per_node=N -m finetune.train <配置> --out ...
@@ -140,6 +145,24 @@ class Halt:
         return None
 
 
+def screened(loader, screens, device, log):
+    """样本筛选（#245）：从 loader 逐个取 batch，依次交给 screens 里各成分的 screen(batch, device)，有一个不学就丢掉、
+    取下一个；全都学的产出 (batch, t0)，t0 为这一步取到第一个 batch 的时刻。每次调用 screen 的记录交给 log(记录)。
+    screens 为空时每个 batch 都产出。"""
+    t0 = None
+    for batch in loader:
+        t0 = time.time() if t0 is None else t0
+        ok = True
+        for t in screens:
+            ok, rec = t.screen(batch, device)
+            log(rec)
+            if not ok:
+                break
+        if ok:
+            yield batch, t0
+            t0 = None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("config", help="runs/<id>/configs/<方法>.toml")
@@ -251,10 +274,13 @@ def main(argv=None):
 
     if not r["resume"]:
         observe(0)
+    screens = [t for _, t in terms if getattr(t, "screening", False)]     # 样本筛选（#245）
+    scr_f = open(out / f"screen_r{rank}.jsonl", "a", buffering=1, encoding="utf-8") if screens else None
+    scr_log = (lambda rec: scr_f.write(json.dumps({"step": step + 1, **rec}, ensure_ascii=False) + "\n")) \
+        if screens else None
     with open(out / "log.jsonl" if main_ else os.devnull, "a", encoding="utf-8") as log:
         while step < total:
-            for batch in loader:
-                t0 = time.time()
+            for batch, t0 in screened(loader, screens, args.device, scr_log):
                 st = Step(model, mname, batch, args.device, neg, rng, optim)
                 loss, stats, active = torch.zeros((), device=args.device), {}, False
                 for n, term in terms:
@@ -311,6 +337,8 @@ def main(argv=None):
                 break
     if tbw:
         tbw.close()
+    if scr_f:
+        scr_f.close()
     trw.flush()
     if r["save_every"] and step % r["save_every"] and not halted:
         save(step)

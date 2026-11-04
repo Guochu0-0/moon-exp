@@ -2078,11 +2078,14 @@ def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypa
     loss.backward()
     assert len(calls) == 4                                                  # 3 次参照（screen）+ 1 次当前模型
     assert (stats["scr_drawn"], stats["scr_ratio"], stats["scr_disc"]) == (3.0, 0.75, 0.25)
-    assert stats["d_ref"] > 100 and float(w.grad) != 0.0                   # 打分用的是 screen 时的参照
+    d_far = stats["d_ref"]
     assert term.screen({"pair": ["d"], "image0": img, "image1": img}, "cpu")[0]   # 之后 (I, 20)：比例 1
     st.batch = {"pair": ["d"]}
-    _, stats, _ = term(st)
+    w.grad = None
+    loss, stats, _ = term(st)
+    loss.backward()
     assert stats["scr_drawn"] == 1.0 and "scr_disc" not in stats           # 计数每步清零
+    assert d_far - stats["d_ref"] > 400 and float(w.grad) != 0.0           # 打分用的是 screen 时的参照
     with pytest.raises(RuntimeError):                                      # 没经 screen 选中
         term(st)
 

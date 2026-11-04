@@ -1,5 +1,23 @@
 id = "E40"
 title = "测试时强行满足约束（正反向互逆、对已知扰动等变、随机遮挡）各能让 E37 五级模型提高多少"
 parent = "E37"
-# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
 date = "2026-11-04"
+
+[methods.main]
+name = "模型的答案"
+
+[methods.swap]
+name = "正反向互逆取平均"
+ref = "E40/main"
+
+[methods.equiv]
+name = "对已知扰动等变取平均"
+ref = "E40/main"
+
+[methods.occl]
+name = "随机遮挡取平均"
+ref = "E40/main"
+
+[methods.all]
+name = "三项合用取平均"
+ref = "E40/main"

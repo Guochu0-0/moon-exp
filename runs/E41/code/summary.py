@@ -285,8 +285,9 @@ def main():
             ax[2].axhline(RUNS[k][2], color=c, ls=":", lw=0.8)
         for g in range(1, 4):
             ax[0].axvline(g * PASS, color="0.85", lw=0.8)
-        ax[0].set_xscale("symlog", linthresh=100)
-        ax[2].set_xscale("symlog", linthresh=100)
+        for a in (ax[0], ax[2]):
+            a.set_xscale("symlog", linthresh=100)
+            a.set_xlim(0, UPD)
         ax[0].set(xlabel="更新次数（前 100 次线性、之后对数）", ylabel="保留比例（200 次更新滑动平均）")
         ax[1].set(xlabel="被丢掉的对的参照内点比例（全程）", ylabel="密度")
         ax[2].set(xlabel="更新次数（前 100 次线性、之后对数）", ylabel="取到的对的参照内点比例（每步中位数，200 步滑动中位数）")

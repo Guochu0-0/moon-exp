@@ -1,0 +1,7 @@
+# E41（#245）：E37 `all` 原样（_e37all），只多一道样本筛选：参照（EMA 参照）内点比例低于 0.15 的对不学、补抽下一对。
+# 门槛 0.15 = zero-shot 在训练集随机 2000 对上内点比例的中位数 0.1545 四舍五入到 0.05（code/threshold.py，
+# extra/data/threshold.json）。种子 0，7907 次更新。
+base = "_e37all"
+
+[rloo]
+screen = 0.15

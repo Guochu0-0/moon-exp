@@ -94,11 +94,19 @@ T_i 与这几份抽点的随机数取自以 (torch 初始种子, 调用次数, �
   优势置零（grad 方式乘在奖励上），分母不变，同粗级 frame_mask。
 - fine_cert_bce > 0（只配 grad / local）：每个训练级输出的 certainty（这一级的输入 certainty + 细化层算出的增量，带梯度）
   对这张掩码加 BCE，权重 fine_cert_bce，不乘 fine_w；同粗级 cert_bce，参照合理性检查没过时不做，多扰动核对没过时照常。
+
+样本筛选（#245，screen = 门槛 > 0；只配 reward = ref 且参照来自参照模型，即 ref_ema 或 frozen_ref；[optim] batch = 1）：
+训练循环每取到一对图，先调用 screen(batch)：参照模型对这对（已扰动的）图正常推理、拟合参照仿射（同训练时的参照，
+num 个点、RANSAC ransac px），内点比例 = 内点数 ÷ num，拟合失败记 0。比例 ≥ 门槛时这对照常抽签、打分、参与更新，
+参照仿射直接沿用这次拟合的结果，不再推理一次；< 门槛时丢掉，不抽签，训练循环接着取下一对（finetune/train.py
+「样本筛选」），每张卡各自取到一对过门槛的才做这一步。日志记 scr_ratio（这一步所学的对的内点比例）、scr_drawn（这一步
+本卡共取了几对，含所学的一对）、scr_disc（被丢掉的对的内点比例均值，没有丢掉的步不记）、t_scr（这一步参照推理的总耗时）。
 """
 from __future__ import annotations
 
 import math
 import time
+from typing import NamedTuple
 
 import numpy as np
 import torch
@@ -155,6 +163,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "fine_w": 1.0,    # 细化损失（各级策略梯度项之和）的系数 w_f（#221）
           "fine_mask": False,   # 细化各级：参照仿射映射到 SAR 画面外 / 补零区的像素优势置零（#221，只配 grad / local）
           "fine_cert_bce": 0.0,  # 细化各级 certainty 对画面内掩码的 BCE 权重（#221，只配 grad / local）；0 = 不训
+          "screen": 0.0,    # 样本筛选（#245）：参照内点比例低于它的对不学、换下一对；0 = 不筛（每对都学）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -244,6 +253,11 @@ def check(cfg):
     if (p["fine_mask"] or p["fine_cert_bce"]) and (not lv or p["fine_mode"] == "chain" or p["frozen_ref"]):
         raise ConfigError("[rloo] fine_mask、fine_cert_bce 要配非空的 levels 与 fine_mode = 'grad' / 'local'，"
                           "不与 frozen_ref 同用（掩码要来自自估仿射、EMA 参照或多扰动核对的参照）")
+    if not 0 <= p["screen"] < 1:
+        raise ConfigError(f"[rloo] screen 应在 [0, 1)，得到 {p['screen']!r}")
+    if p["screen"] and (p["reward"] != "ref" or not (p["ref_ema"] or p["frozen_ref"]) or p["mp_n"]
+                        or cfg["optim"]["batch"] != 1):
+        raise ConfigError("[rloo] screen 只配 reward = 'ref' 且 ref_ema 或 frozen_ref 打开、mp_n = 0、[optim] batch = 1")
 
 
 def data_kw(p):
@@ -779,6 +793,19 @@ def loo(r):
 
 # ---------- 训练成分 ----------
 
+class Kept(NamedTuple):
+    """样本筛选（#245）选中的一对：pair 标识、参照仿射（或 None）、内点数、内点比例。"""
+    pair: str
+    A: object
+    n: int
+    ratio: float
+
+
+def _scr_fresh():
+    """样本筛选的逐步计数：这一步本卡取了几对、被丢对的内点比例、参照推理耗时、选中的一对。"""
+    return {"drawn": 0, "disc": [], "t": 0.0, "kept": None}
+
+
 class Term:
     def __init__(self, p, model, ds):
         self.p, self.model = p, model
@@ -787,6 +814,35 @@ class Term:
         self.slow = SlowRef(model, self.frozen, p["ref_ema"]) if p.get("ref_ema") else None    # EMA 参照（#216）
         self.calls = 0
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
+        self.screening = bool(p.get("screen"))      # 样本筛选（#245）：训练循环取到每对图先调 screen
+        self._scr = _scr_fresh()
+
+    @torch.no_grad()
+    def ref_fit(self, i0, i1):
+        """参照模型（frozen_copy / EMA 参照）对一对图（(1,1,H,W) 输入）正常推理、拟合参照仿射，同 __call__ 里的参照：
+        粗级每格取最高分位置、细化到尺度 1，按可信度抽 num 个点、RANSAC ransac px。返回 (A_ref 或 None, 内点数)。"""
+        z1, z2 = features(self.frozen, i0, i1)
+        zcls, zcert = coarse(self.frozen, z1, z2)
+        Pz = zcls.float().softmax(1)
+        zf, zc = refine(self.frozen, z1, z2, anchor_flow(Pz, Pz.argmax(1)), zcert.float())
+        return fit_many(zf, zc, self.p["num"], self.p["ransac"])[0]
+
+    def screen(self, batch, device):
+        """样本筛选（#245）：一对图（batch 只有一对）→ (是否学这对, 记录 {pair, ratio, keep})。内点比例 = 参照拟合的
+        内点数 ÷ num（拟合失败为 0），≥ screen 时学；学的对的参照仿射留给紧接着的 __call__ 沿用。"""
+        t0 = time.time()
+        pair = batch["pair"][0]
+        A, n = self.ref_fit(batch["image0"].to(device), batch["image1"].to(device))
+        ratio = n / self.p["num"]
+        keep = ratio >= self.p["screen"]
+        s = self._scr
+        s["drawn"] += 1
+        s["t"] += time.time() - t0
+        if keep:
+            s["kept"] = Kept(pair, A, n, ratio)
+        else:
+            s["disc"].append(ratio)
+        return keep, {"pair": pair, "ratio": round(ratio, 5), "keep": keep}
 
     def state_dict(self):
         sd = {"calls": self.calls}
@@ -857,11 +913,18 @@ class Term:
             stats.update(gated=[], gate_det=[], gate_sv=[], gate_in=[], ref_det=[], ref_sv=[])
         if p["spread"]:
             stats.update(H_bar=[], l_spread=[])
+        kept = None     # 样本筛选（#245）：screen 已对这对图拟合好的参照
+        if self.screening:
+            sc = self._scr
+            kept = sc["kept"]
+            if B != 1 or kept is None or kept.pair != st.batch["pair"][0]:
+                raise RuntimeError("[rloo] screen 打开时每对图要先经 screen 选中（训练循环 finetune/train.py 的 screened）")
+            stats.update(scr_ratio=[kept.ratio], scr_drawn=[sc["drawn"]], t_scr=[sc["t"]])
+            if sc["disc"]:
+                stats["scr_disc"] = [float(np.mean(sc["disc"]))]
+            self._scr = _scr_fresh()
         if self.frozen is not None:
             stats.update(cur_ok=[], d_cur=[], ref_gap=[])
-            with torch.no_grad():
-                z1, z2 = features(self.frozen, i0, i1)
-                zcls, zcert = coarse(self.frozen, z1, z2)
         if p["mp_n"]:
             stats.update(mp_gap=[], mp_block=[], mp_fail=[])
         lv = p["levels"]
@@ -896,11 +959,8 @@ class Term:
                     A_ref, n_ref = fits[0]
                     fc = anchor_flow(P.expand(p["group"], -1, -1, -1), k)
                     if self.frozen is not None:     # 参照换成冻结的初始模型；当前模型的仿射只用来记录
-                        A_cur, Pz = A_ref, zcls[b:b + 1].float().softmax(1)
-                        zf, zc = refine(self.frozen, {s: x[b:b + 1] for s, x in z1.items()},
-                                        {s: x[b:b + 1] for s, x in z2.items()}, anchor_flow(Pz, Pz.argmax(1)),
-                                        zcert[b:b + 1].float())
-                        A_ref, n_ref = fit_many(zf, zc, p["num"], p["ransac"])[0]
+                        A_cur = A_ref
+                        A_ref, n_ref = (kept.A, kept.n) if kept is not None else                             self.ref_fit(i0[b:b + 1], i1[b:b + 1])     # 样本筛选时已拟合过（#245）
                         _, dc = ref_cells(fc, A_cur, p["delta"], p["tau"], p["r_out"], p["shape"])
                         stats["cur_ok"].append(float(A_cur is not None))
                         if dc is not None:

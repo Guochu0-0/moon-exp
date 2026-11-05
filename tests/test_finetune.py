@@ -2034,3 +2034,80 @@ def test_roma_state_dict_keeps_init_lora():
     assert torch.allclose(ev.blocks[0].attn.qkv.weight, ref.blocks[0].attn.qkv.weight)
     no_init = types.SimpleNamespace(**{**vars(m), "adapter": types.SimpleNamespace(lora_merged=[])})
     assert "dinov2_lora_base" not in Model.state_dict(no_init)   # 不带 init 的存档与原来相同
+
+
+# ---------- 样本筛选（#245） ----------
+
+def test_config_rloo_screen(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\nref_ema = 0.996\n'))
+    assert d["rloo"]["screen"] == 0.0                                       # 默认不筛，同旧行为
+    c = C.load(_write(tmp_path, "c", head + '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 0.35\n'))
+    assert c["rloo"]["screen"] == 0.35
+    for bad in ('[rloo]\nreward = "ref"\nscreen = 0.35',                    # 参照取当前模型：没有参照模型可先推理
+                '[rloo]\nreward = "r1"\nref_ema = 0.996\nscreen = 0.35',
+                '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 1.0',
+                '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = -0.1',
+                '[optim]\nbatch = 2\n[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 0.35',
+                '[rloo]\nreward = "ref"\nfrozen_ref = true\nmp_n = 2\nscreen = 0.35'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
+def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypatch):
+    """screen：内点比例 = 参照拟合的内点数 ÷ num，拟合失败为 0；低于门槛的不学。学的那对在 __call__ 里沿用 screen 时的参照
+    仿射（不再拟合参照，只拟合当前模型那一次），日志记这一步取了几对、所学对的比例与被丢对的比例均值；没经 screen 的对报错。"""
+    import torch
+    from finetune.parts import rloo as R
+    term, st, w = _fake_term(monkeypatch, ref_ema=0.99, num=20, screen=0.6)
+    I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    far = np.array([[1.0, 0, 500.0], [0, 1.0, 0]])                         # 学的那对的参照：离恒等仿射 500 px
+    queue, calls = [(I, 10), (None, 0), (far, 15)], []
+
+    def fit_many(flows, certs, num, thr, gen=None):
+        calls.append(num)
+        return [queue.pop(0) if queue else (I, 20)] * len(flows)
+    monkeypatch.setattr(R, "fit_many", fit_many)
+    img = torch.rand(1, 1, 32, 32) + 0.1
+    got = [term.screen({"pair": [q], "image0": img, "image1": img}, "cpu") for q in ("a", "b", "c")]
+    assert [k for k, _ in got] == [False, False, True]
+    assert [r["ratio"] for _, r in got] == [0.5, 0.0, 0.75] and got[2][1] == {"pair": "c", "ratio": 0.75, "keep": True}
+    st.batch = {"pair": ["c"]}
+    loss, stats, _ = term(st)
+    loss.backward()
+    assert len(calls) == 4                                                  # 3 次参照（screen）+ 1 次当前模型
+    assert (stats["scr_drawn"], stats["scr_ratio"], stats["scr_disc"]) == (3.0, 0.75, 0.25)
+    d_far = stats["d_ref"]
+    assert term.screen({"pair": ["d"], "image0": img, "image1": img}, "cpu")[0]   # 之后 (I, 20)：比例 1
+    st.batch = {"pair": ["d"]}
+    w.grad = None
+    loss, stats, _ = term(st)
+    loss.backward()
+    assert stats["scr_drawn"] == 1.0 and "scr_disc" not in stats           # 计数每步清零
+    assert d_far - stats["d_ref"] > 200 and float(w.grad) != 0.0           # 打分用的是 screen 时的参照
+    with pytest.raises(RuntimeError):                                      # 没经 screen 选中
+        term(st)
+
+
+def test_train_screened_skips_rejected_and_wraps_epochs():
+    """screened：不学的 batch 丢掉、接着取下一个，跨过 epoch 照常接着取；每次 screen 的记录都交给 log；没有 screens 时原样产出。"""
+    import itertools
+    import torch
+    from finetune.trace import Loader
+    from finetune.train import screened
+
+    class Keep3:
+        def screen(self, batch, device):
+            i = int(batch[0, 0])
+            return i == 3, {"pair": i, "keep": i == 3}
+
+    g = torch.Generator().manual_seed(0)
+    loader = Loader(torch.utils.data.DataLoader(_RandSet(), batch_size=1, shuffle=False, generator=g), g)
+    log = []
+    got = list(itertools.islice(screened(loader, [Keep3()], "cpu", log.append), 3))
+    assert [int(b[0, 0]) for b, _ in got] == [3, 3, 3] and loader.epoch == 2   # 3 个 epoch 各取到一次
+    assert len(log) == 4 + 12 + 12 and sum(r["keep"] for r in log) == 3
+    assert all(isinstance(t0, float) for _, t0 in got)
+    plain = list(itertools.islice(screened(iter(range(5)), [], "cpu", log.append), 5))
+    assert [b for b, _ in plain] == list(range(5))

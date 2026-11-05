@@ -1,0 +1,5 @@
+threshold,distinct_drawn,ever_discarded,never_discarded,discarded_every_time
+0.15,7907,548,7359,0
+0.3,7907,1812,6095,14
+0.6,7907,6514,1393,271
+0.8,7907,7872,35,1361

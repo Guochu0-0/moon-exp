@@ -1,0 +1,12 @@
+# E43（#250）定系数：从 zero-shot 起照 main 的配置训前 50 次更新（4 卡、每次 4 对），新项（遮挡约束）只算、只量梯度、
+# 不进参数更新（pix_occ_apply = false），所以这 50 次更新与 E41 `main` 的做法相同。每一步记两项在共用参数上的梯度范数
+# 与比值（occ_g_ratio），系数取这 50 次更新的比值中位数（code/probe.py）。不存档。
+base = "_e41"
+
+[rloo]
+pix_occ = true
+pix_occ_apply = false
+
+[run]
+stop_at = 50
+save_every = 0

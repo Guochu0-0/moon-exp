@@ -1,0 +1,54 @@
+# E43（#250）底座：E41 `main` 原样展开（E41 configs/_e37all.toml + [rloo] screen = 0.15），不训练，只当 base。
+# 即 E37 五级配置（EMA 参照 τ 0.996 + warmup 后恒定学习率，4 卡数据并行，学习率 2e-4 / LoRA 4e-4，细化尺度 16、8、4、2、1
+# 逐级局部抽签，细化损失系数 4.2，训练集 4 遍 = 7907 次更新）+ 参照内点比例固定门槛 0.15 的样本筛选。种子 0。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.47
+vgg_lr = 0.47
+lora_lr = 4e-4
+
+[optim]
+lr = 2e-4
+steps = 7907
+warmup = 125
+sched = "const"
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.01
+fine_shape = "cauchy"
+levels = [16, 8, 4, 2, 1]
+k = 0.5
+fine_mode = "local"
+fine_group = 8
+fine_mask = true
+fine_cert_bce = 0.01
+fine_w = 4.2
+ref_ema = 0.996
+screen = 0.15
+
+[run]
+seed = 0
+ddp = 4
+save_every = 250
+save_zero = false
+save_optim = false
+sweep = "last"
+halt_above = {d_ref = 100.0}
+halt_below = {in_frame = 0.5}
+halt_window = 200

@@ -1,0 +1,8 @@
+# E47（#255）：E41 门槛 0.8（_e41）原样，加正反向互逆约束奖励。系数 cyc_w 由定系数的 50 次更新取得
+# （configs/_calib.toml、code/calib.py：两项共用参数上梯度范数之比 main_gn / cyc_gn 的中位数 0.608，取两位有效数字，extra/data/calib.json）。
+# 照票里「前 50 次更新系数为 0」：这 50 次更新已在定系数那次单独跑过（与 E41 门槛 0.8 相同），本次从 zero-shot 起训、全程用此系数。
+base = "_e41"
+
+[rloo]
+cyc = true
+cyc_w = 0.61

@@ -145,9 +145,12 @@ def main():
         for name in ("sample", "mode", "s1"):
             a = float(np.median([r[f"{name}_occ"] for r in per]))
             c = float(np.median([r[f"{name}_orig"] for r in per]))
-            row.update({f"{name}_occ": round(a, 2), f"{name}_orig": round(c, 2), f"{name}_ratio": round(a / c, 3),
+            # 存档 0：模型即参照，原图上的最高分位置与尺度 1 输出离参照恒为 0，比值无定义（记空）
+            ok = all(r[f"{name}_orig"] > 0 for r in per)
+            row.update({f"{name}_occ": round(a, 2), f"{name}_orig": round(c, 2),
+                        f"{name}_ratio": round(a / c, 3) if c > 0 else None,
                         f"{name}_ratio_pairs_med": round(float(np.median([r[f"{name}_occ"] / r[f"{name}_orig"]
-                                                                          for r in per])), 3)})
+                                                                          for r in per])), 3) if ok else None})
         summ.append(row)
         print(f"{time.time() - t0:.0f}s", row, flush=True)
     out = R / "extra" / "data"

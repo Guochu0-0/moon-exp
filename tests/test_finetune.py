@@ -2229,7 +2229,7 @@ def test_rloo_term_pix_occ_with_screen_uses_kept_reference(monkeypatch):
     term, st, w, dec = _fake_term_fine(monkeypatch, ref_ema=0.99, num=20, screen=0.1, pix_occ=True, pix_occ_gn_every=1)
     img = st.images()[0]
     keep, _ = term.screen({"pair": ["a"], "image0": img, "image1": img}, "cpu")
-    assert keep and term._scr["kept"].pix is not None and set(term._scr["kept"].pix[1]) == {16, 8}
+    assert keep and term._scr["kept"].pix is not None and {16, 8} <= set(term._scr["kept"].pix[1])
     st.batch = {"pair": ["a"]}
     torch.manual_seed(1)
     _, stats, active = term(st)

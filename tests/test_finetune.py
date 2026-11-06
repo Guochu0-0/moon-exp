@@ -2280,7 +2280,7 @@ def test_rloo_term_sim_gradients(monkeypatch):
     import torch
 
     def run(seed, **over):
-        term, st, w, dec = _fake_term_fine(monkeypatch, frame_mask=True, sim_diag=0, **over)
+        term, st, w, dec = _fake_term_fine(monkeypatch, frame_mask=True, sim_diag=0, delta=200.0, **over)   # 粗级奖励不全为 0
         term.model.params = [w] + list(dec.parameters())
         torch.manual_seed(seed)
         loss, stats, active = term(st)
@@ -2327,7 +2327,7 @@ def test_rloo_sim_diag_records_rank_correlation(monkeypatch):
     d(1, stats)
     assert stats == {}
     d(2, stats)
-    assert stats["sim_rho"] == pytest.approx(-1.0) and stats["sim_verr"] == pytest.approx(7.5)
+    assert stats["sim_rho"] == [pytest.approx(-1.0)] and stats["sim_verr"] == [pytest.approx(7.5)]
 
 
 def test_rloo_sim_spearman_matches_definition():

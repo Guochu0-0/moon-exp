@@ -49,8 +49,8 @@ from finetune.parts import rloo as RL  # noqa: E402
 from finetune.parts import rloo_pixocc as PO  # noqa: E402
 from workbench.launch import require_clean  # noqa: E402
 
-N, SEED = 64, 0
-CKPTS = (0, 250, 500, 1000, 2000, 4000, 6000, 7750)
+N, SEED = int(os.environ.get("N", 64)), 0      # 环境变量 N、CKPTS（逗号分隔）只用于试跑
+CKPTS = tuple(int(x) for x in os.environ.get("CKPTS", "0,250,500,1000,2000,4000,6000,7750").split(","))
 CK = R / "ckpt" / "main"
 
 

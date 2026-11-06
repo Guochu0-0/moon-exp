@@ -14,6 +14,9 @@
    中位数、90% 分位，按更新次数分段取中位数）。
 4. 开销（cost.csv）：每次更新耗时（日志 sec）的中位数与总和、训练墙钟时间、第 1 步的峰值显存（mem_gb）、新项耗时 t_occ。
 5. 定系数（probe.csv）：extra/data/probe.json 的逐步梯度范数与比值汇总。
+6. 第一次训练（crash.csv、rerun_vs_crash.csv）：gpfs 故障中断的第一次训练（同配置）各存档的 Val 指标与 E41 的差，
+   以及重训减第一次在同一存档位置的 AUC@5 差与配对自助法区间，作同配置重复的起伏参考。
+7. 遮挡比值（occ.png）：画 code/occ_ratio.py 写的 occ_ratio.csv。
 """
 from __future__ import annotations
 
@@ -253,6 +256,72 @@ def main():
         write("probe.csv", [{"quantity": k, **{q: round(float(np.nanpercentile([r[k] for r in rows if r[k] is not None], p)), 4)
                                                for q, p in (("p25", 25), ("median", 50), ("p75", 75))}}
                             for k in ("occ_g_old", "occ_g_new", "occ_g_ratio", "occ_g_old_all", "occ_g_new_all")])
+
+    # 6. 第一次训练（gpfs 故障中断于约第 2600 次更新，同配置）与重训在同一存档位置的 Val，作同配置重复的起伏参考
+    crash()
+
+    # 7. 遮挡版本与原图离逐像素参照的距离（code/occ_ratio.py 写的 occ_ratio.csv）→ occ.png
+    f = OUT / "occ_ratio.csv"
+    if f.exists():
+        rs = list(csv.DictReader(open(f, encoding="utf-8")))
+        x = [int(r["ckpt"]) for r in rs]
+        fig, ax = plt.subplots(1, 3, figsize=(15, 4.2))
+        for a, (k, t) in zip(ax, (("sample", "粗级抽签"), ("mode", "粗级最高分位置"), ("s1", "正常推理尺度 1 的输出"))):
+            a.plot(x, [float(r[f"{k}_occ"]) for r in rs], "o-", color="C3", label="遮挡版本")
+            a.plot(x, [float(r[f"{k}_orig"]) for r in rs], "o-", color="0.4", label="原图")
+            b = a.twinx()
+            b.plot(x, [float(r[f"{k}_ratio"]) for r in rs], "s--", color="C0", ms=3, label="比值（右轴）")
+            b.set_ylabel("遮挡版本 ÷ 原图")
+            a.set(title=t, xlabel="存档（更新次数）", ylabel="离逐像素参照的距离（px，各对中位数）")
+            a.legend(fontsize=8, loc="upper right")
+        fig.tight_layout()
+        fig.savefig(R / "extra" / "occ.png", dpi=110)
+
+
+def val_errors(ds, f):
+    """一个 Val 预测文件 → 按 ds.labelled('val') 顺序的逐对误差（失败记 ∞，同 workbench eval）。"""
+    from workbench.evaluate import pair_error
+    preds = {}
+    for line in Path(f).read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            r = json.loads(line)
+            preds[r["pair"]] = r.get("A")
+    return fix([pair_error(ds, "val", q, preds.get(q)) for q in ds.labelled("val")])
+
+
+def crash():
+    """ckpt/main_gpfs_crash/sweep/S/preds/step<N>/val.jsonl（第一次训练）对 sweep/main/S/preds（重训）与 E41：
+    crash.csv（第一次训练各存档的 Val 指标、与 E41 同位置的 AUC@5 差和区间）、rerun_vs_crash.csv（同位置重训减第一次）。"""
+    from workbench.dataset import Dataset
+    src = R / "ckpt" / "main_gpfs_crash" / "sweep" / "S" / "preds"
+    if not src.exists():
+        return
+    ds = Dataset(Y / "dataset" / "Moon")
+    e41 = MAIN / "E41" / "sweep" / "main" / "S" / "preds"
+    re_ = R / "sweep" / "main" / "S" / "preds"
+    steps = sorted(int(p.name[4:]) for p in src.iterdir() if (p / "val.jsonl").exists())
+    rows, rr = [], []
+    for s in steps:
+        e = val_errors(ds, src / f"step{s}" / "val.jsonl")
+        fin = e[np.isfinite(e)]
+        row = {"update": s, "auc@5": round(auc(e, 5.0), 4), "auc@3": round(auc(e, 3.0), 4),
+               "sr@3": round(float((e <= 3).mean()), 4), "sr@5": round(float((e <= 5).mean()), 4),
+               "median_err": round(float(np.median(e)), 2) if len(fin) else None}
+        if (e41 / f"step{s}" / "val.jsonl").exists():
+            d_, ci = paired(e, val_errors(ds, e41 / f"step{s}" / "val.jsonl"))
+            row.update(diff_e41=round(d_, 4), ci_lo=round(ci[0], 4), ci_hi=round(ci[1], 4))
+        rows.append(row)
+        if (re_ / f"step{s}" / "val.jsonl").exists():
+            er = val_errors(ds, re_ / f"step{s}" / "val.jsonl")
+            d_, ci = paired(er, e)
+            rr.append({"update": s, "auc5_rerun": round(auc(er, 5.0), 4), "auc5_first": row["auc@5"],
+                       "diff": round(d_, 4), "ci_lo": round(ci[0], 4), "ci_hi": round(ci[1], 4)})
+    write("crash.csv", rows)
+    write("rerun_vs_crash.csv", rr)
+    if rr:
+        d = np.array([r["diff"] for r in rr])
+        print(f"重训减第一次：{len(d)} 个存档，平均 {d.mean():.4f}，绝对值平均 {np.abs(d).mean():.4f}，"
+              f"范围 {d.min():.4f}–{d.max():.4f}")
 
 
 if __name__ == "__main__":

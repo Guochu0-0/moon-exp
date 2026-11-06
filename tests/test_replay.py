@@ -106,6 +106,8 @@ ADDED = {
     "rloo.occ": (False, "#249 新增遮挡约束奖励；false = 不加这一项，即之前的做法"),
     "rloo.occ_side": (229.0, "#249 与 occ 同批新增；只在 occ 打开时起作用"),
     "rloo.occ_w": (0.0, "#249 与 occ 同批新增；只在 occ 打开时起作用"),
+    "rloo.cyc": (False, "#255 新增正反向互逆约束奖励；false = 不加这一项，即之前的做法"),
+    "rloo.cyc_w": (0.0, "#255 与 cyc 同批新增；只在 cyc 打开时起作用"),
 }
 
 

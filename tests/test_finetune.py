@@ -2221,3 +2221,87 @@ def test_rloo_occ_grad_helpers():
     assert (main, occ, main_all) == pytest.approx((3.0, math.sqrt(16 + 144), math.sqrt(9 + 25)))
     OC.restore([a, b], saved)
     assert torch.equal(a.grad, torch.tensor([3.0, 0.0])) and b.grad is None
+
+
+# ---------- 正反向互逆约束奖励（#255） ----------
+
+def test_config_rloo_cyc(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    ok = '[rloo]\nreward = "ref"\nref_ema = 0.996\nlevels = [16, 8]\nfine_mode = "local"\ncyc = true\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
+    assert (d["rloo"]["cyc"], d["rloo"]["cyc_w"]) == (False, 0.0)                     # 默认不做，同旧行为
+    c = C.load(_write(tmp_path, "c", head + ok + "cyc_w = 0.7\n"))
+    assert c["rloo"]["cyc"] and c["rloo"]["cyc_w"] == 0.7
+    for bad in (ok.replace("ref_ema = 0.996\n", ""),                                   # 反向参照要参照模型
+                ok.replace('"local"', '"grad"'), ok.replace("levels = [16, 8]\n", ""),
+                '[optim]\nbatch = 2\n' + ok, '[optim]\naccum = 2\n' + ok,
+                ok + 'occ = true', ok + 'gate = true', ok + 'cyc_w = -1.0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
+def test_rloo_cyc_geometry():
+    """映回距离：落点就在格心、B 为恒等时为 0，B 平移 64 px 时处处为 64；复合残差：B = A⁻¹ 时为 0；反向掩码：SAR 补零区
+    与 B 映射到光学画面外的格子都不算。"""
+    import torch
+    from finetune.geom import inv_affine
+    from finetune.parts import rloo_cyc as CY
+    from finetune.parts.pseudo import grid
+    I = np.c_[np.eye(2), np.zeros(2)]
+    fc = grid(4, 4, "cpu").permute(2, 0, 1)[None].expand(3, -1, -1, -1)
+    assert float(CY.back_dist(fc, I).abs().max()) < 1e-4
+    T = np.array([[1.0, 0, 64.0], [0, 1.0, 0]])
+    assert torch.allclose(CY.back_dist(fc, T), torch.full((3, 4, 4), 64.0), atol=1e-3)
+    p = {"shape": "gauss", "fine_shape": "cauchy", "delta": 8.0, "tau": 16.0, "r_out": -0.1}
+    r, d = CY.coarse_reward(fc, I, p)
+    assert torch.allclose(r, torch.ones_like(r))
+    r, _ = CY.level_reward(fc, T, 8, p)
+    assert torch.allclose(r, torch.full_like(r, 1 / (1 + 0.5 * 8 ** 2)))               # cauchy，delta·s/8 = 8
+    A = np.array([[1.1, 0.1, 20.0], [-0.05, 0.9, -7.0]])
+    assert CY.composite_residual(A, inv_affine(A), 4, 4) == pytest.approx(0.0, abs=1e-6)
+    assert CY.composite_residual(T, I, 4, 4) == pytest.approx(64.0, abs=1e-4)
+    sar = torch.rand(1, 64, 64) + 0.1
+    sar[:, :, :32] = 0                                                                  # 左半补零
+    m = CY.rev_mask(I, sar, 4, 4)
+    assert not m[:, :2].any() and m[:, 2:].all()                                        # 格心 x = 8、24 在补零区（外扩到 36）
+    assert not CY.rev_mask(np.array([[1.0, 0, 600.0], [0, 1.0, 0]]), torch.rand(1, 64, 64) + 0.1, 4, 4).any()
+
+
+def test_rloo_term_cyc_gradients(monkeypatch):
+    """cyc（#255）：本成分内部反向，返回 active = False。cyc_w = 0 时只量不学：梯度、损失与全局随机数流都与不加这一项时
+    相同；cyc_w = c 时总梯度 = 现有项梯度 + c × 新项梯度，cyc_gn 即新项（系数 1）的梯度范数；反向参照拟合失败时不做。"""
+    import types
+    import torch
+
+    def run(seed, B=np.c_[np.eye(2), np.zeros(2)], **over):
+        term, st, w, dec = _fake_term_fine(monkeypatch, fine_mask=True, frame_mask=True, **over)
+        term.model.params = [w] + list(dec.parameters())
+        term.ref_fit = lambda a, b: (B, 10)
+        st.optim = types.SimpleNamespace(backward=lambda l, **k: l.backward(**k), factor=lambda: 1.0)
+        torch.manual_seed(seed)
+        loss, stats, active = term(st)
+        if active:
+            loss.backward()
+        stats["_after"] = float(torch.rand(()))
+        return [None if q.grad is None else q.grad.clone() for q in term.model.params], stats, active, float(loss)
+
+    g_ref, s_ref, a_ref, l_ref = run(3)
+    assert a_ref and "cyc_gn" not in s_ref
+    g0, s0, a0, l0 = run(3, cyc=True, cyc_w=0.0)
+    assert not a0 and all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["_after"] == s_ref["_after"] and l0 == pytest.approx(l_ref, abs=1e-6)
+    assert s0["cyc_gn"] > 0 and s0["main_gn"] > 0 and s0["cyc_ratio"] == 0.0 and s0["cyc_ok"] == 1.0
+    assert s0["cyc_coef"] == pytest.approx(s0["main_gn"] / s0["cyc_gn"], rel=1e-3)
+    assert s0["cyc_res"] == pytest.approx(0.0, abs=1e-6) and s0["cyc_rew_f"] == pytest.approx(s0["rew"], abs=1e-4)
+    assert {"cyc_rew_r", "cyc_rew_f_16", "cyc_rew_r_8", "cyc_in_r", "l_cyc", "t_cyc"} <= set(s0)
+    g1, s1, _, _ = run(3, cyc=True, cyc_w=1.0)
+    g2, s2, _, l2 = run(3, cyc=True, cyc_w=2.0)
+    d1 = [a - b for a, b in zip(g1, g0) if a is not None]
+    d2 = [a - b for a, b in zip(g2, g0) if a is not None]
+    assert all(torch.allclose(y, 2 * x, atol=1e-6) for x, y in zip(d1, d2))
+    assert float(torch.cat([x.flatten() for x in d1]).norm()) == pytest.approx(s1["cyc_gn"], rel=1e-3)
+    assert s1["cyc_gn"] == pytest.approx(s0["cyc_gn"], rel=1e-4)
+    assert l2 == pytest.approx(l0 + 2 * s2["l_cyc"], abs=1e-4)
+    _, s_fail, _, _ = run(3, B=None, cyc=True, cyc_w=1.0)
+    assert s_fail["cyc_ok"] == 0.0 and "cyc_gn" not in s_fail

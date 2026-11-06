@@ -106,6 +106,7 @@ ADDED = {
     "rloo.occ": (False, "#249 新增遮挡约束奖励；false = 不加这一项，即之前的做法"),
     "rloo.occ_side": (229.0, "#249 与 occ 同批新增；只在 occ 打开时起作用"),
     "rloo.occ_w": (0.0, "#249 与 occ 同批新增；只在 occ 打开时起作用"),
+    "rloo.erase_cert": (False, "#256 新增被擦除区域可信度约束；false = 被擦处照常打分、可信度目标照常，即之前的做法"),
 }
 
 

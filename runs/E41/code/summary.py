@@ -1,19 +1,24 @@
-"""E41 表与图（#245）。在 gpfs worktree 里跑（ckpt、点对不同步到本机；E37 的读 gpfs 主 checkout）：
+"""E41 表与图（#245 门槛 0.15，#247 加门槛 0.3 / 0.6 / 0.8）。在 gpfs worktree 里跑（ckpt、点对不同步到本机）：
 
     /opt/envs/loftr/bin/python runs/E41/code/summary.py
 
 写 extra/data/*.csv、extra/*.png，并打印表格。
-- 两个运行：E41 main（加样本筛选）与 E37 all（同配置不筛选，对照，不重跑）。横轴为更新次数（每次 4 对）；
-  E41 每次更新取到的对数多于 4，另给「已取图对数」。
-1. Val：sweep/<方法>/S/metrics.json 各存档的逐对误差；AUC@5、AUC@3、SR@3、SR@5、误差中位数；同一存档位置 E41 减 E37 的
-   AUC@5 之差与配对自助法 95% 区间（同一批 Val 图对有放回重抽 2000 次，同 E37）；按训练集遍数（每 1977 次更新）分段的平均。
-2. 训练曲线：每次更新的保留比例 = 4 ÷ 四张卡共取到的对数（日志 scr_drawn 为各卡平均，故 = 1 ÷ scr_drawn），
-   200 次更新滑动平均；被丢掉的对的内点比例分布（ckpt/main/screen_r*.jsonl，按训练进程分四段）；离参照的距离、
-   画面内格子比例、训练图对上当前模型自身拟合的内点比例（日志 n_inl ÷ 5000）与 E37 all 叠画（50 次更新滑动中位数）。
-3. 开销：两边日志 sec（每次更新的耗时，E41 含被丢掉的对的参照推理）之和与训练的墙钟时间；平均每次更新取了几对。
+- 五个运行：E37 all（不筛选，门槛 0，对照，不重跑）、E41 main（门槛 0.15）、E41 main__screen0.3 / 0.6 / 0.8。
+  每个方法的产物找两处：本 worktree 的 runs/E41（本票新训的方法），没有就找 gpfs 主 checkout（已结票的 main、E37）。
+  横轴为更新次数（每次 4 对）。
+1. Val：sweep/<方法>/S/metrics.json 各存档的逐对误差；AUC@5、AUC@3、SR@3、SR@5、误差中位数；评测这个存档的机器
+   （sweep/<方法>/S/preds/step<N>/val.meta.json 的 host → GPU 型号）；同一存档位置减 E37 all 的 AUC@5 之差与配对自助法
+   95% 区间（同一批 Val 图对有放回重抽 2000 次）；按训练集遍数（每 1977 次更新）分四段的平均。
+   总表（overview.csv）：各段平均 AUC@5 与减不筛选之差、最后存档、最高点、全程丢掉的对数、训练墙钟时间。
+2. 训练曲线：每次更新的保留比例 = 1 ÷ scr_drawn（日志里为各卡平均取到的对数），200 次更新滑动平均；
+   筛选记录（ckpt/<方法>/screen_r*.jsonl）按更新次数分段：取到 / 丢掉的对数、保留比例、取到的对与被丢掉的对的
+   参照内点比例；离参照的距离、画面内格子比例、训练图对上当前模型自身拟合的内点比例（日志 n_inl ÷ 5000）五个运行叠画。
+3. 开销：日志 sec（每次更新的耗时，含被丢掉的对的参照推理）之和、中位数、训练墙钟时间、平均每次更新取了几对；
+   前 500 次更新单独列出。
 4. 每个存档在 Val 上，模型自身的内点比例与真实误差的 Spearman 相关：点对（val_matches.npz，按可信度取前 2000 个）
-   到这对图估计仿射的距离 ≤ 3 px 的比例（同工作台逐对视图的内点判定），估计失败记 0；真实误差同评测（失败记 ∞）。
-5. 训练中被丢掉次数最多的对：次数、被取到的次数、丢掉时内点比例的中位数（csv），前 6 对的光学与 SAR 原图（图）。
+   到这对图估计仿射的距离 ≤ 3 px 的比例，估计失败记 0；真实误差同评测（失败记 ∞）。
+5. 训练中被丢掉次数最多的对：各门槛前 20 对的次数、被取到的次数、丢掉时内点比例的中位数（csv），各门槛前 4 对的
+   光学与 SAR 原图（图）。
 """
 from __future__ import annotations
 
@@ -36,15 +41,31 @@ from workbench.evaluate import pair_error  # noqa: E402
 from workbench.protocol import auc  # noqa: E402
 
 Y = Path("/remote-home/xufang/YGC")
-E37 = Y / "moon-exp" / "runs" / "E37"
+MAIN = Y / "moon-exp" / "runs"
 DATA = Y / "dataset" / "Moon"
 FONT = str(Y / "fonts" / "simhei.ttf")
 if Path(FONT).exists():
     matplotlib.font_manager.fontManager.addfont(FONT)
 plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
-RUNS = {"E41": (R, "main", "加样本筛选（E41）", "C3"), "E37": (E37, "all", "不筛选（E37 五级）", "C0")}
+GPU = {"bcb626e99cea": "RTX 3090", "7b3282290ade": "V100"}     # 150、160 的容器 hostname
+
+
+def where(exp, m):
+    """方法的实验目录：本 worktree 里有这个方法的 ckpt 就用它，否则用 gpfs 主 checkout。"""
+    here = REPO / "runs" / exp
+    return here if (here / "ckpt" / m).exists() else MAIN / exp
+
+
+# key: (实验, 方法, 门槛, 显示名, 颜色)
+RUNS = {"0": ("E37", "all", 0.0, "不筛选（E37 五级）", "0.3"),
+        "0.15": ("E41", "main", 0.15, "门槛 0.15", "C0"),
+        "0.3": ("E41", "main__screen0.3", 0.3, "门槛 0.3", "C2"),
+        "0.6": ("E41", "main__screen0.6", 0.6, "门槛 0.6", "C1"),
+        "0.8": ("E41", "main__screen0.8", 0.8, "门槛 0.8", "C3")}
+SCREENED = [k for k in RUNS if k != "0"]
 N, PASS, UPD, THR_PX = 4, 1977, 7907, 3.0
+BINS = ((0, 100), (100, 300), (300, 500), (500, 1000), (1000, 2000), (2000, 4000), (4000, UPD))
 OUT = R / "extra" / "data"
 
 
@@ -70,6 +91,8 @@ def paired(e1, e0, n=2000, seed=0):
 
 
 def write(name, rows):
+    if not rows:
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     with open(OUT / name, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
@@ -80,13 +103,22 @@ def write(name, rows):
         print(" | ".join(f"{k}={r[k]}" for k in r))
 
 
+def seg_of(s):
+    return min(4, (s - 1) // PASS + 1)
+
+
 def load_val(d, m):
-    """{更新次数: Val 记录}"""
+    """{更新次数: Val 记录}，记录里另加 gpu（评测这个存档的机器的 GPU 型号）。"""
     met = d / "sweep" / m / "S" / "metrics.json"
     if not met.exists():
         return {}
-    return {int(k[4:]): v["val"] for k, v in json.loads(met.read_text(encoding="utf-8"))["methods"].items()
-            if k.startswith("step") and "val" in v}
+    out = {}
+    for k, v in json.loads(met.read_text(encoding="utf-8"))["methods"].items():
+        if k.startswith("step") and "val" in v:
+            meta = d / "sweep" / m / "S" / "preds" / k / "val.meta.json"
+            host = json.loads(meta.read_text(encoding="utf-8")).get("host") if meta.exists() else None
+            out[int(k[4:])] = {**v["val"], "gpu": GPU.get(host, host)}
+    return out
 
 
 def rank(x):
@@ -141,115 +173,131 @@ def train_hours(d, m):
 
 def main():
     (R / "extra").mkdir(exist_ok=True)
-    val = {k: load_val(d, m) for k, (d, m, _, _) in RUNS.items()}
+    dirs = {k: where(e, m) for k, (e, m, *_) in RUNS.items()}
+    val = {k: load_val(dirs[k], RUNS[k][1]) for k in RUNS}
+    logs = {k: jl(dirs[k] / "ckpt" / RUNS[k][1] / "log.jsonl") for k in RUNS
+            if (dirs[k] / "ckpt" / RUNS[k][1] / "log.jsonl").exists()}
+    scr = {k: [r for f in sorted((dirs[k] / "ckpt" / RUNS[k][1]).glob("screen_r*.jsonl")) for r in jl(f)]
+           for k in SCREENED}
+
     # 1. Val
-    write("val.csv", [{"run": k, "update": s, "pairs_learned": s * N,
-                       **{x: round(val[k][s]["summary"][x], 3) for x in ("auc@5", "auc@3", "sr@3", "sr@5")},
-                       "median_err": round(val[k][s]["summary"]["median"], 2)} for k in RUNS for s in sorted(val[k])])
-    ss = sorted(set(val["E41"]) & set(val["E37"]))
+    write("val.csv", [{"threshold": k, "update": s, **{x: round(val[k][s]["summary"][x], 3)
+                                                        for x in ("auc@5", "auc@3", "sr@3", "sr@5")},
+                       "median_err": round(val[k][s]["summary"]["median"], 2), "gpu": val[k][s]["gpu"]}
+                      for k in RUNS for s in sorted(val[k])])
     diff = []
-    for s in ss:
-        d_, ci = paired(val["E41"][s]["errors"], val["E37"][s]["errors"])
-        diff.append({"update": s, "auc5_E41": round(val["E41"][s]["summary"]["auc@5"], 3),
-                     "auc5_E37": round(val["E37"][s]["summary"]["auc@5"], 3),
-                     "diff": round(d_, 3), "ci_lo": round(ci[0], 3), "ci_hi": round(ci[1], 3)})
-    if diff:
-        write("vs_e37.csv", diff)
-        bp = []
-        for k in range(1, 5):
-            rs = [r for r in diff if (k - 1) * PASS < r["update"] <= (k * PASS if k < 4 else UPD)]
+    for k in SCREENED:
+        for s in sorted(set(val[k]) & set(val["0"])):
+            d_, ci = paired(val[k][s]["errors"], val["0"][s]["errors"])
+            diff.append({"threshold": k, "update": s, "auc5": round(val[k][s]["summary"]["auc@5"], 4),
+                         "auc5_noscreen": round(val["0"][s]["summary"]["auc@5"], 4),
+                         "diff": round(d_, 4), "ci_lo": round(ci[0], 4), "ci_hi": round(ci[1], 4),
+                         "gpu": val[k][s]["gpu"], "gpu_noscreen": val["0"][s]["gpu"]})
+    write("vs_e37.csv", diff)
+    bp = []
+    for k in SCREENED:
+        for g in range(1, 5):
+            rs = [r for r in diff if r["threshold"] == k and seg_of(r["update"]) == g]
             if rs:
-                bp.append({"segment": k, "n_ckpt": len(rs),
-                           "auc5_E41": round(float(np.mean([r["auc5_E41"] for r in rs])), 4),
-                           "auc5_E37": round(float(np.mean([r["auc5_E37"] for r in rs])), 4),
+                bp.append({"threshold": k, "segment": g, "n_ckpt": len(rs),
+                           "auc5": round(float(np.mean([r["auc5"] for r in rs])), 4),
+                           "auc5_noscreen": round(float(np.mean([r["auc5_noscreen"] for r in rs])), 4),
                            "mean_diff": round(float(np.mean([r["diff"] for r in rs])), 4),
                            "n_above": sum(r["ci_lo"] > 0 for r in rs), "n_below": sum(r["ci_hi"] < 0 for r in rs)})
-        write("by_segment.csv", bp)
-        fig, a_ = plt.subplots(figsize=(7, 4.2))
-        x = [r["update"] for r in diff]
-        y = np.array([r["diff"] for r in diff])
-        a_.errorbar(x, y, yerr=[y - [r["ci_lo"] for r in diff], [r["ci_hi"] for r in diff] - y], fmt="o", color="k",
-                    ms=3, capsize=2, lw=0.8)
-        a_.axhline(0, color="0.5", ls=":", lw=0.8)
-        a_.set_xlabel("更新次数")
-        a_.set_ylabel("Val AUC@5 之差（加筛选减不筛选）")
-        fig.tight_layout()
-        fig.savefig(R / "extra" / "diff.png", dpi=110)
+    write("by_segment.csv", bp)
 
-    # 2–3. 训练日志
-    logs = {k: jl(d / "ckpt" / m / "log.jsonl") for k, (d, m, _, _) in RUNS.items()
-            if (d / "ckpt" / m / "log.jsonl").exists()}
-    scr = []
-    for f in sorted((R / "ckpt" / "main").glob("screen_r*.jsonl")):
-        scr += jl(f)
+    # 总表
+    ov = []
+    for k in RUNS:
+        v = val[k]
+        if not v:
+            continue
+        row = {"threshold": k, "n_ckpt": len(v)}
+        for g in range(1, 5):
+            ss = [s for s in v if seg_of(s) == g]
+            row[f"seg{g}"] = round(float(np.mean([v[s]["summary"]["auc@5"] for s in ss])), 4) if ss else None
+            row[f"seg{g}_diff"] = None if k == "0" else next(
+                (r["mean_diff"] for r in bp if r["threshold"] == k and r["segment"] == g), None)
+        last = max(v)
+        best = max(v, key=lambda s: v[s]["summary"]["auc@5"])
+        row.update(last_update=last, last_auc5=round(v[last]["summary"]["auc@5"], 4),
+                   last_diff=next((r["diff"] for r in diff if r["threshold"] == k and r["update"] == last), None),
+                   best_update=best, best_auc5=round(v[best]["summary"]["auc@5"], 4),
+                   discarded=0 if k == "0" else sum(not r["keep"] for r in scr[k]),
+                   drawn=(len(scr[k]) if k != "0" else
+                          (logs[k][-1]["step"] * N if k in logs else None)),
+                   wall_h=None if train_hours(dirs[k], RUNS[k][1]) is None else round(train_hours(dirs[k], RUNS[k][1]), 2))
+        ov.append(row)
+    write("overview.csv", ov)
+
+    # 2–3. 训练日志、筛选
     cost = []
     for k, log in logs.items():
         drawn = np.array([r.get("scr_drawn", 1.0) for r in log], float) * N
-        cost.append({"run": k, "updates": log[-1]["step"], "pairs_drawn": int(round(drawn.sum())),
-                     "mean_drawn_per_update": round(float(drawn.mean()), 2),
-                     "sec_sum_h": round(sum(r["sec"] for r in log) / 3600, 2),
-                     "median_sec": round(float(np.median([r["sec"] for r in log])), 3),
-                     "wall_h": None if train_hours(*RUNS[k][:2]) is None else round(train_hours(*RUNS[k][:2]), 2)})
-    if cost:
-        write("cost.csv", cost)
-    if "E41" in logs:
-        log = logs["E41"]
         st = np.array([r["step"] for r in log])
-        keep = 1.0 / np.array([r.get("scr_drawn", np.nan) for r in log], float)
-        seg = []
-        for k in range(1, 5):
-            m_ = (st > (k - 1) * PASS) & (st <= (k * PASS if k < 4 else UPD))
-            sr = [r for r in scr if (k - 1) * PASS < r["step"] <= (k * PASS if k < 4 else UPD)]
-            disc = np.array([r["ratio"] for r in sr if not r["keep"]])
-            kept = np.array([r["ratio"] for r in sr if r["keep"]])
-            seg.append({"segment": k, "keep_ratio": round(float(len(kept) / max(1, len(sr))), 3),
-                        "drawn_per_update": round(float(len(sr) / max(1, m_.sum())), 2),
-                        "kept_ratio_median": round(float(np.median(kept)), 3) if len(kept) else None,
-                        "disc_ratio_median": round(float(np.median(disc)), 3) if len(disc) else None,
-                        "disc_ratio_p90": round(float(np.quantile(disc, 0.9)), 3) if len(disc) else None,
-                        "disc_fit_fail": int((disc == 0).sum())})
-        write("screen_by_segment.csv", seg)
-        early = []
-        for lo, hi in ((0, 100), (100, 200), (200, 300), (300, 500), (500, 750), (750, 1000), (1000, 1500),
-                       (1500, 1977), (1977, UPD)):
-            sr = [r for r in scr if lo < r["step"] <= hi]
+        sec = np.array([r["sec"] for r in log], float)
+        e = st <= 500
+        cost.append({"threshold": k, "updates": int(st[-1]), "pairs_drawn": int(round(drawn.sum())),
+                     "mean_drawn_per_update": round(float(drawn.mean()), 2),
+                     "sec_sum_h": round(float(sec.sum()) / 3600, 2), "median_sec": round(float(np.median(sec)), 3),
+                     "wall_h": None if train_hours(dirs[k], RUNS[k][1]) is None else round(train_hours(dirs[k], RUNS[k][1]), 2),
+                     "first500_pairs_drawn": int(round(drawn[e].sum())),
+                     "first500_mean_drawn": round(float(drawn[e].mean()), 2),
+                     "first500_sec_sum_h": round(float(sec[e].sum()) / 3600, 3),
+                     "first500_median_sec": round(float(np.median(sec[e])), 3),
+                     "rest_median_sec": round(float(np.median(sec[~e])), 3) if (~e).any() else None})
+    write("cost.csv", cost)
+    seg = []
+    for k in SCREENED:
+        for lo, hi in BINS:
+            sr = [r for r in scr[k] if lo < r["step"] <= hi]
+            if not sr:
+                continue
             ra = np.array([r["ratio"] for r in sr])
-            early.append({"updates": f"{lo + 1}-{hi}", "drawn": len(sr), "discarded": sum(not r["keep"] for r in sr),
-                          "keep_ratio": round(sum(r["keep"] for r in sr) / max(1, len(sr)), 3),
-                          "ratio_median_all": round(float(np.median(ra)), 3)})
-        write("screen_early.csv", early)
+            disc = np.array([r["ratio"] for r in sr if not r["keep"]])
+            seg.append({"threshold": k, "updates": f"{lo + 1}-{hi}", "drawn": len(sr), "discarded": len(disc),
+                        "keep_ratio": round(1 - len(disc) / len(sr), 3),
+                        "drawn_per_update": round(len(sr) / (hi - lo), 2),
+                        "ratio_median_all": round(float(np.median(ra)), 3),
+                        "disc_ratio_median": round(float(np.median(disc)), 3) if len(disc) else None,
+                        "disc_fit_fail": int((disc == 0).sum())})
+    write("screen_by_segment.csv", seg)
 
-        fig, ax = plt.subplots(1, 3, figsize=(17, 4.4))
-        ax[0].plot(st, roll(keep, 200, np.nanmean), color="C3", lw=1.1)
-        for k in range(1, 4):
-            ax[0].axvline(k * PASS, color="0.8", lw=0.8)
-        ax[0].set_ylabel("保留比例（200 次更新滑动平均）")
-        ax[0].set_xlabel("更新次数")
-        bins = np.linspace(0, max(0.05, max(r["ratio"] for r in scr)), 41)
-        for k in range(1, 5):
-            disc = [r["ratio"] for r in scr if not r["keep"] and (k - 1) * PASS < r["step"] <= (k * PASS if k < 4 else UPD)]
+    have = [k for k in SCREENED if k in logs and scr[k]]
+    if have:
+        fig, ax = plt.subplots(1, 3, figsize=(18, 4.6))
+        for k in have:
+            log, c, name = logs[k], RUNS[k][4], RUNS[k][3]
+            st = np.array([r["step"] for r in log])
+            keep = 1.0 / np.array([r.get("scr_drawn", np.nan) for r in log], float)
+            ax[0].plot(st, roll(keep, 200, np.nanmean), color=c, lw=1.1, label=name)
+            disc = [r["ratio"] for r in scr[k] if not r["keep"]]
             if disc:
-                ax[1].hist(disc, bins=bins, histtype="step", density=True, lw=1.1, label=f"第 {k} 段")
-        thr = json.loads((R / "extra" / "data" / "threshold.json").read_text(encoding="utf-8"))["threshold"]
-        ax[1].axvline(thr, color="0.4", ls=":", lw=0.8)
-        ax[1].set_xlabel("被丢掉的对的参照内点比例")
-        ax[1].set_ylabel("密度")
-        ax[1].legend(fontsize=8)
-        ratio_all = np.array([r["ratio"] for r in scr])
-        step_all = np.array([r["step"] for r in scr])
-        ax[2].plot(np.unique(step_all), [np.median(ratio_all[step_all == s]) for s in np.unique(step_all)],
-                   ",", color="0.6", alpha=0.3)
-        med = roll(np.array([np.median(ratio_all[step_all == s]) for s in np.unique(step_all)]), 200)
-        ax[2].plot(np.unique(step_all), med, color="C3", lw=1.1, label="取到的全部对（每步中位数，200 步滑动中位数）")
-        ax[2].axhline(thr, color="0.4", ls=":", lw=0.8)
-        ax[2].set_xlabel("更新次数")
-        ax[2].set_ylabel("参照内点比例")
-        ax[2].legend(fontsize=8)
+                ax[1].hist(disc, bins=np.linspace(0, 0.8, 41), histtype="step", density=True, lw=1.1, color=c,
+                           label=f"{name}（{len(disc)} 对）")
+            ra = np.array([r["ratio"] for r in scr[k]])
+            sa = np.array([r["step"] for r in scr[k]])
+            o = np.argsort(sa, kind="stable")
+            us, first = np.unique(sa[o], return_index=True)
+            med = [np.median(x) for x in np.split(ra[o], first[1:])]
+            ax[2].plot(us, roll(med, 200), color=c, lw=1.1, label=name)
+            ax[1].axvline(RUNS[k][2], color=c, ls=":", lw=0.8)
+            ax[2].axhline(RUNS[k][2], color=c, ls=":", lw=0.8)
+        for g in range(1, 4):
+            ax[0].axvline(g * PASS, color="0.85", lw=0.8)
+        for a in (ax[0], ax[2]):
+            a.set_xscale("symlog", linthresh=100)
+            a.set_xlim(0, UPD)
+        ax[0].set(xlabel="更新次数（前 100 次线性、之后对数）", ylabel="保留比例（200 次更新滑动平均）")
+        ax[1].set(xlabel="被丢掉的对的参照内点比例（全程）", ylabel="密度")
+        ax[2].set(xlabel="更新次数（前 100 次线性、之后对数）", ylabel="取到的对的参照内点比例（每步中位数，200 步滑动中位数）")
+        for a in ax:
+            a.legend(fontsize=8)
         fig.tight_layout()
         fig.savefig(R / "extra" / "screen.png", dpi=110)
 
-    fig, ax = plt.subplots(1, 4, figsize=(21, 4.4))
-    for k, (d, m, name, c) in RUNS.items():
+    fig, ax = plt.subplots(1, 4, figsize=(22, 4.6))
+    for k, (_, _, _, name, c) in RUNS.items():
         if k in logs:
             log = logs[k]
             st = np.array([r["step"] for r in log])
@@ -258,64 +306,93 @@ def main():
                 a.plot(st, roll(v, 50), color=c, lw=1.0, label=name)
         if val[k]:
             s_ = sorted(val[k])
-            ax[3].plot(s_, [val[k][s]["summary"]["auc@5"] for s in s_], "o-", color=c, lw=1.1, ms=3, label=name)
+            ax[3].plot(s_, [val[k][s]["summary"]["auc@5"] for s in s_], "o-", color=c, lw=1.0, ms=2.5, label=name)
     ax[0].set_yscale("log")
     for a, lab in zip(ax, ("离参照的距离（px）", "画面内格子比例", "训练图对上模型自身拟合的内点比例", "Val AUC@5")):
-        a.set_ylabel(lab)
-        a.set_xlabel("更新次数")
+        a.set(ylabel=lab, xlabel="更新次数")
         a.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(R / "extra" / "curves.png", dpi=110)
+
+    if diff:
+        fig, a_ = plt.subplots(figsize=(9, 4.6))
+        for j, k in enumerate(SCREENED):
+            rs = [r for r in diff if r["threshold"] == k]
+            if not rs:
+                continue
+            x = np.array([r["update"] for r in rs]) + (j - 1.5) * 40
+            y = np.array([r["diff"] for r in rs])
+            a_.errorbar(x, y, yerr=[y - [r["ci_lo"] for r in rs], [r["ci_hi"] for r in rs] - y], fmt="o",
+                        color=RUNS[k][4], ms=3, capsize=1.5, lw=0.7, label=RUNS[k][3])
+        a_.axhline(0, color="0.5", ls=":", lw=0.8)
+        for g in range(1, 4):
+            a_.axvline(g * PASS, color="0.85", lw=0.8)
+        a_.set(xlabel="更新次数", ylabel="Val AUC@5 之差（减不筛选）")
+        a_.legend(fontsize=8)
+        fig.tight_layout()
+        fig.savefig(R / "extra" / "diff.png", dpi=110)
 
     # 4. 自身内点比例与真实误差的 Spearman
     ds = Dataset(DATA)
     pairs = ds.labelled("val")
     sp = []
-    for k, (d, m, _, _) in RUNS.items():
+    for k in RUNS:
         for s in sorted(val[k]):
-            o = own_ratio(d, m, s, ds, pairs)
+            o = own_ratio(dirs[k], RUNS[k][1], s, ds, pairs)
             if o is not None:
-                sp.append({"run": k, "update": s, "spearman": round(spearman(*o), 3),
+                sp.append({"threshold": k, "update": s, "spearman": round(spearman(*o), 3),
                            "own_ratio_median": round(float(np.median(o[0])), 3)})
+    write("spearman.csv", sp)
     if sp:
-        write("spearman.csv", sp)
-        fig, a = plt.subplots(figsize=(7, 4.2))
-        for k, (_, _, name, c) in RUNS.items():
-            rs = [r for r in sp if r["run"] == k]
-            a.plot([r["update"] for r in rs], [r["spearman"] for r in rs], "o-", color=c, ms=3, lw=1.0, label=name)
-        a.set_xlabel("更新次数")
-        a.set_ylabel("自身内点比例与真实误差的 Spearman 相关")
+        fig, a = plt.subplots(figsize=(8, 4.4))
+        for k in RUNS:
+            rs = [r for r in sp if r["threshold"] == k]
+            if rs:
+                a.plot([r["update"] for r in rs], [r["spearman"] for r in rs], "o-", color=RUNS[k][4], ms=2.5,
+                       lw=1.0, label=RUNS[k][3])
+        a.set(xlabel="更新次数", ylabel="自身内点比例与真实误差的 Spearman 相关")
         a.legend(fontsize=8)
         fig.tight_layout()
         fig.savefig(R / "extra" / "spearman.png", dpi=110)
 
     # 5. 被丢掉最多次的对
-    if scr:
-        n_draw = collections.Counter(r["pair"] for r in scr)
-        n_disc = collections.Counter(r["pair"] for r in scr if not r["keep"])
+    top, n_pairs = {}, []
+    for k in SCREENED:
+        if not scr[k]:
+            continue
+        n_draw = collections.Counter(r["pair"] for r in scr[k])
+        n_disc = collections.Counter(r["pair"] for r in scr[k] if not r["keep"])
         rat = collections.defaultdict(list)
-        for r in scr:
+        for r in scr[k]:
             if not r["keep"]:
                 rat[r["pair"]].append(r["ratio"])
-        top = [{"pair": q, "n_disc": c, "n_drawn": n_draw[q], "disc_ratio_median": round(float(np.median(rat[q])), 3)}
-               for q, c in n_disc.most_common(20)]
-        write("most_discarded.csv", top)
-        never = sum(1 for q in n_draw if q not in n_disc)
-        print(f"取到过的不同对 {len(n_draw)}，从未被丢掉的 {never}，被丢掉过的 {len(n_disc)}")
+        top[k] = [{"threshold": k, "pair": q, "n_disc": c, "n_drawn": n_draw[q],
+                   "disc_ratio_median": round(float(np.median(rat[q])), 3)} for q, c in n_disc.most_common(20)]
+        n_pairs.append({"threshold": k, "distinct_drawn": len(n_draw), "ever_discarded": len(n_disc),
+                        "never_discarded": sum(1 for q in n_draw if q not in n_disc),
+                        "discarded_every_time": sum(1 for q in n_disc if n_disc[q] == n_draw[q])})
+    write("most_discarded.csv", [r for k in top for r in top[k]])
+    write("discard_pairs.csv", n_pairs)
+    if top:
         from baselines.data import Data
         from moonlib import inputs
         dd = Data(str(DATA))
         mo, ms = inputs.get("optical", "div255"), inputs.get("sar", "p2p98")
-        fig, ax = plt.subplots(2, 6, figsize=(18, 6.4))
-        for j, r in enumerate(top[:6]):
-            ax[0, j].imshow(mo(dd.optical("train", r["pair"])), cmap="gray")
-            ax[1, j].imshow(ms(dd.sar("train", r["pair"])), cmap="gray")
-            ax[0, j].set_title(f"{r['pair']}\n丢 {r['n_disc']} / 取 {r['n_drawn']}，比例中位数 {r['disc_ratio_median']}",
-                               fontsize=8)
-            for a in ax[:, j]:
-                a.axis("off")
+        ks = list(top)
+        fig, ax = plt.subplots(2 * len(ks), 4, figsize=(12, 6.2 * len(ks)))
+        for i, k in enumerate(ks):
+            for j in range(4):
+                for a in ax[2 * i:2 * i + 2, j]:
+                    a.axis("off")
+                if j >= len(top[k]):
+                    continue
+                r = top[k][j]
+                ax[2 * i, j].imshow(mo(dd.optical("train", r["pair"])), cmap="gray")
+                ax[2 * i + 1, j].imshow(ms(dd.sar("train", r["pair"])), cmap="gray")
+                ax[2 * i, j].set_title(f"{RUNS[k][3]}：{r['pair']}\n丢 {r['n_disc']} / 取 {r['n_drawn']}，"
+                                       f"比例中位数 {r['disc_ratio_median']}", fontsize=8)
         fig.tight_layout()
-        fig.savefig(R / "extra" / "most_discarded.png", dpi=90)
+        fig.savefig(R / "extra" / "most_discarded.png", dpi=80)
 
 
 if __name__ == "__main__":

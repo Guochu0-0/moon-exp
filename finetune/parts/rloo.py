@@ -101,6 +101,23 @@ num 个点、RANSAC ransac px），内点比例 = 内点数 ÷ num，拟合失�
 参照仿射直接沿用这次拟合的结果，不再推理一次；< 门槛时丢掉，不抽签，训练循环接着取下一对（finetune/train.py
 「样本筛选」），每张卡各自取到一对过门槛的才做这一步。日志记 scr_ratio（这一步所学的对的内点比例）、scr_drawn（这一步
 本卡共取了几对，含所学的一对）、scr_disc（被丢掉的对的内点比例均值，没有丢掉的步不记）、t_scr（这一步参照推理的总耗时）。
+
+遮挡约束奖励（#249，occ = true；只配 reward = ref、fine_mode = grad / local、[optim] batch = 1、accum = 1，不与 mp_n、gate、
+spread、trace、cos_every 同用）：每对图照常算完上面的全部损失（现有项）后，另生成 1 个遮挡版本：光学图上边长 occ_side
+原网格 px 的正方形、左上角每步重新随机抽，SAR 上遮住它经参照仿射映射过去的四边形，被遮处填这张图自己均值、标准差的
+高斯噪声（遮挡的生成见 finetune/parts/rloo_occ.py）。当前模型在遮挡版本上照原图同样做一遍：粗级抽 group 份、细化各级
+（levels）从遮挡版本正常推理的轨迹抽签，打分方式与现有项相同，参照仍是原图上那个参照仿射；光学图上落在被遮处的粗格、
+细化像素优势置零（分母不变，同 frame_mask），画面外的照现有项置零。不做 certainty 的 BCE。参照拟合失败的对不做这一项。
+总损失 = 现有项 + occ_w × 新项（新项的粗级与细化部分都乘 occ_w；细化部分另照现有项乘 fine_w）。
+为了分开量两项的梯度，occ 打开时本成分在内部反向：先对现有项 backward，记下各参数的梯度，再对新项 backward；返回的损失
+只是数值（不再参与训练循环的统一反向，返回 active = False，训练循环照常做参数更新）。日志：main_gn、occ_gn 为现有项与
+（系数为 1 的）新项在全部可训练参数上的梯度范数（反缩放后、多卡平均之前、裁剪之前），occ_coef = main_gn / occ_gn
+（让两者 1:1 的系数），occ_ratio = occ_w · occ_gn / main_gn（实际施加的比例）。occ_w = 0 时只量不学：新项照算、
+反向量完梯度后撤掉，这一步只按现有项更新。另记 occ_fo / occ_fs（光学 / SAR 被遮的面积比例）、t_occ（新项耗时），
+以及只在光学图未被遮、且参照映射到画面内的格子 / 像素上的：occ_rew 与 occ_rew0（遮挡版本 / 原图的粗级奖励均值）、
+occ_d 与 occ_d0（粗级抽到的位置离参照的平均距离），occ_rew_s（细化尺度 s 抽签奖励均值）、occ_dmu_s 与 occ_dmu0_s
+（遮挡版本 / 原图正常推理轨迹上尺度 s 的 μ 离参照的平均距离）。遮挡位置与噪声的随机数取自以 (torch 初始种子, 调用次数,
+批内序号) 起的独立发生器，不动训练的随机数流。
 """
 from __future__ import annotations
 
@@ -118,6 +135,7 @@ from .. import augment
 from ..config import ConfigError
 from ..geom import HW, compose, inv_affine
 from ..trace import stack_rows
+from . import rloo_occ as OC
 from . import rloo_trace as RT
 from .cexp import sample_matches
 from .pseudo import affine_norm, grid
@@ -164,6 +182,9 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "fine_mask": False,   # 细化各级：参照仿射映射到 SAR 画面外 / 补零区的像素优势置零（#221，只配 grad / local）
           "fine_cert_bce": 0.0,  # 细化各级 certainty 对画面内掩码的 BCE 权重（#221，只配 grad / local）；0 = 不训
           "screen": 0.0,    # 样本筛选（#245）：参照内点比例低于它的对不学、换下一对；0 = 不筛（每对都学）
+          "occ": False,     # 遮挡约束奖励（#249）：每对另加 1 个遮挡版本，没遮住处对原图参照仿射打分
+          "occ_side": 229.0,  # occ：光学图上遮挡正方形的边长（原网格 px；229 ≈ √0.2 × 512，面积约 20%，同 E40）
+          "occ_w": 0.0,     # occ：新项的系数；0 = 只量梯度、不学
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -258,6 +279,13 @@ def check(cfg):
     if p["screen"] and (p["reward"] != "ref" or not (p["ref_ema"] or p["frozen_ref"]) or p["mp_n"]
                         or cfg["optim"]["batch"] != 1):
         raise ConfigError("[rloo] screen 只配 reward = 'ref' 且 ref_ema 或 frozen_ref 打开、mp_n = 0、[optim] batch = 1")
+    if p["occ"] and (p["reward"] != "ref" or not lv or p["fine_mode"] == "chain" or p["mp_n"] or p["gate"]
+                     or p["spread"] or p["trace"] or p["cos_every"] or cfg["optim"]["batch"] != 1
+                     or cfg["optim"]["accum"] != 1):
+        raise ConfigError("[rloo] occ 只配 reward = 'ref'、非空的 levels 与 fine_mode = 'grad' / 'local'、[optim] batch = 1、"
+                          "accum = 1，不与 mp_n、gate、spread、trace、cos_every 同用")
+    if p["occ_w"] < 0 or not 0 < p["occ_side"] < HW:
+        raise ConfigError(f"[rloo] occ_w 应 ≥ 0，occ_side 应在 (0, {HW})")
 
 
 def data_kw(p):
@@ -934,6 +962,7 @@ class Term:
             stats.update({f"{n}_{s_}": [] for s_ in lv for n in ("rew", "rew_sd", "d", "d90", "zero")},
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         rows = []
+        occ_ctx = []    # 遮挡约束奖励（#249）：各对做新项要用的现有项中间量
         for b in range(B):
             m = None    # 画面内掩码（frame_mask / cert_bce / gate / spread）
             blocked = False     # 参照合理性检查没过（#216）
@@ -1085,6 +1114,8 @@ class Term:
                         stats.setdefault(key, []).append(v)
                 torch.cuda.synchronize()
                 stats["t_fine"].append(time.time() - t3)
+            if p["occ"] and A_ref is not None:
+                occ_ctx.append((b, A_ref, m, masks, r, d, traj))
             if p["trace"]:
                 rows.append(tr)
         if rows:
@@ -1092,7 +1123,105 @@ class Term:
         if lv:
             stats["l_coarse"].append(float(p["weight"] * loss))
             stats["l_fine"].append(float(fine))
-        return p["weight"] * loss + fine, {k: round(float(np.mean(v)), 5) for k, v in stats.items() if v}, True
+        total = p["weight"] * loss + fine
+        if p["occ"]:
+            val = self._occ(st, i0, i1, total, occ_ctx, B, sig, stats)
+            return torch.zeros((), device=cls.device) + val, _mean_stats(stats), False
+        return total, _mean_stats(stats), True
+
+    def _occ(self, st, i0, i1, total, ctx, B, sig, stats):
+        """遮挡约束奖励（#249）：现有项 total 先反向，再逐对算新项并反向，量两项的梯度范数（见模块说明「遮挡约束奖励」）。
+        ctx：[(批内序号, 参照仿射, 粗级画面内掩码, 细化各级画面内掩码, 原图粗级奖励, 原图粗级距离, 原图正常推理轨迹)]。
+        返回这一步的损失数值（现有项 + occ_w × 新项；只量不学时只有现有项）。"""
+        p, optim = self.p, st.optim
+        params = [q for q in self.model.params if q.requires_grad]
+        fac = optim.factor()
+        optim.backward(total)
+        val = float(total)
+        if not ctx:
+            return val
+        g0 = OC.grads(params)
+        main_gn = OC.grad_norm(params) / fac
+        w = p["occ_w"] if p["occ_w"] > 0 else 1.0
+        t0 = time.time()
+        occ_val = 0.0
+        for b, A, m, masks, r0, d0, traj0 in ctx:
+            l_o = self._occ_pair(st, i0[b:b + 1], i1[b:b + 1], b, A, m, masks, r0, d0, traj0, w / B, sig, stats)
+            optim.backward(l_o)
+            occ_val += float(l_o)
+        occ_gn = OC.grad_norm(params, g0) / fac / w
+        if math.isfinite(main_gn) and math.isfinite(occ_gn):     # GradScaler 溢出的步不记
+            stats["main_gn"], stats["occ_gn"] = [main_gn], [occ_gn]
+            if occ_gn > 0:
+                stats["occ_coef"] = [main_gn / occ_gn]
+            if main_gn > 0:
+                stats["occ_ratio"] = [p["occ_w"] * occ_gn / main_gn]
+        if p["occ_w"] == 0:      # 只量不学：撤掉新项的梯度
+            OC.restore(params, g0)
+        else:
+            val += occ_val
+        torch.cuda.synchronize()
+        stats["t_occ"] = [time.time() - t0]
+        return val
+
+    def _occ_pair(self, st, i0, i1, b, A, m, masks, r0, d0, traj0, w, sig, stats):
+        """一对图的新项（#249）：生成遮挡版本，当前模型在它上面照现有项抽签、对原图的参照仿射 A 打分，光学被遮处与画面外
+        优势置零。细化各级在 fine_direct 里已经反向；返回粗级项 + 细化替身项（都已乘 w · weight，细化另乘 fine_w），
+        由调用者反向。i0、i1：(1,1,H,W)；m：粗级画面内掩码或 None；masks：细化各级画面内掩码或 None；r0、d0：原图粗级
+        各份的奖励与距离 (G,h,w)；traj0：原图正常推理轨迹。"""
+        p, model = self.p, self.model
+        dev = i0.device
+        rng = np.random.default_rng([torch.initial_seed() % 2 ** 32, self.calls, b, 249])
+        gen = torch.Generator(device=dev).manual_seed(int(rng.integers(2 ** 62)))
+        side = p["occ_side"]
+        box = OC.draw_box(rng, side)
+        mo = OC.opt_mask(box, side, *i0.shape[-2:], dev)
+        ms = OC.sar_mask(box, side, A, *i1.shape[-2:], dev)
+        o0 = OC.fill_noise(i0[0], mo, gen)
+        o1 = OC.fill_noise(i1[0], ms, gen, sar_valid(i1[0]))
+        stats.setdefault("occ_fo", []).append(float(mo.float().mean()))
+        stats.setdefault("occ_fs", []).append(float(ms.float().mean()))
+        f1, f2 = features(model, o0[None], o1[None])
+        cls, cert = coarse(model, f1, f2)
+        cls = cls.float()
+        _, C, h, w_ = cls.shape
+        logp = F.log_softmax(cls / p["temp"], 1)[0]
+        with torch.no_grad():
+            q = logp.exp()
+            k = torch.multinomial(q.reshape(C, -1).T, p["group"], replacement=True).T.reshape(-1, h, w_)
+            P = cls.softmax(1)
+            traj = {}
+            refine(model, f1, f2, anchor_flow(P, P.argmax(1)), cert.float(), traj)
+            fc = anchor_flow(P.expand(p["group"], -1, -1, -1), k)
+            r, d = ref_cells(fc, A, p["delta"], p["tau"], p["r_out"], p["shape"])
+            vis = ~OC.opt_mask(box, side, h, w_, dev)
+            if m is None:
+                m = in_frame(A, i1[0], h, w_)
+            adv = advantage(r, p["baseline"]) * (vis & m if p["frame_mask"] else vis)
+            sel = vis & m
+            if bool(sel.any()):
+                for key, x in (("occ_rew", r), ("occ_rew0", r0), ("occ_d", d), ("occ_d0", d0)):
+                    stats.setdefault(key, []).append(float(x[:, sel].mean()))
+            if masks is None:
+                masks = {s_: in_frame(A, i1[0], *traj[s_][0].shape[-2:]) for s_ in sig}
+            vis_f = {s_: ~OC.opt_mask(box, side, *traj[s_][0].shape[-2:], dev) for s_ in sig}
+            keep = {s_: (vis_f[s_] & masks[s_] if p["fine_mask"] else vis_f[s_]).float() for s_ in sig}
+        l_c = -(adv * _logp(logp, k)).mean()
+        sur, rd, _ = fine_direct(model.model.decoder, f1, f2, traj, A, sig, p, st.optim.backward, st.optim.factor(),
+                                 w * p["weight"] * p["fine_w"], keep)
+        with torch.no_grad():
+            for s_, (r_s, _) in rd.items():
+                sel_s = vis_f[s_] & masks[s_]
+                if not bool(sel_s.any()):
+                    continue
+                stats.setdefault(f"occ_rew_{s_}", []).append(float(r_s[:, sel_s].mean()))
+                for key, tr_ in ((f"occ_dmu_{s_}", traj), (f"occ_dmu0_{s_}", traj0)):
+                    stats.setdefault(key, []).append(float(level_reward(tr_[s_][2], A, s_, p)[1][:, sel_s].mean()))
+        return w * p["weight"] * l_c + sur
+
+
+def _mean_stats(stats):
+    return {k: round(float(np.mean(v)), 5) for k, v in stats.items() if v}
 
 
 def _level_stats(stats, s, r, d):

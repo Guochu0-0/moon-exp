@@ -1,0 +1,12 @@
+# E42（#249）定新项系数用，只当一次性命令跑、不由驱动领取：E41 `main` 原样（_e41），加上遮挡约束奖励但系数为 0
+# （只量梯度、不学，所以这 50 次更新与 E41 相同），从 zero-shot 起训 50 次更新，记下现有项与新项在全部可训练参数上的
+# 梯度范数（日志 main_gn、occ_gn、occ_coef）。系数取 occ_coef 的中位数（code/calib.py）。不存档。
+base = "_e41"
+
+[rloo]
+occ = true
+occ_w = 0.0
+
+[run]
+stop_at = 50
+save_every = 0

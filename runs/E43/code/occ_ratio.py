@@ -3,8 +3,9 @@
 
 做法：用训练同一份配置（configs/main.toml）建模型、训练集（同样的扰动），固定种子 0 从训练集取 N 对（不放回），每对的扰动
 在各存档间相同。对每个存档 S（模型 = ckpt_S，S = 0 为 zero-shot）：
-- 参照：EMA 参照的权重没有存下（save_optim 关闭），用 ckpt_{S-250} 代替（τ = 0.996 的滑动平均，权重的平均滞后约
-  τ/(1-τ) ≈ 249 次更新）；S = 0 与 250 时参照为 zero-shot（S = 0 即只量不学的情形：模型与参照相同）。
+- 参照：EMA 参照的权重没有存下（save_optim 关闭），用存档的加权平均近似（ema_weights：把 τ = 0.996 的滑动平均按每
+  250 次更新一块记到最近的存档上，更早的部分记给 zero-shot；只平均参数，缓冲区取 zero-shot 的，同 SlowRef）。
+  S = 0 时参照即 zero-shot 模型本身（只量不学的情形：模型与参照相同，原图上最高分位置与尺度 1 的距离恒为 0）。
 - 参照在原图上正常推理，记逐像素对应（粗级取最高分位置，细化各级的输出），并拟合参照仿射（5000 点、RANSAC 3 px）；
   拟合失败的对跳过。
 - 遮挡照训练（finetune/parts/rloo_pixocc.py 的同一组函数）：光学图上 229 px 正方形，SAR 上按参照仿射映过去的四边形，
@@ -49,7 +50,7 @@ from finetune.parts import rloo as RL  # noqa: E402
 from finetune.parts import rloo_pixocc as PO  # noqa: E402
 from workbench.launch import require_clean  # noqa: E402
 
-N, SEED = int(os.environ.get("N", 64)), 0      # 环境变量 N、CKPTS（逗号分隔）只用于试跑
+N, SEED = int(os.environ.get("N", 128)), 0      # 环境变量 N、CKPTS（逗号分隔）只用于试跑
 CKPTS = tuple(int(x) for x in os.environ.get("CKPTS", "0,250,500,1000,2000,4000,6000,7750").split(","))
 CK = R / "ckpt" / "main"
 
@@ -88,9 +89,49 @@ def build(cfg):
     return mod.Model(cfg, f"{Y}/weights", device="cuda")
 
 
+def sd_of(z, s):
+    """存档 s 的权重（s = 0：zero-shot 的权重 z）。"""
+    return z if s == 0 else torch.load(CK / f"ckpt_{s}.pt", map_location="cpu")
+
+
 def load(model, z, s):
-    """把存档 s 装进 model（s = 0：zero-shot 的权重 z）。"""
-    load_weights(model, z if s == 0 else torch.load(CK / f"ckpt_{s}.pt", map_location="cpu"))
+    load_weights(model, sd_of(z, s))
+    model.model.eval()
+
+
+def ema_weights(s, tau=0.996, every=250):
+    """EMA 参照在第 s 次更新时的权重 θ_slow = (1−τ)Σ_j τ^j θ_{s−j} + τ^s θ_0，用每 every 次的存档分块近似：第 k 块
+    （j ∈ [every·k − every/2, every·k + every/2)，k = 0 时从 0 起）全部记作存档 s − every·k，权重 τ^{max(0, every·k − every/2)}
+    − τ^{every·k + every/2}；更早的部分（含 τ^s 的初始项）全部记给 zero-shot。返回 [(存档, 权重)]，权重和为 1。"""
+    out, k = [], 0
+    while s - every * k > 0:
+        lo, hi = max(0, every * k - every // 2), min(s, every * k + every // 2)
+        out.append((s - every * k, tau ** lo - tau ** hi))
+        k += 1
+    out.append((0, 1 - sum(w for _, w in out)))
+    return out
+
+
+def load_ema(model, z, s):
+    """把 ema_weights(s) 的加权平均装进 model：只平均参数（含 LoRA 的 A、B），缓冲区取 zero-shot 的
+    （SlowRef 只对可训练参数做滑动平均，参照副本的缓冲区停在起点）。"""
+    buf = {n for n, _ in model.model.named_buffers()}
+    acc = {"model": {}, "dinov2_lora": {}}
+    for c, w in ema_weights(s):
+        sd = sd_of(z, c)
+        for k, v in sd["model"].items():
+            if k in buf or not v.is_floating_point():
+                acc["model"][k] = z["model"][k]
+            else:
+                acc["model"][k] = acc["model"].get(k, 0) + w * v.float()
+        for k, l in sd.get("dinov2_lora", {}).items():
+            a = acc["dinov2_lora"].setdefault(k, {"A": 0, "B": 0, "scale": l["scale"]})
+            a["A"] = a["A"] + w * l["A"].float()
+            a["B"] = a["B"] + w * l["B"].float()
+    for k, v in acc["model"].items():
+        if v.is_floating_point():
+            acc["model"][k] = v.to(z["model"][k].dtype)
+    load_weights(model, acc)
     model.model.eval()
 
 
@@ -112,7 +153,8 @@ def main():
     t0 = time.time()
     for s in CKPTS:
         load(model, z, s)
-        load(ref, z, max(0, s - 250))
+        load_ema(ref, z, s)
+        refdesc = " + ".join(f"{w:.3f}×{c}" for c, w in ema_weights(s))
         per = []
         for j, b in enumerate(pairs):
             i0, i1 = b["image0"].cuda(), b["image1"].cuda()
@@ -135,13 +177,13 @@ def main():
             g1 = torch.Generator(device="cuda").manual_seed(SEED * 1000 + j)
             d0 = dists(model, i0, i1, tc, tl[1], kc, k1, p["temp"], p["group"], g0)
             d1 = dists(model, o0, o1, tc, tl[1], kc, k1, p["temp"], p["group"], g1)
-            r = {"ckpt": s, "ref": max(0, s - 250), "pair": b["pair"], "keep_c": round(float(kc.float().mean()), 4),
+            r = {"ckpt": s, "pair": b["pair"], "keep_c": round(float(kc.float().mean()), 4),
                  "keep_1": round(float(k1.float().mean()), 4)}
             for name, a, c in zip(("sample", "mode", "s1"), d1, d0):
                 r[f"{name}_occ"], r[f"{name}_orig"] = round(a, 3), round(c, 3)
             per.append(r)
         rows += per
-        row = {"ckpt": s, "ref": max(0, s - 250), "n_pairs": len(per)}
+        row = {"ckpt": s, "ref": refdesc, "n_pairs": len(per)}
         for name in ("sample", "mode", "s1"):
             a = float(np.median([r[f"{name}_occ"] for r in per]))
             c = float(np.median([r[f"{name}_orig"] for r in per]))

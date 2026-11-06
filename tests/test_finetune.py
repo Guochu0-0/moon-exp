@@ -2221,3 +2221,124 @@ def test_rloo_occ_grad_helpers():
     assert (main, occ, main_all) == pytest.approx((3.0, math.sqrt(16 + 144), math.sqrt(9 + 25)))
     OC.restore([a, b], saved)
     assert torch.equal(a.grad, torch.tensor([3.0, 0.0])) and b.grad is None
+
+
+# ---------- 同模态自配对约束奖励（#254） ----------
+
+def test_config_rloo_selfpair(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    ok = '[rloo]\nreward = "ref"\nlevels = [16, 8]\nfine_mode = "local"\nselfpair = true\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
+    assert (d["rloo"]["selfpair"], d["rloo"]["selfpair_w"]) == (False, 0.0)                  # 默认不做，同旧行为
+    assert (d["rloo"]["selfpair_shift"], d["rloo"]["selfpair_rot"], d["rloo"]["selfpair_scale"]) == (128.0, 20.0, 0.2)
+    c = C.load(_write(tmp_path, "c", head + ok + "selfpair_w = 1.5\n"))
+    assert c["rloo"]["selfpair"] and c["rloo"]["selfpair_w"] == 1.5
+    for bad in ('[rloo]\nreward = "r1"\nselfpair = true',
+                '[rloo]\nreward = "ref"\nselfpair = true',                              # 没有细化级
+                '[rloo]\nreward = "ref"\nlevels = [16]\nselfpair = true',               # chain 不支持
+                '[optim]\nbatch = 2\n' + ok, '[optim]\naccum = 2\n' + ok,
+                ok + 'occ = true', ok + 'mp_n = 2', ok + 'selfpair_w = -1.0', ok + 'selfpair_scale = 1.0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
+def test_rloo_data_kw_selfpair():
+    from finetune.parts import rloo as R
+    assert R.data_kw({**R.PARAMS}) == {} and R.data_kw({**R.PARAMS, "selfpair": True}) == {"raw_sar": True}
+
+
+def test_pairset_raw_sar_is_unperturbed():
+    """raw_sar（#254）：另返回扰动之前的 SAR；扰动后的 image1、T 与不开时逐位相同（不改随机数流）。"""
+    import types
+    import torch
+    from finetune.data import PairSet
+
+    rng = np.random.default_rng(0)
+    opt, sar = rng.random((512, 512)).astype(np.float32), rng.random((512, 512)).astype(np.float32)
+
+    def make(raw):
+        ds = PairSet.__new__(PairSet)
+        ds.resize_hi, ds.raw_sar, ds.neg, ds.seed, ds.aug = None, raw, False, 0, ("geo",)
+        ds.aug_kw = {"shift": 128.0, "rot": 20.0, "scale": 0.2, "disk": True}
+        ds.src, ds.pairs = {"R/p": "train"}, ["R/p"]
+        ds.data = types.SimpleNamespace(optical=lambda sp, q: opt, sar=lambda sp, q: sar)
+        ds.map_opt = ds.map_sar = lambda x: x
+        ds.resize = lambda x: x[::2, ::2]
+        return ds
+
+    a, b = make(False)[0], make(True)[0]
+    assert "image1_raw" not in a and torch.equal(a["image1"], b["image1"]) and torch.equal(a["T"], b["T"])
+    assert torch.equal(b["image1_raw"], torch.from_numpy(sar[::2, ::2])[None])
+    assert not torch.equal(b["image1_raw"], b["image1"])
+
+
+def test_rloo_selfpair_make_pair():
+    """自配对：两种模态都会选到；T3 在设定范围内（圆盘平移、旋转、缩放）；T3 X 上的像素 = X 在 T3⁻¹ 处的值；
+    画面内掩码只看几何，X 里本来为 0 的像素不算补零区。"""
+    import torch
+    from finetune.geom import inv_affine
+    from finetune.parts import rloo as R
+    from finetune.parts import rloo_self as SP
+
+    p = {**R.PARAMS, "selfpair": True}
+    opt = torch.rand(1, 64, 64) + 0.1
+    sar = torch.zeros(1, 64, 64)                                    # 全黑的 SAR：灰度不影响掩码
+    rng = np.random.default_rng(0)
+    picks, ts = [], []
+    for _ in range(200):
+        x, xt, ones_t, T, use_sar = SP.make_pair(opt, sar, rng, p)
+        picks.append(use_sar)
+        ts.append(T)
+        assert x is (sar if use_sar else opt) and xt.shape == x.shape
+    assert 0.35 < np.mean(picks) < 0.65
+    for T in ts:
+        L = T[:, :2]
+        sc = np.sqrt(abs(np.linalg.det(L)))
+        th = np.degrees(np.arctan2(L[1, 0], L[0, 0]))
+        t = T[:, 2] - (np.array([256.0, 256.0]) - L @ [256, 256])            # 绕中心变换后剩下的平移
+        assert 0.8 - 1e-9 <= sc <= 1.2 + 1e-9 and abs(th) <= 20 + 1e-9 and np.linalg.norm(t) <= 128 + 1e-6
+    T = np.array([[1.0, 0, 64.0], [0, 1.0, 0]])                     # 原网格右移 64 px = 输入网格（64）右移 8 px
+    xt = R.perturb_sar(opt, T)
+    assert torch.allclose(xt[0, :, 8:], opt[0, :, :-8]) and float(xt[0, :, :8].abs().max()) == 0.0
+    m = R.in_frame(T, R.perturb_sar(torch.ones_like(sar), T), 8, 8)
+    assert m[:, 1:7].all() and not m[:, 7].any()                    # 最右一列格心映射到画面外
+    assert inv_affine(T)[0, 2] == -64.0
+
+
+def test_rloo_term_selfpair_gradients(monkeypatch):
+    """selfpair（#254）：本成分内部反向，返回 active = False。selfpair_w = 0 时只量不学：梯度、损失与不加这一项时逐位相同，
+    之后的全局随机数不变；selfpair_w = c 时总梯度 = 现有项梯度 + c × 新项梯度，日志的 sp_gn 即新项（系数 1）的梯度范数；
+    日志含粗级与细化各级的自配对奖励、组内标准差、离真值的距离。"""
+    import torch
+
+    def run(seed, **over):
+        term, st, w, dec = _fake_term_fine(monkeypatch, fine_mask=True, frame_mask=True, cert_bce=0.01, **over)
+        img = st.images()[0]
+        st.batch["image1_raw"] = img * 0.5
+        term.model.params = [w] + list(dec.parameters())
+        torch.manual_seed(seed)
+        loss, stats, active = term(st)
+        if active:
+            loss.backward()
+        stats["_after"] = float(torch.rand(()))
+        return [None if q.grad is None else q.grad.clone() for q in term.model.params], stats, active, float(loss)
+
+    g_ref, s_ref, a_ref, l_ref = run(3)
+    assert a_ref and "sp_gn" not in s_ref
+    g0, s0, a0, l0 = run(3, selfpair=True, selfpair_w=0.0)
+    assert not a0 and all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["_after"] == s_ref["_after"] and l0 == pytest.approx(l_ref, abs=1e-6)
+    assert s0["sp_gn"] > 0 and s0["main_gn"] > 0 and s0["sp_ratio"] == 0.0
+    assert s0["sp_coef"] == pytest.approx(s0["main_gn"] / s0["sp_gn"], rel=1e-3)
+    for k in ("sp_rew", "sp_rew_sd", "sp_d", "sp_dmode", "sp_in", "sp_sar", "sp_rew_16", "sp_rew_sd_8", "sp_d_16",
+              "sp_dmu_8", "t_sp"):
+        assert k in s0, k
+    g1, s1, _, _ = run(3, selfpair=True, selfpair_w=1.0)
+    g2, s2, _, _ = run(3, selfpair=True, selfpair_w=2.0)
+    d1 = [a - b for a, b in zip(g1, g0) if a is not None]
+    d2 = [a - b for a, b in zip(g2, g0) if a is not None]
+    assert all(torch.allclose(y, 2 * x, atol=1e-6) for x, y in zip(d1, d2))
+    assert float(torch.cat([x.flatten() for x in d1]).norm()) == pytest.approx(s1["sp_gn"], rel=1e-3)
+    assert s1["sp_gn"] == pytest.approx(s0["sp_gn"], rel=1e-4) and s2["sp_ratio"] == pytest.approx(
+        2 * s2["sp_gn"] / s2["main_gn"], rel=1e-3)

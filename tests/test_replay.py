@@ -106,6 +106,11 @@ ADDED = {
     "rloo.occ": (False, "#249 新增遮挡约束奖励；false = 不加这一项，即之前的做法"),
     "rloo.occ_side": (229.0, "#249 与 occ 同批新增；只在 occ 打开时起作用"),
     "rloo.occ_w": (0.0, "#249 与 occ 同批新增；只在 occ 打开时起作用"),
+    "rloo.selfpair": (False, "#254 新增同模态自配对约束奖励；false = 不加这一项，即之前的做法"),
+    "rloo.selfpair_w": (0.0, "#254 与 selfpair 同批新增；只在 selfpair 打开时起作用"),
+    "rloo.selfpair_shift": (128.0, "#254 与 selfpair 同批新增；只在 selfpair 打开时起作用"),
+    "rloo.selfpair_rot": (20.0, "#254 与 selfpair 同批新增；只在 selfpair 打开时起作用"),
+    "rloo.selfpair_scale": (0.2, "#254 与 selfpair 同批新增；只在 selfpair 打开时起作用"),
 }
 
 

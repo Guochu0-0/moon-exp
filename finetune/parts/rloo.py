@@ -119,6 +119,9 @@ occ_d 与 occ_d0（粗级抽到的位置离参照的平均距离），occ_rew_s�
 （遮挡版本 / 原图正常推理轨迹上尺度 s 的 μ 离参照的平均距离）。新项的随机数（遮挡位置、噪声、粗级与细化的抽签）都取自以
 (torch 初始种子, 调用次数, 批内序号) 起的独立发生器，不动训练的随机数流（只量不学时与不加这一项的训练同一条随机数流）。
 SAR 上只遮四边形里的非补零区像素。
+
+同模态自配对约束奖励（#254，selfpair = true）：每对另加 1 对（光学或扰动前的 SAR，它经已知仿射 T3 变换后的版本），粗级与
+细化各级按 T3 打分；全部实现与日志见 finetune/parts/rloo_self.py，这里只在 check、data_kw 与 __call__ 末尾各挂一处。
 """
 from __future__ import annotations
 
@@ -137,6 +140,7 @@ from ..config import ConfigError
 from ..geom import HW, compose, inv_affine
 from ..trace import stack_rows
 from . import rloo_occ as OC
+from . import rloo_self as SP
 from . import rloo_trace as RT
 from .cexp import sample_matches
 from .pseudo import affine_norm, grid
@@ -186,6 +190,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "occ": False,     # 遮挡约束奖励（#249）：每对另加 1 个遮挡版本，没遮住处对原图参照仿射打分
           "occ_side": 229.0,  # occ：光学图上遮挡正方形的边长（原网格 px；229 ≈ √0.2 × 512，面积约 20%，同 E40）
           "occ_w": 0.0,     # occ：新项的系数；0 = 只量梯度、不学
+          **SP.PARAMS,      # 同模态自配对约束奖励（#254）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -287,10 +292,11 @@ def check(cfg):
                           "accum = 1，不与 mp_n、gate、spread、trace、cos_every 同用")
     if p["occ_w"] < 0 or not 0 < p["occ_side"] < HW:
         raise ConfigError(f"[rloo] occ_w 应 ≥ 0，occ_side 应在 (0, {HW})")
+    SP.check(p, cfg)
 
 
 def data_kw(p):
-    return {}
+    return SP.data_kw(p)
 
 
 # ---------- 前向：粗级（带梯度）与细化（照抄 romatch Decoder.forward 的非 upsample 分支） ----------
@@ -1138,6 +1144,9 @@ class Term:
         total = p["weight"] * loss + fine
         if p["occ"]:
             val = self._occ(st, i0, i1, total, occ_ctx, B, sig, stats)
+            return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
+        if p["selfpair"]:   # 同模态自配对约束奖励（#254）
+            val = SP.step(self, st, total, B, sig, stats)
             return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
         return total, _mean_stats(stats), True
 

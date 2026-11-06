@@ -2180,12 +2180,14 @@ def test_rloo_term_occ_gradients(monkeypatch):
         loss, stats, active = term(st)
         if active:
             loss.backward()
+        stats["_after"] = float(torch.rand(()))                     # 之后的全局随机数：新项不动训练的随机数流
         return [None if q.grad is None else q.grad.clone() for q in term.model.params], stats, active, float(loss)
 
     g_ref, s_ref, a_ref, l_ref = run(3)
     assert a_ref and "occ_gn" not in s_ref
     g0, s0, a0, l0 = run(3, occ=True, occ_w=0.0)
     assert not a0 and all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["_after"] == s_ref["_after"] and s0["main_gn_all"] >= s0["main_gn"]
     assert l0 == pytest.approx(l_ref, abs=1e-6)
     assert s0["occ_gn"] > 0 and s0["main_gn"] > 0 and s0["occ_ratio"] == 0.0
     assert s0["occ_coef"] == pytest.approx(s0["main_gn"] / s0["occ_gn"], rel=1e-3)
@@ -2213,5 +2215,9 @@ def test_rloo_occ_grad_helpers():
     a.grad = a.grad + torch.tensor([0.0, 4.0])
     b.grad = torch.tensor([0.0, 0.0, 12.0])
     assert OC.grad_norm([a, b], saved) == pytest.approx(math.sqrt(16 + 144))
+    c = torch.nn.Parameter(torch.zeros(1))
+    c.grad = torch.tensor([5.0])                                    # 只有现有项有梯度的参数：不算共用
+    main, occ, main_all = OC.split_norms([a, b, c], saved + [c.grad.clone()])
+    assert (main, occ, main_all) == pytest.approx((3.0, math.sqrt(16 + 144), math.sqrt(9 + 25)))
     OC.restore([a, b], saved)
     assert torch.equal(a.grad, torch.tensor([3.0, 0.0])) and b.grad is None

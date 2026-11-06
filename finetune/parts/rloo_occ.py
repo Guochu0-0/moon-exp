@@ -6,7 +6,8 @@
 被遮处填高斯噪声，均值、标准差取这张图自己的均值、标准差，截到 [0, 1]。与 E40 的两处不同：
 - 判定像素是否被遮，看像素中心是否落在正方形（SAR 上为它的像，等价于中心经 A⁻¹ 映回光学后落在正方形内）里；
   E40 用 cv2.fillConvexPoly 按 1/16 px 精度填四边形，只在边界上差一圈像素；
-- 训练时 SAR 经过了已知扰动，画面外补 0；SAR 噪声的均值、标准差只取非补零区（rloo.sar_valid），E40 的 SAR 没有补零区。
+- 训练时 SAR 经过了已知扰动，画面外补 0；SAR 上只遮四边形里的非补零区像素（补零区保持 0，不让画面边界变样），
+  噪声的均值、标准差也只取非补零区（rloo.sar_valid）。E40 的 SAR 没有补零区。
 网络输入网格（训练为 560）与原网格（HW = 512）只差一个整体缩放：输入像素 j 的中心在原网格的 (j + 0.5)·HW / W。
 """
 from __future__ import annotations
@@ -84,6 +85,25 @@ def grad_norm(params, base=None) -> float:
         else:
             s += float((g.double() - b.double()).square().sum())
     return math.sqrt(s)
+
+
+@torch.no_grad()
+def split_norms(params, base) -> tuple[float, float, float]:
+    """两项的梯度范数（#249）：base 为只有现有项时 grads() 的拷贝，当前 .grad 为两项之和。新项梯度 = 当前 − base。
+    返回 (现有项在共用参数上的范数, 新项的范数, 现有项在全部参数上的范数)；共用参数 = 新项梯度不全为 0 的参数
+    （新项梯度在其余参数上为 0，它的范数不受这个限定影响）。"""
+    s_main, s_occ, s_all = 0.0, 0.0, 0.0
+    for q, b in zip(params, base):
+        g = q.grad
+        bm = 0.0 if b is None else float(b.double().square().sum())
+        s_all += bm
+        if g is None:
+            continue
+        d = float((g.double() - (0.0 if b is None else b.double())).square().sum())
+        if d > 0:
+            s_occ += d
+            s_main += bm
+    return math.sqrt(s_main), math.sqrt(s_occ), math.sqrt(s_all)
 
 
 @torch.no_grad()

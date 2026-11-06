@@ -1,0 +1,72 @@
+{
+ "rows": [
+  {
+   "update": 250,
+   "auc5": 0.3019,
+   "auc5_e41": 0.2979,
+   "diff": 0.004,
+   "host": "bcb626e99cea",
+   "host_e41": "bcb626e99cea"
+  },
+  {
+   "update": 500,
+   "auc5": 0.303,
+   "auc5_e41": 0.3035,
+   "diff": -0.0005,
+   "host": "bcb626e99cea",
+   "host_e41": "bcb626e99cea"
+  },
+  {
+   "update": 750,
+   "auc5": 0.3023,
+   "auc5_e41": 0.3057,
+   "diff": -0.0034,
+   "host": "bcb626e99cea",
+   "host_e41": "bcb626e99cea"
+  },
+  {
+   "update": 1000,
+   "auc5": 0.3036,
+   "auc5_e41": 0.3044,
+   "diff": -0.0008,
+   "host": "bcb626e99cea",
+   "host_e41": "bcb626e99cea"
+  },
+  {
+   "update": 1250,
+   "auc5": 0.3055,
+   "auc5_e41": 0.3144,
+   "diff": -0.009,
+   "host": "bcb626e99cea",
+   "host_e41": "bcb626e99cea"
+  },
+  {
+   "update": 1500,
+   "auc5": 0.3067,
+   "auc5_e41": 0.3144,
+   "diff": -0.0077,
+   "host": "bcb626e99cea",
+   "host_e41": "bcb626e99cea"
+  },
+  {
+   "update": 1750,
+   "auc5": 0.3051,
+   "auc5_e41": 0.3152,
+   "diff": -0.0102,
+   "host": "bcb626e99cea",
+   "host_e41": "bcb626e99cea"
+  },
+  {
+   "update": 2000,
+   "auc5": 0.3054,
+   "auc5_e41": 0.3092,
+   "diff": -0.0038,
+   "host": "bcb626e99cea",
+   "host_e41": "bcb626e99cea"
+  }
+ ],
+ "mean_diff": -0.0039,
+ "all_below": false,
+ "stop": false,
+ "rule": "8 个存档 AUC@5 都低于 E41 main 同位置存档，或平均低 0.01 以上则停"
+}

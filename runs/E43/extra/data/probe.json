@@ -1,0 +1,412 @@
+{
+ "commit": "d6f6aeedd73851d638754d904d0ef1a88c04d515",
+ "updates": 50,
+ "ratio_median": 1.6688,
+ "ratio_quartiles": [
+  1.4335,
+  1.9558
+ ],
+ "coef": 1.7,
+ "rows": [
+  {
+   "step": 1,
+   "occ_g_old": 11.41192,
+   "occ_g_new": 6.66397,
+   "occ_g_ratio": 1.74832,
+   "occ_g_old_all": NaN,
+   "occ_g_new_all": NaN
+  },
+  {
+   "step": 2,
+   "occ_g_old": 14.50227,
+   "occ_g_new": Infinity,
+   "occ_g_ratio": 1.53366,
+   "occ_g_old_all": Infinity,
+   "occ_g_new_all": NaN
+  },
+  {
+   "step": 3,
+   "occ_g_old": 16.3069,
+   "occ_g_new": 8.92318,
+   "occ_g_ratio": 2.06927,
+   "occ_g_old_all": Infinity,
+   "occ_g_new_all": NaN
+  },
+  {
+   "step": 4,
+   "occ_g_old": 15.64429,
+   "occ_g_new": 13.6963,
+   "occ_g_ratio": 1.22656,
+   "occ_g_old_all": Infinity,
+   "occ_g_new_all": NaN
+  },
+  {
+   "step": 5,
+   "occ_g_old": 27.80713,
+   "occ_g_new": 15.15891,
+   "occ_g_ratio": 1.68417,
+   "occ_g_old_all": Infinity,
+   "occ_g_new_all": NaN
+  },
+  {
+   "step": 6,
+   "occ_g_old": 21.03507,
+   "occ_g_new": 11.61462,
+   "occ_g_ratio": 1.95433,
+   "occ_g_old_all": 21.03507,
+   "occ_g_new_all": 11.61462
+  },
+  {
+   "step": 7,
+   "occ_g_old": 17.13889,
+   "occ_g_new": 17.26047,
+   "occ_g_ratio": 1.82854,
+   "occ_g_old_all": 17.13889,
+   "occ_g_new_all": 17.26047
+  },
+  {
+   "step": 8,
+   "occ_g_old": 15.97116,
+   "occ_g_new": 11.29502,
+   "occ_g_ratio": 1.61901,
+   "occ_g_old_all": 15.97116,
+   "occ_g_new_all": 11.29502
+  },
+  {
+   "step": 9,
+   "occ_g_old": 24.09521,
+   "occ_g_new": 15.18333,
+   "occ_g_ratio": 1.95635,
+   "occ_g_old_all": 24.09521,
+   "occ_g_new_all": 15.18333
+  },
+  {
+   "step": 10,
+   "occ_g_old": 22.43695,
+   "occ_g_new": 11.22944,
+   "occ_g_ratio": 2.39587,
+   "occ_g_old_all": 22.43695,
+   "occ_g_new_all": 11.22944
+  },
+  {
+   "step": 11,
+   "occ_g_old": 20.54481,
+   "occ_g_new": 12.54279,
+   "occ_g_ratio": 1.80306,
+   "occ_g_old_all": 20.54481,
+   "occ_g_new_all": 12.54279
+  },
+  {
+   "step": 12,
+   "occ_g_old": 23.18157,
+   "occ_g_new": 13.10788,
+   "occ_g_ratio": 2.14627,
+   "occ_g_old_all": 23.18157,
+   "occ_g_new_all": 13.10788
+  },
+  {
+   "step": 13,
+   "occ_g_old": 16.00743,
+   "occ_g_new": 11.12944,
+   "occ_g_ratio": 1.66346,
+   "occ_g_old_all": 16.00743,
+   "occ_g_new_all": 11.12944
+  },
+  {
+   "step": 14,
+   "occ_g_old": 23.69501,
+   "occ_g_new": 9.03077,
+   "occ_g_ratio": 2.74367,
+   "occ_g_old_all": 23.69501,
+   "occ_g_new_all": 9.03077
+  },
+  {
+   "step": 15,
+   "occ_g_old": 15.81663,
+   "occ_g_new": 10.09286,
+   "occ_g_ratio": 1.73761,
+   "occ_g_old_all": 15.81663,
+   "occ_g_new_all": 10.09286
+  },
+  {
+   "step": 16,
+   "occ_g_old": 16.6953,
+   "occ_g_new": 14.47485,
+   "occ_g_ratio": 1.38546,
+   "occ_g_old_all": 16.6953,
+   "occ_g_new_all": 14.47485
+  },
+  {
+   "step": 17,
+   "occ_g_old": 13.65388,
+   "occ_g_new": 8.25444,
+   "occ_g_ratio": 1.82471,
+   "occ_g_old_all": 13.65388,
+   "occ_g_new_all": 8.25444
+  },
+  {
+   "step": 18,
+   "occ_g_old": 29.21105,
+   "occ_g_new": 14.25607,
+   "occ_g_ratio": 2.33882,
+   "occ_g_old_all": 29.21105,
+   "occ_g_new_all": 14.25607
+  },
+  {
+   "step": 19,
+   "occ_g_old": 13.26027,
+   "occ_g_new": 12.95291,
+   "occ_g_ratio": 1.18096,
+   "occ_g_old_all": 13.26027,
+   "occ_g_new_all": 12.95291
+  },
+  {
+   "step": 20,
+   "occ_g_old": 18.89797,
+   "occ_g_new": 12.80688,
+   "occ_g_ratio": 1.70824,
+   "occ_g_old_all": 18.89797,
+   "occ_g_new_all": 12.80688
+  },
+  {
+   "step": 21,
+   "occ_g_old": 29.36736,
+   "occ_g_new": 12.20934,
+   "occ_g_ratio": 2.48952,
+   "occ_g_old_all": 29.36736,
+   "occ_g_new_all": 12.20934
+  },
+  {
+   "step": 22,
+   "occ_g_old": 16.38219,
+   "occ_g_new": 12.19409,
+   "occ_g_ratio": 1.44512,
+   "occ_g_old_all": 16.38219,
+   "occ_g_new_all": 12.19409
+  },
+  {
+   "step": 23,
+   "occ_g_old": 19.37818,
+   "occ_g_new": 11.78731,
+   "occ_g_ratio": 1.73416,
+   "occ_g_old_all": 19.37818,
+   "occ_g_new_all": 11.78731
+  },
+  {
+   "step": 24,
+   "occ_g_old": 17.31419,
+   "occ_g_new": 18.18649,
+   "occ_g_ratio": 1.00053,
+   "occ_g_old_all": 17.31419,
+   "occ_g_new_all": 18.18649
+  },
+  {
+   "step": 25,
+   "occ_g_old": 14.26165,
+   "occ_g_new": 10.40965,
+   "occ_g_ratio": 1.39241,
+   "occ_g_old_all": 14.26165,
+   "occ_g_new_all": 10.40965
+  },
+  {
+   "step": 26,
+   "occ_g_old": 15.21644,
+   "occ_g_new": 13.66816,
+   "occ_g_ratio": 1.08732,
+   "occ_g_old_all": 15.21644,
+   "occ_g_new_all": 13.66816
+  },
+  {
+   "step": 27,
+   "occ_g_old": 15.64887,
+   "occ_g_new": 10.38849,
+   "occ_g_ratio": 1.60711,
+   "occ_g_old_all": 15.64887,
+   "occ_g_new_all": 10.38849
+  },
+  {
+   "step": 28,
+   "occ_g_old": 25.05711,
+   "occ_g_new": 9.57612,
+   "occ_g_ratio": 2.25141,
+   "occ_g_old_all": 25.05711,
+   "occ_g_new_all": 9.57612
+  },
+  {
+   "step": 29,
+   "occ_g_old": 14.957,
+   "occ_g_new": 14.15546,
+   "occ_g_ratio": 0.993,
+   "occ_g_old_all": 14.957,
+   "occ_g_new_all": 14.15546
+  },
+  {
+   "step": 30,
+   "occ_g_old": 23.3443,
+   "occ_g_new": 11.51994,
+   "occ_g_ratio": 2.1276,
+   "occ_g_old_all": 23.3443,
+   "occ_g_new_all": 11.51994
+  },
+  {
+   "step": 31,
+   "occ_g_old": 16.33141,
+   "occ_g_new": 11.87722,
+   "occ_g_ratio": 1.65349,
+   "occ_g_old_all": 16.33141,
+   "occ_g_new_all": 11.87722
+  },
+  {
+   "step": 32,
+   "occ_g_old": 17.81382,
+   "occ_g_new": 7.20307,
+   "occ_g_ratio": 2.53226,
+   "occ_g_old_all": 17.81382,
+   "occ_g_new_all": 7.20307
+  },
+  {
+   "step": 33,
+   "occ_g_old": 12.04679,
+   "occ_g_new": 8.2814,
+   "occ_g_ratio": 1.47237,
+   "occ_g_old_all": 12.04679,
+   "occ_g_new_all": 8.2814
+  },
+  {
+   "step": 34,
+   "occ_g_old": 12.19012,
+   "occ_g_new": 9.241,
+   "occ_g_ratio": 1.34509,
+   "occ_g_old_all": 12.19012,
+   "occ_g_new_all": 9.241
+  },
+  {
+   "step": 35,
+   "occ_g_old": 8.38222,
+   "occ_g_new": 5.66587,
+   "occ_g_ratio": 1.68547,
+   "occ_g_old_all": 8.38222,
+   "occ_g_new_all": 5.66587
+  },
+  {
+   "step": 36,
+   "occ_g_old": 11.90021,
+   "occ_g_new": 7.63603,
+   "occ_g_ratio": 1.67419,
+   "occ_g_old_all": 11.90021,
+   "occ_g_new_all": 7.63603
+  },
+  {
+   "step": 37,
+   "occ_g_old": 8.96167,
+   "occ_g_new": 10.46822,
+   "occ_g_ratio": 0.914,
+   "occ_g_old_all": 8.96167,
+   "occ_g_new_all": 10.46822
+  },
+  {
+   "step": 38,
+   "occ_g_old": 13.69087,
+   "occ_g_new": 9.86855,
+   "occ_g_ratio": 1.50416,
+   "occ_g_old_all": 13.69087,
+   "occ_g_new_all": 9.86855
+  },
+  {
+   "step": 39,
+   "occ_g_old": 13.28383,
+   "occ_g_new": 7.10651,
+   "occ_g_ratio": 2.70725,
+   "occ_g_old_all": 13.28383,
+   "occ_g_new_all": 7.10651
+  },
+  {
+   "step": 40,
+   "occ_g_old": 12.77007,
+   "occ_g_new": 8.92181,
+   "occ_g_ratio": 1.45695,
+   "occ_g_old_all": 12.77007,
+   "occ_g_new_all": 8.92181
+  },
+  {
+   "step": 41,
+   "occ_g_old": 13.9799,
+   "occ_g_new": 10.57694,
+   "occ_g_ratio": 1.42965,
+   "occ_g_old_all": 13.9799,
+   "occ_g_new_all": 10.57694
+  },
+  {
+   "step": 42,
+   "occ_g_old": 13.09855,
+   "occ_g_new": 6.73864,
+   "occ_g_ratio": 1.96003,
+   "occ_g_old_all": 13.09855,
+   "occ_g_new_all": 6.73864
+  },
+  {
+   "step": 43,
+   "occ_g_old": 13.91096,
+   "occ_g_new": 6.78014,
+   "occ_g_ratio": 2.72441,
+   "occ_g_old_all": 13.91096,
+   "occ_g_new_all": 6.78014
+  },
+  {
+   "step": 44,
+   "occ_g_old": 10.34086,
+   "occ_g_new": 8.31129,
+   "occ_g_ratio": 1.41023,
+   "occ_g_old_all": 10.34086,
+   "occ_g_new_all": 8.31129
+  },
+  {
+   "step": 45,
+   "occ_g_old": 10.94457,
+   "occ_g_new": 9.56572,
+   "occ_g_ratio": 1.55019,
+   "occ_g_old_all": 10.94457,
+   "occ_g_new_all": 9.56572
+  },
+  {
+   "step": 46,
+   "occ_g_old": 14.28403,
+   "occ_g_new": 10.84926,
+   "occ_g_ratio": 1.40397,
+   "occ_g_old_all": 14.28403,
+   "occ_g_new_all": 10.84926
+  },
+  {
+   "step": 47,
+   "occ_g_old": 11.06097,
+   "occ_g_new": 6.75161,
+   "occ_g_ratio": 1.92819,
+   "occ_g_old_all": 11.06097,
+   "occ_g_new_all": 6.75161
+  },
+  {
+   "step": 48,
+   "occ_g_old": 11.89771,
+   "occ_g_new": 9.67895,
+   "occ_g_ratio": 1.46548,
+   "occ_g_old_all": 11.89771,
+   "occ_g_new_all": 9.67895
+  },
+  {
+   "step": 49,
+   "occ_g_old": 10.61168,
+   "occ_g_new": 8.20933,
+   "occ_g_ratio": 1.55336,
+   "occ_g_old_all": 10.61168,
+   "occ_g_new_all": 8.20933
+  },
+  {
+   "step": 50,
+   "occ_g_old": 6.47075,
+   "occ_g_new": 7.11237,
+   "occ_g_ratio": 1.08691,
+   "occ_g_old_all": 6.47075,
+   "occ_g_new_all": 7.11237
+  }
+ ]
+}

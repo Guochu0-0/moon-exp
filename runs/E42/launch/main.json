@@ -162,8 +162,8 @@
  },
  {
   "start": "2026-11-06 05:14:21 +0000",
-  "end": null,
-  "status": null,
+  "end": "2026-11-06 21:27:33 +0800",
+  "status": "ok",
   "commit": "8e0825f25b67b76e88604e73dd01fb2cc82e0a9e",
   "dirty": false,
   "allow_dirty": false,

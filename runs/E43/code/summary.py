@@ -270,7 +270,7 @@ def main():
             a.plot(x, [float(r[f"{k}_occ"]) for r in rs], "o-", color="C3", label="遮挡版本")
             a.plot(x, [float(r[f"{k}_orig"]) for r in rs], "o-", color="0.4", label="原图")
             b = a.twinx()
-            b.plot(x, [float(r[f"{k}_ratio"]) for r in rs], "s--", color="C0", ms=3, label="比值（右轴）")
+            b.plot(x, [float(r[f"{k}_ratio"]) if r[f"{k}_ratio"] else np.nan for r in rs], "s--", color="C0", ms=3, label="比值（右轴）")
             b.set_ylabel("遮挡版本 ÷ 原图")
             a.set(title=t, xlabel="存档（更新次数）", ylabel="离逐像素参照的距离（px，各对中位数）")
             a.legend(fontsize=8, loc="upper right")

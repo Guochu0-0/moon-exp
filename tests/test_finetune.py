@@ -2221,3 +2221,16 @@ def test_rloo_term_pix_occ_probe_and_apply(monkeypatch):
         news.append(stats["occ_g_new"])
         assert not torch.equal(_grads(w, dec)[0], g_off[0])
     assert news[1] == pytest.approx(news[0], rel=1e-3)
+
+
+def test_rloo_term_pix_occ_with_screen_uses_kept_reference(monkeypatch):
+    """pix_occ + 样本筛选：逐像素参照随 screen 选中的那对存进 Kept，__call__ 用它加新项。"""
+    import torch
+    term, st, w, dec = _fake_term_fine(monkeypatch, ref_ema=0.99, screen=0.1, pix_occ=True, pix_occ_gn_every=1)
+    img = st.images()[0]
+    keep, _ = term.screen({"pair": ["a"], "image0": img, "image1": img}, "cpu")
+    assert keep and term._scr["kept"].pix is not None and set(term._scr["kept"].pix[1]) == {16, 8}
+    st.batch = {"pair": ["a"]}
+    torch.manual_seed(1)
+    _, stats, active = term(st)
+    assert not active and stats["occ_on"] == 1.0 and stats["occ_g_ratio"] > 0 and float(w.grad) != 0.0

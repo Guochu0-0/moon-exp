@@ -3,7 +3,7 @@ E41 `main` 同位置存档，或 8 个存档平均低于 E41 0.01 以上，就�
 
     nohup /opt/envs/wb/bin/python runs/E43/code/stop_rule.py > runs/E43/ckpt/stop_rule.log 2>&1 < /dev/null &
 
-每 60 秒看一次：8 个存档的 Val 都评完（eval_queue 写的 .evalclaims/main_<step>/done）后，按逐对误差算 AUC@5
+每 60 秒看一次：8 个存档的 Val 都评完（eval_queue 写的 .evalclaims/main_<step>/done，或预测文件已静置 5 分钟）后，按逐对误差算 AUC@5
 （workbench.evaluate.pair_error，失败记 ∞，同 workbench eval），与 E41 `main` 的 sweep/main/S/metrics.json 同位置比较，
 写 extra/data/stop_rule.json（各存档两边的 AUC@5、差、评测机器，平均差，是否停）。要停时再建 ckpt/main/stop.request，
 由 train_queue.py 结束训练。只判断一次，判断完退出。
@@ -47,9 +47,23 @@ def host(d, st):
     return json.loads(f.read_text(encoding="utf-8")).get("host") if f.exists() else None
 
 
+QUIET = 300      # 同 eval_queue.py：没有完成标记的预测，最后一次写入后至少过这么多秒才算写完
+
+
+def evaluated(claims, st):
+    """同 eval_queue.evaluated：有完成标记，或预测文件非空且已静置 QUIET 秒（用新写文件的修改时间当现在）。"""
+    if (claims / f"{M}_{st}" / "done").exists():
+        return True
+    f = R / "sweep" / M / "S" / "preds" / f"step{st}" / "val.jsonl"
+    now = claims / ".now_stop"
+    now.touch()
+    return f.exists() and f.stat().st_size > 0 and now.stat().st_mtime - f.stat().st_mtime > QUIET
+
+
 def main():
     claims = R / ".evalclaims"
-    while not all((claims / f"{M}_{st}" / "done").exists() for st in STEPS):
+    claims.mkdir(exist_ok=True)
+    while not all(evaluated(claims, st) for st in STEPS):
         if (R / "launch" / f"{M}.json").exists() and json.loads((R / "launch" / f"{M}.json").read_text())[-1].get("status"):
             print("训练已结束，没等到 8 个存档", flush=True)
             return

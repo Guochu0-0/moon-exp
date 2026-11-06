@@ -280,7 +280,7 @@ def check(cfg):
         raise ConfigError("[rloo] pix_occ 只配 reward = 'ref'、ref_ema 打开、levels 非空、fine_mode = 'local'、mp_n = 0、"
                           "[optim] batch = 1")
     if p["pix_occ_w"] < 0 or not 0 < p["pix_occ_side"] <= HW or p["pix_occ_gn_every"] < 0:
-        raise ConfigError("[rloo] pix_occ_w、pix_occ_gn_every 应 ≥ 0，pix_occ_side 在 (0, 512]")
+        raise ConfigError("[rloo] pix_occ_w、pix_occ_gn_every 应 ≥ 0，pix_occ_side 在 (0, HW = 512]")
 
 
 def data_kw(p):

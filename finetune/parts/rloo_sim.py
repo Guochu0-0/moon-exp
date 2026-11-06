@@ -145,6 +145,24 @@ def apply(term, st, total, logp_all, ctx, B, stats):
     return val
 
 
+def _ranks(x):
+    """秩（1 起），并列取平均秩。"""
+    x = np.asarray(x, float)
+    order = np.argsort(x, kind="mergesort")
+    r = np.empty(len(x))
+    r[order] = np.arange(1, len(x) + 1)
+    for v in np.unique(x):
+        sel = x == v
+        r[sel] = r[sel].mean()
+    return r
+
+
+def spearman(a, b):
+    """Spearman 秩相关（并列取平均秩，同 scipy.stats.spearmanr）；训练环境没有 scipy。"""
+    ra, rb = _ranks(a), _ranks(b)
+    return float(np.corrcoef(ra, rb)[0, 1])
+
+
 class Diag:
     """验证集诊断（见模块说明）。图对在用到时才读。"""
 
@@ -177,13 +195,12 @@ class Diag:
     @torch.no_grad()
     def __call__(self, calls, stats):
         """第 calls 次调用：每 sim_diag 次量一次，记进 stats。"""
-        from scipy.stats import spearmanr
-        from workbench.protocol import pair_error
-
-        from . import rloo as R
         p, model = self.p, self.model
         if not p["sim_diag"] or calls % p["sim_diag"]:
             return
+        from workbench.protocol import pair_error
+
+        from . import rloo as R
         i0, i1, T, cp_opt, cp_sar, seed = self._item(calls // p["sim_diag"] - 1)
         gen = torch.Generator(device=i0.device).manual_seed(seed)
         f1, f2 = R.features(model, i0, i1)
@@ -200,4 +217,4 @@ class Diag:
         stats["sim_verr"] = [float(np.median(err))]
         e = np.where(np.isfinite(err), err, 1e9)        # 失败记 ∞：秩相关只看次序
         if np.ptp(s) > 0 and np.ptp(e) > 0:
-            stats["sim_rho"] = [float(spearmanr(s, e).correlation)]
+            stats["sim_rho"] = [spearman(s, e)]

@@ -2328,3 +2328,12 @@ def test_rloo_sim_diag_records_rank_correlation(monkeypatch):
     assert stats == {}
     d(2, stats)
     assert stats["sim_rho"] == pytest.approx(-1.0) and stats["sim_verr"] == pytest.approx(7.5)
+
+
+def test_rloo_sim_spearman_matches_definition():
+    from finetune.parts.rloo_sim import spearman
+    assert spearman([1, 2, 3, 4], [10, 20, 30, 40]) == pytest.approx(1.0)
+    assert spearman([1, 2, 3, 4], [4, 3, 2, 1]) == pytest.approx(-1.0)
+    # 并列取平均秩：x 的秩 1, 2.5, 2.5, 4；y 的秩 1, 2, 3, 4 → 皮尔逊相关
+    r = np.corrcoef([1, 2.5, 2.5, 4], [1, 2, 3, 4])[0, 1]
+    assert spearman([0.1, 0.5, 0.5, 0.9], [3, 5, 7, 9]) == pytest.approx(r)

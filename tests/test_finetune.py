@@ -2111,3 +2111,113 @@ def test_train_screened_skips_rejected_and_wraps_epochs():
     assert all(isinstance(t0, float) for _, t0 in got)
     plain = list(itertools.islice(screened(iter(range(5)), [], "cpu", log.append), 5))
     assert [b for b, _ in plain] == list(range(5))
+
+
+# ---------- 遮挡约束奖励（#249） ----------
+
+def test_config_rloo_occ(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    ok = '[rloo]\nreward = "ref"\nlevels = [16, 8]\nfine_mode = "local"\nocc = true\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
+    assert (d["rloo"]["occ"], d["rloo"]["occ_w"], d["rloo"]["occ_side"]) == (False, 0.0, 229.0)   # 默认不做，同旧行为
+    c = C.load(_write(tmp_path, "c", head + ok + "occ_w = 1.5\n"))
+    assert c["rloo"]["occ"] and c["rloo"]["occ_w"] == 1.5
+    for bad in ('[rloo]\nreward = "r1"\nocc = true',
+                '[rloo]\nreward = "ref"\nocc = true',                                   # 没有细化级
+                '[rloo]\nreward = "ref"\nlevels = [16]\nocc = true',                    # chain 不支持
+                '[optim]\nbatch = 2\n' + ok, '[optim]\naccum = 2\n' + ok,
+                ok + 'mp_n = 2', ok + 'gate = true', ok + 'occ_w = -1.0', ok + 'occ_side = 600.0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
+def test_rloo_occ_masks():
+    """光学被遮像素 = 中心落在正方形里（面积比例 = (边长 / 512)²，各网格一致）；SAR 被遮像素 = 正方形经 A 的像：
+    A 为恒等时与光学相同，A 平移 64 px 时整块跟着平移。"""
+    import torch
+    from finetune.parts import rloo_occ as OC
+    box, side = (64, 128), 256.0
+    for n in (4, 64, 560):
+        mo = OC.opt_mask(box, side, n, n, "cpu")
+        assert float(mo.float().mean()) == pytest.approx(0.25, abs=1.5 / n)
+    I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    assert torch.equal(OC.sar_mask(box, side, I, 64, 64, "cpu"), OC.opt_mask(box, side, 64, 64, "cpu"))
+    T = np.array([[1.0, 0, 64.0], [0, 1.0, 0]])
+    assert torch.equal(OC.sar_mask(box, side, T, 64, 64, "cpu"), OC.opt_mask((128, 128), side, 64, 64, "cpu"))
+    rng = np.random.default_rng(0)
+    xs = np.array([OC.draw_box(rng, 229.0) for _ in range(2000)])
+    assert xs.min() == 0 and xs.max() == 512 - 229                                     # 同 E40：[0, HW − side] 整数
+
+
+def test_rloo_occ_fill_noise():
+    """只改被遮处；噪声截到 [0, 1]，均值、标准差取 valid 内的像素（补零区不算）。"""
+    import torch
+    from finetune.parts import rloo_occ as OC
+    img = torch.zeros(1, 200, 200)
+    img[:, :, 100:] = 0.5 + 0.1 * torch.randn(1, 200, 100, generator=torch.Generator().manual_seed(0))
+    mask = torch.zeros(200, 200, dtype=torch.bool)
+    mask[:, 100:150] = True
+    out = OC.fill_noise(img, mask, torch.Generator().manual_seed(1), valid=img[0] > 0)
+    assert torch.equal(out[0][~mask], img[0][~mask])
+    v = out[0][mask]
+    assert float(v.min()) >= 0 and float(v.max()) <= 1
+    assert float(v.mean()) == pytest.approx(0.5, abs=0.01) and float(v.std()) == pytest.approx(0.1, abs=0.01)
+    full = OC.fill_noise(img, mask, torch.Generator().manual_seed(1))                  # 不给 valid：全图（含补零）
+    assert float(full[0][mask].mean()) < 0.4
+
+
+def test_rloo_term_occ_gradients(monkeypatch):
+    """occ（#249）：本成分内部反向，返回 active = False。occ_w = 0 时只量不学：梯度与不加这一项时逐位相同；
+    occ_w = c 时总梯度 = 现有项梯度 + c × 新项梯度，日志的 occ_gn 即新项（系数 1）的梯度范数、main_gn 即现有项的；
+    整张光学图都被遮住时新项没有梯度。"""
+    import torch
+
+    def run(seed, **over):
+        term, st, w, dec = _fake_term_fine(monkeypatch, fine_mask=True, **over)
+        term.model.params = [w] + list(dec.parameters())
+        torch.manual_seed(seed)
+        loss, stats, active = term(st)
+        if active:
+            loss.backward()
+        stats["_after"] = float(torch.rand(()))                     # 之后的全局随机数：新项不动训练的随机数流
+        return [None if q.grad is None else q.grad.clone() for q in term.model.params], stats, active, float(loss)
+
+    g_ref, s_ref, a_ref, l_ref = run(3)
+    assert a_ref and "occ_gn" not in s_ref
+    g0, s0, a0, l0 = run(3, occ=True, occ_w=0.0)
+    assert not a0 and all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["_after"] == s_ref["_after"] and s0["main_gn_all"] >= s0["main_gn"]
+    assert l0 == pytest.approx(l_ref, abs=1e-6)
+    assert s0["occ_gn"] > 0 and s0["main_gn"] > 0 and s0["occ_ratio"] == 0.0
+    assert s0["occ_coef"] == pytest.approx(s0["main_gn"] / s0["occ_gn"], rel=1e-3)
+    assert 0 < s0["occ_fo"] < 1 and "occ_rew" in s0 and "occ_dmu_16" in s0 and "occ_dmu0_8" in s0
+    g1, s1, _, _ = run(3, occ=True, occ_w=1.0)
+    g2, s2, _, _ = run(3, occ=True, occ_w=2.0)
+    d1 = [a - b for a, b in zip(g1, g0) if a is not None]
+    d2 = [a - b for a, b in zip(g2, g0) if a is not None]
+    assert all(torch.allclose(y, 2 * x, atol=1e-6) for x, y in zip(d1, d2))
+    assert float(torch.cat([x.flatten() for x in d1]).norm()) == pytest.approx(s1["occ_gn"], rel=1e-3)
+    assert s1["occ_gn"] == pytest.approx(s0["occ_gn"], rel=1e-4) and s1["main_gn"] == pytest.approx(s0["main_gn"])
+    assert s2["occ_ratio"] == pytest.approx(2 * s2["occ_gn"] / s2["main_gn"], rel=1e-3)
+    _, s_all, _, _ = run(3, occ=True, occ_w=1.0, occ_side=511.0)                       # 4×4 粗格、各级像素全被遮
+    assert s_all["occ_gn"] == 0.0 and "occ_coef" not in s_all and "occ_rew" not in s_all
+
+
+def test_rloo_occ_grad_helpers():
+    import math
+    import torch
+    from finetune.parts import rloo_occ as OC
+    a, b = torch.nn.Parameter(torch.zeros(2)), torch.nn.Parameter(torch.zeros(3))
+    a.grad = torch.tensor([3.0, 0.0])
+    saved = OC.grads([a, b])
+    assert OC.grad_norm([a, b]) == pytest.approx(3.0)
+    a.grad = a.grad + torch.tensor([0.0, 4.0])
+    b.grad = torch.tensor([0.0, 0.0, 12.0])
+    assert OC.grad_norm([a, b], saved) == pytest.approx(math.sqrt(16 + 144))
+    c = torch.nn.Parameter(torch.zeros(1))
+    c.grad = torch.tensor([5.0])                                    # 只有现有项有梯度的参数：不算共用
+    main, occ, main_all = OC.split_norms([a, b, c], saved + [c.grad.clone()])
+    assert (main, occ, main_all) == pytest.approx((3.0, math.sqrt(16 + 144), math.sqrt(9 + 25)))
+    OC.restore([a, b], saved)
+    assert torch.equal(a.grad, torch.tensor([3.0, 0.0])) and b.grad is None

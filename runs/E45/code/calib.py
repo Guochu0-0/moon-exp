@@ -1,5 +1,5 @@
 """E45 只用（#253）：从定系数的 50 次更新（code/calib.sh 的 ckpt/_calib/log.jsonl）取新项系数。
-每次更新的日志量是 4 张卡的平均：main_gn、eqv_gn 为现有项与（系数 1 的）新项在全部可训练参数上的梯度范数，
+每次更新的日志量是 4 张卡的平均：main_gn、eqv_gn 为现有项与（系数 1 的）新项在两项共用参数上的梯度范数，
 eqv_coef = main_gn / eqv_gn（逐卡算后平均）。系数取 eqv_coef 在 50 次更新上的中位数，保留两位有效数字；另记两个范数的
 中位数、四分位与两者中位数之比，写 extra/data/calib.json。
 

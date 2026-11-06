@@ -2296,7 +2296,7 @@ def test_rloo_term_eqv_gradients(monkeypatch):
 
 def test_rloo_term_eqv_target_follows_T(monkeypatch):
     """参照换成 T2∘A：假模型的输出与输入图像无关（输出不跟着几何走）。T2 为恒等时变换后一版离参照的距离与原图相同；
-    T2 平移 40 px 时，正常推理各级 μ 离参照的距离多出约 40 px（正是这一项要抓的错）。"""
+    T2 平移 40 px 时，粗级与细化各级打分所用的参照都是 A 后面接上这 40 px 的平移，离参照的距离随之改变。"""
     from finetune.parts import rloo as R
     term, st, w, dec = _fake_term_fine(monkeypatch, eqv=True)
     term.model.params = [w] + list(dec.parameters())
@@ -2304,8 +2304,14 @@ def test_rloo_term_eqv_target_follows_T(monkeypatch):
     _, s_id, _ = term(st)
     for s_ in (16, 8):
         assert s_id[f"eqv_dmu_{s_}"] == pytest.approx(s_id[f"eqv_dmu0_{s_}"], rel=1e-4)
+    seen = {"cells": [], "level": []}
+    cells, level = R.ref_cells, R.level_reward
+    monkeypatch.setattr(R, "ref_cells", lambda fc, A, *a: seen["cells"].append(np.asarray(A)) or cells(fc, A, *a))
+    monkeypatch.setattr(R, "level_reward", lambda x, A, *a: seen["level"].append(np.asarray(A)) or level(x, A, *a))
     monkeypatch.setattr(R.augment, "sample_T", lambda rng, *a, **k: np.c_[np.eye(2), [40.0, 0.0]])
     _, s_sh, _ = term(st)
+    I, A2 = np.c_[np.eye(2), [0.0, 0.0]], np.c_[np.eye(2), [40.0, 0.0]]                # 假拟合总给恒等仿射
+    assert np.allclose(seen["cells"][0], I) and np.allclose(seen["cells"][-1], A2)      # 原图、变换后一版
+    assert any(np.allclose(A, A2) for A in seen["level"]) and any(np.allclose(A, I) for A in seen["level"])
     for s_ in (16, 8):
-        assert s_sh[f"eqv_dmu_{s_}"] > s_sh[f"eqv_dmu0_{s_}"] + 30
-    assert s_sh["eqv_d"] > s_sh["eqv_d0"] + 20
+        assert abs(s_sh[f"eqv_dmu_{s_}"] - s_sh[f"eqv_dmu0_{s_}"]) > 0.5

@@ -1,7 +1,9 @@
-"""同模态自配对约束奖励（#254；[rloo] selfpair = true）。训练里的挂接只有 finetune/parts/rloo.py 末尾一处调用 step()。
+"""同模态自配对约束奖励（#254；[rloo] selfpair = true）。finetune/parts/rloo.py 里只有四处挂接：PARAMS 并入本模块的 PARAMS，
+check、data_kw 各调用一次本模块的同名函数，__call__ 末尾调用 step()。
 
-每步、每对图在现有项之外另造一对「自配对」：各一半概率取这对图的光学图或扰动之前的 SAR（数据集另给的 image1_raw，
-光学图本来就不扰动），记为 X；抽一个已知随机仿射 T3（augment.sample_T，平移在半径 selfpair_shift 原网格 px 的圆盘内均匀、
+每步、每对图在现有项之外另造一对「自配对」：各一半概率取这对图的光学图（训练批次里的 image0）或扰动之前的 SAR
+（数据集另给的 image1_raw，几何、光度、擦除都还没加），记为 X。[aug] 的几何扰动与擦除只加在 SAR 上；photo、blockmask
+打开时光学图也会带上它们，E46 的配置两者都关，光学图即原图。抽一个已知随机仿射 T3（augment.sample_T，平移在半径 selfpair_shift 原网格 px 的圆盘内均匀、
 旋转 ±selfpair_rot 度、缩放 ±selfpair_scale，默认与难版训练扰动相同），自配对 = (X, T3 变换后的 X)，画面外补 0
 （rloo.perturb_sar，同多扰动核对）。X 上每个像素在 T3 X 上的正确位置就是 T3 把它映射到的位置，精确已知。
 

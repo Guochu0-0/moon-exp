@@ -164,8 +164,9 @@
  },
  {
   "start": "2026-11-06 15:33:19 +0000",
-  "end": null,
-  "status": null,
+  "end": "2026-11-06 16:09:31 +0000",
+  "status": "aborted",
+  "reason": "用户中止：设计上不能补现有奖励的盲区",
   "commit": "28f2d438871346e3ecfc209c2c8d5248a3c48524",
   "dirty": false,
   "allow_dirty": false,

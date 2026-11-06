@@ -35,8 +35,7 @@ def train(job, cmd):
     env = {**os.environ, **D.ENV, **job.env, "CUDA_VISIBLE_DEVICES": str(job.gpu)}
     stop = job.ck / "stop.request"
     with open(job.ck / "train.log", "a") as f:
-        f.write(f"$ {' '.join(map(str, cmd))}
-")
+        f.write(f"$ {' '.join(map(str, cmd))}\n")
         f.flush()
         p = subprocess.Popen(D.NICE + [str(c) for c in cmd], cwd=REPO, env=env, stdout=f, stderr=subprocess.STDOUT,
                              stdin=subprocess.DEVNULL, start_new_session=True)
@@ -61,8 +60,7 @@ def train(job, cmd):
                 ck = sorted(int(c.stem[5:]) for c in job.ck.glob("ckpt_*.pt"))
                 (job.ck / "stopped.json").write_text(json.dumps(
                     {"reason": "停止规则（code/stop_rule.py，extra/data/stop_rule.json）", "last_logged_step": last,
-                     "last_ckpt": ck[-1] if ck else None, "time": time.strftime("%F %T %z")}, ensure_ascii=False) + "
-",
+                     "last_ckpt": ck[-1] if ck else None, "time": time.strftime("%F %T %z")}, ensure_ascii=False) + "\n",
                     encoding="utf-8")
                 return
             time.sleep(30)

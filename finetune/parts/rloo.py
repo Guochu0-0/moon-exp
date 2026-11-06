@@ -119,6 +119,10 @@ occ_d 与 occ_d0（粗级抽到的位置离参照的平均距离），occ_rew_s�
 （遮挡版本 / 原图正常推理轨迹上尺度 s 的 μ 离参照的平均距离）。新项的随机数（遮挡位置、噪声、粗级与细化的抽签）都取自以
 (torch 初始种子, 调用次数, 批内序号) 起的独立发生器，不动训练的随机数流（只量不学时与不加这一项的训练同一条随机数流）。
 SAR 上只遮四边形里的非补零区像素。
+
+图像相似度约束奖励（#252，sim = true；只配 reward = ref、[optim] batch = 1、accum = 1，不与 mp_n、occ 同用）：同组每份粗级样本
+用全部格子拟合一个仿射，按 SAR 经它拉到光学网格后的灰度 NCC 打分、组内留一，乘在这份样本粗级的 log π 上；总损失 = 现有项
++ sim_w × 新项。本成分在内部反向（返回 active = False），做法、日志与验证集诊断见 finetune/parts/rloo_sim.py。
 """
 from __future__ import annotations
 
@@ -137,6 +141,7 @@ from ..config import ConfigError
 from ..geom import HW, compose, inv_affine
 from ..trace import stack_rows
 from . import rloo_occ as OC
+from . import rloo_sim as SIM
 from . import rloo_trace as RT
 from .cexp import sample_matches
 from .pseudo import affine_norm, grid
@@ -186,6 +191,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "occ": False,     # 遮挡约束奖励（#249）：每对另加 1 个遮挡版本，没遮住处对原图参照仿射打分
           "occ_side": 229.0,  # occ：光学图上遮挡正方形的边长（原网格 px；229 ≈ √0.2 × 512，面积约 20%，同 E40）
           "occ_w": 0.0,     # occ：新项的系数；0 = 只量梯度、不学
+          **SIM.PARAMS,     # 图像相似度约束奖励（#252）：sim、sim_w、sim_diag
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -287,6 +293,7 @@ def check(cfg):
                           "accum = 1，不与 mp_n、gate、spread、trace、cos_every 同用")
     if p["occ_w"] < 0 or not 0 < p["occ_side"] < HW:
         raise ConfigError(f"[rloo] occ_w 应 ≥ 0，occ_side 应在 (0, {HW})")
+    SIM.check(p, cfg)
 
 
 def data_kw(p):
@@ -856,6 +863,7 @@ class Term:
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
         self.screening = bool(p.get("screen"))      # 样本筛选（#245）：训练循环取到每对图先调 screen
         self._scr = _scr_fresh()
+        self.sim_diag = SIM.Diag(p, model, ds) if p.get("sim") else None     # 图像相似度约束奖励的验证集诊断（#252）
 
     @torch.no_grad()
     def ref_fit(self, i0, i1):
@@ -975,6 +983,7 @@ class Term:
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         rows = []
         occ_ctx = []    # 遮挡约束奖励（#249）：各对做新项要用的现有项中间量
+        sim_ctx = []    # 图像相似度约束奖励（#252）：各对的样本与优势
         for b in range(B):
             m = None    # 画面内掩码（frame_mask / cert_bce / gate / spread）
             blocked = False     # 参照合理性检查没过（#216）
@@ -1128,6 +1137,8 @@ class Term:
                 stats["t_fine"].append(time.time() - t3)
             if p["occ"] and A_ref is not None:
                 occ_ctx.append(OccCtx(b, A_ref, m, masks, r, d, traj))
+            if p["sim"]:
+                sim_ctx.append(SIM.pair_ctx(p, i0[b], i1[b], fc, k, d, m, b, stats))
             if p["trace"]:
                 rows.append(tr)
         if rows:
@@ -1138,6 +1149,9 @@ class Term:
         total = p["weight"] * loss + fine
         if p["occ"]:
             val = self._occ(st, i0, i1, total, occ_ctx, B, sig, stats)
+            return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
+        if p["sim"]:
+            val = SIM.apply(self, st, total, logp_all, sim_ctx, B, stats)
             return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
         return total, _mean_stats(stats), True
 

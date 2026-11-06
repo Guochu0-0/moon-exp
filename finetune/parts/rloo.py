@@ -101,6 +101,18 @@ num 个点、RANSAC ransac px），内点比例 = 内点数 ÷ num，拟合失�
 参照仿射直接沿用这次拟合的结果，不再推理一次；< 门槛时丢掉，不抽签，训练循环接着取下一对（finetune/train.py
 「样本筛选」），每张卡各自取到一对过门槛的才做这一步。日志记 scr_ratio（这一步所学的对的内点比例）、scr_drawn（这一步
 本卡共取了几对，含所学的一对）、scr_disc（被丢掉的对的内点比例均值，没有丢掉的步不记）、t_scr（这一步参照推理的总耗时）。
+
+遮挡约束（逐像素，#250；pix_occ 打开时，只配 reward = ref、ref_ema、levels 非空、fine_mode = local、[optim] batch = 1；
+实现在 finetune/parts/rloo_pixocc.py）：每对图照上面的做法学完之后，另生成 1 个遮挡版本，加一项约束奖励。
+EMA 参照在原图上正常推理时，记下各级输出的逐像素对应（粗级取最高分位置、细化各级取这一级输出的点，不拟合仿射）；
+当前模型在遮挡版本上照原图抽签（粗级 group 次、细化各级从正常推理这一级的输入抽 fine_group 次），抽到的点离这个像素
+的逐像素参照越近分越高（粗级用 shape、delta，细化用 fine_shape、delta·s/8，同现有奖励），各自 RLOO。光学图上被遮住的
+像素、逐像素参照落在 SAR 被遮处 / 画面外 / 补零区的像素优势置零（分母不变）。新项 = pix_occ_w × (粗级项 + fine_w × 细化各级之和)，
+不训可信度。参照拟合失败、参照合理性检查没过的对不加这一项。
+打开时这一步的反向都在成分内部做（先反向现有项、再反向新项），返回的损失只有数值、不参与反向。
+pix_occ_gn_every = N > 0 时每 N 次调用记一次两项在共用参数（两项都有非零梯度的参数）上的梯度范数（occ_g_old、
+occ_g_new，新项按系数 1 折算）与比值 occ_g_ratio = occ_g_old / occ_g_new；pix_occ_apply = false 时新项只算、只量
+（每步都量），不进参数更新（这一步的更新与不加新项时相同），用来在开训前定系数。
 """
 from __future__ import annotations
 
@@ -164,6 +176,11 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "fine_mask": False,   # 细化各级：参照仿射映射到 SAR 画面外 / 补零区的像素优势置零（#221，只配 grad / local）
           "fine_cert_bce": 0.0,  # 细化各级 certainty 对画面内掩码的 BCE 权重（#221，只配 grad / local）；0 = 不训
           "screen": 0.0,    # 样本筛选（#245）：参照内点比例低于它的对不学、换下一对；0 = 不筛（每对都学）
+          "pix_occ": False,     # 遮挡约束（逐像素，#250）：遮挡版本上的抽签对 EMA 参照在原图上的逐像素对应打分
+          "pix_occ_w": 1.0,     # 新项的系数
+          "pix_occ_side": 229,  # 光学图上遮挡正方形的边长（原网格 px；229 ≈ 20% 面积，同 E40）
+          "pix_occ_apply": True,    # False：新项只算、只量梯度，不进参数更新（定系数用）
+          "pix_occ_gn_every": 0,    # 每几次调用量一次两项梯度范数（0 = 不量；pix_occ_apply = False 时每次都量）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -258,6 +275,12 @@ def check(cfg):
     if p["screen"] and (p["reward"] != "ref" or not (p["ref_ema"] or p["frozen_ref"]) or p["mp_n"]
                         or cfg["optim"]["batch"] != 1):
         raise ConfigError("[rloo] screen 只配 reward = 'ref' 且 ref_ema 或 frozen_ref 打开、mp_n = 0、[optim] batch = 1")
+    if p["pix_occ"] and (p["reward"] != "ref" or not p["ref_ema"] or not lv or p["fine_mode"] != "local"
+                         or p["mp_n"] or cfg["optim"]["batch"] != 1):
+        raise ConfigError("[rloo] pix_occ 只配 reward = 'ref'、ref_ema 打开、levels 非空、fine_mode = 'local'、mp_n = 0、"
+                          "[optim] batch = 1")
+    if p["pix_occ_w"] < 0 or not 0 < p["pix_occ_side"] <= HW or p["pix_occ_gn_every"] < 0:
+        raise ConfigError("[rloo] pix_occ_w、pix_occ_gn_every 应 ≥ 0，pix_occ_side 在 (0, 512]")
 
 
 def data_kw(p):
@@ -608,17 +631,19 @@ def _mu_cert(dec, s, a, b, fin, cin, H, W):
     return fin + _disp(dec, s, d_flow, H, W), cin + d_cert
 
 
-def level_loss(mu, A, s, sig, p, mode, gen=None, keep=None):
+def level_loss(mu, A, s, sig, p, mode, gen=None, keep=None, rew=None):
     """一级：带梯度的 μ (1,2,h,w) → (loss, (奖励, 距离))。mode = grad：−mean_像素 r(μ)，对 μ 求导；local：从 μ 抽
     fine_group 次 x = μ + σε（随机数取自 gen，不给时用全局发生器），按 r(x) 打分、advantage，
     loss = −mean(优势 · log π)，log π = −‖x − μ‖² / 2σ²。keep：可选的 (h,w) 逐像素权重（#221：画面外像素、
-    检查没过的对置 0），乘在 r（grad）或优势（local）上；分母不变（"置零"而不是"重新归一化"，同粗级 frame_mask）。"""
+    检查没过的对置 0），乘在 r（grad）或优势（local）上；分母不变（"置零"而不是"重新归一化"，同粗级 frame_mask）。
+    rew：可选，x → (奖励, 距离)，代替对参照仿射 A 打分的 level_reward（#250 逐像素参照）。"""
+    score = rew if rew is not None else (lambda x: level_reward(x, A, s, p))
     if mode == "grad":
-        r, d = level_reward(mu, A, s, p)
+        r, d = score(mu)
         return -(r if keep is None else r * keep).mean(), (r.detach(), d.detach())
     with torch.no_grad():
         x = mu.detach() + sig * torch.randn((p["fine_group"],) + tuple(mu.shape[1:]), device=mu.device, generator=gen)
-        r, d = level_reward(x, A, s, p)
+        r, d = score(x)
         adv = advantage(r, p["baseline"])
         if keep is not None:
             adv = adv * keep
@@ -626,11 +651,12 @@ def level_loss(mu, A, s, sig, p, mode, gen=None, keep=None):
     return -(adv * lp).mean(), (r, d)
 
 
-def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0, keep=None, masks=None, bce=0.0):
+def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0, keep=None, masks=None, bce=0.0, rew=None):
     """fine_mode = grad / local 的细化损失：sig 里的每一级从正常推理轨迹 traj（refine 记下的）这一级的输入起，带梯度
     重算 μ，loss_s = w · level_loss，立刻 backward(loss_s)；特征上的梯度与替身项同 fine_surrogate。
     keep：可选，尺度 → (h,w) 逐像素权重（见 level_loss）。bce > 0 时（#221）loss_s 另加 bce · BCE(这一级输出的
     certainty logits, masks[s])，masks：尺度 → (h,w) 画面内掩码；这一项不乘 w。
+    rew：可选，尺度 → 打分函数（见 level_loss），给出时代替对 A 打分（#250）。
     返回 (替身项, {尺度: (奖励, 距离)}, {尺度: BCE 值}（bce = 0 时为空）)。"""
     H, W = f1[1].shape[-2:]
     leaf1 = {s: f1[s].detach().requires_grad_() for s in sig}
@@ -639,7 +665,8 @@ def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0, keep=None
     for s in sig:
         fin, cin, _ = traj[s]
         mu, ce = _mu_cert(dec, s, leaf1[s], leaf2[s], fin, cin, H, W)
-        loss, out[s] = level_loss(mu, A, s, sig[s], p, p["fine_mode"], keep=None if keep is None else keep[s])
+        loss, out[s] = level_loss(mu, A, s, sig[s], p, p["fine_mode"], keep=None if keep is None else keep[s],
+                                  rew=None if rew is None else rew[s])
         loss = w * loss
         if bce:
             l_c = F.binary_cross_entropy_with_logits(ce[0, 0].float(), masks[s].float())
@@ -794,11 +821,12 @@ def loo(r):
 # ---------- 训练成分 ----------
 
 class Kept(NamedTuple):
-    """样本筛选（#245）选中的一对：pair 标识、参照仿射（或 None）、内点数、内点比例。"""
+    """样本筛选（#245）选中的一对：pair 标识、参照仿射（或 None）、内点数、内点比例；pix：pix_occ 时参照的逐像素对应（#250）。"""
     pair: str
     A: object
     n: int
     ratio: float
+    pix: object = None
 
 
 def _scr_fresh():
@@ -816,15 +844,21 @@ class Term:
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
         self.screening = bool(p.get("screen"))      # 样本筛选（#245）：训练循环取到每对图先调 screen
         self._scr = _scr_fresh()
+        self._pix = None    # pix_occ（#250）：最近一次 ref_fit 记下的逐像素参照 (粗级 warp, {尺度: 这一级输出})
 
     @torch.no_grad()
     def ref_fit(self, i0, i1):
         """参照模型（frozen_copy / EMA 参照）对一对图（(1,1,H,W) 输入）正常推理、拟合参照仿射，同 __call__ 里的参照：
-        粗级每格取最高分位置、细化到尺度 1，按可信度抽 num 个点、RANSAC ransac px。返回 (A_ref 或 None, 内点数)。"""
+        粗级每格取最高分位置、细化到尺度 1，按可信度抽 num 个点、RANSAC ransac px。返回 (A_ref 或 None, 内点数)。
+        pix_occ 时（#250）另把这次推理的逐像素对应（粗级 warp、细化各级的输出）记在 self._pix。"""
         z1, z2 = features(self.frozen, i0, i1)
         zcls, zcert = coarse(self.frozen, z1, z2)
         Pz = zcls.float().softmax(1)
-        zf, zc = refine(self.frozen, z1, z2, anchor_flow(Pz, Pz.argmax(1)), zcert.float())
+        traj = {} if self.p.get("pix_occ") else None
+        fz = anchor_flow(Pz, Pz.argmax(1))
+        zf, zc = refine(self.frozen, z1, z2, fz, zcert.float(), traj)
+        if traj is not None:
+            self._pix = (fz, {s: mu for s, (_, _, mu) in traj.items()})
         return fit_many(zf, zc, self.p["num"], self.p["ransac"])[0]
 
     def screen(self, batch, device):
@@ -839,7 +873,7 @@ class Term:
         s["drawn"] += 1
         s["t"] += time.time() - t0
         if keep:
-            s["kept"] = Kept(pair, A, n, ratio)
+            s["kept"] = Kept(pair, A, n, ratio, self._pix)
         else:
             s["disc"].append(ratio)
         return keep, {"pair": pair, "ratio": round(ratio, 5), "keep": keep}
@@ -934,6 +968,7 @@ class Term:
             stats.update({f"{n}_{s_}": [] for s_ in lv for n in ("rew", "rew_sd", "d", "d90", "zero")},
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         rows = []
+        occ_job = None  # pix_occ（#250）：(i0, i1, 参照仿射, 逐像素参照)，这对图要加新项时
         for b in range(B):
             m = None    # 画面内掩码（frame_mask / cert_bce / gate / spread）
             blocked = False     # 参照合理性检查没过（#216）
@@ -961,6 +996,7 @@ class Term:
                     if self.frozen is not None:     # 参照换成冻结的初始模型；当前模型的仿射只用来记录
                         A_cur = A_ref
                         A_ref, n_ref = (kept.A, kept.n) if kept is not None else                             self.ref_fit(i0[b:b + 1], i1[b:b + 1])     # 样本筛选时已拟合过（#245）
+                        pix = kept.pix if kept is not None else self._pix     # pix_occ（#250）
                         _, dc = ref_cells(fc, A_cur, p["delta"], p["tau"], p["r_out"], p["shape"])
                         stats["cur_ok"].append(float(A_cur is not None))
                         if dc is not None:
@@ -1087,12 +1123,20 @@ class Term:
                 stats["t_fine"].append(time.time() - t3)
             if p["trace"]:
                 rows.append(tr)
+            if p["pix_occ"] and A_ref is not None and not (blocked or block):
+                occ_job = (i0[b], i1[b], A_ref, pix)
         if rows:
             st.trace.update(stack_rows(rows))
         if lv:
             stats["l_coarse"].append(float(p["weight"] * loss))
             stats["l_fine"].append(float(fine))
-        return p["weight"] * loss + fine, {k: round(float(np.mean(v)), 5) for k, v in stats.items() if v}, True
+        out = {k: round(float(np.mean(v)), 5) for k, v in stats.items() if v}
+        if p["pix_occ"]:    # 遮挡约束（#250）：反向都在这里做，返回的损失只有数值
+            from . import rloo_pixocc
+            val, extra = rloo_pixocc.step(self, st, p["weight"] * loss + fine, occ_job)
+            out.update(extra)
+            return torch.zeros((), device=cls.device) + val, out, False
+        return p["weight"] * loss + fine, out, True
 
 
 def _level_stats(stats, s, r, d):

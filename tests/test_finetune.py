@@ -2111,3 +2111,113 @@ def test_train_screened_skips_rejected_and_wraps_epochs():
     assert all(isinstance(t0, float) for _, t0 in got)
     plain = list(itertools.islice(screened(iter(range(5)), [], "cpu", log.append), 5))
     assert [b for b, _ in plain] == list(range(5))
+
+
+# ---------- 遮挡约束奖励（逐像素，#250） ----------
+
+def test_config_rloo_pix_occ(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nref_ema = 0.996\nlevels = [16, 8]\nfine_mode = "local"\n'
+    d = C.load(_write(tmp_path, "d", head))
+    assert d["rloo"]["pix_occ"] is False and d["rloo"]["pix_occ_side"] == 229      # 默认不加，同旧行为
+    c = C.load(_write(tmp_path, "c", head + 'pix_occ = true\npix_occ_w = 0.5\n'))
+    assert c["rloo"]["pix_occ"] and c["rloo"]["pix_occ_w"] == 0.5
+    for bad in ('[model]\nname = "roma"\n[rloo]\nreward = "ref"\nlevels = [16]\nfine_mode = "local"\npix_occ = true',
+                '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nref_ema = 0.996\npix_occ = true',
+                '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nref_ema = 0.996\nlevels = [16]\npix_occ = true',
+                head + 'pix_occ = true\npix_occ_w = -1.0',
+                head + 'pix_occ = true\npix_occ_side = 600'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", bad + "\n"))
+
+
+def test_pixocc_square_inside_and_occlude():
+    """遮挡：正方形边长 229 px、在图内；输入网格上被遮的比例约为面积比；被遮处是截到 [0, 1] 的噪声，其余不变；
+    四边形顶点顺、逆时针都能判内外；SAR 一侧经仿射映射后，映射回来的像素在正方形内。"""
+    import torch
+    from finetune.parts import rloo_pixocc as O
+    rng = np.random.default_rng(0)
+    for _ in range(20):
+        sq = O.square(rng, 229)
+        assert sq.min() >= 0 and sq.max() <= 512 and sq[1, 0] - sq[0, 0] == 229 and sq[2, 1] - sq[1, 1] == 229
+    sq = np.array([[100, 50], [329, 50], [329, 279], [100, 279]], np.float64)
+    pts = torch.tensor([[200.0, 100.0], [99.0, 100.0], [329.0, 279.0], [400.0, 60.0]])
+    assert O.inside(pts, sq).tolist() == [True, False, True, False]
+    assert O.inside(pts, sq[::-1].copy()).tolist() == [True, False, True, False]
+    img = torch.rand(1, 112, 112) * 0.5 + 0.25
+    gen = torch.Generator().manual_seed(0)
+    out, m = O.occlude(img, sq, gen)
+    assert abs(float(m.float().mean()) - 229 ** 2 / 512 ** 2) < 0.01
+    assert torch.equal(out[0][~m], img[0][~m]) and not torch.equal(out[0][m], img[0][m])
+    assert float(out.min()) >= 0 and float(out.max()) <= 1
+    A = np.array([[0.9, -0.1, 30.0], [0.1, 0.9, -10.0]])
+    quad = O.map_poly(sq, A)
+    c = torch.tensor([[214.5, 164.5]], dtype=torch.float64)            # 正方形中心经 A 映射后在四边形内
+    assert O.inside(c @ torch.tensor(A[:, :2]).T + torch.tensor(A[:, 2]), quad).all()
+
+
+def test_pixocc_keep_mask():
+    """打分的像素：光学像素中心不在正方形内，逐像素参照在 SAR 画面内、不在补零区、不在被遮的四边形内。"""
+    import torch
+    from finetune.parts import rloo_pixocc as O
+    from finetune.parts.pseudo import grid
+    h = w = 32
+    g = grid(h, w, "cpu").permute(2, 0, 1)[None]                          # 恒等对应
+    sq = np.array([[0, 0], [256, 0], [256, 256], [0, 256]], np.float64)   # 左上四分之一
+    valid = torch.ones(64, 64, dtype=torch.bool)
+    k = O.keep_mask(g, sq, sq, valid)
+    assert abs(float(k.float().mean()) - 0.75) < 1e-6 and not bool(k[:16, :16].any())
+    far = np.array([[400, 400], [512, 400], [512, 512], [400, 512]], np.float64)
+    shifted = g.clone()
+    shifted[:, 0] += 1.5                                                  # 参照点大多移出 SAR 画面
+    k2 = O.keep_mask(shifted, far, far, valid)
+    assert float(k2.float().mean()) < 0.3
+    valid[:, :32] = False                                                 # SAR 左半是补零区
+    k3 = O.keep_mask(g, far, far, valid)
+    assert not bool(k3[:, :15].any()) and bool(k3[:, 17:].any())
+
+
+def test_rloo_level_loss_custom_reward_equals_default():
+    import torch
+    from finetune.parts import rloo as R
+    p = {**R.PARAMS, "reward": "ref", "fine_shape": "cauchy", "fine_group": 4}
+    mu = torch.randn(1, 2, 8, 8) * 0.1
+    A = np.array([[1.0, 0, 3.0], [0, 1.0, -2.0]])
+    torch.manual_seed(0)
+    l1, (r1, _) = R.level_loss(mu, A, 8, 0.02, p, "local")
+    torch.manual_seed(0)
+    l2, (r2, _) = R.level_loss(mu, A, 8, 0.02, p, "local", rew=lambda x: R.level_reward(x, A, 8, p))
+    assert torch.equal(r1, r2) and float(l1) == float(l2)
+
+
+def _grads(w, dec):
+    return [None if q.grad is None else q.grad.clone() for q in [w, *dec.parameters()]]
+
+
+def test_rloo_term_pix_occ_probe_and_apply(monkeypatch):
+    """pix_occ：apply = false 时这一步留下的梯度与不加新项完全相同（新项只量），日志有两项梯度范数与比值；
+    apply = true 时梯度变了，系数翻倍时按系数 1 折算的新项梯度范数不变；返回的损失不参与反向。"""
+    import torch
+    over = dict(ref_ema=0.99, fine_w=4.2)
+    term, st, w, dec = _fake_term_fine(monkeypatch, **over)
+    torch.manual_seed(5)
+    loss, stats, active = term(st)
+    assert active
+    loss.backward()
+    g_off = _grads(w, dec)
+    term, st, w, dec = _fake_term_fine(monkeypatch, pix_occ=True, pix_occ_apply=False, **over)
+    torch.manual_seed(5)
+    loss, stats, active = term(st)
+    assert not active and not loss.requires_grad
+    g_probe = _grads(w, dec)
+    assert all((a is None and b is None) or torch.equal(a, b) for a, b in zip(g_off, g_probe))
+    assert stats["occ_on"] == 1.0 and stats["occ_g_old"] > 0 and stats["occ_g_new"] > 0 and stats["occ_g_ratio"] > 0
+    assert 0 < stats["occ_keep_c"] < 1 and "occ_rew_16" in stats and "occ_dv_8" in stats and "occ_rew_4" not in stats
+    news = []
+    for wt in (1.0, 2.0):
+        term, st, w, dec = _fake_term_fine(monkeypatch, pix_occ=True, pix_occ_w=wt, pix_occ_gn_every=1, **over)
+        torch.manual_seed(5)
+        _, stats, _ = term(st)
+        news.append(stats["occ_g_new"])
+        assert not torch.equal(_grads(w, dec)[0], g_off[0])
+    assert news[1] == pytest.approx(news[0], rel=1e-3)

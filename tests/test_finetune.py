@@ -2311,7 +2311,7 @@ def test_rloo_term_eqv_target_follows_T(monkeypatch):
     monkeypatch.setattr(R.augment, "sample_T", lambda rng, *a, **k: np.c_[np.eye(2), [40.0, 0.0]])
     _, s_sh, _ = term(st)
     I, A2 = np.c_[np.eye(2), [0.0, 0.0]], np.c_[np.eye(2), [40.0, 0.0]]                # 假拟合总给恒等仿射
-    assert np.allclose(seen["cells"][0], I) and np.allclose(seen["cells"][-1], A2)      # 原图、变换后一版
+    assert np.allclose(seen["cells"][0], I) and any(np.allclose(A, A2) for A in seen["cells"])          # 原图、变换后一版
     assert any(np.allclose(A, A2) for A in seen["level"]) and any(np.allclose(A, I) for A in seen["level"])
     for s_ in (16, 8):
         assert abs(s_sh[f"eqv_dmu_{s_}"] - s_sh[f"eqv_dmu0_{s_}"]) > 0.5

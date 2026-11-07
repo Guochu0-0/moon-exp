@@ -47,10 +47,10 @@ PARAMS = {"selfpair": False,      # 同模态自配对约束奖励（#254）：�
 def check(p, cfg):
     if not p["selfpair"]:
         return
-    if (p["reward"] != "ref" or not p["levels"] or p["fine_mode"] == "chain" or p["occ"] or p["mp_n"] or p["gate"]
+    if (p["reward"] != "ref" or not p["levels"] or p["fine_mode"] == "chain" or p["occ"] or p.get("cyc") or p["mp_n"] or p["gate"]
             or p["spread"] or p["trace"] or p["cos_every"] or cfg["optim"]["batch"] != 1 or cfg["optim"]["accum"] != 1):
         raise ConfigError("[rloo] selfpair 只配 reward = 'ref'、非空的 levels 与 fine_mode = 'grad' / 'local'、"
-                          "[optim] batch = 1、accum = 1，不与 occ、mp_n、gate、spread、trace、cos_every 同用")
+                          "[optim] batch = 1、accum = 1，不与 occ、cyc、mp_n、gate、spread、trace、cos_every 同用")
     if p["selfpair_w"] < 0 or p["selfpair_shift"] < 0 or p["selfpair_rot"] < 0 or not 0 <= p["selfpair_scale"] < 1:
         raise ConfigError("[rloo] selfpair_w、selfpair_shift、selfpair_rot 应 ≥ 0，selfpair_scale 在 [0, 1)")
 

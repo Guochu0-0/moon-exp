@@ -28,11 +28,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
-import tomllib  # noqa: E402
 
 R = Path(__file__).resolve().parents[1]
 REPO = R.parents[1]
 sys.path.insert(0, str(REPO))
+from finetune.config import tomllib  # noqa: E402  （3.11 以前的环境没有 tomllib，借 config 的兜底）
 from workbench.dataset import Dataset  # noqa: E402
 from workbench.protocol import auc, pair_error  # noqa: E402
 

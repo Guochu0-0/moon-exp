@@ -28,9 +28,10 @@ class Optim:
                                      lr=o["lr"], weight_decay=o["wd"])
         self.scaler = torch.cuda.amp.GradScaler() if amp else None
 
-    def backward(self, loss):
+    def backward(self, loss, retain_graph=False):
+        """retain_graph：保留计算图，之后还要经同一次前向再反向一次（正反向互逆约束奖励，#255）。"""
         x = loss / self.o["accum"]
-        (self.scaler.scale(x) if self.scaler else x).backward()
+        (self.scaler.scale(x) if self.scaler else x).backward(retain_graph=retain_graph)
 
     def state_dict(self) -> dict:
         """续训用（#209）：AdamW 与 GradScaler 的状态。"""

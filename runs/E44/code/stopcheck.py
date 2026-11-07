@@ -50,7 +50,7 @@ def main():
         if s not in a:
             continue
         d, ci = paired(a[s]["errors"], b[s]["errors"])
-        rows.append({"update": s, "e42": round(auc(fix(a[s]["errors"]), 5.0), 4),
+        rows.append({"update": s, "e44": round(auc(fix(a[s]["errors"]), 5.0), 4),
                      "e41": round(auc(fix(b[s]["errors"]), 5.0), 4), "diff": round(float(d), 4),
                      "lo": round(float(ci[0]), 4), "hi": round(float(ci[1]), 4)})
         print(rows[-1])

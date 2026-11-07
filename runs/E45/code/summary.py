@@ -216,7 +216,7 @@ def main():
     get = lambda log, key: np.array([r.get(key, np.nan) for r in log], float)
     fig, ax = plt.subplots(2, 3, figsize=(18, 9))
     a = ax[0, 0]
-    for key, lab, c in (("rew", "现有项（原图）", "C0"), ("eqv_rew", "新项（T2 变换后的 SAR，对 T2∘参照）", "C3")):
+    for key, lab, c in (("rew", "现有项（原图）", "C0"), ("eqv_rew", "新项（T2 变换后的 SAR，对 T2 接在参照后）", "C3")):
         a.plot(st, roll(get(lg, key), 200), color=c, lw=1.1, label=lab)
     a.set(ylabel="粗级奖励均值", xlabel="更新次数")
     a = ax[0, 1]
@@ -260,7 +260,7 @@ def main():
     fig, ax = plt.subplots(1, 2, figsize=(13, 4.6))
     for a, (k1, k0, lab) in zip(ax, (("eqv_d", "eqv_d0", "粗级抽到的位置"), ("eqv_dmu_1", "eqv_dmu0_1", "正常推理尺度 1 的输出"))):
         a.plot(st, roll(get(lg, k0), 200), color="C0", lw=1.1, label="原图")
-        a.plot(st, roll(get(lg, k1), 200), color="C3", lw=1.1, label="T2 变换后（对 T2∘参照）")
+        a.plot(st, roll(get(lg, k1), 200), color="C3", lw=1.1, label="T2 变换后（对 T2 接在参照后）")
         a.set_yscale("log")
         a.set(xlabel="更新次数", ylabel=f"{lab}离参照的距离（px，画面内）")
         a.legend(fontsize=8)

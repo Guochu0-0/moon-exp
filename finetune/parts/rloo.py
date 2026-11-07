@@ -120,6 +120,9 @@ occ_d 与 occ_d0（粗级抽到的位置离参照的平均距离），occ_rew_s�
 (torch 初始种子, 调用次数, 批内序号) 起的独立发生器，不动训练的随机数流（只量不学时与不加这一项的训练同一条随机数流）。
 SAR 上只遮四边形里的非补零区像素。
 
+图像相似度约束奖励（#252，sim = true；只配 reward = ref、[optim] batch = 1、accum = 1，不与 mp_n、occ、cyc、selfpair 同用）：同组每份粗级样本
+用全部格子拟合一个仿射，按 SAR 经它拉到光学网格后的灰度 NCC 打分、组内留一，乘在这份样本粗级的 log π 上；总损失 = 现有项
++ sim_w × 新项。本成分在内部反向（返回 active = False），做法、日志与验证集诊断见 finetune/parts/rloo_sim.py。
 被擦除区域可信度约束（#256，erase_cert = true；只配 reward = ref、frame_mask 或 cert_bce 打开、[aug] erase = true，不与
 spread、occ 同用）：训练数据在 SAR 上随机擦除了几块（[aug] erase，掩码 batch["occ"]）。参照仿射把光学格子 / 像素中心映到
 SAR 上落在被擦处的（finetune/parts/rloo_erase.py），从画面内掩码里去掉：粗级 frame_mask 的优势置零、cert_bce 的目标
@@ -152,6 +155,7 @@ from ..trace import stack_rows
 from . import rloo_erase as ER
 from . import rloo_cyc as CY
 from . import rloo_occ as OC
+from . import rloo_sim as SIM
 from . import rloo_self as SP
 from . import rloo_trace as RT
 from .cexp import sample_matches
@@ -202,6 +206,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "occ": False,     # 遮挡约束奖励（#249）：每对另加 1 个遮挡版本，没遮住处对原图参照仿射打分
           "occ_side": 229.0,  # occ：光学图上遮挡正方形的边长（原网格 px；229 ≈ √0.2 × 512，面积约 20%，同 E40）
           "occ_w": 0.0,     # occ：新项的系数；0 = 只量梯度、不学
+          **SIM.PARAMS,     # 图像相似度约束奖励（#252）：sim、sim_w、sim_diag
           "erase_cert": False,  # 被擦除区域可信度约束（#256）：SAR 被擦处（[aug] erase）可信度目标为 0、不参与奖励打分
           "cyc": False,     # 正反向互逆约束奖励（#255，finetune/parts/rloo_cyc.py）
           "cyc_w": 0.0,     # cyc：新项的系数；0 = 只量梯度、不学
@@ -307,6 +312,7 @@ def check(cfg):
                           "accum = 1，不与 mp_n、gate、spread、trace、cos_every 同用")
     if p["occ_w"] < 0 or not 0 < p["occ_side"] < HW:
         raise ConfigError(f"[rloo] occ_w 应 ≥ 0，occ_side 应在 (0, {HW})")
+    SIM.check(p, cfg)
     if p["erase_cert"] and (p["reward"] != "ref" or not (p["frame_mask"] or p["cert_bce"]) or not cfg.get("aug", {}).get("erase")
                             or p["spread"] or p["occ"]):
         raise ConfigError("[rloo] erase_cert 只配 reward = 'ref'、frame_mask 或 cert_bce 打开、[aug] erase = true，"
@@ -892,6 +898,7 @@ class Term:
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
         self.screening = bool(p.get("screen"))      # 样本筛选（#245）：训练循环取到每对图先调 screen
         self._scr = _scr_fresh()
+        self.sim_diag = SIM.Diag(p, model, ds) if p.get("sim") else None     # 图像相似度约束奖励的验证集诊断（#252）
 
     @torch.no_grad()
     def ref_fit(self, i0, i1):
@@ -1011,6 +1018,7 @@ class Term:
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         rows = []
         occ_ctx = []    # 遮挡约束奖励（#249）：各对做新项要用的现有项中间量
+        sim_ctx = []    # 图像相似度约束奖励（#252）：各对的样本与优势
         cyc_ctx = []    # 正反向互逆约束奖励（#255）
         for b in range(B):
             m = None    # 画面内掩码（frame_mask / cert_bce / gate / spread）
@@ -1176,6 +1184,8 @@ class Term:
                 stats["t_fine"].append(time.time() - t3)
             if p["occ"] and A_ref is not None:
                 occ_ctx.append(OccCtx(b, A_ref, m, masks, r, d, traj))
+            if p["sim"]:
+                sim_ctx.append(SIM.pair_ctx(p, i0[b], i1[b], fc, k, d, m, b, stats))
             if p["cyc"] and A_ref is not None:
                 cyc_ctx.append(CY.Ctx(b, A_ref, k, fc, m, masks, traj))
             if p["trace"]:
@@ -1188,6 +1198,9 @@ class Term:
         total = p["weight"] * loss + fine
         if p["occ"]:
             val = self._occ(st, i0, i1, total, occ_ctx, B, sig, stats)
+            return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
+        if p["sim"]:
+            val = SIM.apply(self, st, total, logp_all, sim_ctx, B, stats)
             return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
         if p["cyc"]:
             val = CY.step(self, st, i0, i1, total, cyc_ctx, logp_all, f1, f2, B, sig, stats)

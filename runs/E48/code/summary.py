@@ -71,12 +71,12 @@ def write(name, rows):
         return
     OUT.mkdir(parents=True, exist_ok=True)
     with open(OUT / name, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w = csv.DictWriter(f, fieldnames=list(dict.fromkeys(k for r in rows for k in r)))
         w.writeheader()
         w.writerows(rows)
     print(f"== {name}")
     for r in rows:
-        print(" | ".join(f"{k}={r[k]}" for k in r))
+        print(" | ".join(f"{k}={v}" for k, v in r.items()))
 
 
 def seg_of(s):

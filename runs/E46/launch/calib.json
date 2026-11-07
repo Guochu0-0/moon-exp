@@ -1,0 +1,18 @@
+[
+ {
+  "start": "2026-11-07 02:05:11 +0000",
+  "end": "2026-11-07 02:32:40 +0000",
+  "status": "ok",
+  "commit": "b335d04592d693486627c60ada554a22fa12277f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-254",
+  "cuda_visible_devices": "0,1,2,3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "runs/E46/code/calib.sh"
+  ]
+ }
+]

@@ -123,6 +123,21 @@ SAR 上只遮四边形里的非补零区像素。
 已知扰动等变约束奖励（#253，eqv = true；配置限制同 occ，且不与 occ 同用）：每对图另在已扰动的 SAR 上再施加一个已知随机
 仿射 T2，当前模型在（光学，T2 变换后的 SAR）上照原图抽签，对 T2∘A_ref 打分；两项分开反向、量梯度的做法同 occ。
 全部细节与日志见 finetune/parts/rloo_eqv.py。
+图像相似度约束奖励（#252，sim = true；只配 reward = ref、[optim] batch = 1、accum = 1，不与 mp_n、occ、cyc、selfpair 同用）：同组每份粗级样本
+用全部格子拟合一个仿射，按 SAR 经它拉到光学网格后的灰度 NCC 打分、组内留一，乘在这份样本粗级的 log π 上；总损失 = 现有项
++ sim_w × 新项。本成分在内部反向（返回 active = False），做法、日志与验证集诊断见 finetune/parts/rloo_sim.py。
+被擦除区域可信度约束（#256，erase_cert = true；只配 reward = ref、frame_mask 或 cert_bce 打开、[aug] erase = true，不与
+spread、occ 同用）：训练数据在 SAR 上随机擦除了几块（[aug] erase，掩码 batch["occ"]）。参照仿射把光学格子 / 像素中心映到
+SAR 上落在被擦处的（finetune/parts/rloo_erase.py），从画面内掩码里去掉：粗级 frame_mask 的优势置零、cert_bce 的目标
+改为 0；细化各级同样从掩码里去掉（fine_mask 的优势置零、fine_cert_bce 的目标改为 0）。不新增损失项、不改权重。
+日志 in_frame、in_s 仍是去掉之前的画面内比例；另记（只记录）粗级与细化各级在被擦处 / 未擦处（画面内、没被擦）的 BCE
+l_cert_e、l_cert_u 与平均可信度 cert_e、cert_u，以及被擦处占画面内格子的比例 era_frac（细化级加后缀 _s）。
+正反向互逆约束奖励（#255，cyc = true；只配 reward = ref、ref_ema 或 frozen_ref、fine_mode = local、[optim] batch = 1、
+accum = 1，不与 occ、mp_n、gate、spread、trace、cos_every 同用）：另加反向一遍（SAR 第一、光学第二），两个方向的落点经
+另一方向的参照仿射映回后要回到出发的位置。总损失 = 现有项 + cyc_w × 新项，本成分在内部反向并量两项的梯度范数。
+做法与日志见 finetune/parts/rloo_cyc.py。
+同模态自配对约束奖励（#254，selfpair = true）：每对另加 1 对（光学或扰动前的 SAR，它经已知仿射 T3 变换后的版本），粗级与
+细化各级按 T3 打分；全部实现与日志见 finetune/parts/rloo_self.py，这里只在 check、data_kw 与 __call__ 末尾各挂一处。
 """
 from __future__ import annotations
 
@@ -141,7 +156,11 @@ from ..config import ConfigError
 from ..geom import HW, compose, inv_affine
 from ..trace import stack_rows
 from . import rloo_eqv as EQ
+from . import rloo_erase as ER
+from . import rloo_cyc as CY
 from . import rloo_occ as OC
+from . import rloo_sim as SIM
+from . import rloo_self as SP
 from . import rloo_trace as RT
 from .cexp import sample_matches
 from .pseudo import affine_norm, grid
@@ -192,6 +211,11 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "occ_side": 229.0,  # occ：光学图上遮挡正方形的边长（原网格 px；229 ≈ √0.2 × 512，面积约 20%，同 E40）
           "occ_w": 0.0,     # occ：新项的系数；0 = 只量梯度、不学
           **EQ.PARAMS,      # 已知扰动等变约束奖励（#253），见 rloo_eqv.py
+          **SIM.PARAMS,     # 图像相似度约束奖励（#252）：sim、sim_w、sim_diag
+          "erase_cert": False,  # 被擦除区域可信度约束（#256）：SAR 被擦处（[aug] erase）可信度目标为 0、不参与奖励打分
+          "cyc": False,     # 正反向互逆约束奖励（#255，finetune/parts/rloo_cyc.py）
+          "cyc_w": 0.0,     # cyc：新项的系数；0 = 只量梯度、不学
+          **SP.PARAMS,      # 同模态自配对约束奖励（#254）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -294,10 +318,23 @@ def check(cfg):
     if p["occ_w"] < 0 or not 0 < p["occ_side"] < HW:
         raise ConfigError(f"[rloo] occ_w 应 ≥ 0，occ_side 应在 (0, {HW})")
     EQ.check(cfg)
+    SIM.check(p, cfg)
+    if p["erase_cert"] and (p["reward"] != "ref" or not (p["frame_mask"] or p["cert_bce"]) or not cfg.get("aug", {}).get("erase")
+                            or p["spread"] or p["occ"]):
+        raise ConfigError("[rloo] erase_cert 只配 reward = 'ref'、frame_mask 或 cert_bce 打开、[aug] erase = true，"
+                          "不与 spread、occ 同用")
+    if p["cyc"] and (p["reward"] != "ref" or not (p["ref_ema"] or p["frozen_ref"]) or not lv
+                     or p["fine_mode"] != "local" or p["occ"] or p["mp_n"] or p["gate"] or p["spread"] or p["trace"]
+                     or p["cos_every"] or cfg["optim"]["batch"] != 1 or cfg["optim"]["accum"] != 1):
+        raise ConfigError("[rloo] cyc 只配 reward = 'ref'、ref_ema 或 frozen_ref、非空的 levels 与 fine_mode = 'local'、"
+                          "[optim] batch = 1、accum = 1，不与 occ、mp_n、gate、spread、trace、cos_every 同用")
+    if p["cyc_w"] < 0:
+        raise ConfigError("[rloo] cyc_w 应 ≥ 0")
+    SP.check(p, cfg)
 
 
 def data_kw(p):
-    return {}
+    return SP.data_kw(p)
 
 
 # ---------- 前向：粗级（带梯度）与细化（照抄 romatch Decoder.forward 的非 upsample 分支） ----------
@@ -662,11 +699,13 @@ def level_loss(mu, A, s, sig, p, mode, gen=None, keep=None):
     return -(adv * lp).mean(), (r, d)
 
 
-def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0, keep=None, masks=None, bce=0.0, gen=None):
+def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0, keep=None, masks=None, bce=0.0, gen=None,
+                ces=None):
     """fine_mode = grad / local 的细化损失：sig 里的每一级从正常推理轨迹 traj（refine 记下的）这一级的输入起，带梯度
     重算 μ，loss_s = w · level_loss，立刻 backward(loss_s)；特征上的梯度与替身项同 fine_surrogate。
     keep：可选，尺度 → (h,w) 逐像素权重（见 level_loss）。bce > 0 时（#221）loss_s 另加 bce · BCE(这一级输出的
     certainty logits, masks[s])，masks：尺度 → (h,w) 画面内掩码；这一项不乘 w。
+    ces：可选的空 dict，填入各级输出的 certainty logits (h,w)（detach，只记录用，#256）。
     返回 (替身项, {尺度: (奖励, 距离)}, {尺度: BCE 值}（bce = 0 时为空）)。"""
     H, W = f1[1].shape[-2:]
     leaf1 = {s: f1[s].detach().requires_grad_() for s in sig}
@@ -675,6 +714,8 @@ def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0, keep=None
     for s in sig:
         fin, cin, _ = traj[s]
         mu, ce = _mu_cert(dec, s, leaf1[s], leaf2[s], fin, cin, H, W)
+        if ces is not None:
+            ces[s] = ce[0, 0].detach()
         loss, out[s] = level_loss(mu, A, s, sig[s], p, p["fine_mode"], gen, keep=None if keep is None else keep[s])
         loss = w * loss
         if bce:
@@ -863,6 +904,7 @@ class Term:
         self.obs = RT.Observer(p, model, ds) if p.get("obs_every") else None   # 固定观察集（#209）
         self.screening = bool(p.get("screen"))      # 样本筛选（#245）：训练循环取到每对图先调 screen
         self._scr = _scr_fresh()
+        self.sim_diag = SIM.Diag(p, model, ds) if p.get("sim") else None     # 图像相似度约束奖励的验证集诊断（#252）
 
     @torch.no_grad()
     def ref_fit(self, i0, i1):
@@ -982,6 +1024,8 @@ class Term:
                          t_roll_fine=[], t_fine=[], l_coarse=[], l_fine=[])
         rows = []
         occ_ctx = []    # 遮挡约束奖励（#249）：各对做新项要用的现有项中间量
+        sim_ctx = []    # 图像相似度约束奖励（#252）：各对的样本与优势
+        cyc_ctx = []    # 正反向互逆约束奖励（#255）
         for b in range(B):
             m = None    # 画面内掩码（frame_mask / cert_bce / gate / spread）
             blocked = False     # 参照合理性检查没过（#216）
@@ -1032,6 +1076,10 @@ class Term:
                     if need_mask and A_ref is not None:
                         m = in_frame(A_ref, i1[b], h, w)
                         stats["in_frame"].append(float(m.float().mean()))
+                        if p["erase_cert"]:     # 被擦除区域可信度约束（#256）：被擦处移出掩码（目标 0、优势置零）
+                            e = ER.erased(A_ref, st.batch["occ"][b].to(m.device), h, w)
+                            ER.split_stats(cert[b, 0], m, e, stats)
+                            m = ER.target(m, e)
                     if p["gate"] and A_ref is not None:
                         bad = gate_check(A_ref, stats["in_frame"][-1], p)
                         blocked = any(bad.values())
@@ -1113,6 +1161,11 @@ class Term:
                         masks = {s_: in_frame(A_ref, i1[b], *traj[s_][0].shape[-2:]) for s_ in lv}
                         for s_, m_ in masks.items():
                             stats.setdefault(f"in_{s_}", []).append(float(m_.float().mean()))
+                    ces = era = None
+                    if p["erase_cert"] and masks is not None:   # #256：同粗级，被擦处移出各级掩码
+                        ces, era = {}, {s_: ER.erased(A_ref, st.batch["occ"][b].to(cls.device), *m_.shape)
+                                        for s_, m_ in masks.items()}
+                        masks0, masks = masks, {s_: ER.target(m_, era[s_]) for s_, m_ in masks.items()}
                     if p["fine_mask"] or stop:
                         keep = {s_: (masks[s_].float() if p["fine_mask"]
                                      else torch.ones(traj[s_][0].shape[-2:], device=cls.device)) * (0.0 if stop else 1.0)
@@ -1120,8 +1173,10 @@ class Term:
                     # 细化 certainty 的 BCE 同粗级 cert_bce：只有参照合理性检查没过时不做，多扰动核对没过时照常
                     bce = 0.0 if blocked or masks is None else p["weight"] * p["fine_cert_bce"] / B
                     sur, rd, lc = fine_direct(dec, fb, gb, traj, A_ref, sig, p, st.optim.backward, st.optim.factor(),
-                                              p["weight"] * p["fine_w"] / B, keep, masks, bce)
+                                              p["weight"] * p["fine_w"] / B, keep, masks, bce, ces=ces)
                     fine = fine + sur
+                    for s_, c_ in (ces or {}).items():
+                        ER.split_stats(c_, masks0[s_], era[s_], stats, f"_{s_}")
                     for s_, v in lc.items():
                         stats.setdefault(f"l_cert_{s_}", []).append(v)
                     for s_, (r_s, d_s) in rd.items():
@@ -1137,6 +1192,10 @@ class Term:
                 occ_ctx.append(OccCtx(b, A_ref, m, masks, r, d, traj))
             if p["eqv"] and A_ref is not None:     # 已知扰动等变约束奖励（#253）：同样的中间量
                 occ_ctx.append(OccCtx(b, A_ref, m, masks, r, d, traj))
+            if p["sim"]:
+                sim_ctx.append(SIM.pair_ctx(p, i0[b], i1[b], fc, k, d, m, b, stats))
+            if p["cyc"] and A_ref is not None:
+                cyc_ctx.append(CY.Ctx(b, A_ref, k, fc, m, masks, traj))
             if p["trace"]:
                 rows.append(tr)
         if rows:
@@ -1150,6 +1209,15 @@ class Term:
             return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
         if p["eqv"]:
             val = EQ.apply(self, st, i0, i1, total, occ_ctx, B, sig, stats)
+            return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
+        if p["sim"]:
+            val = SIM.apply(self, st, total, logp_all, sim_ctx, B, stats)
+            return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
+        if p["cyc"]:
+            val = CY.step(self, st, i0, i1, total, cyc_ctx, logp_all, f1, f2, B, sig, stats)
+            return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
+        if p["selfpair"]:   # 同模态自配对约束奖励（#254）
+            val = SP.step(self, st, total, B, sig, stats)
             return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
         return total, _mean_stats(stats), True
 

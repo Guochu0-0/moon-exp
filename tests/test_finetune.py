@@ -2223,6 +2223,410 @@ def test_rloo_occ_grad_helpers():
     assert torch.equal(a.grad, torch.tensor([3.0, 0.0])) and b.grad is None
 
 
+# ---------- 被擦除区域可信度约束（#256） ----------
+
+def test_config_rloo_erase_cert(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    aug = '[aug]\nerase = true\n'
+    ok = '[rloo]\nreward = "ref"\nframe_mask = true\nerase_cert = true\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
+    assert d["rloo"]["erase_cert"] is False                                             # 默认不做，同旧行为
+    assert C.load(_write(tmp_path, "c", head + aug + ok))["rloo"]["erase_cert"]
+    assert C.load(_write(tmp_path, "c2", head + aug + '[rloo]\nreward = "ref"\ncert_bce = 0.01\nerase_cert = true\n'))
+    for bad in (ok,                                                                     # 没有擦除
+                aug + '[rloo]\nreward = "ref"\nerase_cert = true\n',                    # 没有掩码可改
+                aug + '[rloo]\nreward = "r1"\nerase_cert = true\n',
+                aug + ok + 'spread = 0.1\n',
+                aug + ok + 'levels = [16, 8]\nfine_mode = "local"\nocc = true\n'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad))
+
+
+def test_rloo_erased_follows_reference_affine():
+    """光学格子被算作被擦 ⇔ 参照仿射把格心映到 SAR 被擦处：恒等时就是被擦的那一半，平移 256 px 后整块跟着平移，
+    映到画面外的不算。"""
+    import torch
+    from finetune.parts import rloo_erase as ER
+    occ = torch.zeros(1, 512, 512)
+    occ[:, :, 256:] = 1                                                                 # SAR 右半被擦
+    I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    e = ER.erased(I, occ, 8, 8)
+    assert e[:, 4:].all() and not e[:, :4].any()
+    T = np.array([[1.0, 0, 256.0], [0, 1.0, 0]])                                         # 光学左半 → SAR 右半
+    e = ER.erased(T, occ, 8, 8)
+    assert e[:, :4].all() and not e[:, 4:].any()                                       # 右半映到画面外：不算被擦
+    m = torch.ones(8, 8, dtype=torch.bool)
+    assert torch.equal(ER.target(m, e), ~e)
+
+
+def test_rloo_erase_split_stats():
+    import torch
+    from finetune.parts import rloo_erase as ER
+    logits = torch.zeros(4, 4)
+    logits[:, 2:] = 2.0
+    m = torch.ones(4, 4, dtype=torch.bool)
+    m[3] = False                                                                        # 最后一行在画面外
+    e = torch.zeros(4, 4, dtype=torch.bool)
+    e[:, 2:] = True
+    st = {}
+    ER.split_stats(logits, m, e, st, "_1")
+    assert st["era_frac_1"] == [0.5]
+    assert st["cert_e_1"][0] == pytest.approx(float(torch.sigmoid(torch.tensor(2.0))))
+    assert st["cert_u_1"][0] == pytest.approx(0.5)
+    assert st["l_cert_e_1"][0] == pytest.approx(float(torch.nn.functional.softplus(torch.tensor(2.0))))   # 目标 0
+    assert st["l_cert_u_1"][0] == pytest.approx(float(np.log(2)))                     # 目标 1
+    st = {}
+    ER.split_stats(logits, m, torch.zeros_like(e), st)
+    assert "cert_e" not in st and st["era_frac"] == [0.0]
+
+
+def test_rloo_term_erase_cert(monkeypatch):
+    """erase_cert（#256）：SAR 没有被擦时与不开逐位相同；整张 SAR 都被擦时粗级与细化的策略项都没有梯度，可信度 BCE 的
+    目标全为 0（日志的被擦处 BCE 即全部 BCE），细化层只剩 BCE 的梯度。"""
+    import torch
+
+    def run(occ, **over):
+        term, st, w, dec = _fake_term_fine(monkeypatch, frame_mask=True, fine_mask=True, **over)
+        if occ is not None:
+            st.batch["occ"] = occ
+        torch.manual_seed(3)
+        loss, stats, _ = term(st)
+        loss.backward()
+        return [None if q.grad is None else q.grad.clone() for q in [w] + list(dec.parameters())], stats
+
+    g_ref, s_ref = run(None)
+    g0, s0 = run(torch.zeros(1, 1, 512, 512), erase_cert=True)
+    assert all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["era_frac"] == 0.0 and s0["era_frac_16"] == 0.0 and "cert_e" not in s0 and "cert_u_8" in s0
+    g1, s1 = run(torch.ones(1, 1, 512, 512), erase_cert=True)
+    assert s1["era_frac"] == 1.0 and s1["era_frac_8"] == 1.0 and s1["in_frame"] == 1.0   # in_frame 记去掉之前的
+    assert float(g1[0]) == 0.0 and all(x is None or float(x.abs().sum()) == 0.0 for x in g1[1:])
+    _, s2 = run(torch.ones(1, 1, 512, 512), erase_cert=True, fine_cert_bce=0.01)
+    assert s2["l_cert_16"] == pytest.approx(s2["l_cert_e_16"], rel=1e-4) and "l_cert_u_16" not in s2
+
+
+# ---------- 正反向互逆约束奖励（#255） ----------
+
+def test_config_rloo_cyc(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    ok = '[rloo]\nreward = "ref"\nref_ema = 0.996\nlevels = [16, 8]\nfine_mode = "local"\ncyc = true\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
+    assert (d["rloo"]["cyc"], d["rloo"]["cyc_w"]) == (False, 0.0)                     # 默认不做，同旧行为
+    c = C.load(_write(tmp_path, "c", head + ok + "cyc_w = 0.7\n"))
+    assert c["rloo"]["cyc"] and c["rloo"]["cyc_w"] == 0.7
+    for bad in (ok.replace("ref_ema = 0.996\n", ""),                                   # 反向参照要参照模型
+                ok.replace('"local"', '"grad"'), ok.replace("levels = [16, 8]\n", ""),
+                '[optim]\nbatch = 2\n' + ok, '[optim]\naccum = 2\n' + ok,
+                ok + 'occ = true', ok + 'gate = true', ok + 'cyc_w = -1.0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
+def test_rloo_cyc_geometry():
+    """映回距离：落点就在格心、B 为恒等时为 0，B 平移 64 px 时处处为 64；复合残差：B = A⁻¹ 时为 0；反向掩码：SAR 补零区
+    与 B 映射到光学画面外的格子都不算。"""
+    import torch
+    from finetune.geom import inv_affine
+    from finetune.parts import rloo_cyc as CY
+    from finetune.parts.pseudo import grid
+    I = np.c_[np.eye(2), np.zeros(2)]
+    fc = grid(4, 4, "cpu").permute(2, 0, 1)[None].expand(3, -1, -1, -1)
+    assert float(CY.back_dist(fc, I).abs().max()) < 1e-4
+    T = np.array([[1.0, 0, 64.0], [0, 1.0, 0]])
+    assert torch.allclose(CY.back_dist(fc, T), torch.full((3, 4, 4), 64.0), atol=1e-3)
+    p = {"shape": "gauss", "fine_shape": "cauchy", "delta": 8.0, "tau": 16.0, "r_out": -0.1}
+    r, d = CY.coarse_reward(fc, I, p)
+    assert torch.allclose(r, torch.ones_like(r))
+    r, _ = CY.level_reward(fc, T, 8, p)
+    assert torch.allclose(r, torch.full_like(r, 1 / (1 + 0.5 * 8 ** 2)))               # cauchy，delta·s/8 = 8
+    A = np.array([[1.1, 0.1, 20.0], [-0.05, 0.9, -7.0]])
+    assert CY.composite_residual(A, inv_affine(A), 4, 4) == pytest.approx(0.0, abs=1e-6)
+    assert CY.composite_residual(T, I, 4, 4) == pytest.approx(64.0, abs=1e-4)
+    sar = torch.rand(1, 64, 64) + 0.1
+    sar[:, :, :32] = 0                                                                  # 左半补零
+    m = CY.rev_mask(I, sar, 4, 4)
+    assert not m[:, :2].any() and m[:, 2:].all()                                        # 格心 x = 8、24 在补零区（外扩到 36）
+    assert not CY.rev_mask(np.array([[1.0, 0, 600.0], [0, 1.0, 0]]), torch.rand(1, 64, 64) + 0.1, 4, 4).any()
+
+
+def test_rloo_term_cyc_gradients(monkeypatch):
+    """cyc（#255）：本成分内部反向，返回 active = False。cyc_w = 0 时只量不学：梯度、损失与全局随机数流都与不加这一项时
+    相同；cyc_w = c 时总梯度 = 现有项梯度 + c × 新项梯度，cyc_gn 即新项（系数 1）的梯度范数；反向参照拟合失败时不做。"""
+    import types
+    import torch
+
+    def run(seed, B=np.c_[np.eye(2), np.zeros(2)], **over):
+        term, st, w, dec = _fake_term_fine(monkeypatch, fine_mask=True, frame_mask=True, **over)
+        term.model.params = [w] + list(dec.parameters())
+        term.ref_fit = lambda a, b: (B, 10)
+        st.optim = types.SimpleNamespace(backward=lambda l, **k: l.backward(**k), factor=lambda: 1.0)
+        torch.manual_seed(seed)
+        loss, stats, active = term(st)
+        if active:
+            loss.backward()
+        stats["_after"] = float(torch.rand(()))
+        return [None if q.grad is None else q.grad.clone() for q in term.model.params], stats, active, float(loss)
+
+    g_ref, s_ref, a_ref, l_ref = run(3)
+    assert a_ref and "cyc_gn" not in s_ref
+    g0, s0, a0, l0 = run(3, cyc=True, cyc_w=0.0)
+    assert not a0 and all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["_after"] == s_ref["_after"] and l0 == pytest.approx(l_ref, abs=1e-6)
+    assert s0["cyc_gn"] > 0 and s0["main_gn"] > 0 and s0["cyc_ratio"] == 0.0 and s0["cyc_ok"] == 1.0
+    assert s0["cyc_coef"] == pytest.approx(s0["main_gn"] / s0["cyc_gn"], rel=1e-3)
+    assert s0["cyc_res"] == pytest.approx(0.0, abs=1e-6) and s0["cyc_rew_f"] == pytest.approx(s0["rew"], abs=1e-4)
+    assert {"cyc_rew_r", "cyc_rew_f_16", "cyc_rew_r_8", "cyc_in_r", "l_cyc", "t_cyc"} <= set(s0)
+    g1, s1, _, _ = run(3, cyc=True, cyc_w=1.0)
+    g2, s2, _, l2 = run(3, cyc=True, cyc_w=2.0)
+    d1 = [a - b for a, b in zip(g1, g0) if a is not None]
+    d2 = [a - b for a, b in zip(g2, g0) if a is not None]
+    assert all(torch.allclose(y, 2 * x, atol=1e-6) for x, y in zip(d1, d2))
+    assert float(torch.cat([x.flatten() for x in d1]).norm()) == pytest.approx(s1["cyc_gn"], rel=1e-3)
+    assert s1["cyc_gn"] == pytest.approx(s0["cyc_gn"], rel=1e-4)
+    assert l2 == pytest.approx(l0 + 2 * s2["l_cyc"], abs=1e-4)
+    _, s_fail, _, _ = run(3, B=None, cyc=True, cyc_w=1.0)
+    assert s_fail["cyc_ok"] == 0.0 and "cyc_gn" not in s_fail
+
+
+# ---------- 同模态自配对约束奖励（#254） ----------
+
+def test_config_rloo_selfpair(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    ok = '[rloo]\nreward = "ref"\nlevels = [16, 8]\nfine_mode = "local"\nselfpair = true\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
+    assert (d["rloo"]["selfpair"], d["rloo"]["selfpair_w"]) == (False, 0.0)                  # 默认不做，同旧行为
+    assert (d["rloo"]["selfpair_shift"], d["rloo"]["selfpair_rot"], d["rloo"]["selfpair_scale"]) == (128.0, 20.0, 0.2)
+    c = C.load(_write(tmp_path, "c", head + ok + "selfpair_w = 1.5\n"))
+    assert c["rloo"]["selfpair"] and c["rloo"]["selfpair_w"] == 1.5
+    for bad in ('[rloo]\nreward = "r1"\nselfpair = true',
+                '[rloo]\nreward = "ref"\nselfpair = true',                              # 没有细化级
+                '[rloo]\nreward = "ref"\nlevels = [16]\nselfpair = true',               # chain 不支持
+                '[optim]\nbatch = 2\n' + ok, '[optim]\naccum = 2\n' + ok,
+                ok + 'occ = true', ok + 'mp_n = 2', ok + 'selfpair_w = -1.0', ok + 'selfpair_scale = 1.0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
+def test_rloo_data_kw_selfpair():
+    from finetune.parts import rloo as R
+    assert R.data_kw({**R.PARAMS}) == {} and R.data_kw({**R.PARAMS, "selfpair": True}) == {"raw_sar": True}
+
+
+def test_pairset_raw_sar_is_unperturbed():
+    """raw_sar（#254）：另返回扰动之前的 SAR；扰动后的 image1、T 与不开时逐位相同（不改随机数流）。"""
+    import types
+    import torch
+    from finetune.data import PairSet
+
+    rng = np.random.default_rng(0)
+    opt, sar = rng.random((512, 512)).astype(np.float32), rng.random((512, 512)).astype(np.float32)
+
+    def make(raw):
+        ds = PairSet.__new__(PairSet)
+        ds.resize_hi, ds.raw_sar, ds.neg, ds.seed, ds.aug = None, raw, False, 0, ("geo",)
+        ds.aug_kw = {"shift": 128.0, "rot": 20.0, "scale": 0.2, "disk": True}
+        ds.src, ds.pairs = {"R/p": "train"}, ["R/p"]
+        ds.data = types.SimpleNamespace(optical=lambda sp, q: opt, sar=lambda sp, q: sar)
+        ds.map_opt = ds.map_sar = lambda x: x
+        ds.resize = lambda x: x[::2, ::2]
+        return ds
+
+    a, b = make(False)[0], make(True)[0]
+    assert "image1_raw" not in a and torch.equal(a["image1"], b["image1"]) and torch.equal(a["T"], b["T"])
+    assert torch.equal(b["image1_raw"], torch.from_numpy(sar[::2, ::2])[None])
+    assert not torch.equal(b["image1_raw"], b["image1"])
+
+
+def test_rloo_selfpair_make_pair():
+    """自配对：两种模态都会选到；T3 在设定范围内（圆盘平移、旋转、缩放）；T3 X 上的像素 = X 在 T3⁻¹ 处的值；
+    画面内掩码只看几何，X 里本来为 0 的像素不算补零区。"""
+    import torch
+    from finetune.geom import inv_affine
+    from finetune.parts import rloo as R
+    from finetune.parts import rloo_self as SP
+
+    p = {**R.PARAMS, "selfpair": True}
+    opt = torch.rand(1, 64, 64) + 0.1
+    sar = torch.zeros(1, 64, 64)                                    # 全黑的 SAR：灰度不影响掩码
+    rng = np.random.default_rng(0)
+    picks, ts = [], []
+    for _ in range(200):
+        x, xt, ones_t, T, use_sar = SP.make_pair(opt, sar, rng, p)
+        picks.append(use_sar)
+        ts.append(T)
+        assert x is (sar if use_sar else opt) and xt.shape == x.shape
+    assert 0.35 < np.mean(picks) < 0.65
+    for T in ts:
+        L = T[:, :2]
+        sc = np.sqrt(abs(np.linalg.det(L)))
+        th = np.degrees(np.arctan2(L[1, 0], L[0, 0]))
+        t = T[:, 2] - (np.array([256.0, 256.0]) - L @ [256, 256])            # 绕中心变换后剩下的平移
+        assert 0.8 - 1e-9 <= sc <= 1.2 + 1e-9 and abs(th) <= 20 + 1e-9 and np.linalg.norm(t) <= 128 + 1e-6
+    T = np.array([[1.0, 0, 64.0], [0, 1.0, 0]])                     # 原网格右移 64 px = 输入网格（64）右移 8 px
+    xt = R.perturb_sar(opt, T)
+    assert torch.allclose(xt[0, :, 8:], opt[0, :, :-8]) and float(xt[0, :, :8].abs().max()) == 0.0
+    m = R.in_frame(T, R.perturb_sar(torch.ones_like(sar), T), 8, 8)
+    assert m[:, 1:7].all() and not m[:, 7].any()                    # 最右一列格心映射到画面外
+    assert inv_affine(T)[0, 2] == -64.0
+
+
+def test_rloo_term_selfpair_gradients(monkeypatch):
+    """selfpair（#254）：本成分内部反向，返回 active = False。selfpair_w = 0 时只量不学：梯度、损失与不加这一项时逐位相同，
+    之后的全局随机数不变；selfpair_w = c 时总梯度 = 现有项梯度 + c × 新项梯度，日志的 sp_gn 即新项（系数 1）的梯度范数；
+    日志含粗级与细化各级的自配对奖励、组内标准差、离真值的距离。"""
+    import torch
+
+    def run(seed, **over):
+        term, st, w, dec = _fake_term_fine(monkeypatch, fine_mask=True, frame_mask=True, cert_bce=0.01, **over)
+        img = st.images()[0]
+        st.batch["image1_raw"] = img * 0.5
+        term.model.params = [w] + list(dec.parameters())
+        torch.manual_seed(seed)
+        loss, stats, active = term(st)
+        if active:
+            loss.backward()
+        stats["_after"] = float(torch.rand(()))
+        return [None if q.grad is None else q.grad.clone() for q in term.model.params], stats, active, float(loss)
+
+    g_ref, s_ref, a_ref, l_ref = run(3)
+    assert a_ref and "sp_gn" not in s_ref
+    g0, s0, a0, l0 = run(3, selfpair=True, selfpair_w=0.0)
+    assert not a0 and all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["_after"] == s_ref["_after"] and l0 == pytest.approx(l_ref, abs=1e-6)
+    assert s0["sp_gn"] > 0 and s0["main_gn"] > 0 and s0["sp_ratio"] == 0.0
+    assert s0["sp_coef"] == pytest.approx(s0["main_gn"] / s0["sp_gn"], rel=1e-3)
+    for k in ("sp_rew", "sp_rew_sd", "sp_d", "sp_dmode", "sp_in", "sp_sar", "sp_rew_16", "sp_rew_sd_8", "sp_d_16",
+              "sp_dmu_8", "t_sp"):
+        assert k in s0, k
+    g1, s1, _, _ = run(3, selfpair=True, selfpair_w=1.0)
+    g2, s2, _, _ = run(3, selfpair=True, selfpair_w=2.0)
+    d1 = [a - b for a, b in zip(g1, g0) if a is not None]
+    d2 = [a - b for a, b in zip(g2, g0) if a is not None]
+    assert all(torch.allclose(y, 2 * x, atol=1e-6) for x, y in zip(d1, d2))
+    assert float(torch.cat([x.flatten() for x in d1]).norm()) == pytest.approx(s1["sp_gn"], rel=1e-3)
+    assert s1["sp_gn"] == pytest.approx(s0["sp_gn"], rel=1e-4) and s2["sp_ratio"] == pytest.approx(
+        2 * s2["sp_gn"] / s2["main_gn"], rel=1e-3)
+
+
+# ---------- 图像相似度约束奖励（#252） ----------
+
+def test_config_rloo_sim(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    ok = '[rloo]\nreward = "ref"\nsim = true\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
+    assert (d["rloo"]["sim"], d["rloo"]["sim_w"], d["rloo"]["sim_diag"]) == (False, 0.0, 50)   # 默认不做，同旧行为
+    c = C.load(_write(tmp_path, "c", head + ok + "sim_w = 0.5\n"))
+    assert c["rloo"]["sim"] and c["rloo"]["sim_w"] == 0.5
+    for bad in ('[rloo]\nreward = "r1"\nsim = true', '[optim]\nbatch = 2\n' + ok, '[optim]\naccum = 2\n' + ok,
+                ok + 'mp_n = 2', ok + 'sim_w = -1.0', ok + 'sim_diag = -1',
+                ok + 'levels = [16]\nfine_mode = "local"\nocc = true'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
+def test_rloo_sim_fit_coarse_recovers_affine():
+    """每份样本的格心 → 粗匹配位置恰好是某个仿射时，fit_coarse 拟合回这个仿射（原网格中心约定，同 rloo.fit）；
+    含非有限值的样本记失败。"""
+    import torch
+    from finetune.parts import rloo_sim as S
+    from finetune.parts.pseudo import affine_norm, grid
+    A = np.array([[1.05, 0.08, 20.0], [-0.06, 0.97, -12.0]])
+    An = torch.from_numpy(affine_norm(A)).float()
+    g = grid(40, 40, "cpu")
+    fc = (torch.einsum("ij,hwj->hwi", An[:, :2], g) + An[:, 2]).permute(2, 0, 1)[None].repeat(3, 1, 1, 1)
+    fc[2, 0, 0, 0] = float("nan")
+    out = S.fit_coarse(fc, 3.0)
+    assert out[2] is None
+    for B in out[:2]:
+        assert np.abs(np.asarray(B)[:, :2] - A[:, :2]).max() < 1e-3 and np.abs(np.asarray(B)[:, 2] - A[:, 2]).max() < 0.6
+
+
+def test_rloo_sim_scores_peak_at_true_affine():
+    """SAR = 光学经已知平移；按真仿射打的 NCC 接近 1，偏 24 px 的明显更低，失败记 −1。"""
+    import torch
+    import torch.nn.functional as F
+    from finetune.parts import rloo_sim as S
+    torch.manual_seed(0)
+    opt = F.avg_pool2d(torch.rand(1, 1, 160, 160), 5, 1, 2)[0]
+    sh = 16                                  # SAR 是光学右移 16 个输入像素，左边补 0（补零区不计）
+    sar = torch.zeros_like(opt)
+    sar[:, :, sh:] = opt[:, :, :-sh]
+    t = sh * 512 / 160                       # 输入网格 160 px 对应原网格 512 px
+    A_true = np.array([[1.0, 0, t], [0, 1.0, 0]])
+    A_off = np.array([[1.0, 0, t + 24], [0, 1.0, 0]])
+    s = S.scores(opt, sar, [A_true, A_off, None])
+    assert float(s[0]) > 0.95 and float(s[1]) < float(s[0]) - 0.2 and float(s[2]) == -1.0
+
+
+def test_rloo_term_sim_gradients(monkeypatch):
+    """sim（#252）：本成分内部反向，返回 active = False。sim_w = 0 时只量不学：梯度与不加这一项时逐位相同，全局随机数流不变；
+    sim_w = c 时总梯度 = 现有项梯度 + c × 新项梯度，日志的 sim_gn 即新项（系数 1）的梯度范数、main_gn 即现有项的。"""
+    import torch
+
+    def run(seed, **over):
+        term, st, w, dec = _fake_term_fine(monkeypatch, frame_mask=True, sim_diag=0, delta=200.0, **over)   # 粗级奖励不全为 0
+        term.model.params = [w] + list(dec.parameters())
+        torch.manual_seed(seed)
+        loss, stats, active = term(st)
+        if active:
+            loss.backward()
+        stats["_after"] = float(torch.rand(()))
+        return [None if q.grad is None else q.grad.clone() for q in term.model.params], stats, active, float(loss)
+
+    g_ref, s_ref, a_ref, l_ref = run(3)
+    assert a_ref and "sim_gn" not in s_ref
+    g0, s0, a0, l0 = run(3, sim=True, sim_w=0.0)
+    assert not a0 and all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["_after"] == s_ref["_after"] and l0 == pytest.approx(l_ref, abs=1e-6)
+    assert s0["sim_gn"] > 0 and s0["main_gn"] > 0 and s0["sim_ratio"] == 0.0 and s0["main_gn_all"] >= s0["main_gn"]
+    assert s0["sim_coef"] == pytest.approx(s0["main_gn"] / s0["sim_gn"], rel=1e-3)
+    assert -1 <= s0["sim_ncc"] <= 1 and s0["sim_adv_sd"] > 0 and s0["sim_diff"] in (0.0, 1.0) and "t_sim" in s0
+    g1, s1, _, l1 = run(3, sim=True, sim_w=1.0)
+    g2, s2, _, _ = run(3, sim=True, sim_w=2.0)
+    d1 = [a - b for a, b in zip(g1, g0) if a is not None]
+    d2 = [a - b for a, b in zip(g2, g0) if a is not None]
+    assert all(torch.allclose(y, 2 * x, atol=1e-6) for x, y in zip(d1, d2))
+    assert float(torch.cat([x.flatten() for x in d1]).norm()) == pytest.approx(s1["sim_gn"], rel=1e-3)
+    assert float(d1[0]) != 0 and all(float(x.abs().sum()) == 0 for x in d1[1:])     # 只到粗级，细化层没有新项梯度
+    assert s2["sim_ratio"] == pytest.approx(2 * s2["sim_gn"] / s2["main_gn"], rel=1e-3)
+
+
+def test_rloo_sim_diag_records_rank_correlation(monkeypatch):
+    """验证集诊断：每 sim_diag 次调用量一次；样本的仿射离真值越远 NCC 越低时，秩相关为 −1。"""
+    import types
+    import torch
+    from finetune.parts import rloo_sim as S
+    p = {"sim_diag": 2, "temp": 0.3, "group": 4, "ransac": 3.0}
+    d = S.Diag(p, types.SimpleNamespace(), None)
+    I = np.c_[np.eye(2), np.zeros(2)]
+    cp = np.array([[10.0, 10], [400, 50], [200, 300]])
+    monkeypatch.setattr(d, "_item", lambda n: (torch.zeros(1, 1, 8, 8), torch.zeros(1, 1, 8, 8), I, cp, cp, 0))
+    from finetune.parts import rloo as R
+    monkeypatch.setattr(R, "features", lambda model, a, b: (None, None))
+    monkeypatch.setattr(R, "coarse", lambda model, f1, f2: (torch.zeros(1, 16, 4, 4), None))
+    As = [np.c_[np.eye(2), [x, 0.0]] for x in (0.0, 5.0, 10.0, 20.0)]
+    monkeypatch.setattr(S, "fit_coarse", lambda fc, thr: As)
+    monkeypatch.setattr(S, "scores", lambda opt, sar, A: torch.tensor([0.9, 0.7, 0.5, 0.1]))
+    stats = {}
+    d(1, stats)
+    assert stats == {}
+    d(2, stats)
+    assert stats["sim_rho"] == [pytest.approx(-1.0)] and stats["sim_verr"] == [pytest.approx(7.5)]
+
+
+def test_rloo_sim_spearman_matches_definition():
+    from finetune.parts.rloo_sim import spearman
+    assert spearman([1, 2, 3, 4], [10, 20, 30, 40]) == pytest.approx(1.0)
+    assert spearman([1, 2, 3, 4], [4, 3, 2, 1]) == pytest.approx(-1.0)
+    # 并列取平均秩：x 的秩 1, 2.5, 2.5, 4；y 的秩 1, 2, 3, 4 → 皮尔逊相关
+    r = np.corrcoef([1, 2.5, 2.5, 4], [1, 2, 3, 4])[0, 1]
+    assert spearman([0.1, 0.5, 0.5, 0.9], [3, 5, 7, 9]) == pytest.approx(r)
+
+
 # ---------- 已知扰动等变约束奖励（#253） ----------
 
 def test_config_rloo_eqv(tmp_path):
@@ -2238,7 +2642,8 @@ def test_config_rloo_eqv(tmp_path):
                 '[rloo]\nreward = "ref"\neqv = true',                                   # 没有细化级
                 '[rloo]\nreward = "ref"\nlevels = [16]\neqv = true',                    # chain 不支持
                 '[optim]\nbatch = 2\n' + ok, '[optim]\naccum = 2\n' + ok,
-                ok + 'mp_n = 2', ok + 'occ = true', ok + 'eqv_w = -1.0', ok + 'eqv_scale = 1.0'):
+                ok + 'mp_n = 2', ok + 'occ = true', ok + 'sim = true', ok + 'cyc = true\nref_ema = 0.996',
+                ok + 'selfpair = true', ok + 'eqv_w = -1.0', ok + 'eqv_scale = 1.0'):
         with pytest.raises(C.ConfigError):
             C.load(_write(tmp_path, "b", head + bad + "\n"))
 

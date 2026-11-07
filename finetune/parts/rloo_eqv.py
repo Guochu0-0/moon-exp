@@ -44,9 +44,10 @@ def check(cfg):
     if not p["eqv"]:
         return
     if (p["reward"] != "ref" or not p["levels"] or p["fine_mode"] == "chain" or p["mp_n"] or p["gate"] or p["spread"]
-            or p["trace"] or p["cos_every"] or p["occ"] or cfg["optim"]["batch"] != 1 or cfg["optim"]["accum"] != 1):
+            or p["trace"] or p["cos_every"] or p["occ"] or p.get("sim") or p.get("cyc") or p.get("selfpair")
+            or cfg["optim"]["batch"] != 1 or cfg["optim"]["accum"] != 1):
         raise ConfigError("[rloo] eqv 只配 reward = 'ref'、非空的 levels 与 fine_mode = 'grad' / 'local'、[optim] batch = 1、"
-                          "accum = 1，不与 mp_n、gate、spread、trace、cos_every、occ 同用")
+                          "accum = 1，不与 mp_n、gate、spread、trace、cos_every、occ、sim、cyc、selfpair 同用")
     if p["eqv_w"] < 0 or p["eqv_rot"] < 0 or p["eqv_shift"] < 0 or not 0 <= p["eqv_scale"] < 1:
         raise ConfigError("[rloo] eqv_w、eqv_rot、eqv_shift 应 ≥ 0，eqv_scale 在 [0, 1)")
 

@@ -111,6 +111,17 @@ ADDED = {
     "rloo.eqv_rot": (10.0, "#253 与 eqv 同批新增；只在 eqv 打开时起作用"),
     "rloo.eqv_scale": (0.1, "#253 与 eqv 同批新增；只在 eqv 打开时起作用"),
     "rloo.eqv_shift": (64.0, "#253 与 eqv 同批新增；只在 eqv 打开时起作用"),
+    "rloo.sim": (False, "#252 新增图像相似度约束奖励；false = 不加这一项，即之前的做法"),
+    "rloo.sim_w": (0.0, "#252 与 sim 同批新增；只在 sim 打开时起作用"),
+    "rloo.sim_diag": (50, "#252 与 sim 同批新增；只在 sim 打开时起作用"),
+    "rloo.erase_cert": (False, "#256 新增被擦除区域可信度约束；false = 被擦处照常打分、可信度目标照常，即之前的做法"),
+    "rloo.cyc": (False, "#255 新增正反向互逆约束奖励；false = 不加这一项，即之前的做法"),
+    "rloo.cyc_w": (0.0, "#255 与 cyc 同批新增；只在 cyc 打开时起作用"),
+    "rloo.selfpair": (False, "#254 新增同模态自配对约束奖励；false = 不加这一项，即之前的做法"),
+    "rloo.selfpair_w": (0.0, "#254 与 selfpair 同批新增；只在 selfpair 打开时起作用"),
+    "rloo.selfpair_shift": (128.0, "#254 与 selfpair 同批新增；只在 selfpair 打开时起作用"),
+    "rloo.selfpair_rot": (20.0, "#254 与 selfpair 同批新增；只在 selfpair 打开时起作用"),
+    "rloo.selfpair_scale": (0.2, "#254 与 selfpair 同批新增；只在 selfpair 打开时起作用"),
 }
 
 

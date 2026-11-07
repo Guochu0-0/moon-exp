@@ -1,0 +1,12 @@
+# E46（#254）定新项系数用，只当一次性命令跑（code/calib.sh）、不由驱动领取：E41 `main__screen0.8` 原样（_e41s08），加上
+# 同模态自配对约束奖励但系数为 0（只量梯度、不学，所以这 50 次更新与 E41 门槛 0.8 相同），从 zero-shot 起训 50 次更新，
+# 记下现有项与新项在共用参数上的梯度范数（日志 main_gn、sp_gn、sp_coef）。系数取 sp_coef 的中位数（code/calib.py）。不存档。
+base = "_e41s08"
+
+[rloo]
+selfpair = true
+selfpair_w = 0.0
+
+[run]
+stop_at = 50
+save_every = 0

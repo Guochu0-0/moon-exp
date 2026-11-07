@@ -127,7 +127,7 @@ def main():
     ax[0, 1].set_yscale("log")
     a = ax[0, 2]
     a.plot(st, roll(get(lg, "sim_ncc"), WIN), color="C3", lw=1.1, label="组内 NCC 均值")
-    a.plot(st, roll(get(lg, "sim_fail"), WIN), color="C1", lw=1.1, label="记 −1 的样本比例")
+    a.plot(st, roll(get(lg, "sim_fail"), WIN), color="C1", lw=1.1, label="记 -1 的样本比例")
     a.set(ylabel="新项（训练图对）", xlabel="更新次数")
     a = ax[1, 2]
     a.plot(st, roll(get(lg, "sim_ratio"), WIN), color="C3", lw=1.1, label="新项 × 190 ÷ 现有项（实际施加）")

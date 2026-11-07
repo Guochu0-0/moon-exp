@@ -88,6 +88,43 @@ def average_grads(params):
             i += k
 
 
+@torch.no_grad()
+def mean_norms(params, groups, mask, scale=1.0, chunk=1 << 24) -> list[float]:
+    """几组梯度各自「各卡取平均之后」的范数（量真正施加到参数上的梯度大小用；各卡范数的平均不等于平均梯度的范数，
+    它还取决于各卡梯度方向是否一致）。params：参数列表（各卡同序，只用来取形状）；groups：K 组与 params 等长的梯度列表，
+    元素为 None 时按 0；mask：本卡要算进范数的参数（bool 列表），任一卡为真的参数各卡都算进去。各组先除以 scale
+    （本卡的 GradScaler 因子）再平均。返回 K 个范数。全部进程都要调用（内含 all-reduce）；单进程时即本卡的范数。"""
+    n = world()
+    dev = params[0].device if params else torch.device("cpu")
+    live = list(mask)
+    if n > 1:
+        has = torch.tensor([bool(m) for m in mask], device=dev, dtype=torch.int32)
+        dist.all_reduce(has, op=dist.ReduceOp.MAX)
+        live = [bool(h) for h in has.tolist()]
+    sq = torch.zeros(len(groups), dtype=torch.float64, device=dev)
+    idx = [i for i, h in enumerate(live) if h]
+
+    def flush(batch):
+        flat = torch.stack([torch.cat([(torch.zeros(params[i].numel(), device=dev) if g[i] is None
+                                        else g[i].detach().reshape(-1).float().to(dev)) for i in batch])
+                            for g in groups]) / scale
+        if n > 1:
+            dist.all_reduce(flat)
+            flat.div_(n)
+        sq.add_(flat.double().square().sum(1))
+
+    batch, size = [], 0
+    for i in idx:
+        batch.append(i)
+        size += params[i].numel()
+        if size >= chunk:
+            flush(batch)
+            batch, size = [], 0
+    if batch:
+        flush(batch)
+    return [float(x) for x in sq.sqrt()]
+
+
 def gather(obj) -> list:
     """每个进程的 obj（可 pickle）→ 按 rank 排的列表；单进程时 [obj]。"""
     if world() == 1:

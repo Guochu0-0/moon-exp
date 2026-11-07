@@ -2223,6 +2223,89 @@ def test_rloo_occ_grad_helpers():
     assert torch.equal(a.grad, torch.tensor([3.0, 0.0])) and b.grad is None
 
 
+# ---------- 被擦除区域可信度约束（#256） ----------
+
+def test_config_rloo_erase_cert(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    aug = '[aug]\nerase = true\n'
+    ok = '[rloo]\nreward = "ref"\nframe_mask = true\nerase_cert = true\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
+    assert d["rloo"]["erase_cert"] is False                                             # 默认不做，同旧行为
+    assert C.load(_write(tmp_path, "c", head + aug + ok))["rloo"]["erase_cert"]
+    assert C.load(_write(tmp_path, "c2", head + aug + '[rloo]\nreward = "ref"\ncert_bce = 0.01\nerase_cert = true\n'))
+    for bad in (ok,                                                                     # 没有擦除
+                aug + '[rloo]\nreward = "ref"\nerase_cert = true\n',                    # 没有掩码可改
+                aug + '[rloo]\nreward = "r1"\nerase_cert = true\n',
+                aug + ok + 'spread = 0.1\n',
+                aug + ok + 'levels = [16, 8]\nfine_mode = "local"\nocc = true\n'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad))
+
+
+def test_rloo_erased_follows_reference_affine():
+    """光学格子被算作被擦 ⇔ 参照仿射把格心映到 SAR 被擦处：恒等时就是被擦的那一半，平移 256 px 后整块跟着平移，
+    映到画面外的不算。"""
+    import torch
+    from finetune.parts import rloo_erase as ER
+    occ = torch.zeros(1, 512, 512)
+    occ[:, :, 256:] = 1                                                                 # SAR 右半被擦
+    I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
+    e = ER.erased(I, occ, 8, 8)
+    assert e[:, 4:].all() and not e[:, :4].any()
+    T = np.array([[1.0, 0, 256.0], [0, 1.0, 0]])                                         # 光学左半 → SAR 右半
+    e = ER.erased(T, occ, 8, 8)
+    assert e[:, :4].all() and not e[:, 4:].any()                                       # 右半映到画面外：不算被擦
+    m = torch.ones(8, 8, dtype=torch.bool)
+    assert torch.equal(ER.target(m, e), ~e)
+
+
+def test_rloo_erase_split_stats():
+    import torch
+    from finetune.parts import rloo_erase as ER
+    logits = torch.zeros(4, 4)
+    logits[:, 2:] = 2.0
+    m = torch.ones(4, 4, dtype=torch.bool)
+    m[3] = False                                                                        # 最后一行在画面外
+    e = torch.zeros(4, 4, dtype=torch.bool)
+    e[:, 2:] = True
+    st = {}
+    ER.split_stats(logits, m, e, st, "_1")
+    assert st["era_frac_1"] == [0.5]
+    assert st["cert_e_1"][0] == pytest.approx(float(torch.sigmoid(torch.tensor(2.0))))
+    assert st["cert_u_1"][0] == pytest.approx(0.5)
+    assert st["l_cert_e_1"][0] == pytest.approx(float(torch.nn.functional.softplus(torch.tensor(2.0))))   # 目标 0
+    assert st["l_cert_u_1"][0] == pytest.approx(float(np.log(2)))                     # 目标 1
+    st = {}
+    ER.split_stats(logits, m, torch.zeros_like(e), st)
+    assert "cert_e" not in st and st["era_frac"] == [0.0]
+
+
+def test_rloo_term_erase_cert(monkeypatch):
+    """erase_cert（#256）：SAR 没有被擦时与不开逐位相同；整张 SAR 都被擦时粗级与细化的策略项都没有梯度，可信度 BCE 的
+    目标全为 0（日志的被擦处 BCE 即全部 BCE），细化层只剩 BCE 的梯度。"""
+    import torch
+
+    def run(occ, **over):
+        term, st, w, dec = _fake_term_fine(monkeypatch, frame_mask=True, fine_mask=True, **over)
+        if occ is not None:
+            st.batch["occ"] = occ
+        torch.manual_seed(3)
+        loss, stats, _ = term(st)
+        loss.backward()
+        return [None if q.grad is None else q.grad.clone() for q in [w] + list(dec.parameters())], stats
+
+    g_ref, s_ref = run(None)
+    g0, s0 = run(torch.zeros(1, 1, 512, 512), erase_cert=True)
+    assert all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["era_frac"] == 0.0 and s0["era_frac_16"] == 0.0 and "cert_e" not in s0 and "cert_u_8" in s0
+    g1, s1 = run(torch.ones(1, 1, 512, 512), erase_cert=True)
+    assert s1["era_frac"] == 1.0 and s1["era_frac_8"] == 1.0 and s1["in_frame"] == 1.0   # in_frame 记去掉之前的
+    assert float(g1[0]) == 0.0 and all(x is None or float(x.abs().sum()) == 0.0 for x in g1[1:])
+    _, s2 = run(torch.ones(1, 1, 512, 512), erase_cert=True, fine_cert_bce=0.01)
+    assert s2["l_cert_16"] == pytest.approx(s2["l_cert_e_16"], rel=1e-4) and "l_cert_u_16" not in s2
+
+
 # ---------- 正反向互逆约束奖励（#255） ----------
 
 def test_config_rloo_cyc(tmp_path):

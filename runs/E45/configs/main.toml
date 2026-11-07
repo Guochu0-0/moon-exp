@@ -1,0 +1,7 @@
+# E45（#253）正式训练：E41 门槛 0.8 原样（_e41s08），加已知扰动等变约束奖励。新项系数由定系数的 50 次更新
+# （configs/_calib.toml、code/calib.py → extra/data/calib.json）取：两项共用参数上现有项与新项梯度范数之比的中位数 0.83，之后全程固定。
+base = "_e41s08"
+
+[rloo]
+eqv = true
+eqv_w = 0.83

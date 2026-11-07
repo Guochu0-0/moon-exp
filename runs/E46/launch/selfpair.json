@@ -1,0 +1,18 @@
+[
+ {
+  "start": "2026-11-07 07:22:14 +0000",
+  "end": "2026-11-07 10:40:50 +0000",
+  "status": "ok",
+  "commit": "12b7de2f8e7356d8d063c89406f771bcc0a3bdb9",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-254",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "runs/E46/code/selfpair.sh"
+  ]
+ }
+]

@@ -47,8 +47,8 @@ _POOL = None
 def check(p, cfg):
     if not p["sim"]:
         return
-    if p["reward"] != "ref" or p["mp_n"] or p["occ"] or cfg["optim"]["batch"] != 1 or cfg["optim"]["accum"] != 1:
-        raise ConfigError("[rloo] sim 只配 reward = 'ref'、[optim] batch = 1、accum = 1，不与 mp_n、occ 同用")
+    if p["reward"] != "ref" or p["mp_n"] or p["occ"] or p.get("cyc") or p.get("selfpair")             or cfg["optim"]["batch"] != 1 or cfg["optim"]["accum"] != 1:
+        raise ConfigError("[rloo] sim 只配 reward = 'ref'、[optim] batch = 1、accum = 1，不与 mp_n、occ、cyc、selfpair 同用")
     if p["sim_w"] < 0 or not isinstance(p["sim_diag"], int) or p["sim_diag"] < 0:
         raise ConfigError("[rloo] sim_w 应 ≥ 0，sim_diag 应为 ≥ 0 的整数")
 

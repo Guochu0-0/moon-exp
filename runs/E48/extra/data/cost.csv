@@ -1,0 +1,3 @@
+run,updates,train_gpu,median_sec,sec_sum_h,mem_gb_step1,mem_gb_max,wall_h
+E48,7907,V100,1.214,3.43,11.21,11.21,3.46
+E41,7907,V100,1.191,3.33,11.21,11.21,3.35

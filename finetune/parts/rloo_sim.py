@@ -105,6 +105,12 @@ def pair_ctx(p, opt, sar, fc, k, d, m, b, stats):
     return b, k, adv
 
 
+def reduced_norms(params, gs, shared, fac):
+    """现有项（此刻的 .grad）与新项（gs）各卡取平均后在共用参数上的范数（#261）。各卡每步都要调用，且调用方式相同。"""
+    from .. import dist as DI
+    return DI.mean_norms(params, [[q.grad for q in params], list(gs)], shared, fac)
+
+
 def apply(term, st, total, logp_all, ctx, B, stats):
     """新项与现有项一起反向（见模块说明）。ctx：[pair_ctx 的返回]。返回这一步的损失数值（现有项 + sim_w × 新项）。"""
     from . import rloo as R
@@ -124,8 +130,7 @@ def apply(term, st, total, logp_all, ctx, B, stats):
     val = float(total)
     if gs is None:
         if p["sim_gn_reduce"]:     # 别的卡在做 all-reduce，这里也得参与（本卡没有新项梯度，按 0）
-            from .. import dist as DI
-            DI.mean_norms(params, [[q.grad for q in params], [None] * len(params)], [False] * len(params), fac)
+            reduced_norms(params, [None] * len(params), [False] * len(params), fac)
         return val
     s_main = s_sim = s_all = 0.0
     shared = []
@@ -138,8 +143,7 @@ def apply(term, st, total, logp_all, ctx, B, stats):
             s_sim += gg
             s_main += gm
     if p["sim_gn_reduce"]:
-        from .. import dist as DI
-        m_avg, s_avg = DI.mean_norms(params, [[q.grad for q in params], list(gs)], shared, fac)
+        m_avg, s_avg = reduced_norms(params, gs, shared, fac)
         if all(map(math.isfinite, (m_avg, s_avg))):
             stats["main_gn_avg"], stats["sim_gn_avg"] = [m_avg], [s_avg]
             if m_avg > 0:

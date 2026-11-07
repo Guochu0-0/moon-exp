@@ -130,6 +130,8 @@ l_cert_e、l_cert_u 与平均可信度 cert_e、cert_u，以及被擦处占画�
 accum = 1，不与 occ、mp_n、gate、spread、trace、cos_every 同用）：另加反向一遍（SAR 第一、光学第二），两个方向的落点经
 另一方向的参照仿射映回后要回到出发的位置。总损失 = 现有项 + cyc_w × 新项，本成分在内部反向并量两项的梯度范数。
 做法与日志见 finetune/parts/rloo_cyc.py。
+同模态自配对约束奖励（#254，selfpair = true）：每对另加 1 对（光学或扰动前的 SAR，它经已知仿射 T3 变换后的版本），粗级与
+细化各级按 T3 打分；全部实现与日志见 finetune/parts/rloo_self.py，这里只在 check、data_kw 与 __call__ 末尾各挂一处。
 """
 from __future__ import annotations
 
@@ -150,6 +152,7 @@ from ..trace import stack_rows
 from . import rloo_erase as ER
 from . import rloo_cyc as CY
 from . import rloo_occ as OC
+from . import rloo_self as SP
 from . import rloo_trace as RT
 from .cexp import sample_matches
 from .pseudo import affine_norm, grid
@@ -202,6 +205,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "erase_cert": False,  # 被擦除区域可信度约束（#256）：SAR 被擦处（[aug] erase）可信度目标为 0、不参与奖励打分
           "cyc": False,     # 正反向互逆约束奖励（#255，finetune/parts/rloo_cyc.py）
           "cyc_w": 0.0,     # cyc：新项的系数；0 = 只量梯度、不学
+          **SP.PARAMS,      # 同模态自配对约束奖励（#254）
           "weight": 1.0}
 MODELS = {"roma": {}}
 REWARDS = ("r1", "ncc", "rand", "ref")
@@ -314,10 +318,11 @@ def check(cfg):
                           "[optim] batch = 1、accum = 1，不与 occ、mp_n、gate、spread、trace、cos_every 同用")
     if p["cyc_w"] < 0:
         raise ConfigError("[rloo] cyc_w 应 ≥ 0")
+    SP.check(p, cfg)
 
 
 def data_kw(p):
-    return {}
+    return SP.data_kw(p)
 
 
 # ---------- 前向：粗级（带梯度）与细化（照抄 romatch Decoder.forward 的非 upsample 分支） ----------
@@ -1186,6 +1191,9 @@ class Term:
             return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
         if p["cyc"]:
             val = CY.step(self, st, i0, i1, total, cyc_ctx, logp_all, f1, f2, B, sig, stats)
+            return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
+        if p["selfpair"]:   # 同模态自配对约束奖励（#254）
+            val = SP.step(self, st, total, B, sig, stats)
             return torch.zeros((), device=i0.device) + val, _mean_stats(stats), False
         return total, _mean_stats(stats), True
 

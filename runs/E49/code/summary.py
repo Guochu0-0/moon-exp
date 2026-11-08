@@ -139,17 +139,6 @@ def main():
                            "mean_diff": round(float(np.mean([r["diff"] for r in rs])), 4),
                            "n_higher": sum(r["ci_lo"] > 0 for r in rs), "n_lower": sum(r["ci_hi"] < 0 for r in rs)})
     write("by_segment.csv", bs)
-    fig, a = plt.subplots(figsize=(9, 4.5))
-    for k, (_, _, name, c) in RUNS.items():
-        ss = sorted(val[k])
-        if ss:
-            a.plot(ss, [val[k][s]["summary"]["auc@5"] for s in ss], "o-", ms=3, lw=1.0, color=c, label=name)
-    for g in range(1, 4):
-        a.axvline(g * SEG, color="0.85", lw=0.8)
-    a.set(xlabel="更新次数", ylabel="Val AUC@5", xlim=(0, 2100))
-    a.legend(fontsize=9)
-    fig.tight_layout()
-    fig.savefig(R / "extra" / "auc.png", dpi=110)
 
     # 2. 训练曲线
     fig, ax = plt.subplots(2, 3, figsize=(18, 9))

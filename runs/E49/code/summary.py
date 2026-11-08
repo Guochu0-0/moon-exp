@@ -9,7 +9,7 @@
    分四段的平均差，以及区间两端都为正 / 都为负的存档数。图 auc.png：逐存档 AUC@5 与 E41 叠画。
 2. 训练曲线（curves.png）：现有项粗级奖励均值、离参照的距离、画面内格子比例与 E41 叠画；实际施加的梯度比
    （sim_ratio_avg：系数 × 新项梯度 4 卡平均后的范数 ÷ 现有项梯度 4 卡平均后的范数，共用参数上）；
-   NCC 最高与离参照最近不是同一份的比例（sim_diff）；200 次更新滑动中位数（比例为滑动平均）。
+   NCC 最高与离参照最近不是同一份的比例（sim_diff）；20 次更新滑动中位数（比例为滑动平均），横轴只画到第 900 次更新。
 3. 分段诊断（diag_by_segment.csv）：每 100 次更新一段，实际施加的梯度比的中位数与四分位，sim_diff 平均，
    现有项粗级奖励均值与 E41 同段之差，组内 NCC 均值、记 −1 的比例、新项优势的组内标准差、
    Val 图对上组内 NCC 与真实误差的 Spearman 秩相关（sim_rho，有记录的步平均）、离参照的距离中位数。
@@ -46,7 +46,8 @@ RUNS = {"strong": (R, "main", "强档（系数 130）", "C3"),
         "weak": (R, "main__weak", "弱档（系数 39）", "C0"),
         "E41": (E41, "main__screen0.8", "不加（E41 门槛 0.8）", "0.35")}
 OUT = R / "extra" / "data"
-WIN = 200
+WIN = 20
+XMAX = 900
 SEG = 1977
 
 
@@ -145,7 +146,7 @@ def main():
             a.plot(ss, [val[k][s]["summary"]["auc@5"] for s in ss], "o-", ms=3, lw=1.0, color=c, label=name)
     for g in range(1, 4):
         a.axvline(g * SEG, color="0.85", lw=0.8)
-    a.set(xlabel="更新次数", ylabel="Val AUC@5")
+    a.set(xlabel="更新次数", ylabel="Val AUC@5", xlim=(0, 2100))
     a.legend(fontsize=9)
     fig.tight_layout()
     fig.savefig(R / "extra" / "auc.png", dpi=110)
@@ -156,7 +157,8 @@ def main():
                         (ax[1, 0], "in_frame", "画面内格子比例")):
         for k, (_, _, name, c) in RUNS.items():
             if logs[k]:
-                a.plot([r["step"] for r in logs[k]], roll(get(logs[k], key), WIN), color=c, lw=1.0, label=name)
+                lk = [r for r in logs[k] if r["step"] <= XMAX]
+                a.plot([r["step"] for r in lk], roll(get(lk, key), WIN), color=c, lw=1.0, label=name)
         a.set(ylabel=lab, xlabel="更新次数")
     ax[0, 1].set_yscale("log")
     for a, key, lab, f in ((ax[0, 2], "sim_ratio_avg", "实际施加的梯度比（新项 ÷ 现有项）", np.nanmedian),
@@ -175,6 +177,7 @@ def main():
     a.set(ylabel="组内 NCC 均值（训练图对）", xlabel="更新次数")
     for a in ax.flat:
         a.legend(fontsize=8)
+        a.set_xlim(0, XMAX)
     fig.tight_layout()
     fig.savefig(R / "extra" / "curves.png", dpi=110)
 

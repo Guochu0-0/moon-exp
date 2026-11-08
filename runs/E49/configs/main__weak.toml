@@ -1,0 +1,7 @@
+# E49（#261）弱档：同 main（强档），新项系数取强档的 0.3 倍：0.3 × 130 = 39（code/calib.py）。
+base = "_e41"
+
+[rloo]
+sim = true
+sim_w = 39.0
+sim_gn_reduce = true

@@ -1,0 +1,13 @@
+# E49（#261）定新项系数用，只当一次性命令跑（code/calib.sh）、不由驱动领取：E41 门槛 0.8 原样（_e41），加上图像相似度约束奖励，
+# 系数沿用 E44 的 190 并真正施加（与 E44 前 100 次更新相同），另记两项梯度在 4 卡间取平均之后的范数（sim_gn_reduce）。
+# 从 zero-shot 起训 100 次更新，不存档。实际施加的比例 sim_ratio_avg 的中位数 r → 强档系数 = 190 / r（code/calib.py）。
+base = "_e41"
+
+[rloo]
+sim = true
+sim_w = 190.0
+sim_gn_reduce = true
+
+[run]
+stop_at = 100
+save_every = 0

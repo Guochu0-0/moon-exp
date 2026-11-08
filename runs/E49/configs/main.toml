@@ -1,0 +1,10 @@
+# E49（#261）强档：E41 门槛 0.8 原样（_e41），加图像相似度约束奖励（同 E44 main），只改新项系数。
+# 系数 130 = 190 ÷ r，r = 定系数的 100 次更新（configs/_calib.toml，系数 190 真正施加）里实际施加的比例 sim_ratio_avg
+# （两项梯度各自 4 卡平均后在共用参数上的范数之比）的中位数 1.452，取两位有效数字（code/calib.py，extra/data/calib.json）。
+# 种子 0，7907 次更新；停止规则见 code/stopcheck.py。
+base = "_e41"
+
+[rloo]
+sim = true
+sim_w = 130.0
+sim_gn_reduce = true

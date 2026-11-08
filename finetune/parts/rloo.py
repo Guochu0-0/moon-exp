@@ -211,7 +211,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "occ_side": 229.0,  # occ：光学图上遮挡正方形的边长（原网格 px；229 ≈ √0.2 × 512，面积约 20%，同 E40）
           "occ_w": 0.0,     # occ：新项的系数；0 = 只量梯度、不学
           **EQ.PARAMS,      # 已知扰动等变约束奖励（#253），见 rloo_eqv.py
-          **SIM.PARAMS,     # 图像相似度约束奖励（#252）：sim、sim_w、sim_diag
+          **SIM.PARAMS,     # 图像相似度约束奖励（#252）：sim、sim_w、sim_diag、sim_gn_reduce（#261）
           "erase_cert": False,  # 被擦除区域可信度约束（#256）：SAR 被擦处（[aug] erase）可信度目标为 0、不参与奖励打分
           "cyc": False,     # 正反向互逆约束奖励（#255，finetune/parts/rloo_cyc.py）
           "cyc_w": 0.0,     # cyc：新项的系数；0 = 只量梯度、不学

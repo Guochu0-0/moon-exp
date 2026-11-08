@@ -1873,6 +1873,40 @@ dist.destroy_process_group()
 '''
 
 
+MEAN_NORMS_SCRIPT = r'''
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import torch, torch.distributed as dist
+from finetune import dist as D
+dist.init_process_group("gloo")
+r = dist.get_rank()
+ps = [torch.zeros(3), torch.zeros(2), torch.zeros(4)]
+main = [torch.tensor([1.0, 0, 0]) * (1 if r == 0 else -1), torch.full((2,), 2.0), torch.ones(4)]
+sim = [torch.tensor([0, 3.0, 0]), None if r == 0 else torch.tensor([0, 4.0]), None]   # 第 2 个参数只有 rank 1 算进去
+mask = [True, r == 1, False]
+out = D.mean_norms(ps, [main, sim], mask, scale=2.0, chunk=4)
+json.dump(out, open(sys.argv[2] + f"/n{r}.json", "w"))
+dist.destroy_process_group()
+'''
+
+
+def test_dist_mean_norms_two_processes(tmp_path):
+    """mean_norms（#261）：先各卡平均再求范数；任一卡算进去的参数各卡都算；None 按 0；先除以 scale。单进程即本卡范数。"""
+    import subprocess
+    import sys
+    import torch
+    from finetune import dist as D
+    (tmp_path / "w.py").write_text(MEAN_NORMS_SCRIPT, encoding="utf-8")
+    subprocess.run([sys.executable, "-m", "torch.distributed.run", "--standalone", "--nproc_per_node=2",
+                    str(tmp_path / "w.py"), str(REPO), str(tmp_path)], check=True, timeout=300)
+    # 平均后（÷2）：main 参数 1 = 0（两卡相反），参数 2 = [1, 1]；sim 参数 1 = [0, 1.5, 0]，参数 2 = [0, 1]；参数 3 不算
+    for i in range(2):
+        m, s_ = json.loads((tmp_path / f"n{i}.json").read_text())
+        assert m == pytest.approx(2 ** 0.5) and s_ == pytest.approx((1.5 ** 2 + 1) ** 0.5)
+    m, s_ = D.mean_norms([torch.zeros(2)], [[torch.tensor([3.0, 4.0])], [None]], [True], scale=1.0)
+    assert (m, s_) == (pytest.approx(5.0), 0.0)
+
+
 def test_dist_two_processes_average_and_sampler(tmp_path):
     """两个进程（gloo，CPU）：梯度取平均，某卡没有梯度的参数按 0 参与，全都没有的保持 None；广播、最大差、gather；
     DistributedSampler 各卡分到不同的图，Loader 每个 epoch 调 set_epoch 换顺序。"""
@@ -2518,11 +2552,11 @@ def test_config_rloo_sim(tmp_path):
     head = '[model]\nname = "roma"\n'
     ok = '[rloo]\nreward = "ref"\nsim = true\n'
     d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
-    assert (d["rloo"]["sim"], d["rloo"]["sim_w"], d["rloo"]["sim_diag"]) == (False, 0.0, 50)   # 默认不做，同旧行为
+    assert (d["rloo"]["sim"], d["rloo"]["sim_w"], d["rloo"]["sim_diag"], d["rloo"]["sim_gn_reduce"])         == (False, 0.0, 50, False)   # 默认不做，同旧行为
     c = C.load(_write(tmp_path, "c", head + ok + "sim_w = 0.5\n"))
     assert c["rloo"]["sim"] and c["rloo"]["sim_w"] == 0.5
     for bad in ('[rloo]\nreward = "r1"\nsim = true', '[optim]\nbatch = 2\n' + ok, '[optim]\naccum = 2\n' + ok,
-                ok + 'mp_n = 2', ok + 'sim_w = -1.0', ok + 'sim_diag = -1',
+                ok + 'mp_n = 2', ok + 'sim_w = -1.0', ok + 'sim_diag = -1', ok + 'sim_gn_reduce = 1',
                 ok + 'levels = [16]\nfine_mode = "local"\nocc = true'):
         with pytest.raises(C.ConfigError):
             C.load(_write(tmp_path, "b", head + bad + "\n"))
@@ -2593,6 +2627,12 @@ def test_rloo_term_sim_gradients(monkeypatch):
     assert float(torch.cat([x.flatten() for x in d1]).norm()) == pytest.approx(s1["sim_gn"], rel=1e-3)
     assert float(d1[0]) != 0 and all(float(x.abs().sum()) == 0 for x in d1[1:])     # 只到粗级，细化层没有新项梯度
     assert s2["sim_ratio"] == pytest.approx(2 * s2["sim_gn"] / s2["main_gn"], rel=1e-3)
+    assert "sim_gn_avg" not in s2
+    g3, s3, _, _ = run(3, sim=True, sim_w=2.0, sim_gn_reduce=True)     # 单卡：平均后的范数即本卡的（#261）
+    assert all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g2, g3))
+    assert s3["main_gn_avg"] == pytest.approx(s3["main_gn"], rel=1e-4)
+    assert s3["sim_gn_avg"] == pytest.approx(s3["sim_gn"], rel=1e-4)
+    assert s3["sim_ratio_avg"] == pytest.approx(s3["sim_ratio"], rel=1e-4)
 
 
 def test_rloo_sim_diag_records_rank_correlation(monkeypatch):

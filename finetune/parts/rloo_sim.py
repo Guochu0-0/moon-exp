@@ -14,7 +14,10 @@
 sim_w > 0 时把 sim_w × 新项梯度加进 .grad，sim_w = 0 时只量不学（.grad 只有现有项，与不加这一项逐位相同）。
 日志：main_gn、sim_gn 为现有项与（系数为 1 的）新项在两项共用的参数（新项梯度不全为 0 的参数）上的梯度范数（反缩放后、
 多卡平均之前、裁剪之前），main_gn_all 为现有项在全部可训练参数上的范数，sim_coef = main_gn / sim_gn（让两者 1:1 的系数），
-sim_ratio = sim_w · sim_gn / main_gn（实际施加的比例）。另记每步训练图对上的：sim_ncc（组内 NCC 均值）、sim_ncc_sd
+sim_ratio = sim_w · sim_gn / main_gn（各卡自己的比例）。sim_gn_reduce = true 时另记 main_gn_avg、sim_gn_avg：两项梯度先在各卡间
+取平均（与 dist.average_grads 相同，即真正更新参数用的那份）再算的范数，共用参数取任一卡上新项梯度不全为 0 的参数；
+sim_ratio_avg = sim_w · sim_gn_avg / main_gn_avg 才是实际施加的比例（#261；各卡 sim_ratio 的平均偏高）。单卡时与 main_gn、sim_gn 相同。
+另记每步训练图对上的：sim_ncc（组内 NCC 均值）、sim_ncc_sd
 （组内 NCC 标准差）、sim_adv_sd（新项优势的组内标准差）、sim_fail（记 −1 的样本比例）、sim_diff（NCC 最高的样本与离参照
 最近的样本不是同一份为 1；离参照的距离取这份样本在参照画面内格子上的平均，参照拟合失败的对不记）、t_sim（新项耗时）。
 
@@ -39,7 +42,8 @@ from ..geom import HW, compose, inv_affine
 
 PARAMS = {"sim": False,      # 图像相似度约束奖励（#252）：每份粗级样本拟合仿射后按 SAR 与光学的灰度 NCC 打分
           "sim_w": 0.0,      # sim：新项的系数；0 = 只量梯度、不学
-          "sim_diag": 50}    # sim：每几次调用在一对有标注的 Val 图上量一次组内 NCC 与真实误差的秩相关；0 = 不量
+          "sim_diag": 50,    # sim：每几次调用在一对有标注的 Val 图上量一次组内 NCC 与真实误差的秩相关；0 = 不量
+          "sim_gn_reduce": False}   # sim：另记两项梯度在各卡间取平均后的范数（真正施加的大小，#261）；多卡时每步多做 all-reduce
 
 _POOL = None
 
@@ -49,6 +53,8 @@ def check(p, cfg):
         return
     if p["reward"] != "ref" or p["mp_n"] or p["occ"] or p.get("cyc") or p.get("selfpair")             or cfg["optim"]["batch"] != 1 or cfg["optim"]["accum"] != 1:
         raise ConfigError("[rloo] sim 只配 reward = 'ref'、[optim] batch = 1、accum = 1，不与 mp_n、occ、cyc、selfpair 同用")
+    if not isinstance(p["sim_gn_reduce"], bool):
+        raise ConfigError("[rloo] sim_gn_reduce 应为 true / false")
     if p["sim_w"] < 0 or not isinstance(p["sim_diag"], int) or p["sim_diag"] < 0:
         raise ConfigError("[rloo] sim_w 应 ≥ 0，sim_diag 应为 ≥ 0 的整数")
 
@@ -99,6 +105,12 @@ def pair_ctx(p, opt, sar, fc, k, d, m, b, stats):
     return b, k, adv
 
 
+def reduced_norms(params, gs, shared, fac):
+    """现有项（此刻的 .grad）与新项（gs）各卡取平均后在共用参数上的范数（#261）。各卡每步都要调用，且调用方式相同。"""
+    from .. import dist as DI
+    return DI.mean_norms(params, [[q.grad for q in params], list(gs)], shared, fac)
+
+
 def apply(term, st, total, logp_all, ctx, B, stats):
     """新项与现有项一起反向（见模块说明）。ctx：[pair_ctx 的返回]。返回这一步的损失数值（现有项 + sim_w × 新项）。"""
     from . import rloo as R
@@ -117,16 +129,25 @@ def apply(term, st, total, logp_all, ctx, B, stats):
         optim.backward(total)
     val = float(total)
     if gs is None:
+        if p["sim_gn_reduce"]:     # 别的卡在做 all-reduce，这里也得参与（本卡没有新项梯度，按 0）
+            reduced_norms(params, [None] * len(params), [False] * len(params), fac)
         return val
     s_main = s_sim = s_all = 0.0
+    shared = []
     for q, g in zip(params, gs):
         gm = 0.0 if q.grad is None else float(q.grad.double().square().sum())
         s_all += gm
-        if g is not None:
-            gg = float(g.double().square().sum())
-            if gg > 0:
-                s_sim += gg
-                s_main += gm
+        gg = 0.0 if g is None else float(g.double().square().sum())
+        shared.append(gg > 0)
+        if gg > 0:
+            s_sim += gg
+            s_main += gm
+    if p["sim_gn_reduce"]:
+        m_avg, s_avg = reduced_norms(params, gs, shared, fac)
+        if all(map(math.isfinite, (m_avg, s_avg))):
+            stats["main_gn_avg"], stats["sim_gn_avg"] = [m_avg], [s_avg]
+            if m_avg > 0:
+                stats["sim_ratio_avg"] = [p["sim_w"] * s_avg / m_avg]
     main_gn, sim_gn, main_all = (math.sqrt(x) / fac for x in (s_main, s_sim, s_all))
     if all(map(math.isfinite, (main_gn, sim_gn, main_all))):    # GradScaler 溢出的步不记
         stats["main_gn"], stats["sim_gn"], stats["main_gn_all"] = [main_gn], [sim_gn], [main_all]

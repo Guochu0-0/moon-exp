@@ -10,10 +10,10 @@
 2. 训练曲线（curves.png）：现有项粗级奖励均值、离参照的距离、画面内格子比例与 E41 叠画；实际施加的梯度比
    （sim_ratio_avg：系数 × 新项梯度 4 卡平均后的范数 ÷ 现有项梯度 4 卡平均后的范数，共用参数上）；
    NCC 最高与离参照最近不是同一份的比例（sim_diff）；200 次更新滑动中位数（比例为滑动平均）。
-3. 分段诊断（diag_by_segment.csv）：每 500 次更新一段，实际施加的梯度比的中位数与四分位，sim_diff 平均，
+3. 分段诊断（diag_by_segment.csv）：每 100 次更新一段，实际施加的梯度比的中位数与四分位，sim_diff 平均，
    现有项粗级奖励均值与 E41 同段之差，组内 NCC 均值、记 −1 的比例、新项优势的组内标准差、
    Val 图对上组内 NCC 与真实误差的 Spearman 秩相关（sim_rho，有记录的步平均）、离参照的距离中位数。
-4. 开销（cost.csv）：第 501 次更新以后每次更新耗时（日志 sec）中位数、新项耗时 t_sim 中位数、峰值显存、
+4. 开销（cost.csv）：第 101–822 次更新（避开开训时样本筛选大量补抽的阶段；822 为弱档停下处，各训练取到自己的最后一次为止）每次更新耗时（日志 sec）中位数、新项耗时 t_sim 中位数、峰值显存、
    开训到最后一个存档的小时数（ckpt 文件修改时间减 log 第一行之前的 args.json 修改时间）。
 5. 坍缩（halt.csv）：ckpt/<方法>/halt.json（停在哪一步、哪个量越线）；stop.json（停止规则）。
 """
@@ -184,8 +184,8 @@ def main():
     for k in mine:
         lg = logs[k]
         last = int(lg[-1]["step"])
-        for lo in range(0, last, 500):
-            hi = min(lo + 500, last)
+        for lo in range(0, last, 100):
+            hi = min(lo + 100, last)
             sel = [r for r in lg if lo < r["step"] <= hi]
             ref = [r for r in e41 if lo < r["step"] <= hi]
             ra = get(sel, "sim_ratio_avg")
@@ -211,12 +211,12 @@ def main():
         lg = logs[k]
         if not lg:
             continue
-        sel = [r for r in lg if r["step"] > 500]
+        sel = [r for r in lg if 100 < r["step"] <= 822]
         cks = sorted((d / "ckpt" / mth).glob("ckpt_*.pt"), key=lambda p: int(p.stem.split("_")[1]))
         t0 = (d / "ckpt" / mth / "args.json").stat().st_mtime if (d / "ckpt" / mth / "args.json").exists() else None
         cost.append({"run": k, "last_update": int(lg[-1]["step"]),
-                     "median_sec_after500": round(float(np.median(get(sel, "sec"))), 3) if sel else None,
-                     "median_t_sim_after500": round(float(np.nanmedian(get(sel, "t_sim"))), 3)
+                     "median_sec_101_822": round(float(np.median(get(sel, "sec"))), 3) if sel else None,
+                     "median_t_sim_101_822": round(float(np.nanmedian(get(sel, "t_sim"))), 3)
                      if sel and np.isfinite(get(sel, "t_sim")).any() else None,
                      "max_mem_gb": round(float(np.nanmax(get(lg, "mem_gb"))), 2),
                      "hours_to_last_ckpt": round((cks[-1].stat().st_mtime - t0) / 3600, 2) if cks and t0 else None})

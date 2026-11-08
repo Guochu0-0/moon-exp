@@ -2665,3 +2665,98 @@ def test_rloo_sim_spearman_matches_definition():
     # 并列取平均秩：x 的秩 1, 2.5, 2.5, 4；y 的秩 1, 2, 3, 4 → 皮尔逊相关
     r = np.corrcoef([1, 2.5, 2.5, 4], [1, 2, 3, 4])[0, 1]
     assert spearman([0.1, 0.5, 0.5, 0.9], [3, 5, 7, 9]) == pytest.approx(r)
+
+
+# ---------- 已知扰动等变约束奖励（#253） ----------
+
+def test_config_rloo_eqv(tmp_path):
+    from finetune import config as C
+    head = '[model]\nname = "roma"\n'
+    ok = '[rloo]\nreward = "ref"\nlevels = [16, 8]\nfine_mode = "local"\neqv = true\n'
+    d = C.load(_write(tmp_path, "d", head + '[rloo]\nreward = "ref"\n'))
+    assert (d["rloo"]["eqv"], d["rloo"]["eqv_w"], d["rloo"]["eqv_rot"], d["rloo"]["eqv_scale"],
+            d["rloo"]["eqv_shift"]) == (False, 0.0, 10.0, 0.1, 64.0)                   # 默认不做，同旧行为
+    c = C.load(_write(tmp_path, "c", head + ok + "eqv_w = 1.5\n"))
+    assert c["rloo"]["eqv"] and c["rloo"]["eqv_w"] == 1.5
+    for bad in ('[rloo]\nreward = "r1"\neqv = true',
+                '[rloo]\nreward = "ref"\neqv = true',                                   # 没有细化级
+                '[rloo]\nreward = "ref"\nlevels = [16]\neqv = true',                    # chain 不支持
+                '[optim]\nbatch = 2\n' + ok, '[optim]\naccum = 2\n' + ok,
+                ok + 'mp_n = 2', ok + 'occ = true', ok + 'sim = true', ok + 'cyc = true\nref_ema = 0.996',
+                ok + 'selfpair = true', ok + 'eqv_w = -1.0', ok + 'eqv_scale = 1.0'):
+        with pytest.raises(C.ConfigError):
+            C.load(_write(tmp_path, "b", head + bad + "\n"))
+
+
+def test_rloo_eqv_draw_T():
+    """T2 同训练扰动的 sample_T：旋转在 ±eqv_rot 度、缩放在 ±eqv_scale、平移在半径 eqv_shift 的圆盘内。"""
+    from finetune.parts import rloo as R
+    from finetune.parts import rloo_eqv as EQ
+    rng = np.random.default_rng(0)
+    p = {**R.PARAMS}
+    rot, scl, sh = [], [], []
+    for _ in range(2000):
+        T = EQ.draw_T(rng, p)
+        L = T[:, :2]
+        rot.append(np.degrees(np.arctan2(L[1, 0], L[0, 0])))
+        scl.append(np.sqrt(np.linalg.det(L)) - 1)
+        sh.append(np.linalg.norm(T[:, 2] - (np.eye(2) - L) @ np.full(2, 256.0)))
+    assert max(np.abs(rot)) <= 10 and max(np.abs(rot)) > 9.9
+    assert max(np.abs(scl)) <= 0.1 + 1e-9 and max(np.abs(scl)) > 0.099
+    assert max(sh) <= 64 + 1e-9 and max(sh) > 63
+
+
+def test_rloo_term_eqv_gradients(monkeypatch):
+    """eqv（#253）：本成分内部反向，返回 active = False。eqv_w = 0 时只量不学：梯度与不加这一项时逐位相同、不动训练的
+    随机数流；eqv_w = c 时总梯度 = 现有项梯度 + c × 新项梯度，eqv_gn 即新项（系数 1）的梯度范数。"""
+    import torch
+
+    def run(seed, **over):
+        term, st, w, dec = _fake_term_fine(monkeypatch, fine_mask=True, frame_mask=True, **over)
+        term.model.params = [w] + list(dec.parameters())
+        torch.manual_seed(seed)
+        loss, stats, active = term(st)
+        if active:
+            loss.backward()
+        stats["_after"] = float(torch.rand(()))
+        return [None if q.grad is None else q.grad.clone() for q in term.model.params], stats, active, float(loss)
+
+    g_ref, s_ref, a_ref, l_ref = run(3)
+    assert a_ref and "eqv_gn" not in s_ref
+    g0, s0, a0, l0 = run(3, eqv=True, eqv_w=0.0)
+    assert not a0 and all((x is None and y is None) or torch.equal(x, y) for x, y in zip(g_ref, g0))
+    assert s0["_after"] == s_ref["_after"] and l0 == pytest.approx(l_ref, abs=1e-6)
+    assert s0["eqv_gn"] > 0 and s0["main_gn"] > 0 and s0["eqv_ratio"] == 0.0
+    assert s0["eqv_coef"] == pytest.approx(s0["main_gn"] / s0["eqv_gn"], rel=1e-3)
+    assert {"eqv_rew", "eqv_d", "eqv_d0", "eqv_rew_16", "eqv_dmu_8", "eqv_dmu0_16", "t_eqv"} <= set(s0)
+    assert s0["eqv_sh"] == pytest.approx(40.0) and s0["eqv_rot"] == 0.0               # _fake_term_fine 的 T：平移 40 px
+    g1, s1, _, _ = run(3, eqv=True, eqv_w=1.0)
+    g2, s2, _, _ = run(3, eqv=True, eqv_w=2.0)
+    d1 = [a - b for a, b in zip(g1, g0) if a is not None]
+    d2 = [a - b for a, b in zip(g2, g0) if a is not None]
+    assert all(torch.allclose(y, 2 * x, atol=1e-6) for x, y in zip(d1, d2))
+    assert float(torch.cat([x.flatten() for x in d1]).norm()) == pytest.approx(s1["eqv_gn"], rel=1e-3)
+    assert s2["eqv_ratio"] == pytest.approx(2 * s2["eqv_gn"] / s2["main_gn"], rel=1e-3)
+
+
+def test_rloo_term_eqv_target_follows_T(monkeypatch):
+    """参照换成 T2∘A：假模型的输出与输入图像无关（输出不跟着几何走）。T2 为恒等时变换后一版离参照的距离与原图相同；
+    T2 平移 40 px 时，粗级与细化各级打分所用的参照都是 A 后面接上这 40 px 的平移，离参照的距离随之改变。"""
+    from finetune.parts import rloo as R
+    term, st, w, dec = _fake_term_fine(monkeypatch, eqv=True)
+    term.model.params = [w] + list(dec.parameters())
+    monkeypatch.setattr(R.augment, "sample_T", lambda rng, *a, **k: np.c_[np.eye(2), [0.0, 0.0]])
+    _, s_id, _ = term(st)
+    for s_ in (16, 8):
+        assert s_id[f"eqv_dmu_{s_}"] == pytest.approx(s_id[f"eqv_dmu0_{s_}"], rel=1e-4)
+    seen = {"cells": [], "level": []}
+    cells, level = R.ref_cells, R.level_reward
+    monkeypatch.setattr(R, "ref_cells", lambda fc, A, *a: seen["cells"].append(np.asarray(A)) or cells(fc, A, *a))
+    monkeypatch.setattr(R, "level_reward", lambda x, A, *a: seen["level"].append(np.asarray(A)) or level(x, A, *a))
+    monkeypatch.setattr(R.augment, "sample_T", lambda rng, *a, **k: np.c_[np.eye(2), [40.0, 0.0]])
+    _, s_sh, _ = term(st)
+    I, A2 = np.c_[np.eye(2), [0.0, 0.0]], np.c_[np.eye(2), [40.0, 0.0]]                # 假拟合总给恒等仿射
+    assert np.allclose(seen["cells"][0], I) and any(np.allclose(A, A2) for A in seen["cells"])          # 原图、变换后一版
+    assert any(np.allclose(A, A2) for A in seen["level"]) and any(np.allclose(A, I) for A in seen["level"])
+    for s_ in (16, 8):
+        assert abs(s_sh[f"eqv_dmu_{s_}"] - s_sh[f"eqv_dmu0_{s_}"]) > 0.5

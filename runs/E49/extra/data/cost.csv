@@ -1,0 +1,4 @@
+run,last_update,median_sec_101_822,median_t_sim_101_822,max_mem_gb,hours_to_last_ckpt
+strong,445,2.541,1.218,11.21,0.81
+weak,822,2.081,0.999,11.21,1.05
+E41,7907,1.787,,11.21,3.35

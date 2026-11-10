@@ -1,0 +1,5 @@
+# E41 门槛 0.8 补种子（#264，E45 的对照）：与 main__screen0.8 完全相同，只把种子换成 2。
+base = "main__screen0.8"
+
+[run]
+seed = 2

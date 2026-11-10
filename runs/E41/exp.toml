@@ -19,3 +19,11 @@ ref = "E37/all"
 [methods."main__screen0.8"]
 name = "加样本筛选（参照内点比例门槛 0.8）"
 ref = "E37/all"
+
+[methods."main__screen0.8__seed1"]
+name = "加样本筛选（参照内点比例门槛 0.8，种子 1）"
+ref = "E37/all"
+
+[methods."main__screen0.8__seed2"]
+name = "加样本筛选（参照内点比例门槛 0.8，种子 2）"
+ref = "E37/all"

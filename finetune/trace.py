@@ -66,7 +66,8 @@ class _ResumeSampler:
 class Loader:
     """无限地逐个产出 batch。state() 存下当前 epoch、epoch 内已取的 batch 数和这一 epoch 开始时数据发生器的状态；
     load() 之后从同一个 batch 接着取（前面的照常取出再丢掉，所以 worker 里的随机扰动也和原来一样）。
-    只支持第一个 epoch 内的状态：persistent_workers 时 worker 的种子在第一个 epoch 取定，之后的 epoch 无法单独重建。"""
+    默认只支持第一个 epoch 内的状态：persistent_workers 时 worker 的种子在第一个 epoch 取定，之后无法单独重建。
+    resume_epochs=True 时要求 workers=0 且 Dataset 不消耗随机流；支持后续 epoch，并仅跳过已消费索引、不重读影像。"""
 
     def __init__(self, dl, g: torch.Generator, resume_epochs=False):
         self.dl, self.g = dl, g

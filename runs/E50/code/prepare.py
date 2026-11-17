@@ -34,8 +34,24 @@ def worker(index):
         name = f"teacher_{k:02d}"
         raw = R / "raw" / name
         meta = raw / "train.meta.json"
-        if meta.exists() and json.loads(meta.read_text()).get("finished"):
-            continue
+        log = raw / "train.jsonl"
+        saved = set()
+        if log.exists():
+            import numpy as np
+            if (raw / "train.npz").exists():
+                with np.load(raw / "train.npz") as z:
+                    saved = {k.replace("__", "/") for k in z.files}
+            old = log.read_text()
+            records = [json.loads(line) for line in old.splitlines()]
+            complete = [r for r in records if "error" not in r and r["pair"] in saved]
+            if len(complete) != len(records):
+                # 日志每对落盘、npz每50对落盘。恢复前保留原日志，重算未落盘或出错的对。
+                (raw / f"train_attempt_{time.time_ns()}.jsonl").write_text(old)
+                log.write_text("".join(json.dumps(r) + "\n" for r in complete))
+            if meta.exists():
+                info = json.loads(meta.read_text())
+                if info.get("finished") and len(complete) == info["n_pairs"] and len(saved) == info["n_pairs"]:
+                    continue
         wait_idle()
         cmd = [sys.executable, "-m", "baselines.match", CONFIG, "--split", "train", "--data",
                "/remote-home/xufang/YGC/dataset/Moon", "--weights-root", "/remote-home/xufang/YGC/weights",
@@ -87,7 +103,8 @@ def fit():
                               "n_inliers": n, "keep": bool(keep)}
     assert seen == set(pairs), (len(seen), len(pairs))
     assert not errors, errors[:3]
-    rows = [rows.get(q, {"pair": q, "A": None, "n_match": 0, "n_inliers": 0, "keep": False}) for q in pairs]
+    assert set(rows) == set(pairs), (len(rows), len(pairs))
+    rows = [rows[q] for q in pairs]
     extra = R / "extra"
     extra.mkdir(exist_ok=True)
     labels = extra / "labels.jsonl"

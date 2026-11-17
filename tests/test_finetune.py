@@ -180,6 +180,71 @@ def test_optimizer_reports_amp_skip_without_changing_default_budget():
     assert opt.skipped and torch.equal(before, p)
 
 
+@pytest.mark.parametrize("count_updates,expected_calls", [(True, 4), (False, 3)])
+def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch, count_updates, expected_calls):
+    import types
+    import torch
+    from finetune import train
+    from finetune.optim import Optim
+    from finetune.models import roma
+
+    class TinyModel:
+        amp = False
+        def __init__(self, *a, **kw):
+            self.p = torch.nn.Parameter(torch.ones(1))
+            self.params, self.input, self.infer_cfg, self.weights = [self.p], {}, {}, "probe"
+            self.resize = lambda x: x
+        def state_dict(self):
+            return {"model": self.p.detach().clone()}
+
+    class Pairs(torch.utils.data.Dataset):
+        def __init__(self, *a, **kw):
+            self.pairs = ["R/p0", "R/p1", "R/p2", "R/p3"]
+        def __len__(self):
+            return 4
+        def __getitem__(self, i):
+            return {"pair": self.pairs[i]}
+
+    class Term:
+        def __init__(self, p, model, ds):
+            self.model = model
+        def __call__(self, st):
+            return self.model.p.square().sum(), {}, True
+
+    class SkipFirst(Optim):
+        calls = 0
+        def step(self, step):
+            type(self).calls += 1
+            self.skipped = self.calls == 1
+            if self.skipped:
+                self.scaler = types.SimpleNamespace(get_scale=lambda: 32768., scale=lambda loss: loss)
+                self.opt.zero_grad(set_to_none=True)
+                return {}
+            self.scaler = None
+            return super().step(step)
+
+    monkeypatch.setattr(train, "require_clean", lambda *a: None)
+    monkeypatch.setattr(train, "PairSet", Pairs)
+    monkeypatch.setattr(train, "Optim", SkipFirst)
+    monkeypatch.setitem(train.MODELS, "roma", types.SimpleNamespace(Model=TinyModel, PARAMS=roma.PARAMS,
+                         OPTIM=roma.OPTIM, RUN=roma.RUN, TORCH_HOME=roma.TORCH_HOME))
+    monkeypatch.setattr(train.PARTS["pseudo"], "Term", Term)
+    monkeypatch.setattr(train, "git_head", lambda *a: "test")
+    cfg = tmp_path / "main.toml"
+    cfg.write_text('[model]\nname="roma"\n[optim]\nsteps=3\nlr=0.1\nwarmup=0\nsched="const"\n'
+                   f'[run]\nworkers=0\nsave_every=1\ncount_updates={str(count_updates).lower()}\n'
+                   '[pseudo]\nlabels="dummy"\n')
+    out = tmp_path / "out"
+    train.main([str(cfg), "--out", str(out), "--device", "cpu"])
+    logs = [json.loads(x) for x in (out / "log.jsonl").read_text().splitlines()]
+    assert SkipFirst.calls == expected_calls
+    assert [r["step"] for r in logs] == [1, 2, 3]
+    assert (out / "ckpt_3.pt").exists()
+    final = torch.load(out / "ckpt_3.pt")["model"]
+    assert final.item() < (0.75 if count_updates else 0.85)
+    assert (out / "overflow.jsonl").exists() == count_updates
+
+
 def _texture(n=128, shift=0, seed=0):
     import cv2
     rng = np.random.default_rng(seed)

@@ -97,12 +97,12 @@ def begin(run_dir, method: str, cmd: list[str], repo=REPO, **extra) -> dict:
     return rec
 
 
-def end(run_dir, method: str, status: str):
+def end(run_dir, method: str, status: str, **extra):
     p = _path(run_dir, method)
     items = _load(p)
     if not items:
         raise SystemExit(f"launch: {p} 没有启动记录")
-    items[-1].update(end=_now(), status=status)
+    items[-1].update(end=_now(), status=status, **extra)
     _save(p, items)
 
 

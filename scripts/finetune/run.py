@@ -123,7 +123,11 @@ class Job:
             except BaseException:
                 launch.end(self.R, method, "fail")
                 raise
-            launch.end(self.R, method, "ok")
+            extra = {}
+            if self.cfg["run"]["record_hashes"]:
+                runtime = json.loads((self.ck / "args.json").read_text())
+                extra = {"source_hashes": runtime["source_hashes"], "runtime_commit": runtime["commit"]}
+            launch.end(self.R, method, "ok", **extra)
             done = target
             if done < total:
                 time.sleep(30)

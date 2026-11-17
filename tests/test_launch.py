@@ -85,6 +85,10 @@ def test_begin_records_config(repo, tmp_path, monkeypatch):
     items = json.loads((run / "launch" / "main.json").read_text(encoding="utf-8"))
     assert items[0]["args"] == cfg == rec["args"] and items[0]["entry"] == "scripts/finetune/run.py"
     assert items[0]["config"] == {"adapter": "loftr"}
+    launch.end(run, "main", "ok", source_hashes={"weights": {"sha256": "verified-at-start"}})
+    finished = json.loads((run / "launch" / "main.json").read_text())[0]
+    assert finished["end"] and finished["status"] == "ok" and finished["args"] == cfg
+    assert finished["source_hashes"]["weights"]["sha256"] == "verified-at-start"
 
 
 def test_slow_git_uses_explicit_budget_and_still_refuses_dirty(tmp_path, monkeypatch):

@@ -33,8 +33,8 @@ def prepare_weights(method, config, weights_root):
                    "dinov2": weights_root / "torch_home/hub/checkpoints/dinov2_vitl14_pretrain.pth"}
     metadata = {}
     for name, source in sources.items():
-        source = source.resolve(strict=True)
         actual = checkpoints / source.name
+        source = source.resolve(strict=True)
         if not actual.exists() and not actual.is_symlink():
             actual.symlink_to(source)
         if not actual.exists() or not actual.samefile(source):

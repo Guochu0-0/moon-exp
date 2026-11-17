@@ -1,0 +1,31 @@
+[
+ {
+  "start": "2026-11-17 10:59:00 +0000",
+  "end": null,
+  "status": null,
+  "commit": "6d1eae3674b3bfd5dd6fccc38067ac8c32896500",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E50/code/run_all.py"
+  ],
+  "entry": "runs/E50/code/run_all.py",
+  "args": {
+   "teacher_gpus": [
+    0,
+    1
+   ],
+   "training_gpu": 0,
+   "seed": 0,
+   "experiment": "E50",
+   "OMP_NUM_THREADS": "4",
+   "MKL_NUM_THREADS": "4",
+   "MOON_GIT_TIMEOUT": "600"
+  }
+ }
+]

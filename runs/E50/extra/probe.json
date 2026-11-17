@@ -1,0 +1,221 @@
+{
+  "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+  },
+  "config": {
+    "model": {
+      "name": "roma",
+      "config": "configs/baselines/anymatch_roma__minmax.json",
+      "bn_mode": "native",
+      "init": "",
+      "train_vgg": true,
+      "train_decoder": true,
+      "vgg_lr": 0.05,
+      "refine_lr": 1.0,
+      "vgg_dropout": 0.0,
+      "train_res": "560",
+      "lora_r": 0,
+      "lora_alpha": 16.0,
+      "lora_lr": 0.0001,
+      "lora_targets": "qkv",
+      "lora_dropout": 0.0,
+      "drop_path": 0.0,
+      "dino_unfreeze": 0,
+      "dino_ckpt": false,
+      "unc_head": false,
+      "sdpa": false
+    },
+    "optim": {
+      "steps": 7907,
+      "batch": 4,
+      "lr": 5e-05,
+      "wd": 0.01,
+      "warmup": 0,
+      "warmup_start": 0.1,
+      "sched": "multistep",
+      "lr_min": 0.0,
+      "lr_milestones": [
+        7116
+      ],
+      "lr_gamma": 0.1,
+      "amp_growth_interval": 1000000,
+      "clip": 0.01,
+      "accum": 1,
+      "ema": 0.0
+    },
+    "run": {
+      "seed": 0,
+      "workers": 0,
+      "save_every": 250,
+      "save_at": [
+        7907
+      ],
+      "save_zero": false,
+      "limit": 0,
+      "split": "train",
+      "select": "last",
+      "log_update": false,
+      "stop_at": 0,
+      "save_optim": true,
+      "resume": "",
+      "resume_epochs": true,
+      "segment_steps": 500,
+      "count_updates": true,
+      "sweep": "all",
+      "halt_above": {},
+      "halt_below": {},
+      "halt_window": 50,
+      "ddp": 0
+    },
+    "pseudo": {
+      "labels": "runs/E50/extra/labels.jsonl",
+      "top": 1.0,
+      "weight": 1.0,
+      "pair_weight": "",
+      "mask_fill": false,
+      "swap": 0.5,
+      "cls_soft": false,
+      "drop_top": 0.0,
+      "dense": "",
+      "dense_r": 8.0,
+      "dense_cert": 0.5,
+      "reg_tol": 0.0,
+      "fine_ramp": [],
+      "match_dir": "",
+      "match_r": 3.0,
+      "reg_loss": "robust",
+      "mixlap_w": 1.0,
+      "ema_target": 0.0,
+      "ema_alpha": 0.5,
+      "ema_ramp": [
+        2000,
+        4000
+      ]
+    },
+    "common": {
+      "shift": 32,
+      "flip": 0.5
+    }
+  },
+  "batch": [
+    "ROI_001/patch_0",
+    "ROI_001/patch_1",
+    "ROI_001/patch_2",
+    "ROI_001/patch_3"
+  ],
+  "loss": 6.357436180114746,
+  "stats": {
+    "cls16": 5.32998,
+    "reg16": 0.30027,
+    "reg8": 0.24921,
+    "reg4": 0.19974,
+    "reg2": 0.13146,
+    "reg1": 0.1029,
+    "epe1_px": 3.056
+  },
+  "finite_grad": {
+    "vgg": true,
+    "coarse": true,
+    "refine": true
+  },
+  "nonzero_grad": {
+    "vgg": true,
+    "coarse": true,
+    "refine": true
+  },
+  "bn_count": 62,
+  "lr_groups": [
+    5e-05,
+    5e-05,
+    2.5e-06
+  ],
+  "sec": 4.638758732005954,
+  "peak_gb": 24.317017555236816,
+  "final_scale": 32768.0,
+  "common_specs": [
+    [
+      -27,
+      24,
+      false
+    ],
+    [
+      -27,
+      -13,
+      true
+    ],
+    [
+      -6,
+      -31,
+      true
+    ],
+    [
+      -32,
+      11,
+      false
+    ]
+  ],
+  "attempts": [
+    {
+      "scale": 65536.0,
+      "finite": {
+        "vgg": true,
+        "coarse": false,
+        "refine": true
+      },
+      "skipped": true
+    },
+    {
+      "scale": 32768.0,
+      "finite": {
+        "vgg": true,
+        "coarse": true,
+        "refine": true
+      },
+      "skipped": false
+    }
+  ],
+  "upstream_loss": 6.357436180114746,
+  "local_loss": 6.357436180114746,
+  "loss_output_grad_max_diff": 0.0,
+  "resolved_inference": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+      560,
+      560
+    ],
+    "upsample_resolution": [
+      864,
+      864
+    ],
+    "output_resolution": [
+      864,
+      864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+  },
+  "upstream_wandb_logging": "disabled for local loss comparison"
+}

@@ -101,6 +101,7 @@ def main():
     subprocess.run(["/opt/envs/loftr/bin/python", str(R / "code/plot.py")], cwd=ROOT, check=True)
     result = lambda node, split: next(r["summary"] for r in rows if r["node"] == node and r["split"] == split)
     val, test = result("E50", "val"), result("E50", "test")
+    e41_test = next(r for r in comparisons if r["reference"] == "E41/main__screen0.8" and r["split"] == "test")
     metrics = []
     for r in rows:
         s = r["summary"]
@@ -111,11 +112,11 @@ def main():
         metrics.append(f'| {r["node"]}/{r["method"]}（{r["rule"]}） | {r["split"]} | ' + " | ".join(values) + " |")
     paired_table = [f'| {r["reference"]} | {r["split"]} | {r["delta_auc5"]:+.4f} | '
                     f'[{r["ci95"][0]:+.4f}, {r["ci95"][1]:+.4f}] |' for r in comparisons]
-    notes = f'''# 固定伪仿射适配在原始 Val/Test 上的 AUC@5 为 {val["auc@5"]:.4f}/{test["auc@5"]:.4f}
+    notes = f'''# 固定伪仿射适配的 Test AUC@5 为 {test["auc@5"]:.4f}，较 E41 最后存档差 {e41_test["delta_auc5"]:+.4f}
 
 **摘要**
 
-本实验为月球光学–SAR 仿射配准增加 SCENES bootstrapping 的 RoMa／仿射任务适配对照。只用发布起点在无标注 Train 上生成一次伪仿射，再从同一起点训练 VGG 和完整 decoder；不使用目标域标注，也不混入有标注源域数据。固定种子 0 完成 7907 次有效更新，最后存档在原始 Val/Test 的 AUC@5 分别为 {val["auc@5"]:.4f}/{test["auc@5"]:.4f}。全部逐存档 Val 读数与最后存档 Test 已保存，比较的是完整训练配方，不能单独归因于损失形式。
+本实验为月球光学–SAR 仿射配准增加 SCENES bootstrapping 的 RoMa／仿射任务适配对照。只用发布起点在无标注 Train 上生成一次伪仿射，再从同一起点训练 VGG 和完整 decoder；不使用目标域标注，也不混入有标注源域数据。固定种子 0 完成 7907 次有效更新，最后存档在原始 Val/Test 的 AUC@5 分别为 {val["auc@5"]:.4f}/{test["auc@5"]:.4f}。Test 相对 E41 最后存档的 AUC@5 差为 {e41_test["delta_auc5"]:+.4f}，按 patch 对配对重抽的 95% 区间为 [{e41_test["ci95"][0]:+.4f}, {e41_test["ci95"][1]:+.4f}]。全部逐存档 Val 读数与最后存档 Test 已保存，比较的是完整训练配方，不能单独归因于损失形式。
 
 **引言**
 

@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -115,10 +116,16 @@ def fit():
     versions = {"anymatch": subprocess.check_output(["git", "-C", str(upstream), "rev-parse", "HEAD"], text=True).strip()}
     for name in ("train_roma_outdoor.py", "romatch/losses/robust_loss.py", "romatch/datasets/megadepth.py", "romatch/models/encoders.py"):
         versions[name] = sha256(upstream / "third_party/RoMa_AnyMatch" / name)
+    attempts = [r for k in range(SHARDS) for r in json.loads((R / "launch" / f"teacher_{k:02d}.json").read_text())]
+    process_sec = sum((datetime.strptime(r["end"], "%Y-%m-%d %H:%M:%S %z") -
+                       datetime.strptime(r["start"], "%Y-%m-%d %H:%M:%S %z")).total_seconds()
+                      for r in attempts if r["end"])
     summary = {"total": len(rows), "kept": len(kept), "labels_sha256": sha256(labels),
                "keep_sha256": hashlib.sha256("\n".join(kept).encode()).hexdigest(),
                "n_inliers_quantiles": np.quantile([r["n_inliers"] for r in rows], [0, .25, .5, .75, 1]).tolist(),
-               "teacher_total_gpu_sec": sum(s["total_sec"] for s in sessions), "fit_sec": time.monotonic() - t0,
+               "teacher_last_sessions_sec": sum(s["total_sec"] for s in sessions),
+               "teacher_process_sec": process_sec, "teacher_unfinished_attempts": sum(not r["end"] for r in attempts),
+               "teacher_attempts": attempts, "fit_sec": time.monotonic() - t0,
                "upstream": versions, "teacher_sessions": sessions}
     (extra / "labels_meta.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n")
     print(json.dumps({k: v for k, v in summary.items() if k != "teacher_sessions"}), flush=True)

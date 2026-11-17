@@ -29,7 +29,7 @@ def paired(a, b):
 def duration(rows):
     return sum((datetime.strptime(r["end"], "%Y-%m-%d %H:%M:%S %z") -
                 datetime.strptime(r["start"], "%Y-%m-%d %H:%M:%S %z")).total_seconds()
-               for r in rows if r["status"] == "ok")
+               for r in rows if r["end"])
 
 
 def main():
@@ -70,12 +70,15 @@ def main():
     overflow = R / "ckpt/main/overflow.jsonl"
     skipped = len(overflow.read_text().splitlines()) if overflow.exists() else 0
     stages = json.loads((R / "launch/main_train.json").read_text())
-    assert all(r["status"] == "ok" and r["end"] for r in stages)
+    assert stages[-1]["status"] == "ok" and stages[-1]["end"]
     data = R / "extra/data"
     data.mkdir(exist_ok=True)
     report = {"results": rows, "paired": comparisons, "best_val": {"step": best_step, "summary": best},
               "updates": 7907, "gradient_pairs": 31628, "amp_skips": skipped,
-              "train_process_sec": duration(stages), "teacher_total_gpu_sec": labels["teacher_total_gpu_sec"]}
+              "train_process_sec": duration(stages), "train_unfinished_attempts": sum(not r["end"] for r in stages),
+              "train_failed_attempts": sum(r["status"] == "fail" for r in stages),
+              "teacher_process_sec": labels["teacher_process_sec"],
+              "teacher_unfinished_attempts": labels["teacher_unfinished_attempts"]}
     (data / "summary.json").write_text(json.dumps(jsonable(report), ensure_ascii=False, indent=1) + "\n")
     with open(data / "val_curve.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["step", *curve[0][1].keys()])
@@ -134,7 +137,7 @@ RoMa 先用图像特征给出粗对应位置，再用多级细化逐步调整位
 
 *训练配方。* VGG 和完整 decoder（粗级及五级细化）参与训练，BN 沿用上游训练模式；DINOv2 按上游冻结提特征，无 LoRA。训练输入 560；两图共同做 x/y 各 [-32,32] 整数平移，在 ImageNet 归一化后补零，再以 0.5 概率共同水平翻转。固定仿射精确变为 G A G⁻¹，查询和目标两侧的补零区都纳入有效区计算。保留最近锚点分类 CE、多尺度鲁棒回归、certainty BCE，ce_weight=0.01、alpha=0.5、c=1e-4、local_dist={{1:4,2:4,4:8,8:8}}、local_largest_scale=8 和上游尺度权重；不带入软锚点、残差剔除、额外容差、稠密老师或可匹配检查。
 
-*优化与预算。* AdamW，默认 betas=(0.9,0.999)、eps=1e-8，weight decay=0.01；单卡 batch=4，无累积。VGG lr=2.5e-6、decoder 各部分 lr=5e-5；梯度范数裁剪 0.01，无 warmup。MultiStepLR 在完成第 7116 次更新后乘 0.1，即第 7117 次更新起使用衰减学习率。AMP GradScaler 的增长间隔与公开脚本一致为 1000000；溢出被跳过的尝试不计入有效更新预算，记录 {skipped} 次。实际完成 7907 次更新、31628 个参与更新的 patch 对次；筛选后的集合按种子 0 重复打乱遍历。每 250 次存档，另存最后 7907。每 500 次更新退出训练子进程、释放 GPU，再恢复模型、优化器、缩放器、数据顺序和全部随机流；不根据 Val 早停。训练进程累计 {report["train_process_sec"]/3600:.2f} 小时；伪标签推理累计 GPU 时间 {labels["teacher_total_gpu_sec"]/3600:.2f} 小时，拟合 {labels["fit_sec"]:.1f} 秒，二者分开记录。
+*优化与预算。* AdamW，默认 betas=(0.9,0.999)、eps=1e-8，weight decay=0.01；单卡 batch=4，无累积。VGG lr=2.5e-6、decoder 各部分 lr=5e-5；梯度范数裁剪 0.01，无 warmup。MultiStepLR 在完成第 7116 次更新后乘 0.1，即第 7117 次更新起使用衰减学习率。AMP GradScaler 的增长间隔与公开脚本一致为 1000000；溢出被跳过的尝试不计入有效更新预算，记录 {skipped} 次。实际完成 7907 次更新、31628 个参与更新的 patch 对次；筛选后的集合按种子 0 重复打乱遍历。每 250 次存档，另存最后 7907。每 500 次更新退出训练子进程、释放 GPU，再恢复模型、优化器、缩放器、数据顺序和全部随机流；不根据 Val 早停。训练进程累计 {report["train_process_sec"]/3600:.2f} 小时（包含已结束的失败尝试）；伪标签匹配进程累计 {labels["teacher_process_sec"]/3600:.2f} 小时（含模型加载、I/O 及已结束的失败尝试），拟合 {labels["fit_sec"]:.1f} 秒，二者分开记录。未确认结束的尝试数：训练 {report["train_unfinished_attempts"]}、匹配 {labels["teacher_unfinished_attempts"]}，若非零则这些尝试的完整耗时未知。
 
 *评价与统计。* 原始 Val 652 对，原始 Test 953 对。每个存档都评 Val，正式结果固定取最后 7907；Test 只评这一存档。仿射按统一 RANSAC 3 px 拟合，逐 patch 对误差为光学检查点经预测仿射到 SAR 检查点的平均距离，失败记 ∞，全部 patch 对等权。AUC@T 是 [0,T] 误差累积曲线的归一化面积；SR@T 是误差不超过 T 的比例，主要比较 AUC@5。配对比较按同一 patch 对的全精度误差做 2000 次重抽、种子 0，给差值的 95% 区间。区间只反映该数据集按 patch 对重抽的波动，不是训练种子波动。
 

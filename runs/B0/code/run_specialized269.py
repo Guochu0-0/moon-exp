@@ -72,9 +72,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("method", choices=("redfeat", "fhreg", "vmgga"))
     ap.add_argument("--stage", choices=("selfcheck", "infer"), required=True)
+    ap.add_argument("--split", choices=("val", "test"), help="Infer one split per allocated GPU segment")
     ap.add_argument("--data", default=os.environ.get("MOON_DATA"))
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS"))
     args = ap.parse_args()
+    if args.stage == "infer" and args.split is None:
+        ap.error("--stage infer requires --split so each split can release its GPU allocation")
     config_path = Path("configs/baselines") / (args.method + ".json")
     config = json.loads(config_path.read_text())
     run = Path("runs/B0")
@@ -98,7 +101,7 @@ def main():
 
             # Same process preserves the explicitly recorded precision settings.
             # Baselines.match supplies the configured per-patch seed and metadata.
-            for split in ("val", "test"):
+            for split in (args.split,):
                 match_main([str(config_path), "--split", split, "--data", args.data,
                             "--weights-root", args.weights_root, "--out", str(run / "raw"), "--resume"])
         end(run, launch_method, "ok")

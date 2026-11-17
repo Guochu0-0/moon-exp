@@ -118,7 +118,7 @@ def main():
         metrics.append(f'| {r["node"]}/{r["method"]}（{r["rule"]}） | {r["split"]} | ' + " | ".join(values) + " |")
     paired_table = [f'| {r["reference"]} | {r["split"]} | {r["delta_auc5"]:+.4f} | '
                     f'[{r["ci95"][0]:+.4f}, {r["ci95"][1]:+.4f}] |' for r in comparisons]
-    notes = f'''# 固定伪仿射适配的 Test AUC@5 为 {test["auc@5"]:.4f}，较 E41 最后存档差 {e41_test["delta_auc5"]:+.4f}
+    notes = f'''# 固定伪仿射适配的 Test AUC@5 为 {test["auc@5"]:.4f}，相对 E41 最后存档变化 {e41_test["delta_auc5"]:+.4f}
 
 **摘要**
 
@@ -145,6 +145,8 @@ RoMa 先用图像特征给出粗对应位置，再用多级细化逐步调整位
 *优化与预算。* AdamW，默认 betas=(0.9,0.999)、eps=1e-8，weight decay=0.01；单卡 batch=4，无累积。VGG lr=2.5e-6、decoder 各部分 lr=5e-5；梯度范数裁剪 0.01，无 warmup。MultiStepLR 在完成第 7116 次更新后乘 0.1，即第 7117 次更新起使用衰减学习率。AMP GradScaler 的增长间隔与公开脚本一致为 1000000；溢出被跳过的尝试不计入有效更新预算，记录 {skipped} 次。实际完成 7907 次更新、31628 个参与更新的 patch 对次；筛选后的集合按种子 0 重复打乱遍历。每 250 次存档，另存最后 7907。每 500 次更新退出训练子进程、释放 GPU，再恢复模型、优化器、缩放器、数据顺序和全部随机流；不根据 Val 早停。训练进程累计 {report["train_process_sec"]/3600:.2f} 小时（包含已结束的失败尝试）；伪标签匹配进程累计 {labels["teacher_process_sec"]/3600:.2f} 小时（含模型加载、I/O 及已结束的失败尝试），拟合 {labels["fit_sec"]:.1f} 秒，二者分开记录。未确认结束的尝试数：训练 {report["train_unfinished_attempts"]}、匹配 {labels["teacher_unfinished_attempts"]}，若非零则这些尝试的完整耗时未知。
 
 *评价与统计。* 原始 Val 652 对，原始 Test 953 对。每个存档都评 Val，正式结果固定取最后 7907；Test 只评这一存档。仿射按统一 RANSAC 3 px 拟合，逐 patch 对误差为光学检查点经预测仿射到 SAR 检查点的平均距离，失败记 ∞，全部 patch 对等权。AUC@T 是 [0,T] 误差累积曲线的归一化面积；SR@T 是误差不超过 T 的比例，主要比较 AUC@5。配对比较按同一 patch 对的全精度误差做 2000 次重抽、种子 0，给差值的 95% 区间。区间只反映该数据集按 patch 对重抽的波动，不是训练种子波动。
+
+全部 32 份 Val 和最后存档 Test 均逐份校验了完整且唯一的 pair 覆盖、匹配及预测完成记录，以及正常匹配点对的 NPZ 落盘情况。续评不把半份 JSONL 当作已完成存档，真实逐对推理错误仍按失败保留；服务器上的三项针对性检查覆盖了完整到半份、点对未落盘和真实逐对错误三种情况。
 
 资源允许时，不同存档的 Val 评测并行；空闲卡不足时用可用空卡继续。每个 patch 对仍独立按相同参数推理，全部 Val 结束后才汇总和评最后存档 Test。每份完整预测的实际主机、GPU 和环境版本均保存在原始匹配 meta，并汇入 summary.json 的 evaluation_environments；曲线包含的 GPU 型号为 {"、".join(sorted({e["gpu"] for e in evaluation_envs if e["split"] == "val"}))}，最后存档 Test 使用 {evaluation_envs[-1]["gpu"]}。调度没有修改单对推理参数，但跨 GPU 的浮点结果不保证逐位相同。
 

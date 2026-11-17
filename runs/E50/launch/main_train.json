@@ -1,0 +1,2540 @@
+[
+ {
+  "start": "2026-11-17 12:26:06 +0000",
+  "end": "2026-11-17 12:45:09 +0000",
+  "status": "ok",
+  "commit": "c6664a3979f2c4dc453dc30375f3b8bf053f608f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "500"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 500,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   }
+  },
+  "runtime_commit": "c6664a3979f2c4dc453dc30375f3b8bf053f608f"
+ },
+ {
+  "start": "2026-11-17 12:46:02 +0000",
+  "end": "2026-11-17 13:10:13 +0000",
+  "status": "ok",
+  "commit": "618f7842c59f2e4cbbbfab729ea8772b807899dc",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "1000",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_500.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_500.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 1000,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_500.pt",
+    "sha256": "dd6b1ccf2b03e46a89ae6990f26964d6a1a74ed107d109af3d980c1ac19f3833"
+   }
+  },
+  "runtime_commit": "618f7842c59f2e4cbbbfab729ea8772b807899dc"
+ },
+ {
+  "start": "2026-11-17 13:11:25 +0000",
+  "end": "2026-11-17 13:30:31 +0000",
+  "status": "ok",
+  "commit": "3686ca38a6ad638cb023be5a117ebb6f10294001",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "1500",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_1000.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_1000.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 1500,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_1000.pt",
+    "sha256": "0d8e259d615e9c846d9560ceb093a5c74108c9fe9881918c1c54730e64f8eccc"
+   }
+  },
+  "runtime_commit": "3686ca38a6ad638cb023be5a117ebb6f10294001"
+ },
+ {
+  "start": "2026-11-17 13:31:44 +0000",
+  "end": "2026-11-17 13:51:35 +0000",
+  "status": "ok",
+  "commit": "3686ca38a6ad638cb023be5a117ebb6f10294001",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "2000",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_1500.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_1500.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 2000,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_1500.pt",
+    "sha256": "4bb456c103f41bad432a23cd58812588d6dfed9a22d2dc6dd12ac399f3cd29c7"
+   }
+  },
+  "runtime_commit": "3686ca38a6ad638cb023be5a117ebb6f10294001"
+ },
+ {
+  "start": "2026-11-17 13:52:50 +0000",
+  "end": "2026-11-17 14:12:32 +0000",
+  "status": "ok",
+  "commit": "3686ca38a6ad638cb023be5a117ebb6f10294001",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "2500",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_2000.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_2000.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 2500,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_2000.pt",
+    "sha256": "fa3d8d40beb795c09a2ce888ed3ed60fb261f86a0e7e4164c90a13de343226e4"
+   }
+  },
+  "runtime_commit": "3686ca38a6ad638cb023be5a117ebb6f10294001"
+ },
+ {
+  "start": "2026-11-17 14:13:45 +0000",
+  "end": "2026-11-17 14:33:35 +0000",
+  "status": "ok",
+  "commit": "3686ca38a6ad638cb023be5a117ebb6f10294001",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "3000",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_2500.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_2500.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 3000,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_2500.pt",
+    "sha256": "560f83ac8f28e05562da0225558428389f9724b945a2e9de6f9b1c454ccf8c96"
+   }
+  },
+  "runtime_commit": "3686ca38a6ad638cb023be5a117ebb6f10294001"
+ },
+ {
+  "start": "2026-11-17 14:34:48 +0000",
+  "end": "2026-11-17 14:54:14 +0000",
+  "status": "ok",
+  "commit": "3686ca38a6ad638cb023be5a117ebb6f10294001",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "3500",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_3000.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_3000.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 3500,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_3000.pt",
+    "sha256": "8383241f1b1a1d67befd15cd4c56834bddafbe1fdc51c6802af3526a8068aad2"
+   }
+  },
+  "runtime_commit": "3686ca38a6ad638cb023be5a117ebb6f10294001"
+ },
+ {
+  "start": "2026-11-17 14:55:24 +0000",
+  "end": "2026-11-17 15:14:43 +0000",
+  "status": "ok",
+  "commit": "3686ca38a6ad638cb023be5a117ebb6f10294001",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "4000",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_3500.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_3500.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 4000,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_3500.pt",
+    "sha256": "3621c5c24b8773031bc89f79ce2bf4ce880a247e8b9be1f449db93029e1c8b2d"
+   }
+  },
+  "runtime_commit": "3686ca38a6ad638cb023be5a117ebb6f10294001"
+ },
+ {
+  "start": "2026-11-17 15:15:58 +0000",
+  "end": "2026-11-17 15:35:19 +0000",
+  "status": "ok",
+  "commit": "3686ca38a6ad638cb023be5a117ebb6f10294001",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "4500",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_4000.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_4000.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 4500,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_4000.pt",
+    "sha256": "d051c4a3765d857b3e3c7c2e057ae63957e25492a45060718c410b92f9dfffb1"
+   }
+  },
+  "runtime_commit": "3686ca38a6ad638cb023be5a117ebb6f10294001"
+ },
+ {
+  "start": "2026-11-17 15:36:33 +0000",
+  "end": "2026-11-17 15:55:59 +0000",
+  "status": "ok",
+  "commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "5000",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_4500.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_4500.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 5000,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_4500.pt",
+    "sha256": "d4a08db41cf61bd999ec24bdd8943be5a2e7f55710709a4415d4ae190930a540"
+   }
+  },
+  "runtime_commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd"
+ },
+ {
+  "start": "2026-11-17 15:57:05 +0000",
+  "end": "2026-11-17 16:16:19 +0000",
+  "status": "ok",
+  "commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "5500",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_5000.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_5000.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 5500,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_5000.pt",
+    "sha256": "bc32b7f759446127a34574c4e0b512c14c2fc9d28393325c676ea35dfeccb732"
+   }
+  },
+  "runtime_commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd"
+ },
+ {
+  "start": "2026-11-17 16:17:32 +0000",
+  "end": "2026-11-17 16:36:31 +0000",
+  "status": "ok",
+  "commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "6000",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_5500.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_5500.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 6000,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_5500.pt",
+    "sha256": "208e9d3a92bcd833ed9502ea83f4b544728ed1f9aa24327f0908522596fa82d8"
+   }
+  },
+  "runtime_commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd"
+ },
+ {
+  "start": "2026-11-17 16:37:48 +0000",
+  "end": "2026-11-17 16:57:11 +0000",
+  "status": "ok",
+  "commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "6500",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_6000.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_6000.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 6500,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_6000.pt",
+    "sha256": "6727c9dbfbe772b8f2c9b748df1c7f7f7226d52a03f1fd48bec75341989c2d7f"
+   }
+  },
+  "runtime_commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd"
+ },
+ {
+  "start": "2026-11-17 16:58:24 +0000",
+  "end": "2026-11-17 17:17:32 +0000",
+  "status": "ok",
+  "commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "7000",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_6500.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_6500.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 7000,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_6500.pt",
+    "sha256": "f884983f2d900181bd17e9eda78606c6f1f09994f88b9bf0b0da9fc52b97d057"
+   }
+  },
+  "runtime_commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd"
+ },
+ {
+  "start": "2026-11-17 17:18:45 +0000",
+  "end": "2026-11-17 17:38:05 +0000",
+  "status": "ok",
+  "commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "7500",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_7000.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_7000.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 7500,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_7000.pt",
+    "sha256": "7b7ecb238f4fcb2fb64bb4512c46517135a330e01a8b6b9aeb707878ab3e7463"
+   }
+  },
+  "runtime_commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd"
+ },
+ {
+  "start": "2026-11-17 17:39:20 +0000",
+  "end": "2026-11-17 17:55:30 +0000",
+  "status": "ok",
+  "commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "finetune.train",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/configs/main.toml",
+   "--out",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main",
+   "--tb",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/tb/main/scalars",
+   "--stop-at",
+   "7907",
+   "--resume",
+   "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_7500.pt"
+  ],
+  "entry": "finetune.train",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_7500.pt",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0,
+     1
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "stop_at": 7907,
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "source_hashes": {
+   "weights": {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   },
+   "labels": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/extra/labels.jsonl",
+    "sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7"
+   },
+   "resume": {
+    "path": "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_7500.pt",
+    "sha256": "2c660d32795e494f6b5e0070ce6047f859be9d0fd91a2f509a8129d7ca600aa2"
+   }
+  },
+  "runtime_commit": "ada2eb0ca1f64401fdef7ee25a63ad85cd7607cd"
+ }
+]

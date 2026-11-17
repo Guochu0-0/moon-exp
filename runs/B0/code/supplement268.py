@@ -100,6 +100,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("method", choices=("splg", "roma"))
     parser.add_argument("--stage", choices=("selfcheck", "infer"), default="infer")
+    parser.add_argument("--split", choices=("val", "test"), help="Run one inference split for safe GPU handoff")
     args = parser.parse_args()
     os.chdir(ROOT)
     config_path = Path("configs/baselines") / (args.method + ".json")
@@ -108,8 +109,9 @@ def main():
     metadata = prepare_weights(args.method, config, weights_root)
     probe = ROOT / "runs/B0/extra/supplement268" / (args.method + "_selfcheck.json")
     effective = json.loads(probe.read_text(encoding="utf-8"))["effective_config"] if probe.exists() else None
+    splits = [args.split] if args.split else ["val", "test"]
     launch.begin("runs/B0", args.method, [sys.executable, *sys.argv], entry=str(Path(__file__).relative_to(ROOT)),
-                 config_file=str(config_path), config=config, args=dict(stage=args.stage, splits=["val", "test"],
+                 config_file=str(config_path), config=config, args=dict(stage=args.stage, splits=splits,
                  seed=0, pair_timeout=120, ransac=3.0, raw_out="runs/B0/raw/supplement268", effective_config=effective),
                  weights=metadata, torch_home=os.environ.get("TORCH_HOME"))
     try:
@@ -118,7 +120,7 @@ def main():
         else:
             if not probe.exists():
                 raise RuntimeError("Run the committed coordinate self-check before inference")
-            for split in ("val", "test"):
+            for split in splits:
                 subprocess.run([sys.executable, "-m", "baselines.match", str(config_path), "--split", split,
                                 "--out", "runs/B0/raw/supplement268", "--timeout", "120"], check=True)
                 subprocess.run(["/opt/envs/wb/bin/python", "-m", "baselines.fit", "runs/B0/raw/supplement268/" + args.method,

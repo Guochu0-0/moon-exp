@@ -1,5 +1,6 @@
 """A recorded weight must be the exact file the official constructor opens."""
 import hashlib
+import os
 from pathlib import Path
 import runpy
 
@@ -17,7 +18,7 @@ def test_official_cache_is_pinned_and_hashed(tmp_path, monkeypatch):
     monkeypatch.setenv("TORCH_HOME", str(tmp_path / "unrelated_cache"))
     metadata = driver["prepare_weights"]("splg", {}, tmp_path)
     expected_cache = tmp_path / "supplement268_torch_home"
-    assert Path(__import__("os").environ["TORCH_HOME"]) == expected_cache
+    assert Path(os.environ["TORCH_HOME"]) == expected_cache
     for name, entry in metadata.items():
         loaded = Path(entry["path"])
         assert loaded.parent == expected_cache / "hub/checkpoints"

@@ -23,6 +23,30 @@ def digest(path):
     return h.hexdigest()
 
 
+def prepare_weights(method, config, weights_root):
+    """Pin automatic hub loading to the exact official files recorded in launch."""
+    cache = weights_root / "supplement268_torch_home"
+    checkpoints = cache / "hub/checkpoints"
+    checkpoints.mkdir(parents=True, exist_ok=True)
+    sources = {"superpoint": weights_root / "official/superpoint/superpoint_v1.pth",
+               "lightglue": weights_root / "official/lightglue/superpoint_lightglue_v0-1_arxiv.pth"} if method == "splg" else {
+                   "dinov2": weights_root / "torch_home/hub/checkpoints/dinov2_vitl14_pretrain.pth"}
+    metadata = {}
+    for name, source in sources.items():
+        source = source.resolve(strict=True)
+        actual = checkpoints / source.name
+        if not actual.exists() and not actual.is_symlink():
+            actual.symlink_to(source)
+        if not actual.exists() or not actual.samefile(source):
+            raise RuntimeError("Official weight cache differs from recorded source: " + str(actual))
+        metadata[name] = dict(path=str(actual), official_file=str(source), sha256=digest(actual))
+    if method == "roma":
+        direct = (weights_root / config["weights"]).resolve(strict=True)
+        metadata["roma"] = dict(path=str(direct), official_file=str(direct), sha256=digest(direct))
+    os.environ["TORCH_HOME"] = str(cache)
+    return metadata
+
+
 def selfcheck(config, weights_root):
     import cv2
     import numpy as np
@@ -81,11 +105,7 @@ def main():
     config_path = Path("configs/baselines") / (args.method + ".json")
     config = json.loads(config_path.read_text(encoding="utf-8"))
     weights_root = Path(os.environ["MOON_WEIGHTS"])
-    official = {"superpoint": weights_root / "official/superpoint/superpoint_v1.pth",
-                "lightglue": weights_root / "official/lightglue/superpoint_lightglue_v0-1_arxiv.pth"} if args.method == "splg" else {
-                    "roma": weights_root / config["weights"],
-                    "dinov2": weights_root / "torch_home/hub/checkpoints/dinov2_vitl14_pretrain.pth"}
-    metadata = {name: dict(path=str(path), sha256=digest(path)) for name, path in official.items()}
+    metadata = prepare_weights(args.method, config, weights_root)
     probe = ROOT / "runs/B0/extra/supplement268" / (args.method + "_selfcheck.json")
     effective = json.loads(probe.read_text(encoding="utf-8"))["effective_config"] if probe.exists() else None
     launch.begin("runs/B0", args.method, [sys.executable, *sys.argv], entry=str(Path(__file__).relative_to(ROOT)),

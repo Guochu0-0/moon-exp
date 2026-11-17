@@ -1,6 +1,7 @@
 """最后存档、完整 Val 曲线、全精度逐对配对 bootstrap 与自包含 Notes。"""
 import csv
 import json
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -87,20 +88,8 @@ def main():
     with ScalarWriter(R / "tb/main/validation") as writer:
         for step, s in curve:
             writer.add("val/auc@5", s["auc@5"], step)
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(figsize=(7, 4), layout="constrained")
-    ax.plot([s for s, _ in curve], [v["auc@5"] for _, v in curve], marker=".", label="SCENES adaptation, seed 0")
-    for node, label in (("B0m", "Zero-shot"), ("E41", "E41 last")):
-        value = next(r["summary"]["auc@5"] for r in rows if r["node"] == node and r["split"] == "val")
-        ax.axhline(value, linestyle="--", linewidth=1, label=label)
-    ax.scatter([7907], [curve[-1][1]["auc@5"]], color="black", zorder=3, label="Official last checkpoint")
-    ax.set(xlabel="Optimizer updates", ylabel="Original Val AUC@5")
-    ax.grid(alpha=.2)
-    ax.legend(fontsize=8)
-    fig.savefig(R / "extra/val_curve.png", dpi=160)
-    plt.close(fig)
+    # wb 环境不装绘图库；用已有 matplotlib 的训练环境只画图，不改变指标计算环境。
+    subprocess.run(["/opt/envs/loftr/bin/python", str(R / "code/plot.py")], cwd=ROOT, check=True)
     result = lambda node, split: next(r["summary"] for r in rows if r["node"] == node and r["split"] == split)
     val, test = result("E50", "val"), result("E50", "test")
     metrics = []

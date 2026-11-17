@@ -299,6 +299,13 @@ def main(argv=None):
                 if mon and step % o["accum"] == 0:
                     mon.before()
                 upd = optim.step(step)
+                if r["count_updates"] and optim.skipped:
+                    if main_:
+                        with open(out / "overflow.jsonl", "a", encoding="utf-8") as f:
+                            f.write(json.dumps({"next_update": step, "pairs": batch["pair"],
+                                                "loss": float(loss), "scale": optim.scaler.get_scale()}) + "\n")
+                    step -= 1
+                    continue
                 if mon and upd:
                     upd.update(mon.after())
                 if ema and upd:

@@ -23,6 +23,8 @@ save_every = 250
 save_at = [7907]
 save_optim = true
 resume_epochs = true
+segment_steps = 500
+count_updates = true
 select = "last"
 
 [pseudo]

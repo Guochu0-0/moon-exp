@@ -71,6 +71,14 @@ class Job:
         self.S = self.sw / "S"
 
     def sh(self, cmd, logname, gpu=True):
+        if gpu and self.cfg["run"]["segment_steps"]:
+            # 子进程结束后 CUDA 上下文已释放；继续前重新等空卡。
+            while True:
+                mem = subprocess.check_output(["timeout", "15", "nvidia-smi", "-i", str(self.gpu),
+                       "--query-gpu=memory.used", "--format=csv,noheader,nounits"], text=True)
+                if int(mem.strip()) < 100:
+                    break
+                time.sleep(30)
         run(cmd, self.ck / logname, self.env, self.gpu if gpu else None)
 
     def evaluate(self, split, st):
@@ -89,14 +97,44 @@ class Job:
                if k.startswith("step") and "val" in v and int(k[4:]) > 0]
         return max(pts, key=lambda p: p[1])[0]
 
+    def train(self):
+        """默认单次训练；显式分段时保存并恢复优化器、数据顺序及全部随机状态。"""
+        import copy
+        src = self.R / "configs" / f"{self.m}.toml"
+        base = [PY, "-m", "finetune.train", src, "--out", self.ck, "--tb", self.R / "tb" / self.m / "scalars"]
+        interval = self.cfg["run"]["segment_steps"]
+        if not interval:
+            self.sh(base, "train.log")
+            return
+        total = self.cfg["optim"]["steps"]
+        existing = sorted(self.ck.glob("ckpt_*.pt"), key=lambda p: int(p.stem[5:]))
+        done = int(existing[-1].stem[5:]) if existing else 0
+        while done < total:
+            target = min(done + interval, total)
+            resume = self.ck / f"ckpt_{done}.pt" if done else None
+            cmd = base + ["--stop-at", str(target)] + (["--resume", resume] if resume else [])
+            cfg = copy.deepcopy(self.cfg)
+            cfg["run"].update(resume=str(resume) if resume else "")
+            method = f"{self.m}_train"
+            launch.begin(self.R, method, list(map(str, cmd)), entry="finetune.train", config_file=src.relative_to(REPO).as_posix(),
+                         args=cfg, stop_at=target, config=json.loads((REPO / self.infer).read_text()))
+            try:
+                self.sh(cmd, "train.log")
+            except BaseException:
+                launch.end(self.R, method, "fail")
+                raise
+            launch.end(self.R, method, "ok")
+            done = target
+            if done < total:
+                time.sleep(30)
+
     def __call__(self):
         R, m, ck = self.R, self.m, self.ck
         ck.mkdir(parents=True, exist_ok=True)
         online = self.cfg["model"]["name"] == "loftr" and ("cexp" in self.cfg or "neg" in self.cfg)
         if not (ck / "train.done").exists():
             log(f"TRAIN {m} [{', '.join(C.parts_of(self.cfg))}]")
-            self.sh([PY, "-m", "finetune.train", R / "configs" / f"{m}.toml", "--out", ck,
-                     "--tb", R / "tb" / m / "scalars"], "train.log")
+            self.train()
             (ck / "train.done").touch()
         log(f"SWEEP {m}")
         if not self.S.exists():

@@ -58,6 +58,8 @@ RUN = {
     "save_optim": False,    # ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序，#209），供 resume 用
     "resume": "",           # 从 save_optim 存下的 ckpt 接着训（相对仓库根或绝对路径，#209）；空 = 从头训
     "resume_epochs": False, # 允许后续 epoch 续训；只用于 workers=0 且数据加载无随机增强（#267）
+    "segment_steps": 0,    # 驱动每段训练的更新步数；段间释放CUDA进程并重新等空卡（#267）
+    "count_updates": False, # AMP溢出时不计入总更新预算；仅支持 accum=1（#267）
     "sweep": "all",         # 驱动评哪些 ckpt（#209）：all 逐个评 Val 再按 select 补评 Test / last 只评最后一个的 Val、不评 Test
     "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训（不另存 ckpt）
     "halt_below": {},       # 同上，中位数低于阈值就停
@@ -168,6 +170,11 @@ def expand(raw: dict) -> dict:
         raise ConfigError(f"[run] resume 只支持装得回全部权重的模型（有 load_weights 的），{m} 不支持")
     if out["run"]["resume_epochs"] and (out["run"]["workers"] or "aug" in raw):
         raise ConfigError("[run] resume_epochs 要求 workers=0 且不使用 [aug]（共同增强使用独立可恢复 RNG）")
+    if out["run"]["count_updates"] and (o["accum"] != 1 or out["run"]["ddp"] or out["run"]["log_update"]):
+        raise ConfigError("[run] count_updates 要求 accum=1、单卡、不启用 log_update")
+    if out["run"]["segment_steps"] < 0 or (out["run"]["segment_steps"] and
+            (not out["run"]["save_optim"] or not out["run"]["resume_epochs"] or out["run"]["stop_at"])):
+        raise ConfigError("[run] segment_steps 非负；分段要求 save_optim、resume_epochs 且 stop_at=0")
     for name, part in PARTS.items():      # 按登记顺序：每步也按这个顺序算损失
         if name not in raw:
             continue

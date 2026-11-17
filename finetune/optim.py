@@ -25,6 +25,7 @@ class Optim:
         """groups：可选，[{"params": [...], "lr_scale": x}, ...]，每组的 lr = 调度出的 lr × lr_scale（#120 分模块学习率）；
         不给时全部参数一组。reduce：可选，更新前对 params 的梯度调用一次（多卡时各卡梯度取平均，#226）。"""
         self.params, self.o, self.reduce = params, o, reduce
+        self.skipped = False
         groups = groups or [{"params": params, "lr_scale": 1.0}]
         self.opt = torch.optim.AdamW([{"params": g["params"], "lr_scale": g["lr_scale"]} for g in groups],
                                      lr=o["lr"], weight_decay=o["wd"])
@@ -51,6 +52,7 @@ class Optim:
     def step(self, step) -> dict:
         """每 accum 步更新一次（有梯度时）。返回要记进日志的 lr、裁剪前的梯度范数（及 GradScaler 的 scale）。"""
         o, upd = self.o, {}
+        self.skipped = False
         if step % o["accum"]:
             return upd
         if self.reduce:
@@ -65,8 +67,10 @@ class Optim:
                 self.scaler.unscale_(self.opt)
             gn = torch.nn.utils.clip_grad_norm_(self.params, o["clip"] if o["clip"] > 0 else float("inf"))
             if self.scaler:
+                before_scale = self.scaler.get_scale()
                 self.scaler.step(self.opt)
                 self.scaler.update()
+                self.skipped = self.scaler.get_scale() < before_scale
             else:
                 self.opt.step()
             upd = {"lr": float(f"{lr:.4g}"), "gnorm": round(float(gn), 4)}

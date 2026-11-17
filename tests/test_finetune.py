@@ -124,6 +124,62 @@ def test_loader_resume_later_epoch_without_workers():
     assert all(torch.equal(a, next(it2)) for a in expected)
 
 
+def test_segmented_driver_preserves_resume_and_budget(tmp_path, monkeypatch):
+    import importlib.util
+    from finetune.config import expand
+    spec = importlib.util.spec_from_file_location("run267", REPO / "scripts/finetune/run.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    monkeypatch.setattr(mod, "REPO", tmp_path)
+    monkeypatch.setattr(mod.time, "sleep", lambda _: None)
+    records = []
+    monkeypatch.setattr(mod.launch, "begin", lambda *a, **kw: records.append(kw))
+    monkeypatch.setattr(mod.launch, "end", lambda *a: None)
+    r = tmp_path / "runs/E50"
+    cfg = expand({"model": {"name": "roma"}, "optim": {"steps": 7},
+                  "run": {"workers": 0, "save_optim": True, "resume_epochs": True, "segment_steps": 3}})
+    infer = tmp_path / cfg["model"]["config"]
+    infer.parent.mkdir(parents=True)
+    infer.write_text("{}")
+    job = mod.Job(r, "main", cfg, "0")
+    job.ck.mkdir(parents=True)
+    calls = []
+    job.sh = lambda cmd, name: calls.append(list(map(str, cmd)))
+    job.train()
+    assert [int(c[c.index("--stop-at") + 1]) for c in calls] == [3, 6, 7]
+    assert "--resume" not in calls[0]
+    assert calls[1][-1].endswith("ckpt_3.pt") and calls[2][-1].endswith("ckpt_6.pt")
+    assert records[1]["args"]["run"]["resume"].endswith("ckpt_3.pt")
+    assert all(rec["args"]["optim"]["steps"] == 7 for rec in records)
+
+
+def test_optimizer_reports_amp_skip_without_changing_default_budget():
+    import torch
+    from finetune.optim import Optim
+    from finetune.config import expand
+    p = torch.nn.Parameter(torch.ones(1))
+    cfg = expand({"model": {"name": "roma"}, "optim": {"warmup": 0, "sched": "const"}})
+    opt = Optim([p], cfg["optim"], False)
+
+    class Overflow:
+        def __init__(self):
+            self.value = 65536
+        def get_scale(self):
+            return self.value
+        def unscale_(self, optimizer):
+            pass
+        def step(self, optimizer):
+            pass  # AMP 溢出：不调用 optimizer.step
+        def update(self):
+            self.value /= 2
+
+    opt.scaler = Overflow()
+    p.grad = torch.ones_like(p)
+    before = p.detach().clone()
+    opt.step(1)
+    assert opt.skipped and torch.equal(before, p)
+
+
 def _texture(n=128, shift=0, seed=0):
     import cv2
     rng = np.random.default_rng(seed)

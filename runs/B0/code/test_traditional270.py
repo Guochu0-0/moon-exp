@@ -3,12 +3,23 @@ import importlib.util
 import json
 import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
-from scipy.io import savemat
+
+
+def savemat(path, values):
+    """Controllable loader fixture; MAT parser itself is outside these tests."""
+    with open(path, 'wb') as stream:
+        np.savez(stream, **{k: np.atleast_1d(v) if isinstance(v, str) else v for k, v in values.items()})
+
+
+def loadmat(path):
+    with np.load(path) as arrays:
+        return dict(arrays)
 
 spec = importlib.util.spec_from_file_location('traditional270', Path(__file__).with_name('traditional270.py'))
 target = importlib.util.module_from_spec(spec)
@@ -35,7 +46,8 @@ class CollectionBoundary(unittest.TestCase):
         ds.pairs.return_value = self.pairs
         for p in [patch.object(target, 'REPO', self.root), patch.object(target, 'Data', return_value=ds),
                   patch.object(target, 'require_clean'), patch.object(target, 'git_head', return_value='fixed'),
-                  patch.object(target, 'env_info', return_value={})]:
+                  patch.object(target, 'env_info', return_value={}),
+                  patch.dict(sys.modules, {'scipy.io': types.SimpleNamespace(loadmat=loadmat, savemat=savemat)})]:
             p.start()
             self.addCleanup(p.stop)
 

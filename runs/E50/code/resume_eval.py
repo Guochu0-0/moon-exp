@@ -35,7 +35,7 @@ def main():
     launch.begin(R, "main", [sys.executable, *sys.argv], entry="runs/E50/code/resume_eval.py",
                  config_file="runs/E50/configs/main.toml", args=cfg,
                  config=json.loads((ROOT / cfg["model"]["config"]).read_text()),
-                 reason="Val resumed after withdrawing owned processes on shared GPUs",
+                 reason=os.environ.get("EVAL_RESUME_REASON", "Val resumed after withdrawing owned processes on shared GPUs"),
                  completed_val_checkpoints=complete, training_complete_step=7907)
     try:
         driver.Job(R, "main", cfg, gpu)()

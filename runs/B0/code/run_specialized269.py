@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from baselines import adapters
 from baselines.data import Data
-from baselines.match import seed_all
+from baselines.match import git_head, seed_all, sha256
 from moonlib import inputs
 from workbench.launch import begin, end
 
@@ -63,7 +63,8 @@ def selfcheck(config, data_root, weights_root):
                 rec["linear_max_error"] = float(np.abs(affine[:, :2] - np.eye(2)).max())
             records.append(rec)
             print(json.dumps(rec), flush=True)
-    return {"config": config, "gpu": torch.cuda.get_device_name(0), "seed": config["seed"],
+    return {"config": config, "weights_sha256": sha256(weights), "repo_commit": git_head(repo),
+            "gpu": torch.cuda.get_device_name(0), "seed": config["seed"],
             "notes": matcher.notes, "checks": records}
 
 

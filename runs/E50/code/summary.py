@@ -72,6 +72,14 @@ def main():
     skipped = len(overflow.read_text().splitlines()) if overflow.exists() else 0
     stages = json.loads((R / "launch/main_train.json").read_text())
     assert stages[-1]["status"] == "ok" and stages[-1]["end"]
+    evaluation_envs = []
+    for step, _ in curve:
+        meta = json.loads((R / f"sweep/main/match/step{step}/val.meta.json").read_text())
+        evaluation_envs.append({"step": step, "split": "val", "host": meta["env"]["host"],
+                                "gpu": meta["env"]["gpu"], "env": meta["env"]})
+    meta = json.loads((R / "sweep/main/match/step7907/test.meta.json").read_text())
+    evaluation_envs.append({"step": 7907, "split": "test", "host": meta["env"]["host"],
+                            "gpu": meta["env"]["gpu"], "env": meta["env"]})
     data = R / "extra/data"
     data.mkdir(exist_ok=True)
     report = {"results": rows, "paired": comparisons, "best_val": {"step": best_step, "summary": best},
@@ -79,7 +87,8 @@ def main():
               "train_process_sec": duration(stages), "train_unfinished_attempts": sum(not r["end"] for r in stages),
               "train_failed_attempts": sum(r["status"] == "fail" for r in stages),
               "teacher_process_sec": labels["teacher_process_sec"],
-              "teacher_unfinished_attempts": labels["teacher_unfinished_attempts"]}
+              "teacher_unfinished_attempts": labels["teacher_unfinished_attempts"],
+              "evaluation_environments": evaluation_envs}
     (data / "summary.json").write_text(json.dumps(jsonable(report), ensure_ascii=False, indent=1) + "\n")
     with open(data / "val_curve.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["step", *curve[0][1].keys()])
@@ -130,7 +139,7 @@ RoMa 先用图像特征给出粗对应位置，再用多级细化逐步调整位
 
 *评价与统计。* 原始 Val 652 对，原始 Test 953 对。每个存档都评 Val，正式结果固定取最后 7907；Test 只评这一存档。仿射按统一 RANSAC 3 px 拟合，逐 patch 对误差为光学检查点经预测仿射到 SAR 检查点的平均距离，失败记 ∞，全部 patch 对等权。AUC@T 是 [0,T] 误差累积曲线的归一化面积；SR@T 是误差不超过 T 的比例，主要比较 AUC@5。配对比较按同一 patch 对的全精度误差做 2000 次重抽、种子 0，给差值的 95% 区间。区间只反映该数据集按 patch 对重抽的波动，不是训练种子波动。
 
-资源允许时，不同存档的 Val 评测在同一台机器的两张同型号 V100 上并行；空闲卡不足时用可用空卡继续。每个 patch 对仍独立按相同参数推理，全部 Val 结束后才汇总和评最后存档 Test。并行只改变存档间调度，单对推理设置不变。
+资源允许时，不同存档的 Val 评测并行；空闲卡不足时用可用空卡继续。每个 patch 对仍独立按相同参数推理，全部 Val 结束后才汇总和评最后存档 Test。每份完整预测的实际主机、GPU 和环境版本均保存在原始匹配 meta，并汇入 summary.json 的 evaluation_environments；曲线包含的 GPU 型号为 {"、".join(sorted({e["gpu"] for e in evaluation_envs if e["split"] == "val"}))}，最后存档 Test 使用 {evaluation_envs[-1]["gpu"]}。调度没有修改单对推理参数，但跨 GPU 的浮点结果不保证逐位相同。
 
 *历史对照身份。* T13 的训练记录写明学生 init 为空、使用 anymatch/RoMa_AnyMatch.pth，输入为光学 div255、SAR minmax；这里按这一记录比较，不将图中的 M15 关系解释为学生从 M15 权重续训。历史记录未含发布权重 SHA256，因此只能核对发布权重路径和输入配置，不能逐字节确认历史权重与本实验相同。
 
@@ -161,7 +170,7 @@ RoMa 先用图像特征给出粗对应位置，再用多级细化逐步调整位
 
 启动前的代码洁净检查曾因共享盘 Git status 超过 120 秒而退出，当时没有生成伪标签或开始训练；随后显式将 Git 等待预算设为 600 秒，仍逐项检查代码洁净，不使用 dirty 放行。原始错误见 [启动前错误记录](extra/startup_failure.txt)。这一处理只改变等待时限，不改变训练或评价配方。
 
-训练完成后的 Val 评测中，已完成 16 个存档时检测到两张卡出现额外 CUDA 进程，按共享用卡规则撤下了本方两个评测进程。随后确认空卡，保留训练和完整 Val 记录继续评测，重算中断的存档；没有重新训练或重估伪仿射。中断和恢复均保留在 main、pipeline 与 pipeline_resume 的启动记录中。
+训练完成后的 Val 评测中，已完成 16 个存档时检测到两张卡出现额外 CUDA 进程，按共享用卡规则撤下了本方两个评测进程。一次单卡恢复又遇到同卡任务，再次撤下本方进程；随后确认空卡，保留训练和完整 Val 记录继续评测，重算中断的存档。没有重新训练或重估伪仿射。中断和恢复均保留在 main、pipeline 与 pipeline_resume 的启动记录中，第二次中断日志另存 extra/eval_resume_interrupted_160.txt。
 
 **讨论**
 

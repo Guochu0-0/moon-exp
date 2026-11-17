@@ -179,7 +179,7 @@ def append_notes(rows, paired):
         else:
             text += ['跨方法总表与配对差见 [E41 本次补评](../E41/notes.md)。'
                      '若最佳与最后是同一次更新，直接复用同一份预测，没有重复推理。', '']
-        path.write_text(original.rstrip() + '\n\n' + '\n'.join(text) + '\n', encoding='utf-8')
+        path.write_text(original.rstrip() + '\n\n' + '\n'.join(text).rstrip() + '\n', encoding='utf-8')
 
 
 if __name__ == '__main__':

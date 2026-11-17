@@ -15,5 +15,39 @@
    "runs/E50/code/resume_eval.py"
   ],
   "entry": "runs/E50/code/resume_eval.py"
+ },
+ {
+  "start": "2026-11-18 04:38:35 +0800",
+  "end": "2026-11-18 05:32:49 +0800",
+  "status": "fail",
+  "commit": "70826c736627aeb3152e9aafc862e36dfc14e92c",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "6",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E50/code/resume_eval.py"
+  ],
+  "entry": "runs/E50/code/resume_eval.py"
+ },
+ {
+  "start": "2026-11-17 21:34:47 +0000",
+  "end": "2026-11-17 23:08:24 +0000",
+  "status": "fail",
+  "commit": "6cdbcef64a24fc7ed5191ee10a6d063f5072223a",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E50/code/resume_eval.py"
+  ],
+  "entry": "runs/E50/code/resume_eval.py"
  }
 ]

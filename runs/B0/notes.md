@@ -145,7 +145,7 @@ AnyMatch-RoMa 的规律相同，自洽残差在各档都是 1.2–1.5 px。
 
 *采样、坐标与评测。* 每个 patch 对按种子 0 从稠密匹配场采样 10000 个点对，转换回原始 patch 的像素中心坐标，再沿用统一 RANSAC 3 px 估计仿射。原始 10000 点用于拟合并保留在服务器 `raw/supplement268/roma`；工作台点对文件按既有记录规范保存置信度最高的最多 2000 点。Val/Test 分别为与旧四个参照逐对清单相同的 652/953 对；不训练、不搜参、不按 Test 选设置。在 160 的 V100-SXM2 32 GB、PyTorch 2.1.2+cu118 上按 split 分段推理。实际加载权重的 SHA256、完整配置及启动起止状态见 `launch/roma.json`。
 
-原始匹配 meta 的 commit 保留了 `9f849fd-dirty`：现有 `baselines.match.git_head` 的状态检查把运行时更新的已跟踪 `launch/roma.json` 也计为 dirty。正式启动记录的代码检查均为 `dirty=false`、`allow_dirty=false`，两个 split 的预测 meta 也均为 `dirty=false`；推理期间没有修改代码。
+原始匹配 meta 的 commit 保留了 `9f849fd-dirty`。通用 `baselines.match.git_head` 检查包含运行时更新的已跟踪 `launch/roma.json`，代码范围的正式启动检查则均为 `dirty=false`、`allow_dirty=false`，预测 meta 也均为 `dirty=false`。检测范围差异可解释该标记；[来源核对记录](extra/supplement268/provenance_audit.json)保存同期字段、检查定义及推理代码/配置未改的 Git 差异。原始逐文件 status 清单当时未保存，不补造历史清单，也不改写原始 meta。
 
 **结果**
 

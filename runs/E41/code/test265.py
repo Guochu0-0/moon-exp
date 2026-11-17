@@ -121,7 +121,64 @@ def report():
     from workbench.evaluate import jsonable
     output.write_text(json.dumps(jsonable(dict(rows=table, paired=paired, resamples=2000, seed=0)),
                                  ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+    append_notes(table, paired)
     print(output, flush=True)
+
+
+def append_notes(rows, paired):
+    heading = '## 2026-11-17：Test 与选存档规则补评（#265）'
+    labels = {'fixed': '固定起点', 'last': '最后存档', 'best': 'Val 最高存档'}
+    def metrics(summary):
+        return ' / '.join(f'{summary[f"auc@{t}"]:.4f}' for t in (3, 5, 10)) if summary else '缺失'
+    def ci(summary):
+        return '[{:.4f}, {:.4f}]'.format(*summary['auc@5_ci']) if summary else '缺失'
+    for rid in ('B0m', 'E41', 'T13', 'S1'):
+        path = REPO / 'runs' / rid / 'notes.md'
+        original = path.read_text(encoding='utf-8')
+        if heading in original:
+            raise RuntimeError(f'Notes already appended: {path}; do not overwrite user edits')
+        text = [heading, '',
+                '本节只补评已有存档，没有训练。Test 为不加扰动的 953 对有标注 patch 对；'
+                '配准误差、AUC、SR、失败率与单方法 95% 自助法区间沿用 '
+                '`workbench.protocol`（1000 次重抽，种子 0）。本次新增 Test 推理均在 '
+                '160 的 V100 上完成；复用的 Val 与已有最佳 Test 沿用原记录。'
+                '推理配置保持原方法不变：长边 640，RoMa 采样 10000 点，RANSAC 3 px；'
+                'SCENES 保持 AnyMatch-LoFTR 的原始 p2p98 SAR 映射。', '']
+        if rid == 'E41':
+            text += ['为补齐论文主表，本表合并起点、自训练、SCENES 与门槛 0.8 种子 0 的两种选存档规则。'
+                     'E41 第 4250 次更新的存档已经缺失，只有 Val 预测保留，因此该规则下的 Test '
+                     '及配对差无法补评；按票约定没有重训。#264 尚未产生新种子存档，本节没有种子 1、2。', '']
+        selected = rows if rid == 'E41' else [r for r in rows if r['node'] == rid]
+        text += ['| 节点 / 方法 | 选存档规则 | 更新次数 | Val AUC@3 / 5 / 10 | Test AUC@3 / 5 / 10 | Test AUC@5 95% 区间 |',
+                 '|---|---|---:|---|---|---|']
+        for r in selected:
+            method = r['method'] or 'main__screen0.8（存档缺失）'
+            step = str(r['step']) if r['step'] is not None else '—'
+            text.append(f"| {r['node']}/{method} | {labels[r['rule']]} | {step} | {metrics(r['val'])} | {metrics(r['test'])} | {ci(r['test'])} |")
+        text += ['', '表：同一节点的两种选存档规则。Test 缺失表示对应模型存档不在，不是配准失败。', '']
+        if rid == 'E41':
+            text += ['配对自助法按同一批 953 对同步有放回重抽 2000 次，种子 0，差为本文减参照。'
+                     '自训练与 SCENES 的配对比较使用种子 0；其余种子只列单方法读数。', '',
+                     '| 选存档规则 | 参照 | Test AUC@5 之差 | 95% 区间 |', '|---|---|---:|---|']
+            for p in paired:
+                delta = f"{p['delta']:+.4f}" if p['delta'] is not None else '缺失'
+                interval = '[{:+.4f}, {:+.4f}]'.format(*p['ci']) if p['ci'] else '缺失'
+                text.append(f"| {labels[p['rule']]} | {p['reference']} | {delta} | {interval} |")
+            text += ['', '表：两种规则下本文减参照的 Test AUC@5 配对差。正值表示本文的 AUC@5 较高，'
+                     '负值表示较低；区间反映更换同样数量测试对带来的波动，不反映重新训练的随机性。', '',
+                     '完整数值（含 AUC@20、SR、失败率）保存在各原节点的 `metrics.json`；'
+                     '总表和配对差的数据见 [附件](extra/data/test265.json)。'
+                     '评测脚本为 `code/test265.py`，模型与每次启动的提交、主机、卡号见各节点 `launch/`。', '']
+        elif rid == 'B0m':
+            baseline = json.loads((SOURCE / 'B0' / 'metrics.json').read_text())['methods']['anymatch_roma']['test']['summary']
+            current = selected[0]['test']['auc@5']
+            old = baseline['auc@5']
+            text += [f'起点 min–max 映射 Test AUC@5 为 {current:.4f}，B0 分位数映射为 {old:.4f}'
+                     f'（约 {old * 100:.1f}），差为 {current - old:+.4f}。这里只改变 SAR 输入映射。', '']
+        else:
+            text += ['跨方法总表与配对差见 [E41 本次补评](../E41/notes.md)。'
+                     '若最佳与最后是同一次更新，直接复用同一份预测，没有重复推理。', '']
+        path.write_text(original.rstrip() + '\n\n' + '\n'.join(text) + '\n', encoding='utf-8')
 
 
 if __name__ == '__main__':

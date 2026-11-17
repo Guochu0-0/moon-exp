@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import random
+import itertools
 from pathlib import Path
 
 import numpy as np
@@ -48,6 +49,20 @@ class TraceWriter:
         np.savez_compressed(self.dir / f"obs_{step:05d}.npz", **data)
 
 
+class _ResumeSampler:
+    """仍生成同一整份索引排列，只在首次迭代跳过前缀，避免重读确定性影像。"""
+
+    def __init__(self, sampler):
+        self.sampler, self.skip = sampler, 0
+
+    def __iter__(self):
+        skip, self.skip = self.skip, 0
+        return itertools.islice(iter(self.sampler), skip, None)
+
+    def __len__(self):
+        return len(self.sampler)
+
+
 class Loader:
     """无限地逐个产出 batch。state() 存下当前 epoch、epoch 内已取的 batch 数和这一 epoch 开始时数据发生器的状态；
     load() 之后从同一个 batch 接着取（前面的照常取出再丢掉，所以 worker 里的随机扰动也和原来一样）。
@@ -56,6 +71,12 @@ class Loader:
     def __init__(self, dl, g: torch.Generator, resume_epochs=False):
         self.dl, self.g = dl, g
         self.resume_epochs = resume_epochs
+        self.resume_sampler = None
+        if resume_epochs and dl.num_workers == 0:
+            if type(dl.batch_sampler) is not torch.utils.data.BatchSampler:
+                raise ValueError("确定性续训只支持标准 BatchSampler")
+            self.resume_sampler = _ResumeSampler(dl.batch_sampler.sampler)
+            dl.batch_sampler.sampler = self.resume_sampler
         self.epoch, self.i, self.skip = 0, 0, 0
         self.g0 = g.get_state()
 
@@ -74,6 +95,9 @@ class Loader:
             self.g0, self.i = self.g.get_state(), 0
             if hasattr(self.dl.sampler, "set_epoch"):    # 多卡的 DistributedSampler 按 epoch 换顺序（#226）
                 self.dl.sampler.set_epoch(self.epoch)
+            if self.resume_sampler is not None and self.skip:
+                self.resume_sampler.skip = self.skip * self.dl.batch_sampler.batch_size
+                self.i, self.skip = self.skip, 0
             for b in self.dl:
                 self.i += 1
                 if self.skip:

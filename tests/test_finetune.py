@@ -138,6 +138,42 @@ def test_loader_resume_later_epoch_without_workers():
     assert all(torch.equal(a, next(it2)) for a in expected)
 
 
+def test_deterministic_resume_skips_io_and_preserves_shuffle_state():
+    import torch
+    from finetune.trace import Loader
+
+    class Counting(torch.utils.data.Dataset):
+        def __init__(self):
+            self.reads = 0
+        def __len__(self):
+            return 12
+        def __getitem__(self, i):
+            self.reads += 1
+            return i
+
+    def make(seed):
+        ds = Counting()
+        g = torch.Generator().manual_seed(seed)
+        dl = torch.utils.data.DataLoader(ds, batch_size=4, shuffle=True, generator=g, num_workers=0)
+        return Loader(dl, g, resume_epochs=True), ds, g
+
+    full, _, full_g = make(0)
+    it = iter(full)
+    for _ in range(5):
+        next(it)
+    saved = full.state()
+    expected = [next(it).clone() for _ in range(7)]
+    expected_state = full_g.get_state().clone()
+    resumed, ds, g = make(999)
+    resumed.load(saved)
+    it2 = iter(resumed)
+    assert torch.equal(next(it2), expected[0])
+    assert ds.reads == 4  # 前缀的8个patch完全不读，不能只是算完再丢弃。
+    assert all(torch.equal(next(it2), x) for x in expected[1:])
+    assert torch.equal(g.get_state(), expected_state)
+    assert (resumed.epoch, resumed.i) == (full.epoch, full.i)
+
+
 def test_segmented_driver_preserves_resume_and_budget(tmp_path, monkeypatch):
     import importlib.util
     from finetune.config import expand

@@ -75,6 +75,20 @@ class CollectionBoundary(unittest.TestCase):
         self.manifest(self.pairs[:1])
         self.rejected_without_output()
 
+    def test_selfcheck_manifest_cannot_publish_formal_split(self):
+        path = self.out.parent / 'manifest.json'
+        doc = json.loads(path.read_text())
+        doc['selfcheck'] = True
+        path.write_text(json.dumps(doc))
+        self.rejected_without_output()
+
+    def test_prep_limit_rejected_before_writing_inputs(self):
+        with patch.object(sys, 'argv', ['traditional270', 'prep', '--method', 'rift', '--split', 'val',
+                                       '--io', str(self.io), '--data', 'unused', '--limit', '1']):
+            with self.assertRaises(ValueError):
+                target.main()
+        self.assertFalse((self.out.parent / 'in').exists())
+
     def test_limit_cannot_publish_formal_split(self):
         self.manifest(self.pairs[:1])
         self.rejected_without_output('--limit', '1')
@@ -83,6 +97,21 @@ class CollectionBoundary(unittest.TestCase):
         savemat(self.out / (target.key(self.pairs[1]) + '.mat'),
                 {'p1': np.array([[np.nan, 2.]]), 'p2': np.array([[1., 2.]]), 'sec': 0.1, 'err': ''})
         self.rejected_without_output()
+
+    def test_corrupt_mat_rejected(self):
+        (self.out / (target.key(self.pairs[1]) + '.mat')).write_bytes(b'corrupt mat')
+        self.rejected_without_output()
+
+    def test_serialization_failure_preserves_formal_outputs(self):
+        dest = self.root / 'runs/B0/raw/rift'
+        dest.mkdir(parents=True)
+        (dest / 'val.npz').write_bytes(b'old matches')
+        with patch.object(target.np, 'savez_compressed', side_effect=OSError('disk full')):
+            with self.assertRaises(OSError):
+                self.run_collect()
+        self.assertEqual((dest / 'val.npz').read_bytes(), b'old matches')
+        self.assertFalse((dest / 'val.jsonl').exists())
+        self.assertFalse((dest / 'val.meta.json').exists())
 
     def test_rejection_preserves_existing_raw(self):
         dest = self.root / 'runs/B0/raw/rift'

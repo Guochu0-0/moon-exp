@@ -175,7 +175,7 @@ def append_notes(rows, paired):
             current = selected[0]['test']['auc@5']
             old = baseline['auc@5']
             text += [f'起点 min–max 映射 Test AUC@5 为 {current:.4f}，B0 分位数映射为 {old:.4f}'
-                     f'（约 {old * 100:.1f}），差为 {current - old:+.4f}。这里只改变 SAR 输入映射。', '']
+                     f'（约 {old * 100:.1f}%），差为 {current - old:+.4f}。这里只改变 SAR 输入映射。', '']
         else:
             text += ['跨方法总表与配对差见 [E41 本次补评](../E41/notes.md)。'
                      '若最佳与最后是同一次更新，直接复用同一份预测，没有重复推理。', '']

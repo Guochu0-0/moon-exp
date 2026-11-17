@@ -111,7 +111,7 @@ def test_loader_resume_later_epoch_without_workers():
     def make(seed):
         g = torch.Generator().manual_seed(seed)
         return Loader(torch.utils.data.DataLoader(torch.arange(12), batch_size=4, shuffle=True,
-                      generator=g, num_workers=0), g)
+                      generator=g, num_workers=0), g, resume_epochs=True)
     loader = make(0)
     it = iter(loader)
     for _ in range(5):

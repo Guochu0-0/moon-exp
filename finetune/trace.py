@@ -53,8 +53,9 @@ class Loader:
     load() 之后从同一个 batch 接着取（前面的照常取出再丢掉，所以 worker 里的随机扰动也和原来一样）。
     只支持第一个 epoch 内的状态：persistent_workers 时 worker 的种子在第一个 epoch 取定，之后的 epoch 无法单独重建。"""
 
-    def __init__(self, dl, g: torch.Generator):
+    def __init__(self, dl, g: torch.Generator, resume_epochs=False):
         self.dl, self.g = dl, g
+        self.resume_epochs = resume_epochs
         self.epoch, self.i, self.skip = 0, 0, 0
         self.g0 = g.get_state()
 
@@ -62,7 +63,7 @@ class Loader:
         return {"epoch": self.epoch, "batch": self.i, "g": self.g0}
 
     def load(self, s: dict):
-        if s["epoch"] > 0 and self.dl.num_workers > 0:
+        if s["epoch"] > 0 and not (self.resume_epochs and self.dl.num_workers == 0):
             raise ValueError(f"续训只支持第一个 epoch 内的存档，这个存档在第 {s['epoch']} 个 epoch")
         self.epoch = s["epoch"]
         self.g.set_state(s["g"])

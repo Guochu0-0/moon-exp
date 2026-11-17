@@ -173,10 +173,14 @@ def main(argv=None):
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--stop-at", type=int, default=0, help="只跑前 N 步（核对用），lr 调度不变")
+    ap.add_argument("--resume", default="", help="覆盖 [run] resume，从已存完整状态的 ckpt 续训")
     args = ap.parse_args(argv)
     require_clean(REPO)   # 先提交再跑（#76）
 
     cfg = C.load(args.config)
+    if args.resume:
+        cfg["run"]["resume"] = args.resume
+        cfg = C.expand(cfg)
     o, r, mname = cfg["optim"], cfg["run"], cfg["model"]["name"]
     rank = D.init(r["ddp"])      # 多卡（#226）：每个进程绑一张卡；单卡时为 0
     main_ = rank == 0
@@ -218,7 +222,7 @@ def main(argv=None):
     if r["save_zero"] and main_:
         torch.save(model.state_dict(), out / "ckpt_0.pt")
     rng = np.random.default_rng(seed_r)   # 打乱分数（placebo）、交换方向（RoMa 伪标签）共用
-    loader = Loader(dl, g)
+    loader = Loader(dl, g, resume_epochs=r["resume_epochs"])
 
     def sync_check(st):
         """多卡：各卡参数（及成分的 ddp_tensors）与 rank 0 的最大差，记进 ddp_sync.jsonl（#226）。"""

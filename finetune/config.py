@@ -57,6 +57,7 @@ RUN = {
     "stop_at": 0,           # 训到第几步停下（lr 调度仍按 [optim] steps，#209）；0 = 训满
     "save_optim": False,    # ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序，#209），供 resume 用
     "resume": "",           # 从 save_optim 存下的 ckpt 接着训（相对仓库根或绝对路径，#209）；空 = 从头训
+    "resume_epochs": False, # 允许后续 epoch 续训；只用于 workers=0 且数据加载无随机增强（#267）
     "sweep": "all",         # 驱动评哪些 ckpt（#209）：all 逐个评 Val 再按 select 补评 Test / last 只评最后一个的 Val、不评 Test
     "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训（不另存 ckpt）
     "halt_below": {},       # 同上，中位数低于阈值就停
@@ -165,6 +166,8 @@ def expand(raw: dict) -> dict:
         raise ConfigError("[run] ddp 应 ≥ 0；多卡时不支持 save_optim、resume、log_update")
     if out["run"]["resume"] and not hasattr(model, "load_weights"):
         raise ConfigError(f"[run] resume 只支持装得回全部权重的模型（有 load_weights 的），{m} 不支持")
+    if out["run"]["resume_epochs"] and (out["run"]["workers"] or "aug" in raw):
+        raise ConfigError("[run] resume_epochs 要求 workers=0 且不使用 [aug]（共同增强使用独立可恢复 RNG）")
     for name, part in PARTS.items():      # 按登记顺序：每步也按这个顺序算损失
         if name not in raw:
             continue

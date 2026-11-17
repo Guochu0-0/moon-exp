@@ -22,6 +22,7 @@ ENTRY = "scripts/finetune/run.py"
 # 以后新增参数时在这里加一条，默认值必须等于新增之前的行为。
 ADDED = {
     "model.bn_mode": ("eval", "#267 新增；默认保持全部 BN eval"),
+    "run.resume_epochs": (False, "#267 新增；默认不允许后续 epoch 续训"),
     "optim.lr_milestones": ([], "#267 新增；旧调度不用 MultiStep"),
     "optim.lr_gamma": (0.1, "#267 新增；只对 MultiStep 生效"),
     "optim.amp_growth_interval": (2000, "#267 新增；默认与旧 GradScaler 一致"),

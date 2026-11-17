@@ -179,6 +179,8 @@ def expand(raw: dict) -> dict:
     gpus = out["run"]["eval_gpus"]
     if any(type(g) is not int or g < 0 for g in gpus) or len(set(gpus)) != len(gpus):
         raise ConfigError("[run] eval_gpus 必须是互不重复的非负GPU编号")
+    if gpus and m == "loftr" and ("cexp" in raw or "neg" in raw):
+        raise ConfigError("[run] eval_gpus 不支持 LoFTR 在线信号的共享负样本诊断，请用默认串行评测")
     for name, part in PARTS.items():      # 按登记顺序：每步也按这个顺序算损失
         if name not in raw:
             continue

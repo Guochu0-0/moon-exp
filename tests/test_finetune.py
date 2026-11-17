@@ -194,6 +194,12 @@ def test_parallel_val_evaluates_every_checkpoint_once_before_return(tmp_path, mo
     assert sorted((split, int(step)) for _, split, step in calls) == [("val", s) for s in (250, 500, 750, 7907)]
 
 
+def test_parallel_val_rejects_shared_online_diagnostics():
+    from finetune.config import expand, ConfigError
+    with pytest.raises(ConfigError, match="共享负样本诊断"):
+        expand({"model": {"name": "loftr"}, "run": {"eval_gpus": [0, 1]}, "cexp": {}})
+
+
 def test_optimizer_reports_amp_skip_without_changing_default_budget():
     import torch
     from finetune.optim import Optim

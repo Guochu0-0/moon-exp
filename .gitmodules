@@ -46,3 +46,15 @@
 	path = third_party/CoMIR
 	url = https://github.com/MIDA-group/CoMIR
 	shallow = true
+[submodule "third_party/HIMO"]
+	path = third_party/HIMO
+	url = https://github.com/MrPingQi/HIMO_ImgMatching
+	shallow = true
+[submodule "third_party/RIFT"]
+	path = third_party/RIFT
+	url = https://github.com/LJY-RS/RIFT-multimodal-image-matching
+	shallow = true
+[submodule "third_party/OS-SIFT"]
+	path = third_party/OS-SIFT
+	url = https://github.com/xym2009/OS-SIFT
+	shallow = true

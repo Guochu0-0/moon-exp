@@ -1,0 +1,22 @@
+[
+ {
+  "start": "2026-11-17 06:14:08 +0000",
+  "end": "2026-11-17 06:19:23 +0000",
+  "status": "ok",
+  "commit": "6d8f4d85972b10dd8fdf28473d7daac1b8276adc",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-265",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "bash",
+   "scripts/finetune/eval_ckpt.sh",
+   "/remote-home/xufang/YGC/wt/roma-rl-265/runs/S1",
+   "seed2__step8000",
+   "/remote-home/xufang/YGC/moon-exp/runs/S1/ckpt/seed2/ckpt_8000.pt",
+   "configs/baselines/anymatch_loftr.json"
+  ]
+ }
+]

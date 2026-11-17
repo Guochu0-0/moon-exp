@@ -1,0 +1,9 @@
+{
+ "method": "splg",
+ "adapter": "splg_original",
+ "repo": "third_party/LightGlue",
+ "weights": null,
+ "params": {},
+ "input": {"optical": "div255", "sar": "p2p98"},
+ "seed": 0
+}

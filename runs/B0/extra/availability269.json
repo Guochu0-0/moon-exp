@@ -1,0 +1,58 @@
+{
+  "probes": [
+    {
+      "name": "fhreg_google_folder",
+      "url": "https://drive.google.com/embeddedfolderview?id=1T1Ic0uxSIBx_qdQJQEV68jzGlwBFR3TU",
+      "timestamp_utc": "2026-11-17T14:48:57.402234+00:00",
+      "anonymous": true,
+      "proxy": "disabled",
+      "weight_download_attempted": false,
+      "http_status": null,
+      "error": "URLError: <urlopen error [Errno 99] Cannot assign requested address>"
+    },
+    {
+      "name": "vmgga_baidu_share",
+      "url": "https://pan.baidu.com/s/1udp4OAzw_EL9QEI3FyG4Wg?pwd=bf8d",
+      "timestamp_utc": "2026-11-17T14:49:45.462979+00:00",
+      "anonymous": true,
+      "proxy": "disabled",
+      "weight_download_attempted": false,
+      "http_status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "bytes_read": 16038,
+      "page_title": "百度网盘 请输入提取码",
+      "checkpoint_name_mentioned": false
+    },
+    {
+      "name": "mifnet_dropbox_folder",
+      "url": "https://www.dropbox.com/scl/fo/y9sriuno6xi9axuhb184c/AMR6jdKuOh_fZoI-r8rU2u4?rlkey=bh6ufuj2o9kms252cugiy1ub9&st=6bxu4pd8&dl=0",
+      "timestamp_utc": "2026-11-17T14:49:47.043184+00:00",
+      "anonymous": true,
+      "proxy": "disabled",
+      "weight_download_attempted": false,
+      "http_status": null,
+      "error": "URLError: <urlopen error [Errno 99] Cannot assign requested address>"
+    },
+    {
+      "name": "mifnet_sd21_official_api",
+      "url": "https://huggingface.co/api/models/stabilityai/stable-diffusion-2-1",
+      "timestamp_utc": "2026-11-17T14:49:55.065776+00:00",
+      "anonymous": true,
+      "proxy": "disabled",
+      "weight_download_attempted": false,
+      "http_status": null,
+      "error": "URLError: <urlopen error [Errno 99] Cannot assign requested address>"
+    },
+    {
+      "name": "mifnet_sd21_mirror_api",
+      "url": "https://hf-mirror.com/api/models/stabilityai/stable-diffusion-2-1",
+      "timestamp_utc": "2026-11-17T14:50:03.082741+00:00",
+      "anonymous": true,
+      "proxy": "disabled",
+      "weight_download_attempted": false,
+      "http_status": 404,
+      "error": "HTTP Error 404: Not Found",
+      "error_body_excerpt": "{\"error\":\"Repository not found\"}"
+    }
+  ]
+}

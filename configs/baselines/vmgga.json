@@ -1,0 +1,1 @@
+{"method":"vmgga","adapter":"vmgga","repo":"third_party/VMGGA","weights":"official/vmgga/vmgga_optical_sar.pth","params":{"threshold":0.00002,"fine_window_size":5},"input":{"optical":"div255","sar":"p2p98"},"seed":0}

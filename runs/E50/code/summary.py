@@ -16,6 +16,7 @@ from workbench.evaluate import jsonable, pair_errors
 from workbench.protocol import summarize
 from workbench.records import load_runs
 from workbench.tbwriter import ScalarWriter
+from runs.E50.code.completeness import incomplete_reason
 
 R = ROOT / "runs/E50"
 
@@ -60,6 +61,11 @@ def main():
     curve = sorted((int(k[4:]), v["val"]["summary"]) for k, v in sweep.items() if "val" in v)
     assert [s for s, _ in curve] == list(range(250, 7751, 250)) + [7907]
     assert [k for k, v in sweep.items() if "test" in v] == ["step7907"]
+    for step, _ in curve:
+        reason = incomplete_reason(R, step, "val", ds.labelled("val"))
+        assert reason is None, (step, "val", reason)
+    reason = incomplete_reason(R, 7907, "test", ds.labelled("test"))
+    assert reason is None, (7907, "test", reason)
     peak = json.loads((R / "sweep/main/peak.json").read_text())
     assert peak["step"] == 7907 and peak["metric"] == "last"
     best_step, best = max(curve, key=lambda x: x[1]["auc@5"])

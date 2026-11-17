@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -11,6 +12,8 @@ sys.path.insert(0, str(ROOT))
 from finetune import config as C
 from workbench import launch
 from baselines.match import sha256
+from workbench.dataset import Dataset
+from runs.E50.code.completeness import incomplete_reason
 
 R = ROOT / "runs/E50"
 PY, WB = "/opt/envs/loftr/bin/python", "/opt/envs/wb/bin/python"
@@ -28,7 +31,23 @@ def main():
     cfg = C.expand(cfg)
     gpu = cfg["run"]["eval_gpus"][0]
     os.environ.update(CUDA_VISIBLE_DEVICES=str(gpu), CUDA_DEVICE_ORDER="PCI_BUS_ID")
-    complete = len(list((R / "sweep/main/S/preds").glob("step*/val.meta.json")))
+    dataset = Dataset("/remote-home/xufang/YGC/dataset/Moon")
+    complete = 0
+    checks = [(step, "val") for step in list(range(250, 7751, 250)) + [7907]] + [(7907, "test")]
+    for step, split in checks:
+        pred = R / f"sweep/main/S/preds/step{step}"
+        if not (pred / f"{split}.jsonl").exists():
+            continue
+        reason = incomplete_reason(R, step, split, dataset.labelled(split))
+        if reason is None:
+            complete += split == "val"
+            continue
+        archive = R / f"ckpt/incomplete_eval/{time.time_ns()}_step{step}_{split}"
+        archive.mkdir(parents=True)
+        (archive / "reason.txt").write_text(reason + "\n")
+        for path in pred.glob(f"{split}*"):
+            path.rename(archive / path.name)
+        print(f"Archive incomplete {split} step{step}: {reason}", flush=True)
     spec = importlib.util.spec_from_file_location("finetune_driver267", ROOT / "scripts/finetune/run.py")
     driver = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(driver)

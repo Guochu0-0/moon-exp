@@ -68,6 +68,7 @@ def main():
 
 
 if __name__ == "__main__":
+    os.environ["MOON_DATA"] = "/remote-home/xufang/YGC/dataset/Moon"
     os.environ.setdefault("MOON_GIT_TIMEOUT", "600")
     os.environ["TORCH_HOME"] = "/remote-home/xufang/YGC/weights/torch_home"
     launch.begin(R, "pipeline_resume", [sys.executable, *sys.argv], entry="runs/E50/code/resume_eval.py")

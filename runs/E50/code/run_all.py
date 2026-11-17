@@ -54,6 +54,7 @@ def main():
 
 
 if __name__ == "__main__":
+    os.environ["MOON_DATA"] = "/remote-home/xufang/YGC/dataset/Moon"
     os.environ["TORCH_HOME"] = "/remote-home/xufang/YGC/weights/torch_home"
     os.environ.setdefault("MOON_GIT_TIMEOUT", "600")
     launch.begin(R, "pipeline", [sys.executable, *sys.argv], entry="runs/E50/code/run_all.py",

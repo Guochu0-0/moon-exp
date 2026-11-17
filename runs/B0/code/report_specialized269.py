@@ -9,6 +9,7 @@ from collections import Counter
 import json
 from pathlib import Path
 import statistics
+import subprocess
 
 
 def read_lines(path):
@@ -19,6 +20,14 @@ def main():
     run = Path("runs/B0")
     metrics = json.loads((run / "metrics.json").read_text())
     out = {"protocol": metrics["protocol"], "methods": {}, "counts": {}}
+    reference_commit = "ec9ef97a78fd7e3b903c315e8324b2667fc8c1c6"
+    before = json.loads(subprocess.check_output(
+        ["git", "show", reference_commit + ":runs/B0/metrics.json"], text=True))
+    changed = [name for name, data in before["methods"].items() if metrics["methods"].get(name) != data]
+    if changed or before["protocol"] != metrics["protocol"]:
+        raise RuntimeError("Existing B0 metrics changed: %s" % changed)
+    out["legacy_metrics"] = {"reference_commit": reference_commit,
+                             "unchanged_methods": len(before["methods"]), "changed_methods": changed}
     for method in ("redfeat", "fhreg", "vmgga", "mifnet_sp", "mifnet_xfeat",
                    "anymatch_roma", "ma_roma", "minima_roma", "anymatch_loftr", "identity"):
         out["methods"][method] = {
@@ -70,7 +79,7 @@ def main():
     fields = ("n", "fail_rate", "median", "auc@3", "auc@5", "auc@10", "sr@3", "sr@5", "sr@10")
     short = {"redfeat": {s: {k: d["summary"][k] for k in fields}
                          for s, d in out["methods"]["redfeat"].items()},
-             "counts": out["counts"], "unmeasured": out["unmeasured"]}
+             "counts": out["counts"], "unmeasured": out["unmeasured"], "legacy_metrics": out["legacy_metrics"]}
     print(json.dumps(short, ensure_ascii=False, indent=2))
 
 

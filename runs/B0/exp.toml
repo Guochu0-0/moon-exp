@@ -56,3 +56,9 @@ name = "AnyMatch-EDM"
 
 [methods.anymatch_roma]
 name = "AnyMatch-RoMa"
+
+[methods.splg]
+name = "SuperPoint + LightGlue（原版）"
+
+[methods.roma]
+name = "RoMa v1（原版 outdoor 权重）"

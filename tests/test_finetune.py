@@ -229,17 +229,21 @@ def test_optimizer_reports_amp_skip_without_changing_default_budget():
 
 @pytest.mark.parametrize("count_updates,expected_calls", [(True, 4), (False, 3)])
 def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch, count_updates, expected_calls):
+    import hashlib
     import types
     import torch
     from finetune import train
     from finetune.optim import Optim
     from finetune.models import roma
+    weights_file, labels_file = tmp_path / "weights.pt", tmp_path / "labels.jsonl"
+    weights_file.write_bytes(b"published weights")
+    labels_file.write_bytes(b"fixed labels")
 
     class TinyModel:
         amp = False
         def __init__(self, *a, **kw):
             self.p = torch.nn.Parameter(torch.ones(1))
-            self.params, self.input, self.infer_cfg, self.weights = [self.p], {}, {}, "probe"
+            self.params, self.input, self.infer_cfg, self.weights = [self.p], {}, {}, str(weights_file)
             self.resize = lambda x: x
         def state_dict(self):
             return {"model": self.p.detach().clone()}
@@ -279,8 +283,8 @@ def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch
     monkeypatch.setattr(train, "git_head", lambda *a: "test")
     cfg = tmp_path / "main.toml"
     cfg.write_text('[model]\nname="roma"\n[optim]\nsteps=3\nlr=0.1\nwarmup=0\nsched="const"\n'
-                   f'[run]\nworkers=0\nsave_every=1\ncount_updates={str(count_updates).lower()}\n'
-                   '[pseudo]\nlabels="dummy"\n')
+                   f'[run]\nworkers=0\nsave_every=1\nrecord_hashes=true\ncount_updates={str(count_updates).lower()}\n'
+                   f'[pseudo]\nlabels={json.dumps(str(labels_file))}\n')
     out = tmp_path / "out"
     train.main([str(cfg), "--out", str(out), "--device", "cpu"])
     logs = [json.loads(x) for x in (out / "log.jsonl").read_text().splitlines()]
@@ -290,6 +294,9 @@ def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch
     final = torch.load(out / "ckpt_3.pt")["model"]
     assert final.item() < (0.75 if count_updates else 0.85)
     assert (out / "overflow.jsonl").exists() == count_updates
+    hashes = json.loads((out / "args.json").read_text())["source_hashes"]
+    assert hashes["weights"]["sha256"] == hashlib.sha256(b"published weights").hexdigest()
+    assert hashes["labels"]["sha256"] == hashlib.sha256(b"fixed labels").hexdigest()
 
 
 def _texture(n=128, shift=0, seed=0):

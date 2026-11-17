@@ -61,6 +61,7 @@ RUN = {
     "segment_steps": 0,    # 驱动每段训练的更新步数；段间释放CUDA进程并重新等空卡（#267）
     "count_updates": False, # AMP溢出时不计入总更新预算；仅支持 accum=1（#267）
     "eval_gpus": [],       # 非空时用这些卡并行评独立Val存档，全部完成后才选模/评Test（#267）
+    "record_hashes": False, # 启动时记录权重、固定标签、续训存档的SHA256（#267）
     "sweep": "all",         # 驱动评哪些 ckpt（#209）：all 逐个评 Val 再按 select 补评 Test / last 只评最后一个的 Val、不评 Test
     "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训（不另存 ckpt）
     "halt_below": {},       # 同上，中位数低于阈值就停

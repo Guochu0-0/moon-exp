@@ -26,6 +26,7 @@ resume_epochs = true
 segment_steps = 500
 count_updates = true
 eval_gpus = [0, 1]
+record_hashes = true
 select = "last"
 
 [pseudo]

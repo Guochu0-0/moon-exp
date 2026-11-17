@@ -50,7 +50,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from baselines.match import env_info, git_head, seed_all
+from baselines.match import env_info, git_head, seed_all, sha256
 from workbench.launch import require_clean
 from workbench.tbwriter import ScalarWriter
 
@@ -215,8 +215,17 @@ def main(argv=None):
         raise C.ConfigError(f"[run] log_update 要求模型提供 update_parts，{mname} 没有")
     mon = UpdateMonitor(*model.update_parts()) if r["log_update"] else None
     if main_:
+        hashes = {}
+        if r["record_hashes"]:
+            files = {"weights": Path(model.weights)}
+            if "pseudo" in cfg:
+                files["labels"] = REPO / cfg["pseudo"]["labels"]
+            if r["resume"]:
+                files["resume"] = REPO / r["resume"]
+            hashes = {name: {"path": str(p.resolve()), "sha256": sha256(p)} for name, p in files.items()}
         (out / "args.json").write_text(json.dumps(
             {"config": cfg, "source": str(args.config), "infer_config": model.infer_cfg, "weights": model.weights,
+             "source_hashes": hashes,
              "n_train": len(ds), "n_params": sum(p.numel() for p in model.params), "commit": git_head(REPO),
              "env": env_info(), "world": D.world()}, ensure_ascii=False, indent=1), encoding="utf-8")
     if r["save_zero"] and main_:

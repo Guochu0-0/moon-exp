@@ -1,0 +1,78 @@
+{
+ "records": [
+  {
+   "pair": "ROI_035/patch_0",
+   "n_matches": 10000,
+   "n_inliers": 10000,
+   "affine": [
+    [
+     0.9999822525023493,
+     -4.943428277143679e-06,
+     6.981602816075128
+    ],
+    [
+     5.1318423943743445e-06,
+     0.9999575455274169,
+     -5.023855331270669
+    ]
+   ],
+   "median_match_residual": 0.04347542710925677,
+   "max_transform_error": 0.05236677363200546
+  },
+  {
+   "pair": "ROI_035/patch_1",
+   "n_matches": 10000,
+   "n_inliers": 10000,
+   "affine": [
+    [
+     0.9999910263626451,
+     -6.535547056192776e-06,
+     6.980352170068813
+    ],
+    [
+     7.54863019261252e-08,
+     0.9999410786226077,
+     -5.016636220914873
+    ]
+   ],
+   "median_match_residual": 0.04171746232071635,
+   "max_transform_error": 0.05423804996700272
+  },
+  {
+   "pair": "ROI_035/patch_2",
+   "n_matches": 10000,
+   "n_inliers": 10000,
+   "affine": [
+    [
+     0.9999785019724942,
+     -1.3260952467323428e-05,
+     6.985834138853579
+    ],
+    [
+     -2.643767733441519e-06,
+     0.9999477457280046,
+     -5.018274155313906
+    ]
+   ],
+   "median_match_residual": 0.041716830172329994,
+   "max_transform_error": 0.05626343322621759
+  }
+ ],
+ "effective_config": {
+  "coarse_res": [
+   560,
+   560
+  ],
+  "upsample_res": [
+   864,
+   864
+  ],
+  "outer_resize": null,
+  "symmetric": true,
+  "sample_mode": "threshold_balanced",
+  "sample_thresh": 0.05,
+  "sample_num": 10000,
+  "input": "float tensor, official bicubic antialias resize and ImageNet normalization",
+  "use_custom_corr": false
+ }
+}

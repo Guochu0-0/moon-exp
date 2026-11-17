@@ -1,0 +1,62 @@
+[
+ {
+  "start": "2026-11-17 14:01:47 +0000",
+  "end": "2026-11-17 14:02:17 +0000",
+  "status": "ok",
+  "commit": "761319b159851766fdd439aaa9c95e52135ce286",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-268",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/B0/code/supplement268.py",
+   "roma",
+   "--stage",
+   "selfcheck"
+  ],
+  "entry": "runs/B0/code/supplement268.py",
+  "config_file": "configs/baselines/roma.json",
+  "config": {
+   "method": "roma",
+   "adapter": "roma_original",
+   "repo": "third_party/RoMa",
+   "weights": "official/roma/roma_outdoor.pth",
+   "params": {
+    "use_custom_corr": false
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args": {
+   "stage": "selfcheck",
+   "splits": [
+    "val",
+    "test"
+   ],
+   "seed": 0,
+   "pair_timeout": 120,
+   "ransac": 3.0,
+   "raw_out": "runs/B0/raw/supplement268",
+   "effective_config": null
+  },
+  "weights": {
+   "dinov2": {
+    "path": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/dinov2_vitl14_pretrain.pth",
+    "official_file": "/remote-home/xufang/YGC/weights/torch_home/hub/checkpoints/dinov2_vitl14_pretrain.pth",
+    "sha256": "d5383ea8f4877b2472eb973e0fd72d557c7da5d3611bd527ceeb1d7162cbf428"
+   },
+   "roma": {
+    "path": "/remote-home/xufang/YGC/weights/official/roma/roma_outdoor.pth",
+    "official_file": "/remote-home/xufang/YGC/weights/official/roma/roma_outdoor.pth",
+    "sha256": "c7a45c80d41ad788a63c641d1b686d7cb3f297f40097c6f4e75039889e5cc8ba"
+   }
+  },
+  "torch_home": "/remote-home/xufang/YGC/weights/supplement268_torch_home"
+ }
+]

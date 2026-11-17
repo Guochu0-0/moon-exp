@@ -12,3 +12,12 @@ name = "SCENES 式离线伪标签，换种子 1（第 4000 步）"
 
 [methods.seed2]
 name = "SCENES 式离线伪标签，换种子 2（第 5000 步）"
+
+[methods.main__step8000]
+name = "SCENES 式离线伪标签，种子 0，最后存档（第 8000 步）"
+
+[methods.seed1__step8000]
+name = "SCENES 式离线伪标签，种子 1，最后存档（第 8000 步）"
+
+[methods.seed2__step8000]
+name = "SCENES 式离线伪标签，种子 2，最后存档（第 8000 步）"

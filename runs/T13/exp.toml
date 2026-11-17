@@ -12,3 +12,6 @@ name = "DINOv2 LoRA r 8 + L2-SP（第 6000 步）"
 
 [methods.main__s1]
 name = "DINOv2 LoRA r 8，种子 1（第 8000 步）"
+
+[methods.main__step8000]
+name = "DINOv2 LoRA r 8，种子 0，最后存档（第 8000 步）"

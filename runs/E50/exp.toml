@@ -1,0 +1,5 @@
+id = "E50"
+title = "SCENES-RoMa固定伪仿射适配"
+parent = "B0m"
+init = "B0m/anymatch_roma__minmax"
+date = "2026-11-17"

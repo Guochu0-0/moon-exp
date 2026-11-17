@@ -37,6 +37,9 @@ OPTIM = {
     "warmup_start": 0.1,    # warmup 起点 lr 占 lr 的比例（上游 LoFTR 为 0.1）
     "sched": "cosine",      # warmup 之后：const 恒定 / cosine 降到 lr_min·lr
     "lr_min": 0.0,
+    "lr_milestones": [],    # multistep：已完成的更新次数；之后的更新乘 lr_gamma（#267）
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 2000,  # GradScaler 默认；上游 RoMa 用 1000000（#267）
     "clip": 0.0,            # 梯度范数裁剪阈值；0 = 不裁
     "accum": 1,             # 梯度累积：每 accum 步更新一次；步数、存 ckpt 仍按前向步计
     "ema": 0.0,             # 权重 EMA 的 decay；>0 时 ckpt 存 EMA 权重（#120）；0 = 不用
@@ -132,6 +135,15 @@ def expand(raw: dict) -> dict:
            "optim": _fill("optim", raw.pop("optim", {}), {**OPTIM, **model.OPTIM}),
            "run": _fill("run", raw.pop("run", {}), {**RUN, **model.RUN})}
     bad = [x for x in out["run"]["split"].split("+") if x not in SPLITS]
+    o = out["optim"]
+    if o["sched"] not in ("const", "cosine", "multistep"):
+        raise ConfigError("[optim] sched 可选 const / cosine / multistep")
+    if (any(type(x) is not int or x < 0 for x in o["lr_milestones"])
+            or o["lr_milestones"] != sorted(set(o["lr_milestones"])) or not 0 < o["lr_gamma"] <= 1
+            or o["amp_growth_interval"] < 1):
+        raise ConfigError("[optim] milestones 必须是递增非负整数，gamma 在 (0,1]，amp_growth_interval ≥ 1")
+    if o["sched"] == "multistep" and (o["warmup"] or not o["lr_milestones"]):
+        raise ConfigError("[optim] multistep 要求 warmup=0 且指定 lr_milestones")
     if bad:
         raise ConfigError(f"[run] split 只能由 {SPLITS} 用 + 连接，得到 {out['run']['split']!r}")
     if out["run"]["select"] not in SELECT:

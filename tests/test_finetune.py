@@ -8,6 +8,122 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 
 
+def test_common_geometry_normalized_fill_and_gradients():
+    import torch
+    import torchvision.transforms.functional as tvf
+    from finetune.parts.common import warp_normalized, sample, targets
+    from finetune.parts.pseudo import affine_norm
+    from finetune.geom import compose, inv_affine
+    from finetune.models.roma import _norm
+
+    raw = torch.linspace(0, 1, 8 * 8).reshape(1, 1, 8, 8).requires_grad_()
+    image = _norm(raw)
+    spec = [(2, -1, True)]
+    actual = warp_normalized(image, spec)
+    expected = tvf.affine(image[0], angle=0., translate=[2, -1], scale=1., shear=[0., 0.]).flip(-1)
+    assert torch.equal(actual[0], expected)
+    assert (actual[0, :, :, -2:] == 0).all()  # 归一化后的 0，不是灰度黑
+    actual.sum().backward()
+    assert raw.grad is not None and (raw.grad > 0).sum() == 6 * 7
+    specs, Gs = sample(np.random.default_rng(0), 2, {"shift": 2, "flip": 1.}, res=8)
+    assert specs == sample(np.random.default_rng(0), 2, {"shift": 2, "flip": 1.}, res=8)[0]
+    A = np.array([[1., .1, 60.], [0., 1., -40.]])
+    G = Gs[0]
+    conjugate = compose(compose(G, A), inv_affine(G))
+    p = np.array([123., 214., 1.])
+    q = np.r_[A @ p, 1.]
+    assert np.allclose(conjugate @ np.r_[G @ p, 1.], G @ q)
+    An = torch.tensor(affine_norm(conjugate)[None], dtype=torch.float32)
+    Gi = torch.tensor(affine_norm(inv_affine(G))[None], dtype=torch.float32)
+    x2, valid = targets(An, Gi)(8, 8)
+    # 独立像素中心计算：两侧落回原图，且目标仍在增强后的画面。
+    ys, xs = np.mgrid[:8, :8]
+    p = np.stack([(xs + .5) * 64, (ys + .5) * 64, np.ones((8, 8))], -1)
+    dst = p @ conjugate.T
+    src0 = p @ inv_affine(G).T
+    dst0 = np.concatenate([dst, np.ones((8, 8, 1))], -1) @ inv_affine(G).T
+    inside = lambda x: ((x > 0) & (x < 512)).all(-1)
+    assert np.array_equal(valid[0].numpy().astype(bool), inside(src0) & inside(dst0) & inside(dst))
+    # 恒等标签必须恰好保留搬移后的原图区域。
+    identity = torch.tensor([[[1., 0., 0.], [0., 1., 0.]]])
+    assert np.array_equal(targets(identity, Gi)(8, 8)[1][0].numpy().astype(bool), inside(src0))
+
+
+def test_roma_native_bn_and_parameter_groups():
+    import torch
+    from finetune.models.roma import training_mode, _split
+    from finetune.config import expand
+    net = torch.nn.Sequential(torch.nn.Conv2d(1, 2, 1), torch.nn.BatchNorm2d(2))
+    training_mode(net, "eval")
+    assert net.training and not net[1].training
+    before = net[1].running_mean.clone()
+    training_mode(net, "native")
+    net(torch.ones(4, 1, 4, 4)).sum().backward()
+    assert net[1].training and not torch.equal(before, net[1].running_mean)
+    names = ["encoder.cnn.0.weight", "decoder.gps.16.weight", "decoder.conv_refiner.1.weight", "dino.weight"]
+    ps = [torch.nn.Parameter(torch.ones(2)) for _ in names]
+    cfg = expand({"model": {"name": "roma", "train_vgg": True, "bn_mode": "native", "vgg_lr": .05}})
+    dec, ref, vgg = _split(zip(names, ps), cfg["model"])
+    assert dec[0] is ps[1] and ref[0] is ps[2] and vgg[0] is ps[0] and not ps[3].requires_grad
+
+
+def test_multistep_matches_native_scheduler_and_accumulation():
+    import torch
+    from finetune.optim import lr_at, Optim
+    from finetune.config import expand
+    p = torch.nn.Parameter(torch.ones(1))
+    native = torch.optim.AdamW([p], lr=5e-5)
+    sched = torch.optim.lr_scheduler.MultiStepLR(native, milestones=[3], gamma=.1)
+    for step in range(1, 6):
+        assert lr_at(step, 5, 5e-5, sched="multistep", milestones=[3]) == pytest.approx(native.param_groups[0]["lr"])
+        native.step()
+        sched.step()
+    assert lr_at(7116, 7907, 5e-5, sched="multistep", milestones=[7116]) == 5e-5
+    assert lr_at(7117, 7907, 5e-5, sched="multistep", milestones=[7116]) == pytest.approx(5e-6)
+    cfg = expand({"model": {"name": "roma"}, "optim": {"warmup": 0, "sched": "multistep", "lr_milestones": [1],
+                  "accum": 2, "lr": 5e-5}})
+    vgg = torch.nn.Parameter(torch.ones(1))
+    opt = Optim([p, vgg], cfg["optim"], False,
+                groups=[{"params": [p], "lr_scale": 1.}, {"params": [vgg], "lr_scale": .05}])
+    for step in range(1, 5):
+        opt.backward(p.sum() + vgg.sum())
+        opt.step(step)
+        if step % 2 == 0:
+            lr = 5e-5 if step == 2 else 5e-6
+            assert [g["lr"] for g in opt.opt.param_groups] == pytest.approx([lr, lr * .05])
+
+
+def test_common_config_rejects_incompatible_targets():
+    from finetune.config import expand, ConfigError
+    cfg = {"model": {"name": "roma"}, "pseudo": {"labels": "labels.jsonl"}, "common": {}}
+    assert expand(cfg)["common"] == {"shift": 32, "flip": .5}
+    for key in ("dense", "match_dir", "ema_target", "mask_fill"):
+        bad = {**cfg, "pseudo": {"labels": "l", key: "file" if key in ("dense", "match_dir") else True if key == "mask_fill" else .9}}
+        with pytest.raises(ConfigError):
+            expand(bad)
+    with pytest.raises(ConfigError):
+        expand({**cfg, "aug": {}})
+
+
+def test_loader_resume_later_epoch_without_workers():
+    import torch
+    from finetune.trace import Loader
+    def make(seed):
+        g = torch.Generator().manual_seed(seed)
+        return Loader(torch.utils.data.DataLoader(torch.arange(12), batch_size=4, shuffle=True,
+                      generator=g, num_workers=0), g)
+    loader = make(0)
+    it = iter(loader)
+    for _ in range(5):
+        next(it)
+    state = loader.state()
+    expected = [next(it).clone() for _ in range(7)]
+    resumed = make(99)
+    resumed.load(state)
+    it2 = iter(resumed)
+    assert all(torch.equal(a, next(it2)) for a in expected)
+
+
 def _texture(n=128, shift=0, seed=0):
     import cv2
     rng = np.random.default_rng(seed)

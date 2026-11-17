@@ -62,8 +62,9 @@ class Loader:
         return {"epoch": self.epoch, "batch": self.i, "g": self.g0}
 
     def load(self, s: dict):
-        if s["epoch"] > 0:
+        if s["epoch"] > 0 and self.dl.num_workers > 0:
             raise ValueError(f"续训只支持第一个 epoch 内的存档，这个存档在第 {s['epoch']} 个 epoch")
+        self.epoch = s["epoch"]
         self.g.set_state(s["g"])
         self.skip = s["batch"]
 

@@ -1,0 +1,32 @@
+# #267：SCENES bootstrapping 的 RoMa／仿射任务适配；更新次数从 1 起。
+[model]
+name = "roma"
+train_vgg = true
+bn_mode = "native"
+vgg_lr = 0.05
+
+[optim]
+steps = 7907
+batch = 4
+lr = 5e-5
+warmup = 0
+sched = "multistep"
+# 第7116次更新仍用初始LR；其后乘0.1，对齐更新后的scheduler.step。
+lr_milestones = [7116]
+clip = 0.01
+amp_growth_interval = 1000000
+
+[run]
+seed = 0
+workers = 0
+save_every = 250
+save_at = [7907]
+save_optim = true
+select = "last"
+
+[pseudo]
+labels = "runs/E50/extra/labels.jsonl"
+
+[common]
+shift = 32
+flip = 0.5

@@ -7,13 +7,15 @@ import math
 import torch
 
 
-def lr_at(step, total, lr, warmup=0, warmup_start=0.1, sched="const", lr_min=0.0):
+def lr_at(step, total, lr, warmup=0, warmup_start=0.1, sched="const", lr_min=0.0, milestones=(), gamma=0.1):
     """第 step 个前向步（1 起）之后那次更新用的 lr。warmup 从 warmup_start·lr 线性升到 lr（同上游 LoFTR 的 linear
     warmup）；之后 const 恒定，cosine 在 [warmup, total] 上从 lr 降到 lr_min·lr。步数按前向步计，与 accum 无关。"""
     if step < warmup:
         return lr * (warmup_start + (1 - warmup_start) * step / warmup)
     if sched == "const":
         return lr
+    if sched == "multistep":
+        return lr * gamma ** sum(step > m for m in milestones)
     t = min(1.0, (step - warmup) / max(1, total - warmup))
     return lr * (lr_min + (1 - lr_min) * 0.5 * (1 + math.cos(math.pi * t)))
 
@@ -26,7 +28,7 @@ class Optim:
         groups = groups or [{"params": params, "lr_scale": 1.0}]
         self.opt = torch.optim.AdamW([{"params": g["params"], "lr_scale": g["lr_scale"]} for g in groups],
                                      lr=o["lr"], weight_decay=o["wd"])
-        self.scaler = torch.cuda.amp.GradScaler() if amp else None
+        self.scaler = torch.cuda.amp.GradScaler(growth_interval=o.get("amp_growth_interval", 2000)) if amp else None
 
     def backward(self, loss, retain_graph=False):
         """retain_graph：保留计算图，之后还要经同一次前向再反向一次（正反向互逆约束奖励，#255）。"""
@@ -54,7 +56,9 @@ class Optim:
         if self.reduce:
             self.reduce(self.params)
         if any(p.grad is not None for p in self.params):
-            lr = lr_at(step, o["steps"], o["lr"], o["warmup"], o["warmup_start"], o["sched"], o["lr_min"])
+            count = step // o["accum"] if o["sched"] == "multistep" else step
+            lr = lr_at(count, o["steps"], o["lr"], o["warmup"], o["warmup_start"], o["sched"], o["lr_min"],
+                       o.get("lr_milestones", ()), o.get("lr_gamma", 0.1))
             for g in self.opt.param_groups:
                 g["lr"] = lr * g["lr_scale"]
             if self.scaler:

@@ -28,6 +28,7 @@ from ..geom import HW
 
 REPO = Path(__file__).resolve().parents[2]
 PARAMS = {"config": "configs/baselines/anymatch_roma__minmax.json",
+          "bn_mode": "eval",   # eval 保持历史行为；native 沿用上游 train 模式（#267）
           "init": "",            # 起点 ckpt（{'model': ...}）；空 = 推理配置里的底座权重
           "train_vgg": False,    # 解冻 VGG（encoder.cnn）
           "train_decoder": True, # 训 decoder；false 时只训 VGG（#120）
@@ -100,6 +101,16 @@ def _norm(x):
     return (x.expand(-1, 3, -1, -1) - MEAN.to(x)) / STD.to(x)
 
 
+def training_mode(model, bn_mode):
+    if bn_mode not in ("eval", "native"):
+        raise ValueError("[model] bn_mode 可选 eval / native")
+    model.train()
+    if bn_mode == "eval":
+        for mod in model.modules():
+            if isinstance(mod, torch.nn.modules.batchnorm._BatchNorm):
+                mod.eval()
+
+
 class LoRA(torch.nn.Module):
     """y = W x + b + (α/r)·B A x（2106.09685 §4.1）。A 按 kaiming 均匀初始化、B 为 0，起点与原层相同；
     A、B 用 fp32 存，参与 fp16 的前向时临时转型。合并见 baselines.adapters.romatch.merge_lora。
@@ -161,6 +172,7 @@ class Model:
         from baselines.adapters.romatch import RomatchAdapter
 
         m = cfg["model"]
+        self.common = cfg.get("common")
         if (m["lora_dropout"] > 0 or m["drop_path"] > 0) and (m["lora_r"] <= 0 or m["dino_unfreeze"] > 0):
             raise ValueError("[model] lora_dropout、drop_path 要求 lora_r > 0 且 dino_unfreeze = 0")
         if not 0 <= m["drop_path"] < 1 or not 0 <= m["lora_dropout"] < 1:
@@ -180,10 +192,7 @@ class Model:
         if self.train_res not in TRAIN_RES:
             raise ValueError(f"[model] train_res 可选 {TRAIN_RES}，得到 {self.train_res!r}")
         self.resize_hi = (lambda img: self.resize(img, RES_HI)) if self.train_res != "560" else None
-        self.model.train()
-        for mod in self.model.modules():
-            if isinstance(mod, torch.nn.modules.batchnorm._BatchNorm):
-                mod.eval()
+        training_mode(self.model, m["bn_mode"])
         dec, refine, vgg = _split(self.model.named_parameters(), m)
         self.lora, self.dino_blocks = ({}, {}) if m["lora_r"] <= 0 and m["dino_unfreeze"] <= 0 else self._open_dino(m)
         if m["sdpa"]:
@@ -271,9 +280,13 @@ class Model:
         pil = Image.fromarray(u8).resize((res, res), Image.BICUBIC)
         return np.asarray(pil, np.float32) / 255.0
 
-    def forward(self, image0, image1):
+    def forward(self, image0, image1, common=None):
         """image0/1: (B,1,560,560) float [0,1]。返回 romatch 的 corresps（训练态：含 gm_cls、gm_certainty）。"""
-        return self._attach(self.model({"im_A": _norm(image0), "im_B": _norm(image1)}, batched=True))
+        a, b = _norm(image0), _norm(image1)
+        if common is not None:
+            from ..parts.common import warp_normalized
+            a, b = warp_normalized(a, common), warp_normalized(b, common)
+        return self._attach(self.model({"im_A": a, "im_B": b}, batched=True))
 
     def _attach(self, corresps):
         """unc_head 打开时把这次前向各尺度的不确定度输出放进 corresps[s]["unc"]。"""

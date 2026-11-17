@@ -10,10 +10,11 @@ import argparse
 import json
 import os
 from pathlib import Path
-import subprocess
 import sys
 
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from baselines import adapters
 from baselines.data import Data
@@ -81,24 +82,24 @@ def main():
           config_file=str(config_path), config=config, args=vars(args),
           precision={"tf32": False, "float32_matmul_precision": "highest"})
     try:
-        if args.stage == "selfcheck":
-            import torch
+        import torch
 
-            torch.set_float32_matmul_precision("highest")
-            torch.backends.cuda.matmul.allow_tf32 = False
-            torch.backends.cudnn.allow_tf32 = False
+        torch.set_float32_matmul_precision("highest")
+        torch.backends.cuda.matmul.allow_tf32 = False
+        torch.backends.cudnn.allow_tf32 = False
+        if args.stage == "selfcheck":
             result = selfcheck(config, args.data, args.weights_root)
             dest = run / "extra" / ("selfcheck269_" + args.method + ".json")
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_text(json.dumps(result, indent=2) + "\n")
         else:
-            # A fresh interpreter per split isolates upstream module globals.
+            from baselines.match import main as match_main
+
+            # Same process preserves the explicitly recorded precision settings.
             # Baselines.match supplies the configured per-patch seed and metadata.
             for split in ("val", "test"):
-                command = [sys.executable, "-m", "baselines.match", str(config_path),
-                           "--split", split, "--data", args.data, "--weights-root", args.weights_root,
-                           "--out", str(run / "raw"), "--resume"]
-                subprocess.run(command, check=True)
+                match_main([str(config_path), "--split", split, "--data", args.data,
+                            "--weights-root", args.weights_root, "--out", str(run / "raw"), "--resume"])
         end(run, launch_method, "ok")
     except BaseException:
         end(run, launch_method, "fail")

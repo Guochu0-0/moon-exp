@@ -1,0 +1,29 @@
+20:23:22 SWEEP main
+Traceback (most recent call last):
+  File "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/code/resume_eval.py", line 56, in <module>
+    main()
+  File "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/code/resume_eval.py", line 41, in main
+    driver.Job(R, "main", cfg, gpu)()
+  File "/remote-home/xufang/YGC/wt/scenes-267/scripts/finetune/run.py", line 183, in __call__
+    self.sweep_val(ckpts[-1:] if val_only else ckpts, online)
+  File "/remote-home/xufang/YGC/wt/scenes-267/scripts/finetune/run.py", line 167, in sweep_val
+    f.result()
+  File "/opt/envs/loftr/lib/python3.10/concurrent/futures/_base.py", line 458, in result
+    return self.__get_result()
+  File "/opt/envs/loftr/lib/python3.10/concurrent/futures/_base.py", line 403, in __get_result
+    raise self._exception
+  File "/opt/envs/loftr/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/remote-home/xufang/YGC/wt/scenes-267/scripts/finetune/run.py", line 162, in worker
+    evaluate(job, c)
+  File "/remote-home/xufang/YGC/wt/scenes-267/scripts/finetune/run.py", line 139, in evaluate
+    job.evaluate("val", st)
+  File "/remote-home/xufang/YGC/wt/scenes-267/scripts/finetune/run.py", line 86, in evaluate
+    self.sh([PY, "-m", "baselines.match", self.infer, "--split", split, "--weights",
+  File "/remote-home/xufang/YGC/wt/scenes-267/scripts/finetune/run.py", line 82, in sh
+    run(cmd, self.ck / logname, self.env, self.gpu if gpu else None)
+  File "/remote-home/xufang/YGC/wt/scenes-267/scripts/finetune/run.py", line 56, in run
+    subprocess.run(NICE + [str(c) for c in cmd], cwd=REPO, env=env, stdout=f, stderr=subprocess.STDOUT,
+  File "/opt/envs/loftr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['nice', '-n', '10', 'ionice', '-c3', '/opt/envs/loftr/bin/python', '-m', 'baselines.match', 'configs/baselines/anymatch_roma__minmax.json', '--split', 'val', '--weights', '/remote-home/xufang/YGC/wt/scenes-267/runs/E50/ckpt/main/ckpt_4250.pt', '--name', 'step4250', '--out', '/remote-home/xufang/YGC/wt/scenes-267/runs/E50/sweep/main/match']' died with <Signals.SIGTERM: 15>.

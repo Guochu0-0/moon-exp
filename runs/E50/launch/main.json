@@ -132,5 +132,140 @@
    },
    "seed": 0
   }
+ },
+ {
+  "start": "2026-11-17 20:23:22 +0000",
+  "end": "2026-11-17 20:34:05 +0000",
+  "status": "fail",
+  "commit": "320495f9ab6654c104b47c31666408bcf2481cd6",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E50/code/resume_eval.py"
+  ],
+  "entry": "runs/E50/code/resume_eval.py",
+  "config_file": "runs/E50/configs/main.toml",
+  "args": {
+   "model": {
+    "name": "roma",
+    "config": "configs/baselines/anymatch_roma__minmax.json",
+    "bn_mode": "native",
+    "init": "",
+    "train_vgg": true,
+    "train_decoder": true,
+    "vgg_lr": 0.05,
+    "refine_lr": 1.0,
+    "vgg_dropout": 0.0,
+    "train_res": "560",
+    "lora_r": 0,
+    "lora_alpha": 16.0,
+    "lora_lr": 0.0001,
+    "lora_targets": "qkv",
+    "lora_dropout": 0.0,
+    "drop_path": 0.0,
+    "dino_unfreeze": 0,
+    "dino_ckpt": false,
+    "unc_head": false,
+    "sdpa": false
+   },
+   "optim": {
+    "steps": 7907,
+    "batch": 4,
+    "lr": 5e-05,
+    "wd": 0.01,
+    "warmup": 0,
+    "warmup_start": 0.1,
+    "sched": "multistep",
+    "lr_min": 0.0,
+    "lr_milestones": [
+     7116
+    ],
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 1000000,
+    "clip": 0.01,
+    "accum": 1,
+    "ema": 0.0
+   },
+   "run": {
+    "seed": 0,
+    "workers": 0,
+    "save_every": 250,
+    "save_at": [
+     7907
+    ],
+    "save_zero": false,
+    "limit": 0,
+    "split": "train",
+    "select": "last",
+    "log_update": false,
+    "stop_at": 0,
+    "save_optim": true,
+    "resume": "",
+    "resume_epochs": true,
+    "segment_steps": 500,
+    "count_updates": true,
+    "eval_gpus": [
+     0
+    ],
+    "record_hashes": true,
+    "sweep": "all",
+    "halt_above": {},
+    "halt_below": {},
+    "halt_window": 50,
+    "ddp": 0
+   },
+   "pseudo": {
+    "labels": "runs/E50/extra/labels.jsonl",
+    "top": 1.0,
+    "weight": 1.0,
+    "pair_weight": "",
+    "mask_fill": false,
+    "swap": 0.5,
+    "cls_soft": false,
+    "drop_top": 0.0,
+    "dense": "",
+    "dense_r": 8.0,
+    "dense_cert": 0.5,
+    "reg_tol": 0.0,
+    "fine_ramp": [],
+    "match_dir": "",
+    "match_r": 3.0,
+    "reg_loss": "robust",
+    "mixlap_w": 1.0,
+    "ema_target": 0.0,
+    "ema_alpha": 0.5,
+    "ema_ramp": [
+     2000,
+     4000
+    ]
+   },
+   "common": {
+    "shift": 32,
+    "flip": 0.5
+   }
+  },
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "reason": "Val resumed after withdrawing owned processes on shared GPUs",
+  "completed_val_checkpoints": 16,
+  "training_complete_step": 7907
  }
 ]

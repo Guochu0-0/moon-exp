@@ -155,7 +155,8 @@ def append_notes(rows, paired):
             method = r['method'] or 'main__screen0.8（存档缺失）'
             step = str(r['step']) if r['step'] is not None else '—'
             text.append(f"| {r['node']}/{method} | {labels[r['rule']]} | {step} | {metrics(r['val'])} | {metrics(r['test'])} | {ci(r['test'])} |")
-        text += ['', '表：同一节点的两种选存档规则。Test 缺失表示对应模型存档不在，不是配准失败。', '']
+        number = {'B0m': 2, 'E41': 7, 'T13': 2, 'S1': 3}[rid]
+        text += ['', f'表 {number}：同一节点的两种选存档规则。Test 缺失表示对应模型存档不在，不是配准失败。', '']
         if rid == 'E41':
             text += ['配对自助法按同一批 953 对同步有放回重抽 2000 次，种子 0，差为本文减参照。'
                      '自训练与 SCENES 的配对比较使用种子 0；其余种子只列单方法读数。', '',
@@ -164,7 +165,7 @@ def append_notes(rows, paired):
                 delta = f"{p['delta']:+.4f}" if p['delta'] is not None else '缺失'
                 interval = '[{:+.4f}, {:+.4f}]'.format(*p['ci']) if p['ci'] else '缺失'
                 text.append(f"| {labels[p['rule']]} | {p['reference']} | {delta} | {interval} |")
-            text += ['', '表：两种规则下本文减参照的 Test AUC@5 配对差。正值表示本文的 AUC@5 较高，'
+            text += ['', '表 8：两种规则下本文减参照的 Test AUC@5 配对差。正值表示本文的 AUC@5 较高，'
                      '负值表示较低；区间反映更换同样数量测试对带来的波动，不反映重新训练的随机性。', '',
                      '完整数值（含 AUC@20、SR、失败率）保存在各原节点的 `metrics.json`；'
                      '总表和配对差的数据见 [附件](extra/data/test265.json)。'

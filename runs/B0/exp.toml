@@ -56,3 +56,7 @@ name = "AnyMatch-EDM"
 
 [methods.anymatch_roma]
 name = "AnyMatch-RoMa"
+
+[methods.redfeat]
+name = "ReDFeat（官方 VIS-SAR 权重）"
+caveat = "地球光学–SAR 监督预训练；未在月球数据训练"

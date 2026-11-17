@@ -63,7 +63,8 @@ def git_head(path) -> str | None:
         out = subprocess.run(["git", "-C", str(path), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
         # --no-optional-locks：不刷新索引、不拿 index.lock。gpfs 上 status 很慢，被超时杀掉时会留下残锁
         dirty = subprocess.run(["git", "--no-optional-locks", "-C", str(path), "status", "--porcelain",
-                                "--untracked-files=no"], capture_output=True, text=True, timeout=60)
+                                "--untracked-files=no"], capture_output=True, text=True,
+                               timeout=float(os.environ.get("MOON_GIT_TIMEOUT", "60")))
         return out.stdout.strip() + ("-dirty" if dirty.stdout.strip() else "") if out.returncode == 0 else None
     except Exception:
         return None

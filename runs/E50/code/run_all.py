@@ -55,10 +55,12 @@ def main():
 
 if __name__ == "__main__":
     os.environ["TORCH_HOME"] = "/remote-home/xufang/YGC/weights/torch_home"
+    os.environ.setdefault("MOON_GIT_TIMEOUT", "600")
     launch.begin(R, "pipeline", [sys.executable, *sys.argv], entry="runs/E50/code/run_all.py",
                  args={"teacher_gpus": [0, 1], "training_gpu": 0, "seed": 0, "experiment": "E50",
                        "OMP_NUM_THREADS": os.environ.get("OMP_NUM_THREADS"),
-                       "MKL_NUM_THREADS": os.environ.get("MKL_NUM_THREADS")})
+                       "MKL_NUM_THREADS": os.environ.get("MKL_NUM_THREADS"),
+                       "MOON_GIT_TIMEOUT": os.environ["MOON_GIT_TIMEOUT"]})
     try:
         main()
     except BaseException:

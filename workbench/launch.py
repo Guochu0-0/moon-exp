@@ -25,7 +25,9 @@ _CODE = (".", ":(exclude,top)runs")
 _RUN_CODE = (":(glob,top)runs/*/code/**", ":(glob,top)runs/*/configs/**")
 
 
-def _git(repo: Path, *args, timeout=120) -> str | None:
+def _git(repo: Path, *args, timeout=None) -> str | None:
+    # 共享盘偶尔仅 status 就超过两分钟；显式放宽等待，不跳过任何洁净检查（#267）。
+    timeout = float(os.environ.get("MOON_GIT_TIMEOUT", "120")) if timeout is None else timeout
     # --no-optional-locks：不刷新索引、不拿 index.lock（gpfs 上 status 慢，被超时杀掉会留残锁）
     r = subprocess.run(["git", "--no-optional-locks", "-C", str(repo), *args], capture_output=True, text=True,
                        encoding="utf-8", timeout=timeout)

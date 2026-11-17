@@ -1,6 +1,18 @@
 # #270 传统方法接入与执行前检查
 
-代码准备于 2026-11-17；尚未在 MATLAB 中执行，不是已完成补测。
+代码准备于 2026-11-17；尚未在 MATLAB 中执行，不是已完成补测。输入/收集边界已在160服务器CPU上验证。
+
+## 收集边界验证
+
+Spec预审发现：旧收集端会将全部MATLAB异常或`--limit`子集发布为正式raw，随后被统一拟合误算成模型失败。修复前在160的`/opt/envs/wb/bin/python`用真实SciPy写读MAT与假split/manifest复现，8项测试有4项失败；修复后增加坏MAT、输入准备limit、自检manifest混用、序列化失败保护等检查，12项全部通过（0.078秒）。正式MATLAB推理尚未发生，B0旧结果不受该修复影响。
+
+正式prep/collect现在禁止非零limit；任何MATLAB异常、缺文件、缺全量manifest、坏坐标均在发布前拒绝整批。即使只有一对报错也不猜测其原因，先解决异常再发布；正常计算出的零匹配仍是合法模型失败。写文件先在同盘临时目录完成序列化，再替换正式raw，避免序列化失败破坏旧文件。自检仅允许Val与正limit，存入独立目录。
+
+验证命令（源码`e68c658`，服务器worktree`/remote-home/xufang/YGC/wt/baseline-270`）：
+
+```bash
+OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 /opt/envs/wb/bin/python runs/B0/code/test_traditional270.py
+```
 
 ## 环境状态
 
@@ -40,4 +52,4 @@
 5. 收集的原始结果在`runs/B0/raw/<method>`；`python -m baselines.fit runs/B0/raw/<method> --split <val|test> --run runs/B0 --name <method>`生成标准预测。任何方法全体环境报错时先修环境，不能把整组报错作为模型结果。
 6. 每次正式运行记录参数、MATLAB版本/工具箱/线程/seed0和真实命令；收尾补齐end/status。完整结果后再追加exp方法名称、B0 Notes数字表并运行eval/check。新worktree未必带旧方法全部预测，不可直接用局部结果覆盖B0旧metrics：仅合并本票新指标，或在明确防止收尾搬移的情况下只读借用权威旧预测，生成完整指标。多票B0增量由主代理串行合并。
 
-本次只准备已提交代码；未运行正式测试、未启动MATLAB/GPU、未生成新方法预测、未声称验收。PR保持草稿，不自动关票。
+本次准备已提交代码并验证输入/收集边界；未启动MATLAB/GPU、未生成新方法预测、未声称实验验收。PR保持草稿，不自动关票。

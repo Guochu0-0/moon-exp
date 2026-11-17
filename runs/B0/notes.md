@@ -108,7 +108,7 @@ AnyMatch-RoMa 的规律相同，自洽残差在各档都是 1.2–1.5 px。
 
 *官方实现与输入。* 使用 `cvg/LightGlue@edb2b838efb2ecfe3f88097c5fad9887d95aedad`，直接构造 `SuperPoint()` 与 `LightGlue(features="superpoint")`。保留官方默认：SuperPoint 不限制关键点总数、内部按长边 1024 缩放，LightGlue 匹配阈值为 0.1。不给输入额外套 MINIMA 的长边 640 缩放，不换入 MINIMA 权重，也不量化 B0 的浮点映射。官方提取器已将关键点映回输入网格，适配器直接取返回的匹配索引和置信度，再由 B0 的 RANSAC 3 px 估计仿射。
 
-*权重与运行。* 使用官方 `superpoint_v1.pth` 和 `superpoint_lightglue_v0-1_arxiv.pth`，在独立 `TORCH_HOME` 缓存里链接并核对实际加载文件；路径与 SHA256 记录在 `launch/splg.json`。种子为 0，在 160 的 V100-SXM2 32 GB 上按 split 分段推理；没有用 Test 选设置。Val 652 对、Test 953 对有标注 patch 对的逐对清单，与已归档 AnyMatch-RoMa、MatchAnything-RoMa、MINIMA-RoMa 和 LoFTR 各自相应 split 的清单完全相同。
+*权重与运行。* 使用官方 `superpoint_v1.pth` 和 `superpoint_lightglue_v0-1_arxiv.pth`，在独立 `TORCH_HOME` 缓存里链接并核对实际加载文件；路径与 SHA256 记录在 `launch/splg.json`。种子为 0，在 160 的 V100-SXM2 32 GB 上按 split 分段推理；没有用 Test 选设置。本次评价 Val/Test 的全部有标注 patch 对（652/953 对），逐对清单与已归档 AnyMatch-RoMa、MatchAnything-RoMa、MINIMA-RoMa 和 LoFTR 各自相应 split 的清单完全相同。
 
 **结果**
 
@@ -144,6 +144,8 @@ AnyMatch-RoMa 的规律相同，自洽残差在各档都是 1.2–1.5 px。
 *原版模型与浮点入口。* 使用 `Parskatt/RoMa@77f8d68803526dcddfd9b7a46bc76125bdc25f15`、官方 `roma_outdoor.pth` 和 DINOv2 ViT-L/14 权重。数据映射与 B0 相同；在浮点输入上按官方方式做 bicubic、antialias 缩放和 ImageNet 归一化，分别构造 560×560 与 864×864 两种分辨率，交给官方 `match` 的 tensor 与显式 high-res 入口。没有外层长边 640 缩放，也没有经过 uint8 PIL。模型沿用官方对称匹配和混合精度；float32 矩阵乘精度设为 highest。使用官方 `use_custom_corr=false` 的 PyTorch 相关性实现，配置与实际环境均有记录。
 
 *采样、坐标与评测。* 每个 patch 对按种子 0 从稠密匹配场采样 10000 个点对，转换回原始 patch 的像素中心坐标，再沿用统一 RANSAC 3 px 估计仿射。原始 10000 点用于拟合并保留在服务器 `raw/supplement268/roma`；工作台点对文件按既有记录规范保存置信度最高的最多 2000 点。Val/Test 分别为与旧四个参照逐对清单相同的 652/953 对；不训练、不搜参、不按 Test 选设置。在 160 的 V100-SXM2 32 GB、PyTorch 2.1.2+cu118 上按 split 分段推理。实际加载权重的 SHA256、完整配置及启动起止状态见 `launch/roma.json`。
+
+原始匹配 meta 的 commit 保留了 `9f849fd-dirty`：现有 `baselines.match.git_head` 的状态检查把运行时更新的已跟踪 `launch/roma.json` 也计为 dirty。正式启动记录的代码检查均为 `dirty=false`、`allow_dirty=false`，两个 split 的预测 meta 也均为 `dirty=false`；推理期间没有修改代码。
 
 **结果**
 

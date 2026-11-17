@@ -1,0 +1,254 @@
+{
+  "config": {
+    "method": "redfeat",
+    "adapter": "redfeat",
+    "repo": "third_party/ReDFeat",
+    "weights": "repo:Pretrained/VIS_SAR.pth",
+    "params": {
+      "num_features": 4096,
+      "min_size": 256,
+      "max_size": 1000,
+      "scale_factor": 1.189207115002721,
+      "repeatability_threshold": 0.4,
+      "border": 5,
+      "ratio": 0.9
+    },
+    "input": {
+      "optical": "div255",
+      "sar": "p2p98"
+    },
+    "seed": 0
+  },
+  "weights_sha256": "6294dcbd7b116c02bba4b7704ed8495ead1666a81494b14630945014ffaeea24",
+  "repo_commit": "66df80027dcb649118259a91cadbff4b50adc880",
+  "gpu": "Tesla V100-SXM2-32GB",
+  "seed": 0,
+  "notes": "official VIS_SAR model; optical forward1/SAR forward2; channel z-score; official multiscale NMS (10px border) and ratio=0.9; pixel-centre resize; no essential-matrix filtering",
+  "checks": [
+    {
+      "pair": "ROI_035/patch_0",
+      "mode": "cross_branch",
+      "n_matches": 862,
+      "n_inliers": 495,
+      "affine": [
+        [
+          1.0045256497823698,
+          0.004596745920108654,
+          3.825266822995627
+        ],
+        [
+          -0.005387052482584758,
+          0.9940977148491904,
+          -1.4462293490839315
+        ]
+      ],
+      "known_translation": [
+        7,
+        -5
+      ],
+      "raw_shift_residual_median": 2.0,
+      "translation_error": 4.765313901988483,
+      "linear_max_error": 0.005902285150809594
+    },
+    {
+      "pair": "ROI_035/patch_0",
+      "mode": "forward1",
+      "n_matches": 2635,
+      "n_inliers": 2046,
+      "affine": [
+        [
+          1.001753104179383,
+          -0.00030688331528678245,
+          6.987089789478874
+        ],
+        [
+          -2.4744344796789297e-05,
+          0.9986895767302499,
+          -4.66703170639784
+        ]
+      ],
+      "known_translation": [
+        7,
+        -5
+      ],
+      "raw_shift_residual_median": 1.4142135623730951,
+      "translation_error": 0.33321848400116366,
+      "linear_max_error": 0.0017531041793830138
+    },
+    {
+      "pair": "ROI_035/patch_0",
+      "mode": "forward2",
+      "n_matches": 1370,
+      "n_inliers": 922,
+      "affine": [
+        [
+          1.0014371271507672,
+          -0.0019956134094722172,
+          6.781047590510595
+        ],
+        [
+          -0.002071961316235438,
+          1.0029925108870446,
+          -4.791081200654406
+        ]
+      ],
+      "known_translation": [
+        7,
+        -5
+      ],
+      "raw_shift_residual_median": 2.0,
+      "translation_error": 0.30263380898574527,
+      "linear_max_error": 0.0029925108870445527
+    },
+    {
+      "pair": "ROI_035/patch_1",
+      "mode": "cross_branch",
+      "n_matches": 908,
+      "n_inliers": 553,
+      "affine": [
+        [
+          1.0006060250410018,
+          -0.004299883788453795,
+          7.684610086038809
+        ],
+        [
+          0.0021664524948543963,
+          1.002899083209865,
+          -5.779394410028728
+        ]
+      ],
+      "known_translation": [
+        7,
+        -5
+      ],
+      "raw_shift_residual_median": 2.233410284680117,
+      "translation_error": 1.037374867774468,
+      "linear_max_error": 0.004299883788453795
+    },
+    {
+      "pair": "ROI_035/patch_1",
+      "mode": "forward1",
+      "n_matches": 2762,
+      "n_inliers": 2098,
+      "affine": [
+        [
+          1.0006424925292903,
+          0.00024728380400992705,
+          6.755694858862314
+        ],
+        [
+          0.0031175039865028106,
+          0.9992422874727632,
+          -5.487485126633537
+        ]
+      ],
+      "known_translation": [
+        7,
+        -5
+      ],
+      "raw_shift_residual_median": 1.4142135623730951,
+      "translation_error": 0.5452767652075599,
+      "linear_max_error": 0.0031175039865028106
+    },
+    {
+      "pair": "ROI_035/patch_1",
+      "mode": "forward2",
+      "n_matches": 1233,
+      "n_inliers": 767,
+      "affine": [
+        [
+          1.002260076735649,
+          -0.0009181745356843698,
+          6.415211646301898
+        ],
+        [
+          -0.002839341358956383,
+          0.9967138166476778,
+          -3.1628686480074646
+        ]
+      ],
+      "known_translation": [
+        7,
+        -5
+      ],
+      "raw_shift_residual_median": 2.1413421549228664,
+      "translation_error": 1.9279598084749736,
+      "linear_max_error": 0.003286183352322225
+    },
+    {
+      "pair": "ROI_035/patch_2",
+      "mode": "cross_branch",
+      "n_matches": 1017,
+      "n_inliers": 698,
+      "affine": [
+        [
+          1.0014528998424952,
+          -0.004777815095820522,
+          7.779424856811902
+        ],
+        [
+          -0.0003676876172716794,
+          1.0014938280500731,
+          -4.870334203509981
+        ]
+      ],
+      "known_translation": [
+        7,
+        -5
+      ],
+      "raw_shift_residual_median": 1.9476434648398666,
+      "translation_error": 0.7901369034513227,
+      "linear_max_error": 0.004777815095820522
+    },
+    {
+      "pair": "ROI_035/patch_2",
+      "mode": "forward1",
+      "n_matches": 2842,
+      "n_inliers": 2527,
+      "affine": [
+        [
+          0.9996349946692622,
+          -0.00042536166325248453,
+          7.253232848767548
+        ],
+        [
+          0.0005713334334672719,
+          0.9994331675689501,
+          -4.854845520508635
+        ]
+      ],
+      "known_translation": [
+        7,
+        -5
+      ],
+      "raw_shift_residual_median": 1.3387651946807826,
+      "translation_error": 0.2918847351461481,
+      "linear_max_error": 0.0005713334334672719
+    },
+    {
+      "pair": "ROI_035/patch_2",
+      "mode": "forward2",
+      "n_matches": 1589,
+      "n_inliers": 1144,
+      "affine": [
+        [
+          0.9979491305886595,
+          -0.0009225586677623196,
+          7.927977454870703
+        ],
+        [
+          0.002012327793720997,
+          0.9994486659580445,
+          -5.624455048675519
+        ]
+      ],
+      "known_translation": [
+        7,
+        -5
+      ],
+      "raw_shift_residual_median": 1.625117249399463,
+      "translation_error": 1.118519675537562,
+      "linear_max_error": 0.0020508694113404724
+    }
+  ]
+}

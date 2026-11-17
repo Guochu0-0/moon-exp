@@ -1,0 +1,53 @@
+[
+ {
+  "start": "2026-11-17 14:16:54 +0000",
+  "end": "2026-11-17 14:17:09 +0000",
+  "status": "ok",
+  "commit": "7fc9e4a5b6d7af6e4f5573037b57101b312f0c30",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-269",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/baseline269/bin/python",
+   "runs/B0/code/run_specialized269.py",
+   "redfeat",
+   "--stage",
+   "selfcheck"
+  ],
+  "entry": "/remote-home/xufang/YGC/wt/baseline-269/runs/B0/code/run_specialized269.py",
+  "config_file": "configs/baselines/redfeat.json",
+  "config": {
+   "method": "redfeat",
+   "adapter": "redfeat",
+   "repo": "third_party/ReDFeat",
+   "weights": "repo:Pretrained/VIS_SAR.pth",
+   "params": {
+    "num_features": 4096,
+    "min_size": 256,
+    "max_size": 1000,
+    "scale_factor": 1.189207115002721,
+    "repeatability_threshold": 0.4,
+    "border": 5,
+    "ratio": 0.9
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args": {
+   "method": "redfeat",
+   "stage": "selfcheck",
+   "data": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights_root": "/remote-home/xufang/YGC/weights"
+  },
+  "precision": {
+   "tf32": false,
+   "float32_matmul_precision": "highest"
+  }
+ }
+]

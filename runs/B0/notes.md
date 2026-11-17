@@ -108,7 +108,7 @@ AnyMatch-RoMa 的规律相同，自洽残差在各档都是 1.2–1.5 px。
 
 *官方实现与输入。* 使用 `cvg/LightGlue@edb2b838efb2ecfe3f88097c5fad9887d95aedad`，直接构造 `SuperPoint()` 与 `LightGlue(features="superpoint")`。保留官方默认：SuperPoint 不限制关键点总数、内部按长边 1024 缩放，LightGlue 匹配阈值为 0.1。不给输入额外套 MINIMA 的长边 640 缩放，不换入 MINIMA 权重，也不量化 B0 的浮点映射。官方提取器已将关键点映回输入网格，适配器直接取返回的匹配索引和置信度，再由 B0 的 RANSAC 3 px 估计仿射。
 
-*权重与运行。* 使用官方 `superpoint_v1.pth` 和 `superpoint_lightglue_v0-1_arxiv.pth`，在独立 `TORCH_HOME` 缓存里链接并核对实际加载文件；路径与 SHA256 记录在 `launch/splg.json`。种子为 0，在 160 的 V100-SXM2 32 GB 上按 split 分段推理；没有用 Test 选设置。Val 652 对、Test 953 对的逐对清单，与已归档 AnyMatch-RoMa、MatchAnything-RoMa、MINIMA-RoMa 和 LoFTR 各自相应 split 的清单完全相同。
+*权重与运行。* 使用官方 `superpoint_v1.pth` 和 `superpoint_lightglue_v0-1_arxiv.pth`，在独立 `TORCH_HOME` 缓存里链接并核对实际加载文件；路径与 SHA256 记录在 `launch/splg.json`。种子为 0，在 160 的 V100-SXM2 32 GB 上按 split 分段推理；没有用 Test 选设置。Val 652 对、Test 953 对有标注 patch 对的逐对清单，与已归档 AnyMatch-RoMa、MatchAnything-RoMa、MINIMA-RoMa 和 LoFTR 各自相应 split 的清单完全相同。
 
 **结果**
 
@@ -128,3 +128,38 @@ AnyMatch-RoMa 的规律相同，自洽残差在各档都是 1.2–1.5 px。
 **讨论**
 
 这一结果补上了原版稀疏参照：在当前输入与官方默认配置下，原版 SP+LightGlue 在两个 split 上的 10 px 成功率都不足 1%。自检验证了已知光学平移的坐标恢复；它不能证明跨模态匹配正确，也没有检验换预处理、调阈值或在月面训练后的能力。本次没有做这些改变。
+
+## 2026-11-17：原版 RoMa 的 10 px 成功率为 18.71% 和 21.09%
+
+**摘要**
+
+本次同时补齐官方原版 RoMa v1 outdoor 参照。在相同的有标注 Val/Test patch 对上，原版 RoMa 均能估出仿射，但 10 px 内成功率只有 18.71% 和 21.09%，检查点误差中位数分别为 165.01 和 151.93 px。原版 SP+LightGlue 与原版 RoMa 的完整结果都作为 B0 新方法追加，原有 18 种方法的指标与本次先完成的 SP+LightGlue 结果保持原样。
+
+**引言**
+
+原先的 RoMa 参照来自 MatchAnything、MINIMA 和 AnyMatch 发布的跨模态权重，缺少原版 outdoor 权重。本节补测它在本任务上的表现，并保留官方推理与旧跨模态 wrapper 之间的区别，避免把两种不同接入路径当作只换权重的消融。
+
+**方法**
+
+*原版模型与浮点入口。* 使用 `Parskatt/RoMa@77f8d68803526dcddfd9b7a46bc76125bdc25f15`、官方 `roma_outdoor.pth` 和 DINOv2 ViT-L/14 权重。数据映射与 B0 相同；在浮点输入上按官方方式做 bicubic、antialias 缩放和 ImageNet 归一化，分别构造 560×560 与 864×864 两种分辨率，交给官方 `match` 的 tensor 与显式 high-res 入口。没有外层长边 640 缩放，也没有经过 uint8 PIL。模型沿用官方对称匹配和混合精度；float32 矩阵乘精度设为 highest。使用官方 `use_custom_corr=false` 的 PyTorch 相关性实现，配置与实际环境均有记录。
+
+*采样、坐标与评测。* 每个 patch 对按种子 0 从稠密匹配场采样 10000 个点对，转换回原始 patch 的像素中心坐标，再沿用统一 RANSAC 3 px 估计仿射。原始 10000 点用于拟合并保留在服务器 `raw/supplement268/roma`；工作台点对文件按既有记录规范保存置信度最高的最多 2000 点。Val/Test 分别为与旧四个参照逐对清单相同的 652/953 对；不训练、不搜参、不按 Test 选设置。在 160 的 V100-SXM2 32 GB、PyTorch 2.1.2+cu118 上按 split 分段推理。实际加载权重的 SHA256、完整配置及启动起止状态见 `launch/roma.json`。
+
+**结果**
+
+*光学已知平移自检的最大仿射恢复误差低于 0.057 px。* 三个自检 patch 对各采样 10000 点，均为 RANSAC 内点；相对已知 (7,-5) px 平移，四角与中心五处的最大误差分别为 0.0524、0.0542、0.0563 px。点对位移残差中位数分别为 0.0435、0.0417、0.0417 px。它们验证坐标接入，不能用作光学–SAR 的配准精度。[自检记录](extra/supplement268/roma_selfcheck.json)保留了全部读数。
+
+*能估出仿射的 patch 对仍多数不在 10 px 内。* Val/Test 全部 patch 对都写出预测，没有程序执行错误、缺失、重复或仿射估计失败。真实检查点上的结果如下。
+
+| split | patch 对数 | AUC@3 | AUC@5 | AUC@10 | SR@3 | SR@5 | SR@10 | 检查点误差中位（px） |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Val | 652 | 0.009631 | 0.042363 | 0.101063 | 31/652 | 79/652 | 122/652 | 165.01 |
+| Test | 953 | 0.025207 | 0.062076 | 0.123391 | 85/953 | 136/953 | 201/953 | 151.93 |
+
+表 2：原版 RoMa 在原始 Val/Test 上的配准结果。AUC 为 0–1 标度，SR 用成功对数/总对数表示。
+
+每对 RANSAC 内点数中位数为 783/822，而匹配点数固定为采样数 10000，不是检测到的独立特征数量。Val/Test 的 SR@10 单方法 95% 自助法区间分别为 [15.49%, 21.78%] 和 [18.68%, 23.71%]。完整协议指标、区间、数量及覆盖核对见 [原版 RoMa 统计](extra/supplement268/roma_report.json)与 `metrics.json`。
+
+**讨论**
+
+原版 RoMa 补测显示，在本数据与本次官方配置下，它可以给全部 patch 对拟合仿射，但只有约五分之一在 10 px 内。原版 RoMa 的 Val/Test AUC@5 为 0.042/0.062，低于既有 AnyMatch-RoMa 的 0.236/0.231。这是完整模型与其官方推理路径的比较：旧跨模态 RoMa wrapper 有额外缩放和 PIL 量化，本次使用官方浮点双分辨率入口，因此不能单独把分数差解释成训练数据或权重带来的因果效果。本次没有改变输入映射、搜索阈值或在月面训练，也没有从仿射估计成功推断匹配正确。

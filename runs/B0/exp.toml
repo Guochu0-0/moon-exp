@@ -62,3 +62,4 @@ name = "SuperPoint + LightGlue（原版）"
 
 [methods.roma]
 name = "RoMa v1（原版 outdoor 权重）"
+caveat = "点对数量为从稠密匹配场采样的 10000 点"

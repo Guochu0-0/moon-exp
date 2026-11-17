@@ -85,3 +85,33 @@ def test_begin_records_config(repo, tmp_path, monkeypatch):
     items = json.loads((run / "launch" / "main.json").read_text(encoding="utf-8"))
     assert items[0]["args"] == cfg == rec["args"] and items[0]["entry"] == "scripts/finetune/run.py"
     assert items[0]["config"] == {"adapter": "loftr"}
+
+
+def test_slow_git_uses_explicit_budget_and_still_refuses_dirty(tmp_path, monkeypatch):
+    """慢共享盘可以显式等久一点，但不能把超时或未提交代码当成洁净。"""
+    import sys
+    from baselines.match import git_head
+
+    script = tmp_path / "slow_git.py"
+    script.write_text('import sys, time\n'
+                      'if "rev-parse" in sys.argv: print("a" * 40)\n'
+                      'if "status" in sys.argv:\n'
+                      '    time.sleep(.2)\n'
+                      '    print(" M finetune/train.py")\n')
+    original = subprocess.run
+
+    def slow(args, **kwargs):
+        return original([sys.executable, str(script), *args[1:]], **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", slow)
+    monkeypatch.setenv("MOON_GIT_TIMEOUT", "0.05")
+    with pytest.raises(subprocess.TimeoutExpired):
+        launch._git(tmp_path, "status")
+    assert git_head(tmp_path) is None
+    monkeypatch.setenv("MOON_GIT_TIMEOUT", "1")
+    assert "finetune/train.py" in launch._git(tmp_path, "status")
+    assert git_head(tmp_path) == "a" * 40 + "-dirty"
+    monkeypatch.delenv(launch.ALLOW_ENV, raising=False)
+    with pytest.raises(SystemExit) as e:
+        launch.require_clean(tmp_path)
+    assert e.value.code == 2

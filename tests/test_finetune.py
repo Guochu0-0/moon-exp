@@ -151,20 +151,20 @@ def test_deterministic_resume_skips_io_and_preserves_shuffle_state():
             self.reads += 1
             return i
 
-    def make(seed):
+    def make(seed, resume_epochs):
         ds = Counting()
         g = torch.Generator().manual_seed(seed)
         dl = torch.utils.data.DataLoader(ds, batch_size=4, shuffle=True, generator=g, num_workers=0)
-        return Loader(dl, g, resume_epochs=True), ds, g
+        return Loader(dl, g, resume_epochs=resume_epochs), ds, g
 
-    full, _, full_g = make(0)
+    full, _, full_g = make(0, False)  # 未包装的旧采样路径作为参照。
     it = iter(full)
     for _ in range(5):
         next(it)
     saved = full.state()
     expected = [next(it).clone() for _ in range(7)]
     expected_state = full_g.get_state().clone()
-    resumed, ds, g = make(999)
+    resumed, ds, g = make(999, True)
     resumed.load(saved)
     it2 = iter(resumed)
     assert torch.equal(next(it2), expected[0])

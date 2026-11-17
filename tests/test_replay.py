@@ -25,6 +25,7 @@ ADDED = {
     "run.resume_epochs": (False, "#267 新增；默认不允许后续 epoch 续训"),
     "run.segment_steps": (0, "#267 新增；默认不分段"),
     "run.count_updates": (False, "#267 新增；默认沿用前向计步"),
+    "run.eval_gpus": ([], "#267 新增；默认沿用单卡逐存档Val评测"),
     "optim.lr_milestones": ([], "#267 新增；旧调度不用 MultiStep"),
     "optim.lr_gamma": (0.1, "#267 新增；只对 MultiStep 生效"),
     "optim.amp_growth_interval": (2000, "#267 新增；默认与旧 GradScaler 一致"),

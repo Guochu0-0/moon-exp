@@ -60,6 +60,7 @@ RUN = {
     "resume_epochs": False, # 允许后续 epoch 续训；只用于 workers=0 且数据加载无随机增强（#267）
     "segment_steps": 0,    # 驱动每段训练的更新步数；段间释放CUDA进程并重新等空卡（#267）
     "count_updates": False, # AMP溢出时不计入总更新预算；仅支持 accum=1（#267）
+    "eval_gpus": [],       # 非空时用这些卡并行评独立Val存档，全部完成后才选模/评Test（#267）
     "sweep": "all",         # 驱动评哪些 ckpt（#209）：all 逐个评 Val 再按 select 补评 Test / last 只评最后一个的 Val、不评 Test
     "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训（不另存 ckpt）
     "halt_below": {},       # 同上，中位数低于阈值就停
@@ -175,6 +176,9 @@ def expand(raw: dict) -> dict:
     if out["run"]["segment_steps"] < 0 or (out["run"]["segment_steps"] and
             (not out["run"]["save_optim"] or not out["run"]["resume_epochs"] or out["run"]["stop_at"])):
         raise ConfigError("[run] segment_steps 非负；分段要求 save_optim、resume_epochs 且 stop_at=0")
+    gpus = out["run"]["eval_gpus"]
+    if any(type(g) is not int or g < 0 for g in gpus) or len(set(gpus)) != len(gpus):
+        raise ConfigError("[run] eval_gpus 必须是互不重复的非负GPU编号")
     for name, part in PARTS.items():      # 按登记顺序：每步也按这个顺序算损失
         if name not in raw:
             continue

@@ -25,6 +25,7 @@ save_optim = true
 resume_epochs = true
 segment_steps = 500
 count_updates = true
+eval_gpus = [0, 1]
 select = "last"
 
 [pseudo]

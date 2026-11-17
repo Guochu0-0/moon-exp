@@ -71,7 +71,7 @@ class Job:
         self.S = self.sw / "S"
 
     def sh(self, cmd, logname, gpu=True):
-        if gpu and self.cfg["run"]["segment_steps"]:
+        if gpu and (self.cfg["run"]["segment_steps"] or self.cfg["run"]["eval_gpus"]):
             # 子进程结束后 CUDA 上下文已释放；继续前重新等空卡。
             while True:
                 mem = subprocess.check_output(["timeout", "15", "nvidia-smi", "-i", str(self.gpu),
@@ -128,6 +128,40 @@ class Job:
             if done < total:
                 time.sleep(30)
 
+    def sweep_val(self, ckpts, online):
+        """每个存档的原始Val推理独立，结果目录按step隔离；不在工作线程选模或评Test。"""
+        def evaluate(job, c):
+            st = c.stem[5:]
+            job.evaluate("val", st)
+            if online and not (job.sw / "neg" / f"step{st}.jsonl").exists():
+                job.sh([PY, "-m", "finetune.negpairs", job.infer, "--split", "val", "--n", "200",
+                        "--weights", f"step{st}={c}", "--out", job.sw / "neg"], "neg.log")
+
+        gpus = self.cfg["run"]["eval_gpus"]
+        if not gpus:
+            for c in ckpts:
+                evaluate(self, c)
+            return
+        from concurrent.futures import ThreadPoolExecutor
+        from queue import Queue, Empty
+        queue = Queue()
+        for c in ckpts:
+            queue.put(c)
+
+        def worker(gpu):
+            job = Job(self.R, self.m, self.cfg, gpu)
+            while True:
+                try:
+                    c = queue.get_nowait()
+                except Empty:
+                    return
+                evaluate(job, c)
+
+        with ThreadPoolExecutor(max_workers=len(gpus)) as pool:
+            futures = [pool.submit(worker, gpu) for gpu in gpus]
+            for f in futures:
+                f.result()
+
     def __call__(self):
         R, m, ck = self.R, self.m, self.ck
         ck.mkdir(parents=True, exist_ok=True)
@@ -142,12 +176,7 @@ class Job:
                     "sweep.log", gpu=False)
         ckpts = sorted(ck.glob("ckpt_*.pt"), key=lambda p: int(p.stem[5:]))
         val_only = self.cfg["run"]["sweep"] == "last"   # 只评最后一个 ckpt 的 Val、不评 Test（#209）
-        for c in ckpts[-1:] if val_only else ckpts:
-            st = c.stem[5:]
-            self.evaluate("val", st)
-            if online and not (self.sw / "neg" / f"step{st}.jsonl").exists():
-                self.sh([PY, "-m", "finetune.negpairs", self.infer, "--split", "val", "--n", "200",
-                         "--weights", f"step{st}={c}", "--out", self.sw / "neg"], "neg.log")
+        self.sweep_val(ckpts[-1:] if val_only else ckpts, online)
         last = self.cfg["run"]["select"] == "last"   # 在 Test 上训练时不能按 Val 选（#98）
         st = int(ckpts[-1].stem[5:]) if last or val_only else self.peak()
         if not val_only:

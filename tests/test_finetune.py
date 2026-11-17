@@ -167,6 +167,33 @@ def test_segmented_driver_preserves_resume_and_budget(tmp_path, monkeypatch):
     assert all(rec["args"]["optim"]["steps"] == 7 for rec in records)
 
 
+def test_parallel_val_evaluates_every_checkpoint_once_before_return(tmp_path, monkeypatch):
+    import importlib.util
+    import threading
+    from finetune.config import expand
+    spec = importlib.util.spec_from_file_location("parallel267", REPO / "scripts/finetune/run.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    cfg = expand({"model": {"name": "roma"}, "run": {"eval_gpus": [0, 1]}})
+    barrier = threading.Barrier(2)
+    entered, calls = set(), []
+    lock = threading.Lock()
+
+    def evaluate(job, split, step):
+        with lock:
+            first = job.gpu not in entered
+            entered.add(job.gpu)
+        if first:
+            barrier.wait(timeout=5)
+        calls.append((job.gpu, split, step))
+
+    monkeypatch.setattr(mod.Job, "evaluate", evaluate)
+    job = mod.Job(tmp_path / "runs/E50", "main", cfg, "0")
+    job.sweep_val([Path(f"ckpt_{s}.pt") for s in (250, 500, 750, 7907)], online=False)
+    assert entered == {0, 1}
+    assert sorted((split, int(step)) for _, split, step in calls) == [("val", s) for s in (250, 500, 750, 7907)]
+
+
 def test_optimizer_reports_amp_skip_without_changing_default_budget():
     import torch
     from finetune.optim import Optim

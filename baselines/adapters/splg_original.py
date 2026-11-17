@@ -1,8 +1,11 @@
 """Original cvg/LightGlue + SuperPoint, without the MINIMA wrapper.
 
-Use the pinned LightGlue constructors and their defaults. SuperPoint.extract
-does its own 1024-long-side resize and returns pixel centers in the input
-grid (utils.py Extractor.extract). No outer 640 resize, quantization, top-k
+Official source pinned at cvg/LightGlue@edb2b838efb2ecfe3f88097c5fad9887d95aedad:
+- lightglue/superpoint.py:107-145 defines defaults, resize=1024 and official weights.
+- lightglue/lightglue.py:315-339,369-433 defines matcher defaults and weight loading.
+- lightglue/utils.py:137-147 extracts and maps pixel centers back to the input grid.
+- lightglue/lightglue.py:459-468,610-620 defines matches and matching_scores0 outputs.
+No outer 640 resize, quantization, top-k
 override, or MINIMA checkpoint is applied. Official weights come from the
 torch hub cache; the runner records their paths/hashes separately.
 """

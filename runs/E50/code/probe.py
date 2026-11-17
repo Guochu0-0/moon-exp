@@ -93,6 +93,14 @@ def main():
     from finetune.parts.pseudo import affine_norm, roma_loss
     from finetune.geom import compose, inv_affine
     import romatch
+    # 环境不装远程日志客户端；原损失只用 wandb.log，诊断中将日志明确替换为空操作。
+    import types
+    try:
+        import wandb
+    except ModuleNotFoundError:
+        wandb = types.ModuleType("wandb")
+        wandb.log = lambda *a, **kw: None
+        sys.modules["wandb"] = wandb
     import romatch.losses.robust_loss as upstream
     check_rng = np.random.default_rng()
     check_rng.bit_generator.state = state_before
@@ -130,6 +138,8 @@ def main():
               "final_scale": optim.scaler.get_scale(), "common_specs": transforms, "attempts": attempts,
               "upstream_loss": float(up_loss), "local_loss": float(own_loss),
               "loss_output_grad_max_diff": max(differences)}
+    report["resolved_inference"] = getattr(model.adapter, "resolved_params", None)
+    report["upstream_wandb_logging"] = "disabled for local loss comparison"
     (ROOT / "runs/E50/extra").mkdir(exist_ok=True)
     (ROOT / "runs/E50/extra/probe.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(report, ensure_ascii=False), flush=True)

@@ -67,6 +67,20 @@ def test_roma_native_bn_and_parameter_groups():
     assert dec[0] is ps[1] and ref[0] is ps[2] and vgg[0] is ps[0] and not ps[3].requires_grad
 
 
+def test_roma_records_actual_inference_parameters():
+    import types
+    import torch
+    from baselines.adapters.romatch import resolved_parameters
+    model = types.SimpleNamespace(h_resized=448, w_resized=560, upsample_res=(700, 700),
+            get_output_resolution=lambda: (700, 700), symmetric=False, upsample_preds=True, attenuate_cert=False,
+            sample_mode="balanced", sample_thresh=.1, sample=lambda matches, certainty, num=1234: None,
+            match=lambda *a, **kw: None, training=False, encoder=types.SimpleNamespace(amp_dtype=torch.float16),
+            decoder=types.SimpleNamespace(amp_dtype=torch.float16))
+    params = resolved_parameters(model, 512, True)
+    assert params["sample_num"] == 1234 and params["coarse_resolution"] == [448, 560]
+    assert params["adapter_swap"] and not params["symmetric"] and not params["model_training"]
+
+
 def test_multistep_matches_native_scheduler_and_accumulation():
     import torch
     from finetune.optim import lr_at, Optim

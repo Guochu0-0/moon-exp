@@ -171,6 +171,7 @@ def main(argv=None):
     matcher = Adapter(repo=repo, weights=weights, device=args.device, **cfg.get("params", {}))
     meta["load_sec"] = round(time.time() - t0, 2)
     meta["notes"] = getattr(matcher, "notes", "")
+    meta["resolved_params"] = getattr(matcher, "resolved_params", None)
 
     use_alarm = args.timeout > 0 and hasattr(signal, "SIGALRM")
     if use_alarm:

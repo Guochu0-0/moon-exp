@@ -1,0 +1,26 @@
+[
+ {
+  "start": "2026-11-17 14:38:34 +0000",
+  "end": "2026-11-17 14:39:11 +0000",
+  "status": "ok",
+  "commit": "d8f8b8f506b60c87399f474120bc6507907f7419",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-269",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "-m",
+   "baselines.fit",
+   "runs/B0/raw/redfeat",
+   "--split",
+   "test",
+   "--run",
+   "runs/B0",
+   "--ransac",
+   "3"
+  ]
+ }
+]

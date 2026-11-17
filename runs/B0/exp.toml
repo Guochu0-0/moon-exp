@@ -63,3 +63,7 @@ name = "SuperPoint + LightGlue（原版）"
 [methods.roma]
 name = "RoMa v1（原版 outdoor 权重）"
 caveat = "点对数量为从稠密匹配场采样的 10000 点"
+
+[methods.redfeat]
+name = "ReDFeat（官方 VIS-SAR 权重）"
+caveat = "地球光学–SAR 监督预训练；未在月球数据训练"

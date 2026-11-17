@@ -1,0 +1,1 @@
+{"method":"redfeat","adapter":"redfeat","repo":"third_party/ReDFeat","weights":"repo:Pretrained/VIS_SAR.pth","params":{"num_features":4096,"min_size":256,"max_size":1000,"scale_factor":1.189207115002721,"repeatability_threshold":0.4,"border":5,"ratio":0.9},"input":{"optical":"div255","sar":"p2p98"},"seed":0}

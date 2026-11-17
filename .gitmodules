@@ -50,3 +50,15 @@
 	path = third_party/RoMa
 	url = https://github.com/Parskatt/RoMa
 	shallow = true
+[submodule "third_party/ReDFeat"]
+	path = third_party/ReDFeat
+	url = https://github.com/ACuOoOoO/ReDFeat
+	shallow = true
+[submodule "third_party/GUSO"]
+	path = third_party/GUSO
+	url = https://github.com/vision-heng/GUSO
+	shallow = true
+[submodule "third_party/VMGGA"]
+	path = third_party/VMGGA
+	url = https://github.com/yeyuanxin110/VMGGA
+	shallow = true

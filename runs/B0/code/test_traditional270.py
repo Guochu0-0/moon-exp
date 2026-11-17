@@ -100,7 +100,9 @@ class CollectionBoundary(unittest.TestCase):
 
     def test_corrupt_mat_rejected(self):
         (self.out / (target.key(self.pairs[1]) + '.mat')).write_bytes(b'corrupt mat')
-        self.rejected_without_output()
+        with self.assertRaises(Exception):
+            self.run_collect()
+        self.assertFalse((self.root / 'runs/B0/raw').exists())
 
     def test_serialization_failure_preserves_formal_outputs(self):
         dest = self.root / 'runs/B0/raw/rift'

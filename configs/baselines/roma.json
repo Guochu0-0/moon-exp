@@ -3,7 +3,7 @@
  "adapter": "roma_original",
  "repo": "third_party/RoMa",
  "weights": "official/roma/roma_outdoor.pth",
- "params": {},
+ "params": {"use_custom_corr": false},
  "input": {"optical": "div255", "sar": "p2p98"},
  "seed": 0
 }

@@ -1,6 +1,12 @@
 """VMGGA optical-SAR raw matches, before demo homography fitting.
 
-yeyuanxin110/VMGGA@5df54e8 demo_vmgga.py/configs/demo/optical_sar.yaml.
+Reference: yeyuanxin110/VMGGA@5df54e852ba24135be45f782623db30032bf7602:
+- demo_vmgga.py:58-85 constructs the configured model and loads the state.
+- configs/demo/optical_sar.yaml:5-7 sets threshold 2e-5 and fine window 5.
+- demo_vmgga.py:318-327 converts gray, pads to 16 and builds float [0,1].
+- demo_vmgga.py:328-340 forwards and extracts in-bounds raw mkpts*_f;
+  return these before ransac_filter at :342-344.
+
 The 512px inputs already satisfy the 16px padding multiple; no resize is needed.
 """
 from __future__ import annotations

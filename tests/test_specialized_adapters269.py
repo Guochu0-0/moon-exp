@@ -82,6 +82,24 @@ def test_fhreg_confidence_corresponds_to_filtered_fine_matches():
     np.testing.assert_allclose(conf, [.6, .8])
 
 
+def test_fhreg_explicit_usm_uses_coarse_confidence():
+    torch = pytest.importorskip("torch")
+    adapter = FHRegAdapter.__new__(FHRegAdapter)
+    adapter.device, adapter.image_size = "cpu", 512
+
+    class Model:
+        config = {"matching_type": "usm"}
+
+        def __call__(self, batch):
+            batch.update(mkpts0_f=torch.tensor([[10., 20.]]),
+                         mkpts1_f=torch.tensor([[15., 20.]]), mconf=torch.tensor([.7]))
+            return batch
+
+    adapter.model = Model()
+    _, _, conf = adapter.match(np.zeros((512, 512), np.float32), np.zeros((512, 512), np.float32))
+    np.testing.assert_allclose(conf, [.7])
+
+
 def test_redfeat_real_multiscale_normalization_nms_ranking_and_coordinates():
     torch = pytest.importorskip("torch")
     adapter = ReDFeatAdapter.__new__(ReDFeatAdapter)

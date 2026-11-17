@@ -1,6 +1,15 @@
 """ReDFeat official VIS-SAR inference, without the demo's essential-matrix fit.
 
-Reference: ACuOoOoO/ReDFeat@66df800, match.py. Use the official MMNet,
+Reference: ACuOoOoO/ReDFeat@66df80027dcb649118259a91cadbff4b50adc880:
+- match.py:24-29 constructs MMNet and loads checkpoint['model']; :114-125
+  supplies the feature-count, scale, NMS threshold and border defaults.
+- match.py:138-142,158-162 converts RGB to float and applies channel z-score.
+- match.py:32-50 implements repeatability NMS/10px border; :53-109 runs the
+  scale schedule and forward1/forward2, and collects coordinates/descriptors.
+- match.py:151-155,171-175 selects top responses; :180-188 does BF ratio 0.9.
+  Return those raw correspondences, before findEssentialMat at :190-193.
+
+Use the official MMNet,
 multiscale schedule, repeatability NMS and ratio matching. Keep optical forward1
 and SAR forward2. Resize coordinates use this project's pixel-centre convention.
 Importing the demo itself would overwrite CUDA_VISIBLE_DEVICES, so it is avoided.

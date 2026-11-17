@@ -1,6 +1,14 @@
 """FHReg/GUSO official cross-domain inference, before FSC/KDE.
 
-vision-heng/GUSO@f3e5420: zero_shot_msaw_os.py uses float RGB [0,1].
+Reference: vision-heng/GUSO@f3e5420d59902edd025f06159b9a2b2320ea51d4:
+- zero_shot_msaw_os.py:36-56 configures/constructs FHReg and strictly loads
+  the checkpoint; :114-117 supplies float RGB [0,1].
+- zero_shot_msaw_os.py:64-74 calls image_opt/image_sar and reads mkpts*_f;
+  return those points before the FSC call at :163-164.
+- fhreg/matching_module.py:337-342 stores the final, filtered fine-point
+  confidence in mconf_f; coarse mconf is a different array (:164-192).
+  fhreg/fhreg.py:121-124 explicitly skips refinement for matching_type='usm'.
+
 Only the model is imported: the demo would overwrite CUDA_VISIBLE_DEVICES.
 """
 from __future__ import annotations
@@ -54,5 +62,10 @@ class FHRegAdapter:
             batch = result
         kp0 = to_original(batch["mkpts0_f"].float().cpu().numpy(), *g0)
         kp1 = to_original(batch["mkpts1_f"].float().cpu().numpy(), *g1)
-        conf = batch.get("mconf")
+        # FineSubMatching filters/reorders coarse candidates. Its mconf_f is
+        # aligned with mkpts*_f; coarse mconf is valid only in explicit USM mode.
+        if getattr(self.model, "config", {}).get("matching_type") == "usm":
+            conf = batch.get("mconf")
+        else:
+            conf = batch.get("mconf_f")
         return kp0, kp1, None if conf is None else conf.float().cpu().numpy().reshape(-1)

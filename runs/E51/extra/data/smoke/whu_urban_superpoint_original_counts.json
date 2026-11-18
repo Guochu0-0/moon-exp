@@ -1,0 +1,30 @@
+[
+  {
+    "pair": "NI49E024017/A1",
+    "modality": "optical",
+    "status": "ok",
+    "count": 4611,
+    "key": "NI49E024017__A1__optical"
+  },
+  {
+    "pair": "NI49E024017/A1",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1978,
+    "key": "NI49E024017__A1__sar"
+  },
+  {
+    "pair": "NH49E012017/D4",
+    "modality": "optical",
+    "status": "ok",
+    "count": 3020,
+    "key": "NH49E012017__D4__optical"
+  },
+  {
+    "pair": "NH49E012017/D4",
+    "modality": "sar",
+    "status": "ok",
+    "count": 970,
+    "key": "NH49E012017__D4__sar"
+  }
+]

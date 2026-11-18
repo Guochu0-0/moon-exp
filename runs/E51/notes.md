@@ -56,6 +56,24 @@ B0 记录了 ReDFeat 在月球上的匹配输出。ReDFeat 先从光学和 SAR �
 ![WHU-OPT-SAR 上 ReDFeat 与原版 SuperPoint 的检测点叠图](extra/whu_detections.png)
 图 2。WHU-OPT-SAR 四个场景的光学与 SAR 检测点。 [查看地球大图](extra/whu_detections.png)
 
+**城市建筑候选**
+
+从 WHU-OPT-SAR 增补四个同名光学–SAR 场景。8 个 TIFF 共 311,869,592 字节，已校验后存入 gpfs 的 `/remote-home/xufang/YGC/dataset/WHU-OPT-SAR`。先在作者的光学缩略图上选有街区或成组屋顶的位置，再用相同的 512×512 像素窗口读取光学与 SAR。每景四对，共 16 对。下面是 RGB 光学选样图，每格的编号对应表里的检测叠图。
+
+![WHU 城市建筑候选的 16 张 RGB 光学预览](extra/whu_urban/gallery.jpg)
+图 3。城市建筑候选。按 A1–D4 选样。
+
+密集街区可以先看 **A1、C1、D3**，轮廓规则的大屋顶可以先看 **B1、C4**。
+
+| 编号 | WHU 场景 | 主要内容 | 光学和 SAR 检测叠图 |
+|---|---|---|---|
+| A1–A4 | `NI49E024017` | 河湾街区、沿河楼群和大屋顶 | [A 组](extra/whu_urban/A.jpg) |
+| B1–B4 | `NH50E009003` | 河流两岸的厂房、大屋顶和道路 | [B 组](extra/whu_urban/B.jpg) |
+| C1–C4 | `NH49E010020` | 河东连片城区、弯道厂区和成组屋顶 | [C 组](extra/whu_urban/C.jpg) |
+| D1–D4 | `NH49E012017` | 河湾密集街区及西侧厂区 | [D 组](extra/whu_urban/D.jpg) |
+
+两种检测器沿用本实验地球首批的权重、阈值和输入映射，各覆盖 32 张图，失败和零检测均为 0。每张叠图并排显示 ReDFeat 和原版 SuperPoint 在光学与 SAR 上的匹配前检测点。裁切坐标为源 TIFF 的零基像素坐标，逐图检测坐标以各自 patch 的左上像素中心为原点。 [裁切坐标与输入映射](extra/data/whu_urban_manifest.json) · [源文件元数据与 SHA-256](extra/data/whu_urban_sources.json) · [ReDFeat NPZ](extra/data/whu_urban_redfeat.npz) · [原版 SuperPoint NPZ](extra/data/whu_urban_superpoint_original.npz)
+
 **讨论**
 
 两域首批样本均已有两个检测器的结果。ReDFeat 逐图点数受 4096 点上限约束，原版 SuperPoint 使用其自身的阈值和点数设置。表中只量化实际导出的点。地球源 TIFF 缺少空间参考，裁切坐标表示各图的像素位置。

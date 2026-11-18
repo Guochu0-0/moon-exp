@@ -34,7 +34,7 @@ def examples(domain, group):
     return list(first_by_group.values())
 
 
-def render(domain, dataset_name, rows, read_image):
+def render(domain, dataset_name, rows, read_image, target=None):
     figure, axes = plt.subplots(len(rows), 4, figsize=(13.8, 13.2), dpi=150)
     figure.subplots_adjust(left=.105, right=.992, top=.927, bottom=.012, wspace=.034, hspace=.038)
     figure.text(figure.subplotpars.left, .972, dataset_name, fontsize=22, weight="bold", color="#17242a", va="center")
@@ -66,10 +66,12 @@ def render(domain, dataset_name, rows, read_image):
                         ax.text(.97, .035, f"{len(points):,} points", transform=ax.transAxes, ha="right",
                                 va="bottom", color="white", fontsize=10,
                                 bbox={"facecolor": "#111d23", "alpha": .83, "edgecolor": "none", "pad": 4})
-        target = RUN / "extra" / f"{domain}_detections.png"
+        target = target or RUN / "extra" / f"{domain}_detections.png"
         temporary = target.with_suffix(".tmp")
+        jpeg = target.suffix == ".jpg"
+        options = {"optimize": True, "quality": 94, "subsampling": 0} if jpeg else {"optimize": True}
         with BytesIO() as buffer:
-            figure.savefig(buffer, format="png", facecolor="white", pil_kwargs={"optimize": True})
+            figure.savefig(buffer, format="jpeg" if jpeg else "png", facecolor="white", pil_kwargs=options)
             temporary.write_bytes(buffer.getbuffer())
         temporary.replace(target)
         print(target.relative_to(RUN), [row["pair"] for row in rows], flush=True)

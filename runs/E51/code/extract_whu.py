@@ -42,10 +42,14 @@ def describe(dataset, path):
     }
 
 
-def paired_windows(optical, sar):
+def validate_grid(optical, sar):
     if (optical.shape != sar.shape or optical.crs != sar.crs
             or not optical.transform.almost_equals(sar.transform, precision=1e-8)):
         raise ValueError("Optical and SAR source grids differ")
+
+
+def paired_windows(optical, sar):
+    validate_grid(optical, sar)
     for y in (optical.height // 4, 3 * optical.height // 4):
         for x in (optical.width // 4, 3 * optical.width // 4):
             window = Window(x - SIZE // 2, y - SIZE // 2, SIZE, SIZE)

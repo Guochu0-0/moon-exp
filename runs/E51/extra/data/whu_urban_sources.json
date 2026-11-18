@@ -1,0 +1,418 @@
+{
+  "NI49E024017": {
+    "optical": {
+      "path": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NI49E024017.tif",
+      "bytes": 57475280,
+      "sha256": "973db6e49a08c8cf88688a1f11fe73e295def941c96b48bcc013d238fdbba340",
+      "width": 5556,
+      "height": 3704,
+      "band_count": 4,
+      "dtypes": [
+        "uint8",
+        "uint8",
+        "uint8",
+        "uint8"
+      ],
+      "nodata": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_interpretation": [
+        "red",
+        "green",
+        "blue",
+        "undefined"
+      ],
+      "scales": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "offsets": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "crs": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "gcp_count": 0,
+      "has_rpcs": false,
+      "mask_flags": [
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ]
+      ]
+    },
+    "sar": {
+      "path": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NI49E024017.tif",
+      "bytes": 20811982,
+      "sha256": "1bc6b5976e44e5bd0a3a09b939bf47e2d951eba1af834cea5dbc6805b589e1ba",
+      "width": 5556,
+      "height": 3704,
+      "band_count": 1,
+      "dtypes": [
+        "uint8"
+      ],
+      "nodata": [
+        null
+      ],
+      "color_interpretation": [
+        "gray"
+      ],
+      "scales": [
+        1.0
+      ],
+      "offsets": [
+        0.0
+      ],
+      "crs": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "gcp_count": 0,
+      "has_rpcs": false,
+      "mask_flags": [
+        [
+          "all_valid"
+        ]
+      ]
+    }
+  },
+  "NH50E009003": {
+    "optical": {
+      "path": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH50E009003.tif",
+      "bytes": 53885576,
+      "sha256": "a659e8a50b95cfc1b73ca9bd03869427010355a47b206d89483651a86ca44065",
+      "width": 5556,
+      "height": 3704,
+      "band_count": 4,
+      "dtypes": [
+        "uint8",
+        "uint8",
+        "uint8",
+        "uint8"
+      ],
+      "nodata": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_interpretation": [
+        "red",
+        "green",
+        "blue",
+        "undefined"
+      ],
+      "scales": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "offsets": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "crs": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "gcp_count": 0,
+      "has_rpcs": false,
+      "mask_flags": [
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ]
+      ]
+    },
+    "sar": {
+      "path": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH50E009003.tif",
+      "bytes": 22365518,
+      "sha256": "3e457bc3c361c01915bdc3c42c802e523726aa7936b8b5249761635d688c68ac",
+      "width": 5556,
+      "height": 3704,
+      "band_count": 1,
+      "dtypes": [
+        "uint8"
+      ],
+      "nodata": [
+        null
+      ],
+      "color_interpretation": [
+        "gray"
+      ],
+      "scales": [
+        1.0
+      ],
+      "offsets": [
+        0.0
+      ],
+      "crs": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "gcp_count": 0,
+      "has_rpcs": false,
+      "mask_flags": [
+        [
+          "all_valid"
+        ]
+      ]
+    }
+  },
+  "NH49E010020": {
+    "optical": {
+      "path": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E010020.tif",
+      "bytes": 57004144,
+      "sha256": "1052301cf9ddeb7b2dbd51a4a2ab8ff7268005cae3f40ef0f670c59651e1cbf5",
+      "width": 5556,
+      "height": 3704,
+      "band_count": 4,
+      "dtypes": [
+        "uint8",
+        "uint8",
+        "uint8",
+        "uint8"
+      ],
+      "nodata": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_interpretation": [
+        "red",
+        "green",
+        "blue",
+        "undefined"
+      ],
+      "scales": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "offsets": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "crs": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "gcp_count": 0,
+      "has_rpcs": false,
+      "mask_flags": [
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ]
+      ]
+    },
+    "sar": {
+      "path": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E010020.tif",
+      "bytes": 23435862,
+      "sha256": "a388ddf8dc48d5a20c38cfa1a71fe91a28a84c452ebbe69379143f857df000d9",
+      "width": 5556,
+      "height": 3704,
+      "band_count": 1,
+      "dtypes": [
+        "uint8"
+      ],
+      "nodata": [
+        null
+      ],
+      "color_interpretation": [
+        "gray"
+      ],
+      "scales": [
+        1.0
+      ],
+      "offsets": [
+        0.0
+      ],
+      "crs": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "gcp_count": 0,
+      "has_rpcs": false,
+      "mask_flags": [
+        [
+          "all_valid"
+        ]
+      ]
+    }
+  },
+  "NH49E012017": {
+    "optical": {
+      "path": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E012017.tif",
+      "bytes": 54746672,
+      "sha256": "8be4616d2ad860661073f20d09963aebac6bd528a4969c7d5a6b89fc6a41a61e",
+      "width": 5556,
+      "height": 3704,
+      "band_count": 4,
+      "dtypes": [
+        "uint8",
+        "uint8",
+        "uint8",
+        "uint8"
+      ],
+      "nodata": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "color_interpretation": [
+        "red",
+        "green",
+        "blue",
+        "undefined"
+      ],
+      "scales": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "offsets": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "crs": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "gcp_count": 0,
+      "has_rpcs": false,
+      "mask_flags": [
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ],
+        [
+          "all_valid"
+        ]
+      ]
+    },
+    "sar": {
+      "path": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E012017.tif",
+      "bytes": 22144558,
+      "sha256": "147411cb175391584f208fd2f530f0514d6ed0d7c0a0fc1ecde795ef3c312b42",
+      "width": 5556,
+      "height": 3704,
+      "band_count": 1,
+      "dtypes": [
+        "uint8"
+      ],
+      "nodata": [
+        null
+      ],
+      "color_interpretation": [
+        "gray"
+      ],
+      "scales": [
+        1.0
+      ],
+      "offsets": [
+        0.0
+      ],
+      "crs": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "gcp_count": 0,
+      "has_rpcs": false,
+      "mask_flags": [
+        [
+          "all_valid"
+        ]
+      ]
+    }
+  }
+}

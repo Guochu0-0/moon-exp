@@ -67,3 +67,17 @@ caveat = "点对数量为从稠密匹配场采样的 10000 点"
 [methods.redfeat]
 name = "ReDFeat（官方 VIS-SAR 权重）"
 caveat = "地球光学–SAR 监督预训练；未在月球数据训练"
+
+[methods.gdros_whu_lsr]
+name = "GDROS WHU · 官方 LSR"
+
+[methods.gdros_whu_ransac]
+name = "GDROS WHU · RANSAC 3 px"
+ref = "B0/gdros_whu_lsr"
+
+[methods.gdros_os_lsr]
+name = "GDROS OS · 官方 LSR"
+
+[methods.gdros_os_ransac]
+name = "GDROS OS · RANSAC 3 px"
+ref = "B0/gdros_os_lsr"

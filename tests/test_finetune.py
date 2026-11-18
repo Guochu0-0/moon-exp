@@ -8,6 +8,333 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 
 
+def test_common_geometry_normalized_fill_and_gradients():
+    import torch
+    import torchvision.transforms.functional as tvf
+    from finetune.parts.common import warp_normalized, sample, targets
+    from finetune.parts.pseudo import affine_norm
+    from finetune.geom import compose, inv_affine
+    from finetune.models.roma import _norm
+
+    raw = torch.linspace(0, 1, 8 * 8).reshape(1, 1, 8, 8).requires_grad_()
+    image = _norm(raw)
+    spec = [(2, -1, True)]
+    actual = warp_normalized(image, spec)
+    expected = tvf.affine(image[0], angle=0., translate=[2, -1], scale=1., shear=[0., 0.]).flip(-1)
+    assert torch.equal(actual[0], expected)
+    assert (actual[0, :, :, -2:] == 0).all()  # 归一化后的 0，不是灰度黑
+    actual.sum().backward()
+    assert raw.grad is not None and (raw.grad > 0).sum() == 6 * 7
+    specs, Gs = sample(np.random.default_rng(0), 2, {"shift": 2, "flip": 1.}, res=8)
+    assert specs == sample(np.random.default_rng(0), 2, {"shift": 2, "flip": 1.}, res=8)[0]
+    A = np.array([[1., .1, 60.], [0., 1., -40.]])
+    G = Gs[0]
+    conjugate = compose(compose(G, A), inv_affine(G))
+    p = np.array([123., 214., 1.])
+    q = np.r_[A @ p, 1.]
+    assert np.allclose(conjugate @ np.r_[G @ p, 1.], G @ q)
+    An = torch.tensor(affine_norm(conjugate)[None], dtype=torch.float32)
+    Gi = torch.tensor(affine_norm(inv_affine(G))[None], dtype=torch.float32)
+    x2, valid = targets(An, Gi)(8, 8)
+    # 独立像素中心计算：两侧落回原图，且目标仍在增强后的画面。
+    ys, xs = np.mgrid[:8, :8]
+    p = np.stack([(xs + .5) * 64, (ys + .5) * 64, np.ones((8, 8))], -1)
+    dst = p @ conjugate.T
+    src0 = p @ inv_affine(G).T
+    dst0 = np.concatenate([dst, np.ones((8, 8, 1))], -1) @ inv_affine(G).T
+    inside = lambda x: ((x > 0) & (x < 512)).all(-1)
+    assert np.array_equal(valid[0].numpy().astype(bool), inside(src0) & inside(dst0) & inside(dst))
+    # 恒等标签必须恰好保留搬移后的原图区域。
+    identity = torch.tensor([[[1., 0., 0.], [0., 1., 0.]]])
+    assert np.array_equal(targets(identity, Gi)(8, 8)[1][0].numpy().astype(bool), inside(src0))
+
+
+def test_roma_native_bn_and_parameter_groups():
+    import torch
+    from finetune.models.roma import training_mode, _split
+    from finetune.config import expand
+    net = torch.nn.Sequential(torch.nn.Conv2d(1, 2, 1), torch.nn.BatchNorm2d(2))
+    training_mode(net, "eval")
+    assert net.training and not net[1].training
+    before = net[1].running_mean.clone()
+    training_mode(net, "native")
+    net(torch.ones(4, 1, 4, 4)).sum().backward()
+    assert net[1].training and not torch.equal(before, net[1].running_mean)
+    names = ["encoder.cnn.0.weight", "decoder.gps.16.weight", "decoder.conv_refiner.1.weight", "dino.weight"]
+    ps = [torch.nn.Parameter(torch.ones(2)) for _ in names]
+    cfg = expand({"model": {"name": "roma", "train_vgg": True, "bn_mode": "native", "vgg_lr": .05}})
+    dec, ref, vgg = _split(zip(names, ps), cfg["model"])
+    assert dec[0] is ps[1] and ref[0] is ps[2] and vgg[0] is ps[0] and not ps[3].requires_grad
+
+
+def test_roma_records_actual_inference_parameters():
+    import types
+    import torch
+    from baselines.adapters.romatch import resolved_parameters
+    model = types.SimpleNamespace(h_resized=448, w_resized=560, upsample_res=(700, 700),
+            get_output_resolution=lambda: (700, 700), symmetric=False, upsample_preds=True, attenuate_cert=False,
+            sample_mode="balanced", sample_thresh=.1, sample=lambda matches, certainty, num=1234: None,
+            match=lambda *a, **kw: None, training=False, encoder=types.SimpleNamespace(amp_dtype=torch.float16),
+            decoder=types.SimpleNamespace(amp_dtype=torch.float16))
+    params = resolved_parameters(model, 512, True)
+    assert params["sample_num"] == 1234 and params["coarse_resolution"] == [448, 560]
+    assert params["adapter_swap"] and not params["symmetric"] and not params["model_training"]
+
+
+def test_multistep_matches_native_scheduler_and_accumulation():
+    import torch
+    from finetune.optim import lr_at, Optim
+    from finetune.config import expand
+    p = torch.nn.Parameter(torch.ones(1))
+    native = torch.optim.AdamW([p], lr=5e-5)
+    sched = torch.optim.lr_scheduler.MultiStepLR(native, milestones=[3], gamma=.1)
+    for step in range(1, 6):
+        assert lr_at(step, 5, 5e-5, sched="multistep", milestones=[3]) == pytest.approx(native.param_groups[0]["lr"])
+        native.step()
+        sched.step()
+    assert lr_at(7116, 7907, 5e-5, sched="multistep", milestones=[7116]) == 5e-5
+    assert lr_at(7117, 7907, 5e-5, sched="multistep", milestones=[7116]) == pytest.approx(5e-6)
+    cfg = expand({"model": {"name": "roma"}, "optim": {"warmup": 0, "sched": "multistep", "lr_milestones": [1],
+                  "accum": 2, "lr": 5e-5}})
+    vgg = torch.nn.Parameter(torch.ones(1))
+    opt = Optim([p, vgg], cfg["optim"], False,
+                groups=[{"params": [p], "lr_scale": 1.}, {"params": [vgg], "lr_scale": .05}])
+    for step in range(1, 5):
+        opt.backward(p.sum() + vgg.sum())
+        opt.step(step)
+        if step % 2 == 0:
+            lr = 5e-5 if step == 2 else 5e-6
+            assert [g["lr"] for g in opt.opt.param_groups] == pytest.approx([lr, lr * .05])
+
+
+def test_common_config_rejects_incompatible_targets():
+    from finetune.config import expand, ConfigError
+    cfg = {"model": {"name": "roma"}, "pseudo": {"labels": "labels.jsonl"}, "common": {}}
+    assert expand(cfg)["common"] == {"shift": 32, "flip": .5}
+    for key in ("dense", "match_dir", "ema_target", "mask_fill"):
+        bad = {**cfg, "pseudo": {"labels": "l", key: "file" if key in ("dense", "match_dir") else True if key == "mask_fill" else .9}}
+        with pytest.raises(ConfigError):
+            expand(bad)
+    with pytest.raises(ConfigError):
+        expand({**cfg, "aug": {}})
+
+
+def test_loader_resume_later_epoch_without_workers():
+    import torch
+    from finetune.trace import Loader
+    def make(seed):
+        g = torch.Generator().manual_seed(seed)
+        return Loader(torch.utils.data.DataLoader(torch.arange(12), batch_size=4, shuffle=True,
+                      generator=g, num_workers=0), g, resume_epochs=True)
+    loader = make(0)
+    it = iter(loader)
+    for _ in range(5):
+        next(it)
+    state = loader.state()
+    expected = [next(it).clone() for _ in range(7)]
+    resumed = make(99)
+    resumed.load(state)
+    it2 = iter(resumed)
+    assert all(torch.equal(a, next(it2)) for a in expected)
+
+
+def test_deterministic_resume_skips_io_and_preserves_shuffle_state():
+    import torch
+    from finetune.trace import Loader
+
+    class Counting(torch.utils.data.Dataset):
+        def __init__(self):
+            self.reads = 0
+        def __len__(self):
+            return 12
+        def __getitem__(self, i):
+            self.reads += 1
+            return i
+
+    def make(seed, resume_epochs):
+        ds = Counting()
+        g = torch.Generator().manual_seed(seed)
+        dl = torch.utils.data.DataLoader(ds, batch_size=4, shuffle=True, generator=g, num_workers=0)
+        return Loader(dl, g, resume_epochs=resume_epochs), ds, g
+
+    full, _, full_g = make(0, False)  # 未包装的旧采样路径作为参照。
+    it = iter(full)
+    for _ in range(5):
+        next(it)
+    saved = full.state()
+    expected = [next(it).clone() for _ in range(7)]
+    expected_state = full_g.get_state().clone()
+    resumed, ds, g = make(999, True)
+    resumed.load(saved)
+    it2 = iter(resumed)
+    assert torch.equal(next(it2), expected[0])
+    assert ds.reads == 4  # 前缀的8个patch完全不读，不能只是算完再丢弃。
+    assert all(torch.equal(next(it2), x) for x in expected[1:])
+    assert torch.equal(g.get_state(), expected_state)
+    assert (resumed.epoch, resumed.i) == (full.epoch, full.i)
+
+
+def test_segmented_driver_preserves_resume_and_budget(tmp_path, monkeypatch):
+    import importlib.util
+    from finetune.config import expand
+    spec = importlib.util.spec_from_file_location("run267", REPO / "scripts/finetune/run.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    monkeypatch.setattr(mod, "REPO", tmp_path)
+    monkeypatch.setattr(mod.time, "sleep", lambda _: None)
+    records = []
+    monkeypatch.setattr(mod.launch, "begin", lambda *a, **kw: records.append(kw))
+    monkeypatch.setattr(mod.launch, "end", lambda *a: None)
+    r = tmp_path / "runs/E50"
+    cfg = expand({"model": {"name": "roma"}, "optim": {"steps": 7},
+                  "run": {"workers": 0, "save_optim": True, "resume_epochs": True, "segment_steps": 3}})
+    infer = tmp_path / cfg["model"]["config"]
+    infer.parent.mkdir(parents=True)
+    infer.write_text("{}")
+    job = mod.Job(r, "main", cfg, "0")
+    job.ck.mkdir(parents=True)
+    calls = []
+    job.sh = lambda cmd, name: calls.append(list(map(str, cmd)))
+    job.train()
+    assert [int(c[c.index("--stop-at") + 1]) for c in calls] == [3, 6, 7]
+    assert "--resume" not in calls[0]
+    assert calls[1][-1].endswith("ckpt_3.pt") and calls[2][-1].endswith("ckpt_6.pt")
+    assert records[1]["args"]["run"]["resume"].endswith("ckpt_3.pt")
+    assert all(rec["args"]["optim"]["steps"] == 7 for rec in records)
+
+
+def test_parallel_val_evaluates_every_checkpoint_once_before_return(tmp_path, monkeypatch):
+    import importlib.util
+    import threading
+    from finetune.config import expand
+    spec = importlib.util.spec_from_file_location("parallel267", REPO / "scripts/finetune/run.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    cfg = expand({"model": {"name": "roma"}, "run": {"eval_gpus": [0, 1]}})
+    barrier = threading.Barrier(2)
+    entered, calls = set(), []
+    lock = threading.Lock()
+
+    def evaluate(job, split, step):
+        with lock:
+            first = job.gpu not in entered
+            entered.add(job.gpu)
+        if first:
+            barrier.wait(timeout=5)
+        calls.append((job.gpu, split, step))
+
+    monkeypatch.setattr(mod.Job, "evaluate", evaluate)
+    job = mod.Job(tmp_path / "runs/E50", "main", cfg, "0")
+    job.sweep_val([Path(f"ckpt_{s}.pt") for s in (250, 500, 750, 7907)], online=False)
+    assert entered == {0, 1}
+    assert sorted((split, int(step)) for _, split, step in calls) == [("val", s) for s in (250, 500, 750, 7907)]
+
+
+def test_parallel_val_rejects_shared_online_diagnostics():
+    from finetune.config import expand, ConfigError
+    with pytest.raises(ConfigError, match="共享负样本诊断"):
+        expand({"model": {"name": "loftr"}, "run": {"eval_gpus": [0, 1]}, "cexp": {}})
+
+
+def test_optimizer_reports_amp_skip_without_changing_default_budget():
+    import torch
+    from finetune.optim import Optim
+    from finetune.config import expand
+    p = torch.nn.Parameter(torch.ones(1))
+    cfg = expand({"model": {"name": "roma"}, "optim": {"warmup": 0, "sched": "const"}})
+    opt = Optim([p], cfg["optim"], False)
+
+    class Overflow:
+        def __init__(self):
+            self.value = 65536
+        def get_scale(self):
+            return self.value
+        def unscale_(self, optimizer):
+            pass
+        def step(self, optimizer):
+            pass  # AMP 溢出：不调用 optimizer.step
+        def update(self):
+            self.value /= 2
+
+    opt.scaler = Overflow()
+    p.grad = torch.ones_like(p)
+    before = p.detach().clone()
+    opt.step(1)
+    assert opt.skipped and torch.equal(before, p)
+
+
+@pytest.mark.parametrize("count_updates,expected_calls", [(True, 4), (False, 3)])
+def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch, count_updates, expected_calls):
+    import hashlib
+    import types
+    import torch
+    from finetune import train
+    from finetune.optim import Optim
+    from finetune.models import roma
+    weights_file, labels_file = tmp_path / "weights.pt", tmp_path / "labels.jsonl"
+    weights_file.write_bytes(b"published weights")
+    labels_file.write_bytes(b"fixed labels")
+
+    class TinyModel:
+        amp = False
+        def __init__(self, *a, **kw):
+            self.p = torch.nn.Parameter(torch.ones(1))
+            self.params, self.input, self.infer_cfg, self.weights = [self.p], {}, {}, str(weights_file)
+            self.resize = lambda x: x
+        def state_dict(self):
+            return {"model": self.p.detach().clone()}
+
+    class Pairs(torch.utils.data.Dataset):
+        def __init__(self, *a, **kw):
+            self.pairs = ["R/p0", "R/p1", "R/p2", "R/p3"]
+        def __len__(self):
+            return 4
+        def __getitem__(self, i):
+            return {"pair": self.pairs[i]}
+
+    class Term:
+        def __init__(self, p, model, ds):
+            self.model = model
+        def __call__(self, st):
+            return self.model.p.square().sum(), {}, True
+
+    class SkipFirst(Optim):
+        calls = 0
+        def step(self, step):
+            type(self).calls += 1
+            self.skipped = self.calls == 1
+            if self.skipped:
+                self.scaler = types.SimpleNamespace(get_scale=lambda: 32768., scale=lambda loss: loss)
+                self.opt.zero_grad(set_to_none=True)
+                return {}
+            self.scaler = None
+            return super().step(step)
+
+    monkeypatch.setattr(train, "require_clean", lambda *a: None)
+    monkeypatch.setattr(train, "PairSet", Pairs)
+    monkeypatch.setattr(train, "Optim", SkipFirst)
+    monkeypatch.setitem(train.MODELS, "roma", types.SimpleNamespace(Model=TinyModel, PARAMS=roma.PARAMS,
+                         OPTIM=roma.OPTIM, RUN=roma.RUN, TORCH_HOME=roma.TORCH_HOME))
+    monkeypatch.setattr(train.PARTS["pseudo"], "Term", Term)
+    monkeypatch.setattr(train, "git_head", lambda *a: "test")
+    cfg = tmp_path / "main.toml"
+    cfg.write_text('[model]\nname="roma"\n[optim]\nsteps=3\nlr=0.1\nwarmup=0\nsched="const"\n'
+                   f'[run]\nworkers=0\nsave_every=1\nrecord_hashes=true\ncount_updates={str(count_updates).lower()}\n'
+                   f'[pseudo]\nlabels={json.dumps(str(labels_file))}\n')
+    out = tmp_path / "out"
+    train.main([str(cfg), "--out", str(out), "--device", "cpu"])
+    logs = [json.loads(x) for x in (out / "log.jsonl").read_text().splitlines()]
+    assert SkipFirst.calls == expected_calls
+    assert [r["step"] for r in logs] == [1, 2, 3]
+    assert (out / "ckpt_3.pt").exists()
+    final = torch.load(out / "ckpt_3.pt")["model"]
+    assert final.item() < (0.75 if count_updates else 0.85)
+    assert (out / "overflow.jsonl").exists() == count_updates
+    hashes = json.loads((out / "args.json").read_text())["source_hashes"]
+    assert hashes["weights"]["sha256"] == hashlib.sha256(b"published weights").hexdigest()
+    assert hashes["labels"]["sha256"] == hashlib.sha256(b"fixed labels").hexdigest()
+
+
 def _texture(n=128, shift=0, seed=0):
     import cv2
     rng = np.random.default_rng(seed)

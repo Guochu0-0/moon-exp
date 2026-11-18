@@ -25,7 +25,9 @@ _CODE = (".", ":(exclude,top)runs")
 _RUN_CODE = (":(glob,top)runs/*/code/**", ":(glob,top)runs/*/configs/**")
 
 
-def _git(repo: Path, *args, timeout=120) -> str | None:
+def _git(repo: Path, *args, timeout=None) -> str | None:
+    # 共享盘偶尔仅 status 就超过两分钟；显式放宽等待，不跳过任何洁净检查（#267）。
+    timeout = float(os.environ.get("MOON_GIT_TIMEOUT", "120")) if timeout is None else timeout
     # --no-optional-locks：不刷新索引、不拿 index.lock（gpfs 上 status 慢，被超时杀掉会留残锁）
     r = subprocess.run(["git", "--no-optional-locks", "-C", str(repo), *args], capture_output=True, text=True,
                        encoding="utf-8", timeout=timeout)
@@ -95,12 +97,12 @@ def begin(run_dir, method: str, cmd: list[str], repo=REPO, **extra) -> dict:
     return rec
 
 
-def end(run_dir, method: str, status: str):
+def end(run_dir, method: str, status: str, **extra):
     p = _path(run_dir, method)
     items = _load(p)
     if not items:
         raise SystemExit(f"launch: {p} 没有启动记录")
-    items[-1].update(end=_now(), status=status)
+    items[-1].update(end=_now(), status=status, **extra)
     _save(p, items)
 
 

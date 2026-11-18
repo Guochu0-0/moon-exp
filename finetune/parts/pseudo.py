@@ -166,6 +166,12 @@ class Term:
         sw = st.rng.random(st.B) < self.p["swap"]
         m = torch.from_numpy(sw)[:, None, None, None].to(i0.device)
         a, b = torch.where(m, i1, i0), torch.where(m, i0, i1)
+        common, inverse = None, None
+        if getattr(self.model, "common", None) is not None:
+            from .common import sample
+            common, Gs = sample(st.rng, st.B, self.model.common)
+            As = [compose(compose(G, A), inv_affine(G)) for G, A in zip(Gs, As)]
+            inverse = torch.from_numpy(np.stack([affine_norm(inv_affine(G)) for G in Gs])).float().to(i0.device)
         An = torch.from_numpy(np.stack([affine_norm(inv_affine(A) if s else A) for A, s in zip(As, sw)])
                               ).float().to(i0.device)
         occ = (st.batch["occ"].to(i0.device), m[:, 0, 0, 0]) if "occ" in st.batch else None
@@ -187,13 +193,16 @@ class Term:
         kw = dict(cls_soft=self.p["cls_soft"], drop_top=self.p["drop_top"], occ=occ, dense=dense, src=src,
                   reg_tol=self.p["reg_tol"] * 2 / HW, fine_w=self.fine_w(), match=match,
                   mixlap=self.p["mixlap_w"] if self.p["reg_loss"] == "mixlap" else 0.0, ema=ema)
+        if common is not None:
+            from .common import targets
+            kw["gt"] = targets(An, inverse)
         tr = getattr(self.model, "train_res", "560")
         if tr == "864":   # 560 一遍只给初值（#122）
             with torch.no_grad():
                 c = self.model.forward(a, b)
             loss, stats = 0.0, {}
         else:
-            c = self.model.forward(a, b)
+            c = self.model.forward(a, b, common=common) if common is not None else self.model.forward(a, b)
             loss, stats = roma_loss(c, An, **kw)
         if tr != "560":
             h0, h1 = st.batch["image0_hi"].to(i0.device), st.batch["image1_hi"].to(i0.device)

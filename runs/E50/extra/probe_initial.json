@@ -1,0 +1,164 @@
+{
+  "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+  },
+  "config": {
+    "model": {
+      "name": "roma",
+      "config": "configs/baselines/anymatch_roma__minmax.json",
+      "bn_mode": "native",
+      "init": "",
+      "train_vgg": true,
+      "train_decoder": true,
+      "vgg_lr": 0.05,
+      "refine_lr": 1.0,
+      "vgg_dropout": 0.0,
+      "train_res": "560",
+      "lora_r": 0,
+      "lora_alpha": 16.0,
+      "lora_lr": 0.0001,
+      "lora_targets": "qkv",
+      "lora_dropout": 0.0,
+      "drop_path": 0.0,
+      "dino_unfreeze": 0,
+      "dino_ckpt": false,
+      "unc_head": false,
+      "sdpa": false
+    },
+    "optim": {
+      "steps": 7907,
+      "batch": 4,
+      "lr": 5e-05,
+      "wd": 0.01,
+      "warmup": 0,
+      "warmup_start": 0.1,
+      "sched": "multistep",
+      "lr_min": 0.0,
+      "lr_milestones": [
+        7116
+      ],
+      "lr_gamma": 0.1,
+      "amp_growth_interval": 1000000,
+      "clip": 0.01,
+      "accum": 1,
+      "ema": 0.0
+    },
+    "run": {
+      "seed": 0,
+      "workers": 0,
+      "save_every": 250,
+      "save_at": [
+        7907
+      ],
+      "save_zero": false,
+      "limit": 0,
+      "split": "train",
+      "select": "last",
+      "log_update": false,
+      "stop_at": 0,
+      "save_optim": true,
+      "resume": "",
+      "resume_epochs": true,
+      "sweep": "all",
+      "halt_above": {},
+      "halt_below": {},
+      "halt_window": 50,
+      "ddp": 0
+    },
+    "pseudo": {
+      "labels": "runs/E50/extra/labels.jsonl",
+      "top": 1.0,
+      "weight": 1.0,
+      "pair_weight": "",
+      "mask_fill": false,
+      "swap": 0.5,
+      "cls_soft": false,
+      "drop_top": 0.0,
+      "dense": "",
+      "dense_r": 8.0,
+      "dense_cert": 0.5,
+      "reg_tol": 0.0,
+      "fine_ramp": [],
+      "match_dir": "",
+      "match_r": 3.0,
+      "reg_loss": "robust",
+      "mixlap_w": 1.0,
+      "ema_target": 0.0,
+      "ema_alpha": 0.5,
+      "ema_ramp": [
+        2000,
+        4000
+      ]
+    },
+    "common": {
+      "shift": 32,
+      "flip": 0.5
+    }
+  },
+  "batch": [
+    "ROI_001/patch_0",
+    "ROI_001/patch_1",
+    "ROI_001/patch_2",
+    "ROI_001/patch_3"
+  ],
+  "loss": 6.949504852294922,
+  "stats": {
+    "cls16": 5.86657,
+    "reg16": 0.31473,
+    "reg8": 0.26143,
+    "reg4": 0.21108,
+    "reg2": 0.13653,
+    "reg1": 0.10605,
+    "epe1_px": 3.176
+  },
+  "finite_grad": {
+    "vgg": true,
+    "coarse": false,
+    "refine": true
+  },
+  "nonzero_grad": {
+    "vgg": true,
+    "coarse": true,
+    "refine": true
+  },
+  "bn_count": 62,
+  "lr_groups": [
+    5e-05,
+    5e-05,
+    2.5e-06
+  ],
+  "sec": 3.3170917481184006,
+  "peak_gb": 23.8836350440979,
+  "initial_scale": 65536.0,
+  "common_specs": [
+    [
+      -21,
+      20,
+      false
+    ],
+    [
+      0,
+      7,
+      false
+    ],
+    [
+      9,
+      3,
+      false
+    ],
+    [
+      -14,
+      21,
+      true
+    ]
+  ]
+}

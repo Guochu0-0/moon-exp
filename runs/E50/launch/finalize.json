@@ -1,0 +1,19 @@
+[
+ {
+  "start": "2026-11-18 07:11:02 +0800",
+  "end": "2026-11-18 07:13:03 +0800",
+  "status": "ok",
+  "commit": "67d8b6a9f81315111b428cfe78421d063ef6acd0",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E50/code/finalize.py"
+  ],
+  "entry": "runs/E50/code/finalize.py"
+ }
+]

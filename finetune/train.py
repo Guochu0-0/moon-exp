@@ -50,7 +50,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from baselines.match import env_info, git_head, seed_all
+from baselines.match import env_info, git_head, seed_all, sha256
 from workbench.launch import require_clean
 from workbench.tbwriter import ScalarWriter
 
@@ -173,10 +173,14 @@ def main(argv=None):
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--stop-at", type=int, default=0, help="只跑前 N 步（核对用），lr 调度不变")
+    ap.add_argument("--resume", default="", help="覆盖 [run] resume，从已存完整状态的 ckpt 续训")
     args = ap.parse_args(argv)
     require_clean(REPO)   # 先提交再跑（#76）
 
     cfg = C.load(args.config)
+    if args.resume:
+        cfg["run"]["resume"] = args.resume
+        cfg = C.expand(cfg)
     o, r, mname = cfg["optim"], cfg["run"], cfg["model"]["name"]
     rank = D.init(r["ddp"])      # 多卡（#226）：每个进程绑一张卡；单卡时为 0
     main_ = rank == 0
@@ -211,14 +215,23 @@ def main(argv=None):
         raise C.ConfigError(f"[run] log_update 要求模型提供 update_parts，{mname} 没有")
     mon = UpdateMonitor(*model.update_parts()) if r["log_update"] else None
     if main_:
+        hashes = {}
+        if r["record_hashes"]:
+            files = {"weights": Path(model.weights)}
+            if "pseudo" in cfg:
+                files["labels"] = REPO / cfg["pseudo"]["labels"]
+            if r["resume"]:
+                files["resume"] = REPO / r["resume"]
+            hashes = {name: {"path": str(p.resolve()), "sha256": sha256(p)} for name, p in files.items()}
         (out / "args.json").write_text(json.dumps(
             {"config": cfg, "source": str(args.config), "infer_config": model.infer_cfg, "weights": model.weights,
+             "source_hashes": hashes,
              "n_train": len(ds), "n_params": sum(p.numel() for p in model.params), "commit": git_head(REPO),
              "env": env_info(), "world": D.world()}, ensure_ascii=False, indent=1), encoding="utf-8")
     if r["save_zero"] and main_:
         torch.save(model.state_dict(), out / "ckpt_0.pt")
     rng = np.random.default_rng(seed_r)   # 打乱分数（placebo）、交换方向（RoMa 伪标签）共用
-    loader = Loader(dl, g)
+    loader = Loader(dl, g, resume_epochs=r["resume_epochs"])
 
     def sync_check(st):
         """多卡：各卡参数（及成分的 ddp_tensors）与 rank 0 的最大差，记进 ddp_sync.jsonl（#226）。"""
@@ -295,6 +308,13 @@ def main(argv=None):
                 if mon and step % o["accum"] == 0:
                     mon.before()
                 upd = optim.step(step)
+                if r["count_updates"] and optim.skipped:
+                    if main_:
+                        with open(out / "overflow.jsonl", "a", encoding="utf-8") as f:
+                            f.write(json.dumps({"next_update": step, "pairs": batch["pair"],
+                                                "loss": float(loss), "scale": optim.scaler.get_scale()}) + "\n")
+                    step -= 1
+                    continue
                 if mon and upd:
                     upd.update(mon.after())
                 if ema and upd:

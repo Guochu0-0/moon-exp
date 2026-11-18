@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import sys
+import inspect
 
 import numpy as np
 
@@ -39,6 +40,7 @@ class RomatchAdapter:
         self.lora_merged = merge_saved(self.model.encoder.dinov2_vitl14[0], ckpt) if weights_key else []
         self.model.eval()
         self.device, self.long_side = device, long_side
+        self.resolved_params = resolved_parameters(self.model, long_side, swap)
         self.notes = (f"long_side={long_side}, uint8 PIL at 640 grid (official match() only takes PIL RGB), "
                       f"weights_key={weights_key}, sample num=default(10000)"
                       + (f", coarse_res={coarse_res}, upsample_res={upsample_res}" if res else "")
@@ -72,6 +74,26 @@ class RomatchAdapter:
         kp0 = to_original(k0.float().cpu().numpy() - 0.5, *g0)
         kp1 = to_original(k1.float().cpu().numpy() - 0.5, *g1)
         return kp0, kp1, conf.float().cpu().numpy()
+
+
+def resolved_parameters(model, long_side, swap):
+    """从实际实例记录推理参数，不把构造默认值事后当成运行事实（#267）。"""
+    import torch
+    return {
+        "model_class": f"{type(model).__module__}.{type(model).__qualname__}",
+        "coarse_resolution": [model.h_resized, model.w_resized],
+        "upsample_resolution": list(model.upsample_res),
+        "output_resolution": list(model.get_output_resolution()),
+        **{k: getattr(model, k) for k in ("symmetric", "upsample_preds", "attenuate_cert", "sample_mode", "sample_thresh")},
+        "sample_signature": str(inspect.signature(model.sample)),
+        "sample_num": inspect.signature(model.sample).parameters["num"].default,
+        "match_signature": str(inspect.signature(model.match)), "match_batched": False,
+        "adapter_long_side": long_side, "adapter_swap": swap, "model_training": model.training,
+        "encoder_amp_dtype": str(model.encoder.amp_dtype),
+        "decoder_amp_dtype": str(model.decoder.amp_dtype),
+        "matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
+        "cudnn_allow_tf32": torch.backends.cudnn.allow_tf32,
+    }
 
 
 def merge_saved(dinov2, ckpt: dict):

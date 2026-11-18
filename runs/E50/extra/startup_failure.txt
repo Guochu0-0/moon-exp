@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/code/run_all.py", line 58, in <module>
+    launch.begin(R, "pipeline", [sys.executable, *sys.argv], entry="runs/E50/code/run_all.py",
+  File "/remote-home/xufang/YGC/wt/scenes-267/workbench/launch.py", line 86, in begin
+    st = require_clean(repo)
+  File "/remote-home/xufang/YGC/wt/scenes-267/workbench/launch.py", line 50, in require_clean
+    st = repo_state(repo)
+  File "/remote-home/xufang/YGC/wt/scenes-267/workbench/launch.py", line 43, in repo_state
+    out = _git(repo, "status", "--porcelain", "--untracked-files=all", "--ignore-submodules=untracked", "--", *spec)
+  File "/remote-home/xufang/YGC/wt/scenes-267/workbench/launch.py", line 30, in _git
+    r = subprocess.run(["git", "--no-optional-locks", "-C", str(repo), *args], capture_output=True, text=True,
+  File "/opt/envs/loftr/lib/python3.10/subprocess.py", line 505, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+  File "/opt/envs/loftr/lib/python3.10/subprocess.py", line 1154, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+  File "/opt/envs/loftr/lib/python3.10/subprocess.py", line 2022, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/opt/envs/loftr/lib/python3.10/subprocess.py", line 1198, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['git', '--no-optional-locks', '-C', '/remote-home/xufang/YGC/wt/scenes-267', 'status', '--porcelain', '--untracked-files=all', '--ignore-submodules=untracked', '--', '.', ':(exclude,top)runs']' timed out after 120 seconds

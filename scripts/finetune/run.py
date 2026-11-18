@@ -71,6 +71,14 @@ class Job:
         self.S = self.sw / "S"
 
     def sh(self, cmd, logname, gpu=True):
+        if gpu and (self.cfg["run"]["segment_steps"] or self.cfg["run"]["eval_gpus"]):
+            # 子进程结束后 CUDA 上下文已释放；继续前重新等空卡。
+            while True:
+                mem = subprocess.check_output(["timeout", "15", "nvidia-smi", "-i", str(self.gpu),
+                       "--query-gpu=memory.used", "--format=csv,noheader,nounits"], text=True)
+                if int(mem.strip()) < 100:
+                    break
+                time.sleep(30)
         run(cmd, self.ck / logname, self.env, self.gpu if gpu else None)
 
     def evaluate(self, split, st):
@@ -89,14 +97,82 @@ class Job:
                if k.startswith("step") and "val" in v and int(k[4:]) > 0]
         return max(pts, key=lambda p: p[1])[0]
 
+    def train(self):
+        """默认单次训练；显式分段时保存并恢复优化器、数据顺序及全部随机状态。"""
+        import copy
+        src = self.R / "configs" / f"{self.m}.toml"
+        base = [PY, "-m", "finetune.train", src, "--out", self.ck, "--tb", self.R / "tb" / self.m / "scalars"]
+        interval = self.cfg["run"]["segment_steps"]
+        if not interval:
+            self.sh(base, "train.log")
+            return
+        total = self.cfg["optim"]["steps"]
+        existing = sorted(self.ck.glob("ckpt_*.pt"), key=lambda p: int(p.stem[5:]))
+        done = int(existing[-1].stem[5:]) if existing else 0
+        while done < total:
+            target = min(done + interval, total)
+            resume = self.ck / f"ckpt_{done}.pt" if done else None
+            cmd = base + ["--stop-at", str(target)] + (["--resume", resume] if resume else [])
+            cfg = copy.deepcopy(self.cfg)
+            cfg["run"].update(resume=str(resume) if resume else "")
+            method = f"{self.m}_train"
+            launch.begin(self.R, method, list(map(str, cmd)), entry="finetune.train", config_file=src.relative_to(REPO).as_posix(),
+                         args=cfg, stop_at=target, config=json.loads((REPO / self.infer).read_text()))
+            try:
+                self.sh(cmd, "train.log")
+            except BaseException:
+                launch.end(self.R, method, "fail")
+                raise
+            extra = {}
+            if self.cfg["run"]["record_hashes"]:
+                runtime = json.loads((self.ck / "args.json").read_text())
+                extra = {"source_hashes": runtime["source_hashes"], "runtime_commit": runtime["commit"]}
+            launch.end(self.R, method, "ok", **extra)
+            done = target
+            if done < total:
+                time.sleep(30)
+
+    def sweep_val(self, ckpts, online):
+        """每个存档的原始Val推理独立，结果目录按step隔离；不在工作线程选模或评Test。"""
+        def evaluate(job, c):
+            st = c.stem[5:]
+            job.evaluate("val", st)
+            if online and not (job.sw / "neg" / f"step{st}.jsonl").exists():
+                job.sh([PY, "-m", "finetune.negpairs", job.infer, "--split", "val", "--n", "200",
+                        "--weights", f"step{st}={c}", "--out", job.sw / "neg"], "neg.log")
+
+        gpus = self.cfg["run"]["eval_gpus"]
+        if not gpus:
+            for c in ckpts:
+                evaluate(self, c)
+            return
+        from concurrent.futures import ThreadPoolExecutor
+        from queue import Queue, Empty
+        queue = Queue()
+        for c in ckpts:
+            queue.put(c)
+
+        def worker(gpu):
+            job = Job(self.R, self.m, self.cfg, gpu)
+            while True:
+                try:
+                    c = queue.get_nowait()
+                except Empty:
+                    return
+                evaluate(job, c)
+
+        with ThreadPoolExecutor(max_workers=len(gpus)) as pool:
+            futures = [pool.submit(worker, gpu) for gpu in gpus]
+            for f in futures:
+                f.result()
+
     def __call__(self):
         R, m, ck = self.R, self.m, self.ck
         ck.mkdir(parents=True, exist_ok=True)
         online = self.cfg["model"]["name"] == "loftr" and ("cexp" in self.cfg or "neg" in self.cfg)
         if not (ck / "train.done").exists():
             log(f"TRAIN {m} [{', '.join(C.parts_of(self.cfg))}]")
-            self.sh([PY, "-m", "finetune.train", R / "configs" / f"{m}.toml", "--out", ck,
-                     "--tb", R / "tb" / m / "scalars"], "train.log")
+            self.train()
             (ck / "train.done").touch()
         log(f"SWEEP {m}")
         if not self.S.exists():
@@ -104,12 +180,7 @@ class Job:
                     "sweep.log", gpu=False)
         ckpts = sorted(ck.glob("ckpt_*.pt"), key=lambda p: int(p.stem[5:]))
         val_only = self.cfg["run"]["sweep"] == "last"   # 只评最后一个 ckpt 的 Val、不评 Test（#209）
-        for c in ckpts[-1:] if val_only else ckpts:
-            st = c.stem[5:]
-            self.evaluate("val", st)
-            if online and not (self.sw / "neg" / f"step{st}.jsonl").exists():
-                self.sh([PY, "-m", "finetune.negpairs", self.infer, "--split", "val", "--n", "200",
-                         "--weights", f"step{st}={c}", "--out", self.sw / "neg"], "neg.log")
+        self.sweep_val(ckpts[-1:] if val_only else ckpts, online)
         last = self.cfg["run"]["select"] == "last"   # 在 Test 上训练时不能按 Val 选（#98）
         st = int(ckpts[-1].stem[5:]) if last or val_only else self.peak()
         if not val_only:

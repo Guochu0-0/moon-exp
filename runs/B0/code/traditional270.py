@@ -24,6 +24,7 @@ import numpy as np
 from baselines.data import Data
 from baselines.match import env_info, git_head, key
 from moonlib import inputs
+from moonlib.ransac import fit_affine
 from workbench.launch import require_clean
 
 
@@ -53,6 +54,7 @@ def main():
         raise ValueError('Formal prep/collect requires the full split: --limit is only for --selfcheck')
     require_clean(REPO)
     cfg = json.loads((REPO / 'runs/B0/configs' / (args.method + '_270.json')).read_text(encoding='utf-8'))
+    commit = git_head(REPO)
     if git_head(REPO / cfg['repo']) != cfg['upstream_commit']:
         raise RuntimeError('Upstream checkout differs from the pinned config, or is dirty')
     ds = Data(args.data)
@@ -62,7 +64,7 @@ def main():
     tag = args.split + ('_selfcheck' if args.selfcheck else '')
     base = Path(args.io) / args.method / tag
     if args.step == 'prep':
-        (base / 'in').mkdir(parents=True, exist_ok=True)
+        (base / 'in').mkdir(parents=True)
         for pair in pairs:
             opt = inputs.optical_div255(ds.optical(args.split, pair))
             if args.selfcheck:
@@ -73,11 +75,11 @@ def main():
                 sar = linear_sar(raw) if args.method == 'ossift' else inputs.sar_p2p98(raw)
             savemat(base / 'in' / (key(pair) + '.mat'), {'opt': opt, 'sar': sar})
         (base / 'manifest.json').write_text(json.dumps({'pairs': pairs, 'config': cfg,
-            'commit': git_head(REPO), 'selfcheck': args.selfcheck}, indent=1), encoding='utf-8')
+            'commit': commit, 'selfcheck': args.selfcheck}, indent=1), encoding='utf-8')
         print('prepared', len(pairs), base)
         return
     manifest = json.loads((base / 'manifest.json').read_text(encoding='utf-8'))
-    if (manifest['pairs'] != pairs or manifest['config'] != cfg
+    if (manifest['pairs'] != pairs or manifest['config'] != cfg or manifest['commit'] != commit
             or manifest.get('selfcheck') != args.selfcheck):
         raise ValueError('Input manifest differs from requested split/config')
     missing = [p for p in pairs if not (base / 'out' / (key(p) + '.mat')).exists()]
@@ -95,21 +97,35 @@ def main():
             raise RuntimeError('MATLAB exception for %s; no raw results published: %s' % (pair, err))
         if not np.isfinite(rec['sec']) or rec['sec'] < 0:
             raise ValueError('Invalid timing for ' + pair)
-        p1 = np.asarray(result['p1'], dtype=float).reshape(-1, 2) - 1
-        p2 = np.asarray(result['p2'], dtype=float).reshape(-1, 2) - 1
-        if len(p1) != len(p2) or not np.isfinite(np.c_[p1, p2]).all():
+        p1 = np.asarray(result['p1'], dtype=float) - 1
+        p2 = np.asarray(result['p2'], dtype=float) - 1
+        if p1.shape != p2.shape or p1.ndim != 2 or p1.shape[1] != 2 or not np.isfinite(np.c_[p1, p2]).all():
             raise ValueError('Invalid coordinates for ' + pair)
-        store[key(pair)] = np.c_[p1, p2, np.ones(len(p1))].astype(np.float32)
+        conf = np.asarray(result['conf'], dtype=float).reshape(-1)
+        if len(conf) != len(p1) or not np.isfinite(conf).all() or np.any((conf < 0) | (conf > 1)):
+            raise ValueError('Invalid confidence for ' + pair)
+        store[key(pair)] = np.c_[p1, p2, conf].astype(np.float32)
         rec['n'] = len(p1)
         if args.selfcheck:
             rec['median_shift_residual'] = (float(np.median(np.linalg.norm(p2-p1-[7, -5], axis=1)))
                                             if len(p1) else None)
+            affine, inliers, failure = fit_affine(store[key(pair)], 3.0)
+            if failure:
+                raise RuntimeError(f'{pair}: translation self-check failed ({failure})')
+            height, width = loadmat(base / 'in' / (key(pair) + '.mat'))['opt'].shape
+            probes = np.array([[.5, .5], [width-.5, .5], [.5, height-.5],
+                               [width-.5, height-.5], [width/2, height/2]])
+            shifted = np.c_[probes, np.ones(len(probes))] @ affine.T
+            max_error = float(np.linalg.norm(shifted - probes - [7, -5], axis=1).max())
+            if max_error > 1:
+                raise RuntimeError(f'{pair}: translation self-check error {max_error:.3f} px exceeds 1 px')
+            rec.update(selfcheck_max_error_px=max_error, n_inliers=int(inliers.sum()))
         records.append(rec)
     dest = REPO / 'runs/B0/raw' / (args.method + ('_selfcheck' if args.selfcheck else ''))
-    meta = {'config': cfg, 'commit': git_head(REPO), 'repo_commit': git_head(REPO / cfg['repo']),
+    meta = {'config': cfg, 'commit': commit, 'repo_commit': cfg['upstream_commit'],
             'env': env_info(), 'finished': time.strftime('%Y-%m-%d %H:%M:%S'),
-            'input_manifest': manifest, 'n_pairs': len(pairs), 'n_errors': sum('error' in r for r in records),
-            'notes': 'MATLAB 1-based converted to 0-based, before all FSC/CSC geometry; confidence unavailable'}
+            'input_manifest': manifest, 'n_pairs': len(pairs), 'n_errors': 0,
+            'notes': 'MATLAB 1-based converted to 0-based, before all FSC/CSC geometry'}
     # Validate the entire batch first, then finish all serialization in a temporary
     # sibling before replacing formal files. Parser/manifest/MATLAB exceptions and
     # serialization failures cannot truncate an existing formal output.

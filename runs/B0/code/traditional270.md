@@ -20,8 +20,8 @@ OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 /opt/envs/wb/bin/python runs/B0/code/te
 
 ## 已准备的方法
 
-- RIFT固定到`7ea830e2f13cc3c226f975fe9e98b7666a8f26fb`，严格调用官方`RIFT_no_rotation_invariance(...,4,6,96)`和demo的最近邻/唯一化，输出FSC之前点对。上游说明这是不含旋转不变性与角点检测的最简公开实现，不能声称覆盖论文完整实现。沿B0使用浮点映射，不额外uint8量化。
-- OS-SIFT固定到`631a8060042ed89ea11e43d97e44b387443b1eb6`，官方光学/SAR分支、尺度与描述子。SAR前两波段相加，有限非负值除以patch最大值，然后执行官方`imadjust`及+0.001；这是线性SAR必要适配，不是输入搜参。`CSC2.m`在描述子ratio=0.95后第一次FSC之前截断，输出光学→SAR点对；不执行几何引导重匹配。上游demo虽计算最强5000点子集，但传入描述子的是全体检测点；本接入跟实际执行路径，不擅自改变数量。
+- RIFT固定到`7ea830e2f13cc3c226f975fe9e98b7666a8f26fb`，严格调用官方`RIFT_no_rotation_invariance(...,4,6,96)`和demo的最近邻/唯一化，输出FSC之前点对，置信度为 `1/(1+matchmetric)`。上游说明这是不含旋转不变性与角点检测的最简公开实现。保留作者对边界描述子的原始处理，其索引错误可能留下零描述子。沿B0使用浮点映射，不额外uint8量化。
+- OS-SIFT固定到`631a8060042ed89ea11e43d97e44b387443b1eb6`，官方光学/SAR分支、尺度与描述子。SAR前两波段相加，有限非负值除以patch最大值，然后执行官方`imadjust`及+0.001，这是线性SAR必要适配。`CSC2.m`在描述子ratio=0.95后第一次FSC之前截断，输出光学→SAR点对，置信度为 `1-ratio`。上游demo虽计算最强5000点子集，但实际将全体检测点传入描述子。
 - HIMO固定到`1a525611a22e15c0862d2af6e3f53857f09a7e70`，尚未决定正式输出协议。逐尺度内部几何筛选参与后续匹配策略，不能把其最终点对称为完全未经过几何筛选的原始匹配。可能的最小适配是保留内部策略，只在末尾“One last outlier removal”之前导出MMatches，需用户先确认例外；当前没有为HIMO生成正式配置/预测。
 
 ## 排除与条件项
@@ -47,8 +47,8 @@ OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 /opt/envs/wb/bin/python runs/B0/code/te
 
 1. 先做服务器语法/收集边界检查，再每法取Val前3对做(7,-5)光学平移自检。OS-SIFT的不同分支可能导致匹配精度差异，需要分别核对MATLAB原始点为1-based xy、收集端减1、最终拟合阶段两侧+0.5。自检不通过就不能产出正式结果。
 2. 用`traditional270.py prep --method <rift|ossift> --split val --io /opt/tmp/baseline270 --limit 3 --selfcheck`准备自检；`traditional270_split`的输入输出目录分别是`<io>/<method>/val_selfcheck/in`和`out`。
-3. 恢复并确认MATLAB有效授权后，记录`workbench.launch.begin`，在脚本固定线程下调用`traditional270_split(method,repo,in_dir,out_dir,2)`，收集并用统一RANSAC检查已知平移。输入/输出要给绝对路径。
-4. 自检通过后Val/Test各做prep→MATLAB→collect，正式运行不带limit/selfcheck。输入manifest核对完整pair列表；缺mat时collect直接退出，不生成“算法失败”。
+3. 恢复并确认MATLAB有效授权后，记录`workbench.launch.begin`，在脚本固定线程下调用`traditional270_split(method,repo,in_dir,out_dir,2)`。四个角像素中心和图像中心经 B0 的 3 px RANSAC 仿射映射后，和已知平移的最大差值须不超过 1 px。输入、输出和仓库根目录使用绝对路径。
+4. 自检通过后Val/Test各做prep→MATLAB→collect，正式运行不带limit/selfcheck。每次准备输入都用新 `--io` 路径，原启动中断时可续用同一批次。输入manifest核对完整pair列表与代码提交。缺mat时collect直接退出，不生成“算法失败”。
 5. 收集的原始结果在`runs/B0/raw/<method>`；`python -m baselines.fit runs/B0/raw/<method> --split <val|test> --run runs/B0 --name <method>`生成标准预测。任何方法全体环境报错时先修环境，不能把整组报错作为模型结果。
 6. 每次正式运行记录参数、MATLAB版本/工具箱/线程/seed0和真实命令；收尾补齐end/status。完整结果后再追加exp方法名称、B0 Notes数字表并运行eval/check。新worktree未必带旧方法全部预测，不可直接用局部结果覆盖B0旧metrics：仅合并本票新指标，或在明确防止收尾搬移的情况下只读借用权威旧预测，生成完整指标。多票B0增量由主代理串行合并。
 

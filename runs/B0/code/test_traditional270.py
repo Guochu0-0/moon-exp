@@ -45,7 +45,8 @@ class CollectionBoundary(unittest.TestCase):
 
     def mat(self, pair, error=''):
         p = np.array([[1., 2.], [4., 5.], [7., 8.]])
-        savemat(self.out / (target.key(pair) + '.mat'), {'p1': p, 'p2': p+[7, -5], 'sec': 0.1, 'err': error})
+        savemat(self.out / (target.key(pair) + '.mat'),
+                {'p1': p, 'p2': p+[7, -5], 'conf': [0.9, 0.8, 0.7], 'sec': 0.1, 'err': error})
 
     def run_collect(self, *extra):
         argv = ['traditional270', 'collect', '--method', 'rift', '--split', 'val',
@@ -74,6 +75,21 @@ class CollectionBoundary(unittest.TestCase):
     def test_partial_manifest_rejected(self):
         self.manifest(self.pairs[:1])
         self.rejected_without_output()
+
+    def test_stale_commit_rejected(self):
+        path = self.out.parent / 'manifest.json'
+        doc = json.loads(path.read_text())
+        doc['commit'] = 'stale'
+        path.write_text(json.dumps(doc))
+        self.rejected_without_output()
+
+    def test_prep_cannot_replace_existing_batch(self):
+        input_dir = self.out.parent / 'in'
+        input_dir.mkdir()
+        with patch.object(sys, 'argv', ['traditional270', 'prep', '--method', 'rift', '--split', 'val',
+                                       '--io', str(self.io), '--data', 'unused']):
+            with self.assertRaises(FileExistsError):
+                target.main()
 
     def test_selfcheck_manifest_cannot_publish_formal_split(self):
         path = self.out.parent / 'manifest.json'
@@ -132,7 +148,7 @@ class CollectionBoundary(unittest.TestCase):
         dest = self.root / 'runs/B0/raw/rift'
         with np.load(dest / 'val.npz') as z:
             self.assertEqual(len(z.files), 2)
-            np.testing.assert_allclose(z[target.key(self.pairs[0])][0], [0, 1, 7, -4, 1])
+            np.testing.assert_allclose(z[target.key(self.pairs[0])][0], [0, 1, 7, -4, 0.9])
 
 
 if __name__ == '__main__':

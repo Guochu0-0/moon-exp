@@ -169,13 +169,19 @@ class Job:
                 f.result()
 
     def __call__(self):
-        R, m, ck = self.R, self.m, self.ck
-        ck.mkdir(parents=True, exist_ok=True)
-        online = self.cfg["model"]["name"] == "loftr" and ("cexp" in self.cfg or "neg" in self.cfg)
-        if not (ck / "train.done").exists():
-            log(f"TRAIN {m} [{', '.join(C.parts_of(self.cfg))}]")
+        self.run_training()
+        self.run_evaluation()
+
+    def run_training(self):
+        self.ck.mkdir(parents=True, exist_ok=True)
+        if not (self.ck / "train.done").exists():
+            log(f"TRAIN {self.m} [{', '.join(C.parts_of(self.cfg))}]")
             self.train()
-            (ck / "train.done").touch()
+            (self.ck / "train.done").touch()
+
+    def run_evaluation(self):
+        R, m, ck = self.R, self.m, self.ck
+        online = self.cfg["model"]["name"] == "loftr" and ("cexp" in self.cfg or "neg" in self.cfg)
         log(f"SWEEP {m}")
         if not self.S.exists():
             self.sh([WB, "-m", "workbench", "--runs", self.sw, "new", "S", "--title", f"{R.name}/{m} ckpt sweep"],
@@ -210,7 +216,12 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("run", help="实验目录 runs/<id>")
     ap.add_argument("--method", help="只运行指定方法")
+    phase = ap.add_mutually_exclusive_group()
+    phase.add_argument("--train-only", action="store_true", help="只训练，另起 eval-only 评测")
+    phase.add_argument("--eval-only", action="store_true", help="在单卡上评测已完成的训练")
     a = ap.parse_args(argv)
+    if (a.train_only or a.eval_only) and not a.method:
+        ap.error("分开运行训练、评测时须用 --method 指定方法")
     R = Path(a.run).resolve()
     if R.parent != REPO / "runs" or not (R / "configs").is_dir():
         ap.error(f"应给本仓库的实验目录 runs/<id>，且其下有 configs/：{R}")
@@ -228,20 +239,24 @@ def main(argv=None):
 
     def load(m):
         cfg = C.load(R / "configs" / f"{m}.toml")
-        expected = cfg["run"]["ddp"] or 1
+        expected = 1 if a.eval_only else (cfg["run"]["ddp"] or 1)
         if len(devices) != expected:
             raise C.ConfigError(f"{m} 需要 {expected} 张 GPU，得到 GPU={gpu}")
         return cfg
 
     for m in candidates():       # 先把全部配置展开一遍，有错就不开跑
         load(m)
+        if a.eval_only and not (R / "ckpt" / m / "train.done").is_file():
+            ap.error(f"{m} 还没有完成训练")
+    phase_name = "test" if a.eval_only else "train" if a.train_only else "train_eval"
     claims = R / ".claims"
     claims.mkdir(exist_ok=True)
     while True:
         picked = None
         for m in candidates():   # 每轮重新列，中途新增的方法也会被领走
             try:
-                (claims / m).mkdir()
+                record = f"{m}_eval" if a.eval_only else m
+                (claims / record).mkdir()
             except FileExistsError:
                 continue
             picked = m
@@ -250,7 +265,7 @@ def main(argv=None):
             log("queue empty")
             return
         m = picked
-        (claims / m / "host").write_text(f"{socket.gethostname()} gpu{gpu} {time.strftime('%F %T %z')}\n")
+        (claims / record / "host").write_text(f"{socket.gethostname()} gpu{gpu} {time.strftime('%F %T %z')}\n")
         log(f"START {R.name}/{m} gpu{gpu}")
         src = R / "configs" / f"{m}.toml"
         try:
@@ -259,14 +274,20 @@ def main(argv=None):
             log(f"FAIL {m}: {e}")
             continue
         infer = json.loads((REPO / cfg["model"]["config"]).read_text(encoding="utf-8"))
-        launch.begin(R, m, [sys.executable, *sys.argv], repo=REPO, entry=ENTRY,      # 字段同 .claude/skills/records/formats.md「启动记录」
-                     config_file=src.relative_to(REPO).as_posix(), args=cfg, config=infer)
+        launch.begin(R, record, [sys.executable, *sys.argv], repo=REPO, entry=ENTRY,
+                     config_file=src.relative_to(REPO).as_posix(), args=cfg, config=infer, phase=phase_name)
         try:
-            Job(R, m, cfg, gpu)()
-            launch.end(R, m, "ok")
+            job = Job(R, m, cfg, gpu)
+            if a.train_only:
+                job.run_training()
+            elif a.eval_only:
+                job.run_evaluation()
+            else:
+                job()
+            launch.end(R, record, "ok")
             log(f"OK {m}")
         except subprocess.CalledProcessError as e:
-            launch.end(R, m, "fail")
+            launch.end(R, record, "fail")
             log(f"FAIL {m}: {e}")
 
 

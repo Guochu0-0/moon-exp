@@ -32,7 +32,9 @@ def result(run, method, k, step, checkpoint, expected_pairs):
     if test["summary"]["n"] != 953 or test["coverage"]["missing"]:
         raise ValueError(f"{run.name}/{method} Test 指标未覆盖全部 953 个图对")
     records = read_json(run / "launch" / f"{method}.json")
-    if records[-1]["status"] != "ok" or len(records) < (2 if k == 5 else 1):
+    eval_path = run / "launch" / f"{method}_eval.json"
+    evaluation = read_json(eval_path)[-1] if eval_path.is_file() else records[-1]
+    if records[-1]["status"] != "ok" or evaluation["status"] != "ok" or len(records) < (2 if k == 5 else 1):
         raise ValueError(f"{run.name}/{method} 缺少成功的启动记录")
     if not checkpoint.is_file() or checkpoint.stat().st_size == 0:
         raise FileNotFoundError(checkpoint)
@@ -45,7 +47,7 @@ def result(run, method, k, step, checkpoint, expected_pairs):
         "checkpoint": f"runs/{run.name}/ckpt/{method}/{checkpoint.name}",
         "config_file": records[0 if k == 5 else -1]["config_file"],
         "training_commit": training["commit"],
-        "test_commit": records[-1]["commit"],
+        "test_commit": evaluation["commit"],
         "test_prediction": f"runs/{run.name}/preds/{method}/test.jsonl",
     }
 

@@ -289,6 +289,24 @@ def test_driver_selects_one_method_and_validates_gpu_count(tmp_path, monkeypatch
     monkeypatch.setenv("GPU", "1,2,3,4")
     mod.main(args)
     assert methods == ["multi"]
+    phases = []
+
+    def train(job):
+        job.ck.mkdir(parents=True)
+        (job.ck / "train.done").touch()
+        phases.append("train")
+
+    monkeypatch.setattr(mod.Job, "run_training", train)
+    monkeypatch.setattr(mod.Job, "run_evaluation", lambda job: phases.append("eval"))
+    single = [str(run), "--method", "single"]
+    monkeypatch.setenv("GPU", "0")
+    with pytest.raises(SystemExit):
+        mod.main(single + ["--eval-only"])
+    mod.main(single + ["--train-only"])
+    mod.main(single + ["--eval-only"])
+    assert phases == ["train", "eval"]
+    assert (run / ".claims" / "single").is_dir()
+    assert (run / ".claims" / "single_eval").is_dir()
 
 
 def test_parallel_val_rejects_shared_online_diagnostics():

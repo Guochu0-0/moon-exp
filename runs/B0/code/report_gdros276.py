@@ -16,6 +16,7 @@ from workbench.dataset import Dataset
 from workbench.evaluate import pair_errors
 from workbench.protocol import TABLE_SR
 from workbench.records import load_runs
+from workbench.reference import paired_diff
 
 RUN = ROOT / "runs/B0"
 
@@ -31,14 +32,16 @@ def compare(dataset, run, split, names, metrics):
     paired = {pair: float(diff) for pair, diff in zip(np.asarray(pairs)[both], ransac[both] - lsr[both])}
     differences = np.array(list(paired.values()))
     lsr_summary, ransac_summary = [metric["summary"] for metric in metrics]
+    delta = paired_diff(ransac, lsr, ransac_summary, lsr_summary)
+    keys = ("auc@5", *(f"sr@{t:g}" for t in TABLE_SR))
     return {
         "labelled_pairs": len(pairs),
         "both_succeeded": int(both.sum()),
         "lsr_only": int((has_lsr & ~has_ransac).sum()),
         "ransac_only": int((~has_lsr & has_ransac).sum()),
         "both_failed": int((~has_lsr & ~has_ransac).sum()),
-        "auc_and_sr_delta": {key: ransac_summary[key] - lsr_summary[key]
-                             for key in ("auc@5", *(f"sr@{t:g}" for t in TABLE_SR))},
+        "auc_and_sr_delta": {key: delta[key] for key in keys},
+        "auc_and_sr_delta_ci": {key: delta[key + "_ci"] for key in keys},
         "ransac_minus_lsr_px": {
             "mean": float(differences.mean()) if paired else None,
             "percentiles": dict(zip(("p05", "p25", "p50", "p75", "p95"),

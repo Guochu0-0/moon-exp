@@ -66,7 +66,7 @@ def validate_manifest(data, manifest):
             raise ValueError(f"Invalid Moon Val manifest entry for {pair}")
 
 
-def extract(detector, manifest, read_image, directory, prefix):
+def extract(detector, manifest, read_image, directory, prefix, method="redfeat"):
     points_by_image = {}
     records = []
     for item in manifest:
@@ -81,8 +81,8 @@ def extract(detector, manifest, read_image, directory, prefix):
                 if (not np.isfinite(points).all()
                         or (points[:, :2] < 0).any() or (points[:, :2] >= SIZE).any()
                         or (points[:, 2] < detector.threshold).any()
-                        or len(points) > detector.num_features):
-                    raise ValueError("Invalid ReDFeat points")
+                        or (detector.num_features is not None and len(points) > detector.num_features)):
+                    raise ValueError(f"Invalid {method} points")
                 status = {"status": "ok", "count": len(points), "key": key}
                 points_by_image[key] = points
             except Exception as exc:
@@ -90,8 +90,8 @@ def extract(detector, manifest, read_image, directory, prefix):
                           "error": f"{type(exc).__name__}: {exc}"}
             records.append({"pair": item["pair"], "modality": modality, **status})
 
-    archive = directory / f"{prefix}_redfeat.npz"
-    temporary = directory / f"{prefix}_redfeat.tmp.npz"
+    archive = directory / f"{prefix}_{method}.npz"
+    temporary = directory / f"{prefix}_{method}.tmp.npz"
     np.savez_compressed(temporary, **points_by_image)
     with np.load(temporary, allow_pickle=False) as saved:
         if saved.files != list(points_by_image):
@@ -99,7 +99,7 @@ def extract(detector, manifest, read_image, directory, prefix):
         for key, expected in points_by_image.items():
             np.testing.assert_array_equal(saved[key], expected)
     temporary.replace(archive)
-    write_json(directory / f"{prefix}_redfeat_counts.json", records)
+    write_json(directory / f"{prefix}_{method}_counts.json", records)
     failures = [row for row in records if row["status"] == "failed"]
     print(f"{len(manifest)} pairs, {len(points_by_image)} images, {len(failures)} failures", flush=True)
     if len(points_by_image) != len(manifest) * len(MODALITY_DIRS):

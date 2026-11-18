@@ -56,7 +56,6 @@ RUN = {
     "log_update": False,    # 每次更新后把各部分参数的相对改变量记进日志（upd_<部分>，#197）；模型要提供 update_parts
     "stop_at": 0,           # 训到第几步停下（lr 调度仍按 [optim] steps，#209）；0 = 训满
     "save_optim": False,    # ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序，#209），供 resume 用
-    "save_on_halt": False,  # 提前停时也保存停止步的权重（#284）
     "resume": "",           # 从 save_optim 存下的 ckpt 接着训（相对仓库根或绝对路径，#209）；空 = 从头训
     "resume_epochs": False, # 允许后续 epoch 续训；只用于 workers=0 且数据加载无随机增强（#267）
     "segment_steps": 0,    # 驱动每段训练的更新步数；段间释放CUDA进程并重新等空卡（#267）
@@ -64,8 +63,9 @@ RUN = {
     "eval_gpus": [],       # 非空时用这些卡并行评独立Val存档，全部完成后才选模/评Test（#267）
     "record_hashes": False, # 启动时记录权重、固定标签、续训存档的SHA256（#267）
     "sweep": "all",         # all：逐个评 Val 再按 select 评 Test；last：末次 Val；last_test：末次 Val 和 Test
-    "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训（不另存 ckpt）
+    "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训
     "halt_below": {},       # 同上，中位数低于阈值就停
+    "save_on_halt": False,  # 提前停时保存触发停训的权重
     "halt_window": 50,      # 提前停的滑动窗口（日志里有这个量的步数）
     "ddp": 0,               # 单机多卡数据并行的卡数（#226，由 torchrun 起这么多个进程，见 finetune/train.py）；0 = 单卡
 }

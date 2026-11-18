@@ -230,6 +230,37 @@ def test_parallel_val_evaluates_every_checkpoint_once_before_return(tmp_path, mo
     assert sorted((split, int(step)) for _, split, step in calls) == [("val", s) for s in (250, 500, 750, 7907)]
 
 
+def test_driver_ddp_and_last_test_use_final_checkpoint(tmp_path, monkeypatch):
+    import importlib.util
+    from finetune.config import expand
+
+    spec = importlib.util.spec_from_file_location("run284", REPO / "scripts/finetune/run.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    cfg = expand({"model": {"name": "roma"}, "run": {"ddp": 4, "sweep": "last_test"}})
+    job = mod.Job(tmp_path, "main", cfg, "0,1,2,3")
+    job.ck.mkdir(parents=True)
+    job.S.mkdir(parents=True)
+    for step in (250, 7907):
+        (job.ck / f"ckpt_{step}.pt").touch()
+    commands, evaluations = [], []
+    monkeypatch.setattr(job, "sh", lambda cmd, *args, **kwargs: commands.append(cmd))
+
+    def evaluate(split, step):
+        evaluations.append((split, int(step)))
+        dst = job.S / "preds" / f"step{step}"
+        dst.mkdir(parents=True, exist_ok=True)
+        (dst / f"{split}.jsonl").touch()
+
+    monkeypatch.setattr(job, "evaluate", evaluate)
+    monkeypatch.setattr(job, "metrics", lambda: {"step7907": {"val": {"summary": {}}, "test": {"summary": {}}}})
+    job()
+    assert commands[0][1:7] == ["-m", "torch.distributed.run", "--standalone", "--nproc_per_node=4", "-m", "finetune.train"]
+    assert evaluations == [("val", 7907), ("test", 7907)]
+    peak = json.loads((job.sw / "peak.json").read_text())
+    assert (peak["step"], peak["metric"]) == (7907, "last")
+
+
 def test_parallel_val_rejects_shared_online_diagnostics():
     from finetune.config import expand, ConfigError
     with pytest.raises(ConfigError, match="共享负样本诊断"):
@@ -2086,6 +2117,53 @@ def test_rloo_term_fine_mask_bce_and_fine_w(monkeypatch):
         vals.append((stats["l_fine"], _fine_grad(dec, 16)))
     assert vals[1][0] == pytest.approx(0.25 * vals[0][0], abs=1e-5)                     # 日志只留 5 位小数
     assert vals[1][1] == pytest.approx(0.25 * vals[0][1], rel=1e-3)
+
+
+def test_rloo_term_fine_policy_levels_keep_all_certainty_losses(monkeypatch):
+    import torch
+
+    levels = [16, 8, 4, 2, 1]
+
+    def run(policy_levels):
+        torch.manual_seed(2)
+        term, st, coarse, dec = _fake_term_fine(
+            monkeypatch, levels=levels, fine_cert_bce=0.01, fine_policy_levels=policy_levels,
+        )
+        loss, stats, _ = term(st)
+        loss.backward()
+        grads = [q.grad.clone() for q in dec.parameters() if q.grad is not None]
+        return stats, coarse.grad.clone(), grads
+
+    default, coarse_default, grads_default = run(None)
+    for k in range(6):
+        stats, coarse_grad, grads = run(levels[:k])
+        assert all(stats[f"l_cert_{s}"] == default[f"l_cert_{s}"] for s in levels)
+        assert {s for s in levels if f"rew_{s}" in stats} == set(levels[:k])
+        assert torch.equal(coarse_grad, coarse_default) and coarse_grad.abs() > 0
+        if k == 5:
+            assert stats["l_fine"] == default["l_fine"]
+            assert len(grads) == len(grads_default)
+            assert all(torch.equal(a, b) for a, b in zip(grads, grads_default))
+        if k == 0:
+            assert stats["l_fine"] == pytest.approx(0.01 * sum(stats[f"l_cert_{s}"] for s in levels), abs=1e-5)
+
+
+def test_config_rloo_fine_policy_levels(tmp_path):
+    from finetune import config as C
+
+    base = '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nlevels = [16, 8]\n'
+    fine = 'fine_mode = "local"\nfine_cert_bce = 0.01\n'
+    good = C.load(_write(tmp_path, "ok", base + fine + 'fine_policy_levels = []\n'))
+    assert good["rloo"]["fine_policy_levels"] == []
+    for text in (
+        fine + 'fine_policy_levels = [16, 16]',
+        fine + 'fine_policy_levels = [4]',
+        fine + 'fine_policy_levels = 16',
+        'fine_mode = "local"\nfine_policy_levels = []',
+        'fine_policy_levels = []',
+    ):
+        with pytest.raises(C.ConfigError, match="fine_policy_levels"):
+            C.load(_write(tmp_path, "bad", base + text + "\n"))
 
 
 # ---------- 提前停（#221） ----------

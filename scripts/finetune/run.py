@@ -101,7 +101,9 @@ class Job:
         """默认单次训练；显式分段时保存并恢复优化器、数据顺序及全部随机状态。"""
         import copy
         src = self.R / "configs" / f"{self.m}.toml"
-        base = [PY, "-m", "finetune.train", src, "--out", self.ck, "--tb", self.R / "tb" / self.m / "scalars"]
+        ddp = self.cfg["run"]["ddp"]
+        launcher = [PY, "-m", "torch.distributed.run", "--standalone", f"--nproc_per_node={ddp}"] if ddp else [PY]
+        base = launcher + ["-m", "finetune.train", src, "--out", self.ck, "--tb", self.R / "tb" / self.m / "scalars"]
         interval = self.cfg["run"]["segment_steps"]
         if not interval:
             self.sh(base, "train.log")
@@ -179,15 +181,17 @@ class Job:
             self.sh([WB, "-m", "workbench", "--runs", self.sw, "new", "S", "--title", f"{R.name}/{m} ckpt sweep"],
                     "sweep.log", gpu=False)
         ckpts = sorted(ck.glob("ckpt_*.pt"), key=lambda p: int(p.stem[5:]))
-        val_only = self.cfg["run"]["sweep"] == "last"   # 只评最后一个 ckpt 的 Val、不评 Test（#209）
-        self.sweep_val(ckpts[-1:] if val_only else ckpts, online)
+        sweep = self.cfg["run"]["sweep"]
+        val_only = sweep == "last"
+        last_only = sweep != "all"
+        self.sweep_val(ckpts[-1:] if last_only else ckpts, online)
         last = self.cfg["run"]["select"] == "last"   # 在 Test 上训练时不能按 Val 选（#98）
-        st = int(ckpts[-1].stem[5:]) if last or val_only else self.peak()
+        st = int(ckpts[-1].stem[5:]) if last or last_only else self.peak()
         if not val_only:
             log(f"TEST {m} step{st}")
             self.evaluate("test", st)
         s = self.metrics()[f"step{st}"]
-        metric = "last (val only)" if val_only else "last" if last else "val auc@5"
+        metric = "last (val only)" if val_only else "last" if last or last_only else "val auc@5"
         (self.sw / "peak.json").write_text(json.dumps({"step": st, "metric": metric, "val": s["val"]["summary"],
                                                        "test": None if val_only else s["test"]["summary"]},
                                                       indent=1) + "\n", encoding="utf-8")
@@ -205,20 +209,37 @@ class Job:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("run", help="实验目录 runs/<id>")
+    ap.add_argument("--method", help="只运行指定方法")
     a = ap.parse_args(argv)
     R = Path(a.run).resolve()
     if R.parent != REPO / "runs" or not (R / "configs").is_dir():
         ap.error(f"应给本仓库的实验目录 runs/<id>，且其下有 configs/：{R}")
     gpu = os.environ["GPU"]
+    devices = gpu.split(",")
+    if any(not d.isdecimal() for d in devices) or len(devices) != len(set(devices)):
+        ap.error("GPU 应是互不重复的 GPU 编号，以逗号分隔")
     os.environ.update(CUDA_VISIBLE_DEVICES=str(gpu), CUDA_DEVICE_ORDER=ENV["CUDA_DEVICE_ORDER"])   # launch 记录里也要有
     launch.require_clean(REPO)   # 配置本身也必须已提交
-    for m in methods(R):         # 先把全部配置展开一遍，有错就不开跑
-        C.load(R / "configs" / f"{m}.toml")
+    if a.method and a.method not in methods(R):
+        ap.error(f"未知方法 {a.method}")
+
+    def candidates():
+        return [a.method] if a.method else methods(R)
+
+    def load(m):
+        cfg = C.load(R / "configs" / f"{m}.toml")
+        expected = cfg["run"]["ddp"] or 1
+        if len(devices) != expected:
+            raise C.ConfigError(f"{m} 需要 {expected} 张 GPU，得到 GPU={gpu}")
+        return cfg
+
+    for m in candidates():       # 先把全部配置展开一遍，有错就不开跑
+        load(m)
     claims = R / ".claims"
     claims.mkdir(exist_ok=True)
     while True:
         picked = None
-        for m in methods(R):     # 每轮重新列，中途新增的方法也会被领走
+        for m in candidates():   # 每轮重新列，中途新增的方法也会被领走
             try:
                 (claims / m).mkdir()
             except FileExistsError:
@@ -233,7 +254,7 @@ def main(argv=None):
         log(f"START {R.name}/{m} gpu{gpu}")
         src = R / "configs" / f"{m}.toml"
         try:
-            cfg = C.load(src)
+            cfg = load(m)
         except C.ConfigError as e:
             log(f"FAIL {m}: {e}")
             continue

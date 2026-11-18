@@ -1,0 +1,9 @@
+base = "_e37all"
+
+[rloo]
+screen = 0.8
+
+[run]
+sweep = "last_test"
+save_on_halt = true
+save_every = 7907

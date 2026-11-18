@@ -361,7 +361,10 @@ def main(argv=None):
     if scr_f:
         scr_f.close()
     trw.flush()
-    if r["save_every"] and step % r["save_every"] and not halted:
+    if halted and r["save_on_halt"]:
+        if not ((r["save_every"] and step % r["save_every"] == 0) or step in save_at):
+            save(step)
+    elif r["save_every"] and step % r["save_every"] and not halted:
         save(step)
     elif not (r["save_every"] and step % r["save_every"] == 0):
         sync_check(step)        # 最后一步没有存档时也检查一次（多卡）

@@ -178,6 +178,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "shape": "ripe",  # ref：奖励随距离的形式 ripe | clip | gauss（#191）| cauchy（#197）
           "fine_shape": "", # 细化各级的奖励形式（#197）；空 = 同 shape
           "levels": [],     # 细化中加高斯噪声的级（16、8、4、2、1 的子集，#192、#197）；空 = 细化不加噪
+          "fine_policy_levels": None,  # #284：grad/local 的位置奖励子集，置信度 BCE 仍覆盖 levels
           "k": 0.5,         # 加噪级的 σ = k × 这一级的尺度（原网格 px，#192）
           "frozen_ref": False,  # ref：参照取训练开始时的模型、全程冻结（#202）；False = 当前模型
           "fine_mode": "chain",  # 细化训练方式（#201）：chain（整链抽签）| grad（精确梯度）| local（逐级局部抽签）
@@ -254,6 +255,16 @@ def check(cfg):
         raise ConfigError(f"[rloo] levels 只能是 {LEVELS} 中不重复的整数，得到 {lv!r}")
     if lv and p["reward"] != "ref":
         raise ConfigError("[rloo] levels 只配 reward = 'ref'")
+    policy_levels = p["fine_policy_levels"]
+    if policy_levels is not None:
+        if (not isinstance(policy_levels, list)
+                or any(type(s) is not int or s not in lv for s in policy_levels)
+                or len(set(policy_levels)) != len(policy_levels)):
+            raise ConfigError("[rloo] fine_policy_levels 应是 levels 的无重复子集")
+        if (p["fine_mode"] == "chain" or not p["fine_cert_bce"]
+                or any(p[k] for k in ("occ", "eqv", "cyc", "selfpair", "cos_every"))):
+            raise ConfigError("[rloo] fine_policy_levels 只配 grad / local 和启用的 fine_cert_bce，"
+                              "不与额外细化奖励或 cos_every 同用")
     if p["frozen_ref"] and p["reward"] != "ref":
         raise ConfigError("[rloo] frozen_ref 只配 reward = 'ref'")
     if p["frozen_ref"] and any(cfg["model"].get(x) for x in FROZEN_OFF):     # 副本里会带随机性或引用原模型
@@ -708,16 +719,22 @@ def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0, keep=None
     ces：可选的空 dict，填入各级输出的 certainty logits (h,w)（detach，只记录用，#256）。
     返回 (替身项, {尺度: (奖励, 距离)}, {尺度: BCE 值}（bce = 0 时为空）)。"""
     H, W = f1[1].shape[-2:]
-    leaf1 = {s: f1[s].detach().requires_grad_() for s in sig}
-    leaf2 = {s: f2[s].detach().requires_grad_() for s in sig}
+    policy_levels = p.get("fine_policy_levels")
+    if policy_levels is None:
+        policy_levels = sig
+    levels = [s for s in sig if s in policy_levels or bce]
+    leaf1 = {s: f1[s].detach().requires_grad_() for s in levels}
+    leaf2 = {s: f2[s].detach().requires_grad_() for s in levels}
     val, out, lc = 0.0, {}, {}
-    for s in sig:
+    for s in levels:
         fin, cin, _ = traj[s]
         mu, ce = _mu_cert(dec, s, leaf1[s], leaf2[s], fin, cin, H, W)
         if ces is not None:
             ces[s] = ce[0, 0].detach()
-        loss, out[s] = level_loss(mu, A, s, sig[s], p, p["fine_mode"], gen, keep=None if keep is None else keep[s])
-        loss = w * loss
+        loss = 0.0
+        if s in policy_levels:
+            loss, out[s] = level_loss(mu, A, s, sig[s], p, p["fine_mode"], gen, keep=None if keep is None else keep[s])
+            loss = w * loss
         if bce:
             l_c = F.binary_cross_entropy_with_logits(ce[0, 0].float(), masks[s].float())
             lc[s] = float(l_c)

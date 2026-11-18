@@ -29,7 +29,7 @@ OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 /opt/envs/wb/bin/python runs/B0/code/te
 - ASS：作者Gitee核心`ASS_detector.p`/`ASS_descriptor.p`/`ASS_map.p`未公开源码，按已确认规则排除。
 - MOSS：综述Table6所指作者仓库`betterlll/MOSS_data`只有数据与说明，无算法实现，排除。
 - SRIF：作者`LJY-RS/SRIF`的`algorithms/SRIF`只有exe/DLL，排除。
-- HOWP：官方项目页称executable code；rar链接两次HTTP406，未能检查目录。未达到核心源码公开这一执行前提，暂不测；若以后取得包也必须核对，只有p-code/二进制则仍排除。
+- HOWP：2026-11-18 静态核验[作者发布包](https://skyearth.org/publication/project/HOWP/data/HOWP_Code.rar)，大小 23,392 字节，SHA-256 为 `3298f4b2640580764ce9077e0745ae67d714579eb50a845494a407dd32eb0a3c`。`HOWP_Func/` 的 15 个文件全为 MATLAB P-code，包含 `HOWP.p`、特征提取、加权相位与对数极坐标描述子。可读的 `HOWP_main.m` 在匹配前调用 `HOWP`。按核心源码未公开排除，本轮未测。
 
 官方来源：
 

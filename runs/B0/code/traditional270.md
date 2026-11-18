@@ -22,7 +22,7 @@ OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 /opt/envs/wb/bin/python runs/B0/code/te
 
 - RIFT固定到`7ea830e2f13cc3c226f975fe9e98b7666a8f26fb`，严格调用官方`RIFT_no_rotation_invariance(...,4,6,96)`和demo的最近邻/唯一化，输出FSC之前点对，置信度为 `1/(1+matchmetric)`。上游说明这是不含旋转不变性与角点检测的最简公开实现。保留作者对边界描述子的原始处理，其索引错误可能留下零描述子。沿B0使用浮点映射，不额外uint8量化。
 - OS-SIFT固定到`631a8060042ed89ea11e43d97e44b387443b1eb6`，官方光学/SAR分支、尺度与描述子。SAR前两波段相加，有限非负值除以patch最大值，然后执行官方`imadjust`及+0.001，这是线性SAR必要适配。`CSC2.m`在描述子ratio=0.95后第一次FSC之前截断，输出光学→SAR点对，置信度为 `1-ratio`。上游demo虽计算最强5000点子集，但实际将全体检测点传入描述子。
-- HIMO固定到`1a525611a22e15c0862d2af6e3f53857f09a7e70`，尚未决定正式输出协议。逐尺度内部几何筛选参与后续匹配策略，不能把其最终点对称为完全未经过几何筛选的原始匹配。可能的最小适配是保留内部策略，只在末尾“One last outlier removal”之前导出MMatches，需用户先确认例外；当前没有为HIMO生成正式配置/预测。
+- HIMO 固定到 `1a525611a22e15c0862d2af6e3f53857f09a7e70`。用户确认保留参与后续匹配的逐尺度内部几何筛选，在全局去重后、最后一次全局去外点前导出 `MMatches`，再用 B0 的 3 px RANSAC。B0 负责读图和输入映射，调用作者的 `Deal_Extreme` 和 `Preproscessing` P-code，并核对倍率为 1 且输出尺寸与原 patch 一致。算法核心为 `func_HIMO` 与 `func_Math` 的 MATLAB 源码。两份补丁将原始距离与去重、参考匹配和内点掩码对齐，置信度为 `1/(1+matchmetric)`。空候选返回空数组，最佳尺度票数并列时按 MATLAB 列主序取首项。
 
 ## 排除与条件项
 

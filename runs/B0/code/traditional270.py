@@ -40,7 +40,7 @@ def main():
 
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('step', choices=['prep', 'collect'])
-    ap.add_argument('--method', required=True, choices=['rift', 'ossift'])
+    ap.add_argument('--method', required=True, choices=['rift', 'ossift', 'himo'])
     ap.add_argument('--split', required=True, choices=['val', 'test'])
     ap.add_argument('--data', default=os.environ.get('MOON_DATA'))
     ap.add_argument('--io', required=True)
@@ -125,7 +125,7 @@ def main():
     meta = {'config': cfg, 'commit': commit, 'repo_commit': cfg['upstream_commit'],
             'env': env_info(), 'finished': time.strftime('%Y-%m-%d %H:%M:%S'),
             'input_manifest': manifest, 'n_pairs': len(pairs), 'n_errors': 0,
-            'notes': 'MATLAB 1-based converted to 0-based, before all FSC/CSC geometry'}
+            'notes': cfg.get('candidate_stage', 'MATLAB 1-based converted to 0-based, before all FSC/CSC geometry')}
     # Validate the entire batch first, then finish all serialization in a temporary
     # sibling before replacing formal files. Parser/manifest/MATLAB exceptions and
     # serialization failures cannot truncate an existing formal output.

@@ -2,13 +2,26 @@
 
 import argparse
 import json
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
 
 from workbench import launch
+
+
+def patch_himo(config, overlay):
+    """Apply the two reviewable changes without modifying the upstream checkout."""
+    upstream = REPO / config['repo'] / 'HIMO_image_matching' / 'func_HIMO'
+    for name in ('Match_Keypoint.m', 'Multiscale_Strategy.m'):
+        patch = Path(__file__).with_name(name + '.patch')
+        source = Path(overlay) / (name + '.original')
+        source.write_text((upstream / name).read_text(encoding='utf-8'), encoding='utf-8', newline='\n')
+        subprocess.run(['patch', '--batch', '--fuzz=0', '-o', str(Path(overlay) / name),
+                        str(source), str(patch)], check=True, timeout=30)
 
 
 def main():
@@ -40,8 +53,11 @@ def main():
         launch.begin(REPO / 'runs/B0', attempt, sys.argv, split=batch.name, config=config,
                      env={'matlab': version, 'threads': 2, 'device': 'cpu', 'precision': 'double'})
         try:
-            session.traditional270_split(method, str(REPO), str(batch / 'in'), str(batch / 'out'), 2,
-                                         nargout=0)
+            with tempfile.TemporaryDirectory(prefix='himo270-') as overlay:
+                if method == 'himo':
+                    patch_himo(config, overlay)
+                session.traditional270_split(method, str(REPO), str(batch / 'in'), str(batch / 'out'),
+                                             2, overlay, nargout=0)
         except BaseException:
             launch.end(REPO / 'runs/B0', attempt, 'fail')
             raise

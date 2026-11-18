@@ -1,5 +1,5 @@
-function traditional270_split(method, repo, in_dir, out_dir, n_threads)
-% #270: official feature calls, no FSC/CSC geometric filtering.
+function traditional270_split(method, repo, in_dir, out_dir, n_threads, himo_overlay)
+% #270: official feature calls, before final geometry estimation.
 % Run ONE MATLAB process, no auto parpool. Inputs are mapped floating images.
 % Output p1/p2: MATLAB 1-based xy, N x 2; conf, sec and err.
 if nargin < 5, n_threads = 2; end
@@ -14,8 +14,16 @@ cfg = manifest.config;
 assert(strcmp(cfg.method, method), 'Method differs from input manifest.');
 params = cfg.params;
 method_path = fullfile(repo, cfg.repo);
-addpath(method_path);
-path_cleanup = onCleanup(@() rmpath(method_path));
+previous_path = path;
+path_cleanup = onCleanup(@() path(previous_path));
+if strcmp(method, 'himo')
+    himo_path = fullfile(method_path, 'HIMO_image_matching');
+    addpath(fullfile(himo_path, 'functions'), fullfile(himo_path, 'func_Math'), ...
+            fullfile(himo_path, 'func_HIMO'));
+    addpath(himo_overlay, '-begin');
+else
+    addpath(method_path);
+end
 if ~exist(out_dir, 'dir'), mkdir(out_dir); end
 files = dir(fullfile(in_dir, '*.mat'));
 [~, order] = sort({files.name}); files = files(order);
@@ -61,6 +69,8 @@ for i = 1:numel(files)
                         end
                     end
                 end
+            case 'himo'
+                [p1,p2,conf] = traditional270_himo(S.opt, S.sar, params);
             otherwise
                 error('Unsupported method');
         end

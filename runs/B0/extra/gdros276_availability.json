@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-18",
+  "upstream_commit": "ee6b6216fe780bc03bfb4759ae094daa0cfddc60",
+  "source": "https://pan.baidu.com/s/1YKbw6FSWjcuJidtAeogjdg?pwd=4ykn",
+  "share_directory": "/GDROS/models",
+  "files": {
+    "GDROS-whu-opt-sar512.pth": {"share_file_id": 450585781317424, "bytes": 51534966, "sha256": null},
+    "GDROS-os512.pth": {"share_file_id": 92671134385131, "bytes": 51534966, "sha256": null}
+  },
+  "probes": [
+    {"location": "154", "action": "official share password verification and file listing", "http": 200, "verify_errno": 0, "list_errno": 0},
+    {"location": "154", "action": "anonymous download metadata request", "http": 200, "errno": 2, "result": "请求失败"},
+    {"location": "local", "action": "anonymous download metadata request", "errno": 118, "result": "违规操作，无法下载"},
+    {"location": "local", "action": "fresh Chromium, select GDROS-os512.pth, press 普通下载", "result": "passport.baidu.com login modal; no file address or transfer"},
+    {"location": "local", "action": "fresh Chromium, select GDROS-whu-opt-sar512.pth, press 普通下载", "result": "passport.baidu.com login modal; no file address or transfer"},
+    {"location": "local", "action": "fresh Chromium, select multiple files, press 下载", "result": "HTTP 200, errno 0, opaque download payload routed to official client; no direct file address"},
+    {"location": "gpfs", "action": "inspect weights and SHA256SUMS", "result": "no GDROS checkpoint found"},
+    {"location": "GitHub", "action": "inspect official source tree, releases and author replies", "result": "no alternate official checkpoint location found"}
+  ],
+  "strict_load": "not reached",
+  "status": "unmeasured"
+}

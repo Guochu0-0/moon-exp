@@ -1,0 +1,30 @@
+{
+  "checkpoint": "GDROS-os512.pth",
+  "checkpoint_source": "https://pan.baidu.com/s/1YKbw6FSWjcuJidtAeogjdg?pwd=4ykn",
+  "upstream_commit": "ee6b6216fe780bc03bfb4759ae094daa0cfddc60",
+  "fit": "ransac",
+  "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+  },
+  "size": 512,
+  "iters": 32,
+  "flow_slice": [
+    10000,
+    210000
+  ],
+  "seed": 0,
+  "ransac": {
+    "threshold": 3,
+    "max_iterations": 10000,
+    "confidence": 0.99999,
+    "seed": 0
+  },
+  "direction": "optical_to_sar",
+  "image_channels": 3,
+  "model_input_range": [
+    0,
+    255
+  ],
+  "tf32": false
+}

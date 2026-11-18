@@ -1,0 +1,226 @@
+[
+  {
+    "pair": "NH49E001013/patch_0",
+    "modality": "optical",
+    "status": "ok",
+    "count": 953,
+    "key": "NH49E001013__patch_0__optical"
+  },
+  {
+    "pair": "NH49E001013/patch_0",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1325,
+    "key": "NH49E001013__patch_0__sar"
+  },
+  {
+    "pair": "NH49E001013/patch_1",
+    "modality": "optical",
+    "status": "ok",
+    "count": 808,
+    "key": "NH49E001013__patch_1__optical"
+  },
+  {
+    "pair": "NH49E001013/patch_1",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1116,
+    "key": "NH49E001013__patch_1__sar"
+  },
+  {
+    "pair": "NH49E001013/patch_2",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1054,
+    "key": "NH49E001013__patch_2__optical"
+  },
+  {
+    "pair": "NH49E001013/patch_2",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1426,
+    "key": "NH49E001013__patch_2__sar"
+  },
+  {
+    "pair": "NH49E001013/patch_3",
+    "modality": "optical",
+    "status": "ok",
+    "count": 893,
+    "key": "NH49E001013__patch_3__optical"
+  },
+  {
+    "pair": "NH49E001013/patch_3",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1486,
+    "key": "NH49E001013__patch_3__sar"
+  },
+  {
+    "pair": "NH49E001014/patch_0",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1032,
+    "key": "NH49E001014__patch_0__optical"
+  },
+  {
+    "pair": "NH49E001014/patch_0",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1335,
+    "key": "NH49E001014__patch_0__sar"
+  },
+  {
+    "pair": "NH49E001014/patch_1",
+    "modality": "optical",
+    "status": "ok",
+    "count": 864,
+    "key": "NH49E001014__patch_1__optical"
+  },
+  {
+    "pair": "NH49E001014/patch_1",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1114,
+    "key": "NH49E001014__patch_1__sar"
+  },
+  {
+    "pair": "NH49E001014/patch_2",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1266,
+    "key": "NH49E001014__patch_2__optical"
+  },
+  {
+    "pair": "NH49E001014/patch_2",
+    "modality": "sar",
+    "status": "ok",
+    "count": 971,
+    "key": "NH49E001014__patch_2__sar"
+  },
+  {
+    "pair": "NH49E001014/patch_3",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1266,
+    "key": "NH49E001014__patch_3__optical"
+  },
+  {
+    "pair": "NH49E001014/patch_3",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1143,
+    "key": "NH49E001014__patch_3__sar"
+  },
+  {
+    "pair": "NH49E001017/patch_0",
+    "modality": "optical",
+    "status": "ok",
+    "count": 2753,
+    "key": "NH49E001017__patch_0__optical"
+  },
+  {
+    "pair": "NH49E001017/patch_0",
+    "modality": "sar",
+    "status": "ok",
+    "count": 834,
+    "key": "NH49E001017__patch_0__sar"
+  },
+  {
+    "pair": "NH49E001017/patch_1",
+    "modality": "optical",
+    "status": "ok",
+    "count": 2751,
+    "key": "NH49E001017__patch_1__optical"
+  },
+  {
+    "pair": "NH49E001017/patch_1",
+    "modality": "sar",
+    "status": "ok",
+    "count": 522,
+    "key": "NH49E001017__patch_1__sar"
+  },
+  {
+    "pair": "NH49E001017/patch_2",
+    "modality": "optical",
+    "status": "ok",
+    "count": 3427,
+    "key": "NH49E001017__patch_2__optical"
+  },
+  {
+    "pair": "NH49E001017/patch_2",
+    "modality": "sar",
+    "status": "ok",
+    "count": 723,
+    "key": "NH49E001017__patch_2__sar"
+  },
+  {
+    "pair": "NH49E001017/patch_3",
+    "modality": "optical",
+    "status": "ok",
+    "count": 3891,
+    "key": "NH49E001017__patch_3__optical"
+  },
+  {
+    "pair": "NH49E001017/patch_3",
+    "modality": "sar",
+    "status": "ok",
+    "count": 317,
+    "key": "NH49E001017__patch_3__sar"
+  },
+  {
+    "pair": "NH49E002012/patch_0",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1579,
+    "key": "NH49E002012__patch_0__optical"
+  },
+  {
+    "pair": "NH49E002012/patch_0",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1660,
+    "key": "NH49E002012__patch_0__sar"
+  },
+  {
+    "pair": "NH49E002012/patch_1",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1271,
+    "key": "NH49E002012__patch_1__optical"
+  },
+  {
+    "pair": "NH49E002012/patch_1",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1788,
+    "key": "NH49E002012__patch_1__sar"
+  },
+  {
+    "pair": "NH49E002012/patch_2",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1100,
+    "key": "NH49E002012__patch_2__optical"
+  },
+  {
+    "pair": "NH49E002012/patch_2",
+    "modality": "sar",
+    "status": "ok",
+    "count": 774,
+    "key": "NH49E002012__patch_2__sar"
+  },
+  {
+    "pair": "NH49E002012/patch_3",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1710,
+    "key": "NH49E002012__patch_3__optical"
+  },
+  {
+    "pair": "NH49E002012/patch_3",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1857,
+    "key": "NH49E002012__patch_3__sar"
+  }
+]

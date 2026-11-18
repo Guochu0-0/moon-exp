@@ -42,12 +42,8 @@ def load_upstream(repo, expected_commit):
     if commit != expected_commit or dirty:
         raise ValueError(f"Expected clean GDROS {expected_commit}, got {commit}: {dirty}")
     sys.path[:0] = [str(repo), str(repo / "core")]
-    from configs.default import get_cfg
-    from core.GDROSnet.FeatureFormer.gdros import GDROS
     from core.LSRnet.LSmodel import LSR, LSR_
-
-    cfg = get_cfg()
-    return GDROS, cfg[cfg.transformer], LSR, LSR_
+    return LSR, LSR_
 
 
 def grid(size, start, stop, device):
@@ -143,18 +139,26 @@ def run(args, methods):
                   args={key: str(value) if isinstance(value, Path) else value
                         for key, value in vars(args).items()})
             started.append(method)
+        lsr, solve = load_upstream(repo, config["upstream_commit"])
+        seed_all(config["seed"])
+        torch.backends.cuda.matmul.allow_tf32 = False
+        torch.backends.cudnn.allow_tf32 = False
+        size = config["size"]
+        start, stop = config["flow_slice"]
+        evidence.update(env=env_info(), synthetic_check=selfcheck(size, start, stop, lsr, solve))
+        print(json.dumps(evidence), flush=True)
         if not weights.is_file():
             status = "unmeasured"
             evidence["reason"] = f"Checkpoint unavailable at {weights}"
             print(evidence["reason"], flush=True)
             return
-        gdros, cfg, lsr, solve = load_upstream(repo, config["upstream_commit"])
-        evidence.update(weights_sha256=sha256(weights), upstream_model_config=json.loads(json.dumps(cfg)),
-                        env=env_info(), gpu=torch.cuda.get_device_name(0))
-        seed_all(config["seed"])
-        torch.backends.cuda.matmul.allow_tf32 = False
-        torch.backends.cudnn.allow_tf32 = False
-        model = torch.nn.DataParallel(gdros(cfg))
+        from configs.default import get_cfg
+        from core.GDROSnet.FeatureFormer.gdros import GDROS
+
+        cfg = get_cfg()
+        model_cfg = cfg[cfg.transformer]
+        evidence.update(weights_sha256=sha256(weights), upstream_model_config=json.loads(json.dumps(model_cfg)))
+        model = torch.nn.DataParallel(GDROS(model_cfg))
         try:
             model.load_state_dict(torch.load(weights, map_location="cpu", weights_only=True), strict=True)
         except (OSError, RuntimeError, ValueError, EOFError, pickle.UnpicklingError) as exc:
@@ -163,9 +167,6 @@ def run(args, methods):
             print(evidence["reason"], flush=True)
             return
         model = model.module.cuda().eval()
-        size = config["size"]
-        start, stop = config["flow_slice"]
-        evidence["synthetic_check"] = selfcheck(size, start, stop, lsr, solve)
         print(json.dumps(evidence), flush=True)
         src = grid(size, start, stop, "cuda")
         ds = Data(args.data)

@@ -6,6 +6,7 @@ import json
 import os
 import pickle
 from contextlib import ExitStack
+from importlib.metadata import version
 from pathlib import Path
 import subprocess
 import sys
@@ -157,8 +158,10 @@ def run(args, methods):
 
         cfg = get_cfg()
         model_cfg = cfg[cfg.transformer]
-        evidence.update(weights_sha256=sha256(weights), upstream_model_config=json.loads(json.dumps(model_cfg)))
         model = torch.nn.DataParallel(GDROS(model_cfg))
+        evidence.update(weights_sha256=sha256(weights), upstream_transformer=cfg.transformer,
+                        upstream_model_config=json.loads(json.dumps(model_cfg)),
+                        upstream_dependencies={name: version(name) for name in ("timm", "scipy")})
         try:
             model.load_state_dict(torch.load(weights, map_location="cpu", weights_only=True), strict=True)
         except (OSError, RuntimeError, ValueError, EOFError, pickle.UnpicklingError) as exc:

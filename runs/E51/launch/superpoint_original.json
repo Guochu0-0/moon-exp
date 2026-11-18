@@ -1,0 +1,218 @@
+[
+ {
+  "start": "2026-11-18 06:16:11 +0000",
+  "end": "2026-11-18 06:16:31 +0000",
+  "status": "ok",
+  "commit": "15b8b76bfae4c68bf6f483c5ede2ace8ef5f6d15",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-275",
+  "cuda_visible_devices": "",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E51.code.extract_superpoint",
+   "--moon",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "--weights",
+   "/remote-home/xufang/YGC/weights/official/superpoint/superpoint_v1.pth",
+   "--torch-home",
+   "/remote-home/xufang/YGC/weights/supplement268_torch_home",
+   "--device",
+   "cpu",
+   "--smoke"
+  ],
+  "args": {
+   "moon": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights": "/remote-home/xufang/YGC/weights/official/superpoint/superpoint_v1.pth",
+   "torch_home": "/remote-home/xufang/YGC/weights/supplement268_torch_home",
+   "smoke": true,
+   "device": "cpu"
+  },
+  "config_file": "configs/baselines/splg.json",
+  "input_manifests": {
+   "moon": "/remote-home/xufang/YGC/wt/baseline-275/runs/E51/extra/data/moon_manifest.json",
+   "whu": "/remote-home/xufang/YGC/wt/baseline-275/runs/E51/extra/data/whu_manifest.json"
+  },
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "7b3282290ade",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12"
+  },
+  "weights_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+  "repo_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+  "torch_hub_file": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+  "detector_config": {
+   "descriptor_dim": 256,
+   "nms_radius": 4,
+   "max_num_keypoints": null,
+   "detection_threshold": 0.0005,
+   "remove_borders": 4
+  },
+  "resize": 1024,
+  "tf32": false
+ },
+ {
+  "start": "2026-11-18 06:16:36 +0000",
+  "end": "2026-11-18 06:17:47 +0000",
+  "status": "failed",
+  "commit": "15b8b76bfae4c68bf6f483c5ede2ace8ef5f6d15",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-275",
+  "cuda_visible_devices": "",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E51.code.extract_superpoint",
+   "--moon",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "--weights",
+   "/remote-home/xufang/YGC/weights/official/superpoint/superpoint_v1.pth",
+   "--torch-home",
+   "/remote-home/xufang/YGC/weights/supplement268_torch_home",
+   "--device",
+   "cpu"
+  ],
+  "args": {
+   "moon": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights": "/remote-home/xufang/YGC/weights/official/superpoint/superpoint_v1.pth",
+   "torch_home": "/remote-home/xufang/YGC/weights/supplement268_torch_home",
+   "smoke": false,
+   "device": "cpu"
+  },
+  "config_file": "configs/baselines/splg.json",
+  "input_manifests": {
+   "moon": "/remote-home/xufang/YGC/wt/baseline-275/runs/E51/extra/data/moon_manifest.json",
+   "whu": "/remote-home/xufang/YGC/wt/baseline-275/runs/E51/extra/data/whu_manifest.json"
+  }
+ },
+ {
+  "start": "2026-11-18 14:19:56 +0800",
+  "end": "2026-11-18 14:20:00 +0800",
+  "status": "ok",
+  "commit": "b9557c834a073cd48a93de118152e9a2407d8a28",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-275",
+  "cuda_visible_devices": "6",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E51.code.extract_superpoint",
+   "--moon",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "--weights",
+   "/remote-home/xufang/YGC/weights/official/superpoint/superpoint_v1.pth",
+   "--torch-home",
+   "/remote-home/xufang/YGC/weights/supplement268_torch_home",
+   "--smoke"
+  ],
+  "args": {
+   "moon": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights": "/remote-home/xufang/YGC/weights/official/superpoint/superpoint_v1.pth",
+   "torch_home": "/remote-home/xufang/YGC/weights/supplement268_torch_home",
+   "smoke": true,
+   "device": "cuda"
+  },
+  "config_file": "configs/baselines/splg.json",
+  "input_manifests": {
+   "moon": "/remote-home/xufang/YGC/wt/baseline-275/runs/E51/extra/data/moon_manifest.json",
+   "whu": "/remote-home/xufang/YGC/wt/baseline-275/runs/E51/extra/data/whu_manifest.json"
+  },
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "bcb626e99cea",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.31",
+   "cuda_visible_devices": "6",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "NVIDIA GeForce RTX 3090",
+   "cuda": "11.8"
+  },
+  "weights_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+  "repo_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+  "torch_hub_file": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+  "detector_config": {
+   "descriptor_dim": 256,
+   "nms_radius": 4,
+   "max_num_keypoints": null,
+   "detection_threshold": 0.0005,
+   "remove_borders": 4
+  },
+  "resize": 1024,
+  "tf32": false
+ },
+ {
+  "start": "2026-11-18 14:20:12 +0800",
+  "end": "2026-11-18 14:20:21 +0800",
+  "status": "ok",
+  "commit": "b9557c834a073cd48a93de118152e9a2407d8a28",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-275",
+  "cuda_visible_devices": "6",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E51.code.extract_superpoint",
+   "--moon",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "--weights",
+   "/remote-home/xufang/YGC/weights/official/superpoint/superpoint_v1.pth",
+   "--torch-home",
+   "/remote-home/xufang/YGC/weights/supplement268_torch_home"
+  ],
+  "args": {
+   "moon": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights": "/remote-home/xufang/YGC/weights/official/superpoint/superpoint_v1.pth",
+   "torch_home": "/remote-home/xufang/YGC/weights/supplement268_torch_home",
+   "smoke": false,
+   "device": "cuda"
+  },
+  "config_file": "configs/baselines/splg.json",
+  "input_manifests": {
+   "moon": "/remote-home/xufang/YGC/wt/baseline-275/runs/E51/extra/data/moon_manifest.json",
+   "whu": "/remote-home/xufang/YGC/wt/baseline-275/runs/E51/extra/data/whu_manifest.json"
+  },
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "bcb626e99cea",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.31",
+   "cuda_visible_devices": "6",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "NVIDIA GeForce RTX 3090",
+   "cuda": "11.8"
+  },
+  "weights_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+  "repo_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+  "torch_hub_file": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+  "detector_config": {
+   "descriptor_dim": 256,
+   "nms_radius": 4,
+   "max_num_keypoints": null,
+   "detection_threshold": 0.0005,
+   "remove_borders": 4
+  },
+  "resize": 1024,
+  "tf32": false
+ }
+]

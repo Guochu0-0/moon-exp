@@ -1,8 +1,8 @@
-# 地球与月球首批 64 张图均导出 4096 个 ReDFeat 检测点
+# 地球与月球首批 64 张图均已导出 ReDFeat 和原版 SuperPoint 检测点
 
 **摘要**
 
-为地球与月球的光学–SAR 检测对照准备逐图数据。沿用 B0 的官方 ReDFeat 权重和检测配置，WHU-OPT-SAR 与月球 Val 各 16 对 patch 均成功导出匹配前坐标和分数，64 张图均达到每图 4096 个输出点的上限。WHU 首批四景的 8 个源文件已下载和校验。SuperPoint 暂待检测分支经过跨模态微调的可核验公开权重。
+为地球与月球的光学–SAR 检测对照准备逐图数据。WHU-OPT-SAR 与月球 Val 各选 16 对 patch，ReDFeat 和原版 SuperPoint 均在同一批 64 张图上导出了匹配前坐标和分数，执行失败为 0。ReDFeat 每张均达到 4096 点的输出上限。原版 SuperPoint 使用 B0 已核验的 `superpoint_v1.pth`。WHU 首批四景的 8 个源文件已下载和校验。
 
 **引言**
 
@@ -20,6 +20,8 @@ B0 记录了 ReDFeat 在月球上的匹配输出。ReDFeat 先从光学和 SAR �
 
 *地球输入。* 光学 TIFF 有四个 uint8 波段，取标记为红、绿、蓝的前三个波段，按 0.299、0.587、0.114 加权并除以 255。SAR 为单波段 uint8，在每个 patch 上按原始强度的 2% 和 98% 分位拉伸到 [0, 1]，实际上下限逐图登记。两域共用 ReDFeat 的权重、尺度、阈值及分支。地球启动记录的 `config` 保存 B0 参数快照，地球实际输入映射记录在地球清单。 [地球样本清单](extra/data/whu_manifest.json) · [地球启动记录](launch/whu_redfeat.json)
 
+*原版 SuperPoint。* 沿用 B0 配置中的官方 `SuperPoint().extract()` 入口，源码固定在 `edb2b838efb2ecfe3f88097c5fad9887d95aedad`。直接使用服务器上的 `/remote-home/xufang/YGC/weights/official/superpoint/superpoint_v1.pth` 及 B0 的 Torch Hub 缓存，两份 SHA-256 均为 `52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e`。沿用两域各自的 ReDFeat 输入清单和映射。两种模态使用同一个检测器，长边缩放至 1024，NMS 半径 4，边界 4，分数阈值 0.0005，不设每图点数上限。坐标由官方入口映回输入 patch。最终小跑与正式批次均在 150 的 RTX 3090 上完成，启动记录保留了 160 首次正式批次的 gpfs 写入失败。 [固定源码](https://github.com/cvg/LightGlue/blob/edb2b838efb2ecfe3f88097c5fad9887d95aedad/lightglue/superpoint.py) · [SuperPoint 启动记录](launch/superpoint_original.json)
+
 **结果**
 
 *月球两种模态均导出了全部预定图像。* 16 对样本对应 32 个不同的归档键，所有数组可读、数值有限，坐标实测范围为 10 至 501 像素，分数均达到阈值并按降序排列。小跑和正式批次的同图数组逐值一致。正式 NPZ 的 SHA-256 为 `756ae903fccb2946f5a61c3c62af618ee0497254711a07109223f2a38133b20b`。
@@ -33,10 +35,19 @@ B0 记录了 ReDFeat 在月球上的匹配输出。ReDFeat 先从光学和 SAR �
 
 *地球两种模态均导出了全部预定图像。* 在 160 的 V100 上先跑清单首尾各一对，随后跑全批 16 对。光学和 SAR 各 16 张，各导出 65,536 点，两种模态的每张图均达到 4096 点上限，失败和零检测均为 0。正式归档包含 32 个不同的键，坐标范围为 10 至 501 像素，坐标和分数格式与月球归档一致。小跑 4 张图的数组与正式批次逐值一致。正式 NPZ 的 SHA-256 为 `934c244d73895708f4823ec5cad03a8085b5b3d61daea9bfd3abc80558aa04c0`。 [地球关键点 NPZ](extra/data/whu_redfeat.npz) · [逐图点数和状态](extra/data/whu_redfeat_counts.json) · [小跑点数和状态](extra/data/smoke/whu_redfeat_counts.json) · [小跑关键点 NPZ](extra/data/smoke/whu_redfeat.npz)
 
-*SuperPoint 暂待权重。* MINIMA 附录 B 和 MIFNet 官方训练配置均冻结 SuperPoint，Project2026 加载原版 v1，Thermal SuperPoint SLAM 的公开热红外权重使用单模态 FLIR 图像训练。本批未核实到检测分支经过跨模态微调的可获取公开 SuperPoint 权重。 [MINIMA 附录 B](https://openaccess.thecvf.com/content/CVPR2025/supplemental/Ren_MINIMA_Modality_Invariant_CVPR_2025_supplemental.pdf) · [MIFNet 训练配置](https://github.com/lyp-deeplearning/MIFNet/blob/main/training/configs/sp_remote_homography.yaml) · [Project2026 加载方式](https://github.com/cangshengmo/Project2026/blob/main/lightglue/superpoint.py#L144-L145) · [Thermal SuperPoint SLAM 训练配置](https://github.com/specarmi/Thermal_SuperPoint_SLAM/blob/master/configs/training/superpoint_flir_train_heatmap.yaml)
+*原版 SuperPoint 完整覆盖两域的固定清单。* 每域 32 个归档键分别与 ReDFeat 的样本和模态一一对应。全部图像均有检测点，坐标、分数及数组读回校验通过。每域小跑的 4 张图与正式批次逐值一致。 [月球 SuperPoint NPZ](extra/data/moon_superpoint_original.npz) · [月球逐图点数](extra/data/moon_superpoint_original_counts.json) · [地球 SuperPoint NPZ](extra/data/whu_superpoint_original.npz) · [地球逐图点数](extra/data/whu_superpoint_original_counts.json)
+
+| 域 | 模态 | 图像数 | 每图中位点数 | 每图点数范围 | 总点数 |
+|---|---|---:|---:|---:|---:|
+| 月球 Val | 光学 | 16 | 831 | 293–1161 | 12,423 |
+| 月球 Val | SAR | 16 | 1666 | 762–3858 | 29,277 |
+| WHU-OPT-SAR | 光学 | 16 | 1266 | 808–3891 | 26,618 |
+| WHU-OPT-SAR | SAR | 16 | 1129.5 | 317–1857 | 18,391 |
+
+表 2。原版 SuperPoint 在同一批 64 张图上的逐图点数。四组的执行失败和零检测均为 0。
 
 **讨论**
 
-两域首批样本均已有 ReDFeat 检测结果。逐图点数受 4096 点上限约束，当前数据只量化实际导出的点。地球源 TIFF 缺少空间参考，裁切坐标表示各图的像素位置。
+两域首批样本均已有两个检测器的结果。ReDFeat 逐图点数受 4096 点上限约束，原版 SuperPoint 使用其自身的阈值和点数设置。表中只量化实际导出的点。地球源 TIFF 缺少空间参考，裁切坐标表示各图的像素位置。
 
-HSPN 的配置使用光学与 SAR 联合训练，作者仓库、提交历史和发布页均未找到公开 checkpoint。NRD-SLAM 的 NR-SP 使用配对近红外与 RGB 微调，论文未提供可获取的权重。 [HSPN 作者仓库](https://github.com/zhgx-ch/Heterogeneous-self-supervised-intersest-point-matching-for-multi-modal-image-registration) · [NRD-SLAM 论文](https://doi.org/10.1109/TII.2026.3707939)
+跨模态微调版本仍待可核验权重。HSPN 的配置使用光学与 SAR 联合训练，作者仓库、提交历史和发布页均未找到公开 checkpoint。NRD-SLAM 的 NR-SP 使用配对近红外与 RGB 微调，论文未提供可获取的权重。MINIMA 和 MIFNet 的训练均冻结 SuperPoint。 [HSPN 作者仓库](https://github.com/zhgx-ch/Heterogeneous-self-supervised-intersest-point-matching-for-multi-modal-image-registration) · [NRD-SLAM 论文](https://doi.org/10.1109/TII.2026.3707939) · [MINIMA 附录 B](https://openaccess.thecvf.com/content/CVPR2025/supplemental/Ren_MINIMA_Modality_Invariant_CVPR_2025_supplemental.pdf) · [MIFNet 训练配置](https://github.com/lyp-deeplearning/MIFNet/blob/main/training/configs/sp_remote_homography.yaml)

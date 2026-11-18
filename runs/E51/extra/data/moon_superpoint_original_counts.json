@@ -1,0 +1,226 @@
+[
+  {
+    "pair": "ROI_035/patch_26",
+    "modality": "optical",
+    "status": "ok",
+    "count": 932,
+    "key": "ROI_035__patch_26__optical"
+  },
+  {
+    "pair": "ROI_035/patch_26",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1754,
+    "key": "ROI_035__patch_26__sar"
+  },
+  {
+    "pair": "ROI_035/patch_80",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1161,
+    "key": "ROI_035__patch_80__optical"
+  },
+  {
+    "pair": "ROI_035/patch_80",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1665,
+    "key": "ROI_035__patch_80__sar"
+  },
+  {
+    "pair": "ROI_035/patch_133",
+    "modality": "optical",
+    "status": "ok",
+    "count": 1107,
+    "key": "ROI_035__patch_133__optical"
+  },
+  {
+    "pair": "ROI_035/patch_133",
+    "modality": "sar",
+    "status": "ok",
+    "count": 3491,
+    "key": "ROI_035__patch_133__sar"
+  },
+  {
+    "pair": "ROI_035/patch_187",
+    "modality": "optical",
+    "status": "ok",
+    "count": 792,
+    "key": "ROI_035__patch_187__optical"
+  },
+  {
+    "pair": "ROI_035/patch_187",
+    "modality": "sar",
+    "status": "ok",
+    "count": 2037,
+    "key": "ROI_035__patch_187__sar"
+  },
+  {
+    "pair": "ROI_070/patch_21",
+    "modality": "optical",
+    "status": "ok",
+    "count": 682,
+    "key": "ROI_070__patch_21__optical"
+  },
+  {
+    "pair": "ROI_070/patch_21",
+    "modality": "sar",
+    "status": "ok",
+    "count": 2300,
+    "key": "ROI_070__patch_21__sar"
+  },
+  {
+    "pair": "ROI_070/patch_63",
+    "modality": "optical",
+    "status": "ok",
+    "count": 969,
+    "key": "ROI_070__patch_63__optical"
+  },
+  {
+    "pair": "ROI_070/patch_63",
+    "modality": "sar",
+    "status": "ok",
+    "count": 2156,
+    "key": "ROI_070__patch_63__sar"
+  },
+  {
+    "pair": "ROI_070/patch_105",
+    "modality": "optical",
+    "status": "ok",
+    "count": 870,
+    "key": "ROI_070__patch_105__optical"
+  },
+  {
+    "pair": "ROI_070/patch_105",
+    "modality": "sar",
+    "status": "ok",
+    "count": 2518,
+    "key": "ROI_070__patch_105__sar"
+  },
+  {
+    "pair": "ROI_070/patch_147",
+    "modality": "optical",
+    "status": "ok",
+    "count": 900,
+    "key": "ROI_070__patch_147__optical"
+  },
+  {
+    "pair": "ROI_070/patch_147",
+    "modality": "sar",
+    "status": "ok",
+    "count": 3858,
+    "key": "ROI_070__patch_147__sar"
+  },
+  {
+    "pair": "ROI_071/patch_5",
+    "modality": "optical",
+    "status": "ok",
+    "count": 599,
+    "key": "ROI_071__patch_5__optical"
+  },
+  {
+    "pair": "ROI_071/patch_5",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1384,
+    "key": "ROI_071__patch_5__sar"
+  },
+  {
+    "pair": "ROI_071/patch_15",
+    "modality": "optical",
+    "status": "ok",
+    "count": 293,
+    "key": "ROI_071__patch_15__optical"
+  },
+  {
+    "pair": "ROI_071/patch_15",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1667,
+    "key": "ROI_071__patch_15__sar"
+  },
+  {
+    "pair": "ROI_071/patch_25",
+    "modality": "optical",
+    "status": "ok",
+    "count": 542,
+    "key": "ROI_071__patch_25__optical"
+  },
+  {
+    "pair": "ROI_071/patch_25",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1059,
+    "key": "ROI_071__patch_25__sar"
+  },
+  {
+    "pair": "ROI_071/patch_35",
+    "modality": "optical",
+    "status": "ok",
+    "count": 683,
+    "key": "ROI_071__patch_35__optical"
+  },
+  {
+    "pair": "ROI_071/patch_35",
+    "modality": "sar",
+    "status": "ok",
+    "count": 980,
+    "key": "ROI_071__patch_35__sar"
+  },
+  {
+    "pair": "ROI_080/patch_13",
+    "modality": "optical",
+    "status": "ok",
+    "count": 575,
+    "key": "ROI_080__patch_13__optical"
+  },
+  {
+    "pair": "ROI_080/patch_13",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1476,
+    "key": "ROI_080__patch_13__sar"
+  },
+  {
+    "pair": "ROI_080/patch_40",
+    "modality": "optical",
+    "status": "ok",
+    "count": 490,
+    "key": "ROI_080__patch_40__optical"
+  },
+  {
+    "pair": "ROI_080/patch_40",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1352,
+    "key": "ROI_080__patch_40__sar"
+  },
+  {
+    "pair": "ROI_080/patch_66",
+    "modality": "optical",
+    "status": "ok",
+    "count": 894,
+    "key": "ROI_080__patch_66__optical"
+  },
+  {
+    "pair": "ROI_080/patch_66",
+    "modality": "sar",
+    "status": "ok",
+    "count": 818,
+    "key": "ROI_080__patch_66__sar"
+  },
+  {
+    "pair": "ROI_080/patch_93",
+    "modality": "optical",
+    "status": "ok",
+    "count": 934,
+    "key": "ROI_080__patch_93__optical"
+  },
+  {
+    "pair": "ROI_080/patch_93",
+    "modality": "sar",
+    "status": "ok",
+    "count": 762,
+    "key": "ROI_080__patch_93__sar"
+  }
+]

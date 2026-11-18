@@ -66,14 +66,14 @@ def validate_manifest(data, manifest):
             raise ValueError(f"Invalid Moon Val manifest entry for {pair}")
 
 
-def extract(detector, data, mappings, manifest, directory):
+def extract(detector, manifest, read_image, directory, prefix):
     points_by_image = {}
     records = []
     for item in manifest:
         for modality in MODALITY_DIRS:
             key = item["pair"].replace("/", "__") + "__" + modality
             try:
-                image = mappings[modality](getattr(data, modality)("val", item["pair"]))
+                image = read_image(item, modality)
                 if image.shape != (SIZE, SIZE) or not np.isfinite(image).all():
                     raise ValueError(f"Invalid mapped image of shape {image.shape}")
                 xy, score = detector.detect(image, modality)
@@ -90,8 +90,8 @@ def extract(detector, data, mappings, manifest, directory):
                           "error": f"{type(exc).__name__}: {exc}"}
             records.append({"pair": item["pair"], "modality": modality, **status})
 
-    archive = directory / "moon_redfeat.npz"
-    temporary = directory / "moon_redfeat.tmp.npz"
+    archive = directory / f"{prefix}_redfeat.npz"
+    temporary = directory / f"{prefix}_redfeat.tmp.npz"
     np.savez_compressed(temporary, **points_by_image)
     with np.load(temporary, allow_pickle=False) as saved:
         if saved.files != list(points_by_image):
@@ -99,7 +99,7 @@ def extract(detector, data, mappings, manifest, directory):
         for key, expected in points_by_image.items():
             np.testing.assert_array_equal(saved[key], expected)
     temporary.replace(archive)
-    write_json(directory / "moon_redfeat_counts.json", records)
+    write_json(directory / f"{prefix}_redfeat_counts.json", records)
     failures = [row for row in records if row["status"] == "failed"]
     print(f"{len(manifest)} pairs, {len(points_by_image)} images, {len(failures)} failures", flush=True)
     if len(points_by_image) != len(manifest) * len(MODALITY_DIRS):
@@ -141,11 +141,15 @@ def main():
         torch.backends.cudnn.allow_tf32 = False
         detector = ReDFeatAdapter(repo, args.weights, **config["params"])
         mappings = {m: inputs.get(m, config["input"][m]) for m in MODALITY_DIRS}
+
+        def read_image(item, modality):
+            return mappings[modality](getattr(data, modality)("val", item["pair"]))
+
         if args.smoke:
             output = output / "smoke"
             output.mkdir(exist_ok=True)
             manifest = [manifest[0], manifest[-1]]
-        extract(detector, data, mappings, manifest, output)
+        extract(detector, manifest, read_image, output, "moon")
     except BaseException:
         launch.end(RUN, "main", "failed")
         raise

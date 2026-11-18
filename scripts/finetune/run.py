@@ -275,7 +275,8 @@ def main(argv=None):
             continue
         infer = json.loads((REPO / cfg["model"]["config"]).read_text(encoding="utf-8"))
         launch.begin(R, record, [sys.executable, *sys.argv], repo=REPO, entry=ENTRY,
-                     config_file=src.relative_to(REPO).as_posix(), args=cfg, config=infer, phase=phase_name)
+                     config_file=src.relative_to(REPO).as_posix(), args=cfg, config=infer, phase=phase_name,
+                     batch_transport=os.environ.get("MOON_BATCH_TRANSPORT", "shared_memory"))
         try:
             job = Job(R, m, cfg, gpu)
             if a.train_only:

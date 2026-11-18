@@ -1,0 +1,46 @@
+--- Multiscale_Strategy.m
++++ Multiscale_Strategy.m
+@@ -0,0 +1 @@
++% Modified for B0 #270: export scored candidates before final HIMO geometry.
+@@ -6 +7 @@
+-function [cor1,cor2] = Multiscale_Strategy(kps_1,kps_2,IMOm_pyr1,IMOm_pyr2,IMOo_pyr1,IMOo_pyr2,...
++function [cor1,cor2,distance] = Multiscale_Strategy(kps_1,kps_2,IMOm_pyr1,IMOm_pyr2,IMOo_pyr1,IMOo_pyr2,...
+@@ -96,0 +98 @@
++ref_distance = zeros(0,1);
+@@ -134 +136 @@
+-                    Match_Keypoint(descriptor1,descriptor2,Error,K,trans_form,ref);
++                    Match_Keypoint(descriptor1,descriptor2,Error,K,trans_form,ref,ref_distance);
+@@ -141,0 +144 @@
++                    ref_distance = match(:,13);
+@@ -175,3 +178,8 @@
+-[max_O1,max_O2] = find(Numkpts==max(max(Numkpts)));
+-
+-MMatches = [];
++[max_count,max_idx] = max(Numkpts(:));
++if max_count == 0
++    cor1 = zeros(0,6); cor2 = zeros(0,6); distance = zeros(0,1);
++    return
++end
++[max_O1,max_O2] = ind2sub(size(Numkpts),max_idx);
++
++MMatches = zeros(0,13);
+@@ -187,15 +195,4 @@
+-%% One last outlier removal
+-% iter = 10000;
+-iter = 800;
+-NCMs = zeros(K,1); indexPairs = cell(K,1);
+-for k = 1:K
+-    [~,~,indexPairs{k}] = Outlier_Removal(MMatches(:,1:6),...
+-                                          MMatches(:,7:end),Error,iter,trans_form,[]);
+-    NCMs(k) = sum(indexPairs{k});
+-end
+-[~,maxIdx] = max(NCMs);
+-indexPairs = indexPairs{maxIdx};
+-MMatches = MMatches(indexPairs,:);
+-cor1 = MMatches(:,1:6); cor2 = MMatches(:,7:end);
+-
+-
++% Export the original candidates directly before the final global filter.
++cor1 = MMatches(:,1:6);
++cor2 = MMatches(:,7:12);
++distance = MMatches(:,13);

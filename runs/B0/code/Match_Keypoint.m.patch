@@ -1,0 +1,25 @@
+--- Match_Keypoint.m
++++ Match_Keypoint.m
+@@ -0,0 +1 @@
++% Modified for B0 #270: export scored candidates before final HIMO geometry.
+@@ -6 +7,4 @@
+-function [matches, num_keys, conf] = Match_Keypoint(descriptor_1,descriptor_2,Error,K,trans_form,ref,aaa,bbb)
++function [matches, num_keys, conf] = Match_Keypoint(descriptor_1,descriptor_2,Error,K,trans_form,ref,ref_distance,aaa,bbb)
++if nargin < 7, ref_distance = []; end
++matches = zeros(0,13); num_keys = 0; conf = zeros(0,1);
++if isempty(descriptor_1) || isempty(descriptor_2), return; end
+@@ -15 +19 @@
+-if(num_keys<20), num_keys = 0; matches = []; return; end
++if(num_keys<20), num_keys = 0; matches = zeros(0,13); conf = zeros(0,1); return; end
+@@ -18 +22 @@
+-conf = conf(indexPairs(:,1),:);
++conf = conf(uniqueIdx,:);
+@@ -27 +31 @@
+-if(num_keys<4), num_keys = 0; matches = []; return; end
++if(num_keys<4), num_keys = 0; matches = zeros(0,13); conf = zeros(0,1); return; end
+@@ -39,0 +44 @@
++    conf = [conf; ref_distance];
+@@ -43 +48,2 @@
+-matches = [cor1,cor2];
++conf = conf(indexPairs,:);
++matches = [cor1,cor2,conf];

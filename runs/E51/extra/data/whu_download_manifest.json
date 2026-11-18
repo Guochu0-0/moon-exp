@@ -6,36 +6,68 @@
   },
   "destination": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
   "selection": "First four exact common GeoTIFF filenames sorted in ascending order",
-  "listed_per_modality": {"optical": 100, "sar": 100},
+  "listed_per_modality": {
+    "optical": 100,
+    "sar": 100
+  },
   "common_filenames": 100,
-  "verified_downloaded_files": 0,
-  "verified_readable_pairs": 0,
-  "status": "blocked",
-  "blocker": "No listening on 154 TCP 11080 or 17890; SSH to the lab workstation timed out",
+  "verified_downloaded_files": 8,
+  "verified_readable_pairs": 4,
+  "status": "verified",
   "scenes": [
     {
       "filename": "NH49E001013.tif",
       "optical_drive_id": "1Nw2KmJtuaj3bwtmp0KQipuDscYzX27gZ",
       "sar_drive_id": "14ZEHeaMmRzfHNM4cB5BRcYUvqfHQm3tY",
-      "expected_bytes": {"optical": 56267480, "sar": 22408548}
+      "expected_bytes": {
+        "optical": 56267480,
+        "sar": 22408548
+      },
+      "sha256": {
+        "optical": "66867d8be342e991e711e96b3a61273e79a10bbf97cd1fde488e2278c75a770d",
+        "sar": "3771ea1d988e4ae6f25b68b8664537fc5d1c6fc636403eb24fb97a3b2881f14d"
+      }
     },
     {
       "filename": "NH49E001014.tif",
       "optical_drive_id": "1GZTRjQCUMtCrf7R829b4INSdTUGm0Wqt",
       "sar_drive_id": "1I75axZj4F_D5jMtdScOkYAIsTBEenJlE",
-      "expected_bytes": {"optical": 57926358, "sar": 23102974}
+      "expected_bytes": {
+        "optical": 57926358,
+        "sar": 23102974
+      },
+      "sha256": {
+        "optical": "e29167e737e18cbe1076a501892f8fbbad6aec84c44cb51ded5918a74e2b91af",
+        "sar": "4dc7eb723175d1b19d37a841d352685d3e5631750b2b50035d9726a8d13bb6bd"
+      }
     },
     {
       "filename": "NH49E001017.tif",
       "optical_drive_id": "1YQlnD0YdEz9bfKWEPbzLiOEIShKU2hpV",
       "sar_drive_id": "1njraWgQ5yh9Wbr7fXZvg2Q4gvFkjS4x7",
-      "expected_bytes": {"optical": 54021306, "sar": 21428458}
+      "expected_bytes": {
+        "optical": 54021306,
+        "sar": 21428458
+      },
+      "sha256": {
+        "optical": "3f9c5b4a600d7dd6afe0844d9cb1ffdacb5832a2a7e65ea7736ef6f8a6d1d46f",
+        "sar": "e9919e89a0eb5b63a8cc9a7b4fc82502b3994f4f1f3df248dca322e3a147060c"
+      }
     },
     {
       "filename": "NH49E002012.tif",
       "optical_drive_id": "1uuazEpzJiKinmnvktVMb2Sd_jHAF3Gw7",
       "sar_drive_id": "1vSasgCR6iEyiruQu46vruTAZ27yVu_Oq",
-      "expected_bytes": {"optical": 51531216, "sar": 22309718}
+      "expected_bytes": {
+        "optical": 51531216,
+        "sar": 22309718
+      },
+      "sha256": {
+        "optical": "920c5bce5b10f86460f11dede8a454ef45ffe7c4534726d755082c459f9847c7",
+        "sar": "0fefb8d0e7e957a06d45e85b353cc68905d089c1b313c526ccfe47345025223e"
+      }
     }
-  ]
+  ],
+  "transfer": "Official Google Drive, local download with resume, SFTP resume to gpfs, SHA256 checked after upload",
+  "verified_bytes": 308996058
 }

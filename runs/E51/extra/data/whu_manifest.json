@@ -1,0 +1,690 @@
+[
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001013",
+    "pair": "NH49E001013/patch_0",
+    "window_xywh": [
+      1133,
+      670,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001013.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001013.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 252.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001013",
+    "pair": "NH49E001013/patch_1",
+    "window_xywh": [
+      3911,
+      670,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001013.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001013.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 9.0,
+        "hi": 237.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001013",
+    "pair": "NH49E001013/patch_2",
+    "window_xywh": [
+      1133,
+      2522,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001013.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001013.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 4.0,
+        "hi": 249.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001013",
+    "pair": "NH49E001013/patch_3",
+    "window_xywh": [
+      3911,
+      2522,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001013.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001013.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 5.0,
+        "hi": 251.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001014",
+    "pair": "NH49E001014/patch_0",
+    "window_xywh": [
+      1133,
+      670,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001014.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001014.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 6.0,
+        "hi": 250.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001014",
+    "pair": "NH49E001014/patch_1",
+    "window_xywh": [
+      3911,
+      670,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001014.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001014.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 7.0,
+        "hi": 235.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001014",
+    "pair": "NH49E001014/patch_2",
+    "window_xywh": [
+      1133,
+      2522,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001014.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001014.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 5.0,
+        "hi": 222.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001014",
+    "pair": "NH49E001014/patch_3",
+    "window_xywh": [
+      3911,
+      2522,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001014.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001014.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 4.0,
+        "hi": 247.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001017",
+    "pair": "NH49E001017/patch_0",
+    "window_xywh": [
+      1133,
+      670,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 166.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001017",
+    "pair": "NH49E001017/patch_1",
+    "window_xywh": [
+      3911,
+      670,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 204.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001017",
+    "pair": "NH49E001017/patch_2",
+    "window_xywh": [
+      1133,
+      2522,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 171.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E001017",
+    "pair": "NH49E001017/patch_3",
+    "window_xywh": [
+      3911,
+      2522,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E001017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E001017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 178.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E002012",
+    "pair": "NH49E002012/patch_0",
+    "window_xywh": [
+      1133,
+      670,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E002012.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E002012.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 243.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E002012",
+    "pair": "NH49E002012/patch_1",
+    "window_xywh": [
+      3911,
+      670,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E002012.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E002012.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 245.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E002012",
+    "pair": "NH49E002012/patch_2",
+    "window_xywh": [
+      1133,
+      2522,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E002012.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E002012.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 166.0
+      }
+    }
+  },
+  {
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E002012",
+    "pair": "NH49E002012/patch_3",
+    "window_xywh": [
+      3911,
+      2522,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E002012.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E002012.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 244.0
+      }
+    }
+  }
+]

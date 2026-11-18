@@ -1,7 +1,7 @@
 """微调实验的驱动：训练 → 逐 ckpt 在 Val 上评测 → 按 Val AUC@5 峰值选 ckpt 补评 Test → 写成正式记录（#76、#86）。
 规矩见 .claude/skills/server/SKILL.md，配置格式见 finetune/config.py，产物布局见 .claude/skills/records/formats.md「训练产物」。
 
-    GPU=<空卡> /opt/envs/loftr/bin/python scripts/finetune/run.py runs/<id>
+    GPU=<空卡[,空卡...]> /opt/envs/loftr/bin/python scripts/finetune/run.py runs/<id> [--method <方法>]
 
 - 每个方法一份 runs/<id>/configs/<方法>.toml；文件名以 _ 开头的只给别的配置当 base，不单独跑。
   每跑完一个就重新列一遍配置，所以中途新增（并提交）的方法也会被领走；每张空卡起一个，靠 mkdir runs/<id>/.claims/<方法> 占位。

@@ -16,7 +16,7 @@
 [run] resume 给出 save_optim 存下的 ckpt 时，装回权重与续训状态，从下一步接着训（只支持第一个 epoch 内的存档）；
 [run] stop_at 与 --stop-at 一样提前停下，lr 调度仍按 [optim] steps。
 [run] halt_above / halt_below（#221）：某个日志量最近 halt_window 个记录的中位数越过阈值时停训，写 <out>/halt.json
-（停在第几步、哪个量、中位数），不另存 ckpt（最后一个存档仍是越线前按 save_every / save_at 存的）；正常退出。
+（停在第几步、哪个量、中位数）；开启 [run] save_on_halt 时另存停训步的权重，然后正常退出。
 成分可以提供 after_update(step)（参数更新之后调用）、observe(step)（每步更新之后与训练前调用，返回要存的数组或 None）、
 state_dict() / load_state_dict()（随续训状态存取）、ddp_tensors()（多卡时要检查各卡一致的张量，如 EMA 参照的权重）。
 

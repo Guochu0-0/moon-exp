@@ -713,7 +713,8 @@ def level_loss(mu, A, s, sig, p, mode, gen=None, keep=None):
 def fine_direct(dec, f1, f2, traj, A, sig, p, backward, factor, w=1.0, keep=None, masks=None, bce=0.0, gen=None,
                 ces=None):
     """fine_mode = grad / local 的细化损失：sig 里的每一级从正常推理轨迹 traj（refine 记下的）这一级的输入起，带梯度
-    重算 μ，loss_s = w · level_loss，立刻 backward(loss_s)；特征上的梯度与替身项同 fine_surrogate。
+    重算 μ，逐级对损失做 backward；特征上的梯度与替身项同 fine_surrogate。fine_policy_levels 限制 w · level_loss
+    的适用级，默认覆盖 sig 中的所有级。
     keep：可选，尺度 → (h,w) 逐像素权重（见 level_loss）。bce > 0 时（#221）loss_s 另加 bce · BCE(这一级输出的
     certainty logits, masks[s])，masks：尺度 → (h,w) 画面内掩码；这一项不乘 w。
     ces：可选的空 dict，填入各级输出的 certainty logits (h,w)（detach，只记录用，#256）。

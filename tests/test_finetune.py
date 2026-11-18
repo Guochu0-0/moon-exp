@@ -261,6 +261,36 @@ def test_driver_ddp_and_last_test_use_final_checkpoint(tmp_path, monkeypatch):
     assert (peak["step"], peak["metric"]) == (7907, "last")
 
 
+def test_driver_selects_one_method_and_validates_gpu_count(tmp_path, monkeypatch):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("run284", REPO / "scripts/finetune/run.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    run = tmp_path / "runs" / "E53"
+    configs = run / "configs"
+    configs.mkdir(parents=True)
+    for method, ddp in (("single", 0), ("multi", 4)):
+        (configs / f"{method}.toml").write_text(f'[model]\nname = "roma"\n[run]\nddp = {ddp}\n')
+    infer = tmp_path / "configs" / "baselines" / "anymatch_roma__minmax.json"
+    infer.parent.mkdir(parents=True)
+    infer.write_text("{}")
+    monkeypatch.setattr(mod, "REPO", tmp_path)
+    monkeypatch.setattr(mod.launch, "require_clean", lambda *_: None)
+    monkeypatch.setattr(mod.launch, "begin", lambda *a, **kw: None)
+    monkeypatch.setattr(mod.launch, "end", lambda *a, **kw: None)
+    methods = []
+    monkeypatch.setattr(mod.Job, "__call__", lambda job: methods.append(job.m))
+    args = [str(run), "--method", "multi"]
+    monkeypatch.setenv("GPU", "0")
+    with pytest.raises(mod.C.ConfigError, match="4 张 GPU"):
+        mod.main(args)
+    assert not (run / ".claims").exists()
+    monkeypatch.setenv("GPU", "1,2,3,4")
+    mod.main(args)
+    assert methods == ["multi"]
+
+
 def test_parallel_val_rejects_shared_online_diagnostics():
     from finetune.config import expand, ConfigError
     with pytest.raises(ConfigError, match="共享负样本诊断"):
@@ -294,8 +324,15 @@ def test_optimizer_reports_amp_skip_without_changing_default_budget():
     assert opt.skipped and torch.equal(before, p)
 
 
-@pytest.mark.parametrize("count_updates,expected_calls", [(True, 4), (False, 3)])
-def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch, count_updates, expected_calls):
+@pytest.mark.parametrize("count_updates,halt_at,save_on_halt,save_every,expected_calls,expected_checkpoints", [
+    (True, None, False, 1, 4, [1, 2, 3]),
+    (False, None, False, 1, 3, [1, 2, 3]),
+    (False, 2, False, 3, 2, []),
+    (False, 2, True, 3, 2, [2]),
+    (False, 2, True, 2, 2, [2]),
+])
+def test_training_update_budget_and_checkpoint(
+        tmp_path, monkeypatch, count_updates, halt_at, save_on_halt, save_every, expected_calls, expected_checkpoints):
     import hashlib
     import types
     import torch
@@ -326,8 +363,10 @@ def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch
     class Term:
         def __init__(self, p, model, ds):
             self.model = model
+            self.calls = 0
         def __call__(self, st):
-            return self.model.p.square().sum(), {}, True
+            self.calls += 1
+            return self.model.p.square().sum(), {"calls": self.calls}, True
 
     class SkipFirst(Optim):
         calls = 0
@@ -348,18 +387,31 @@ def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch
                          OPTIM=roma.OPTIM, RUN=roma.RUN, TORCH_HOME=roma.TORCH_HOME))
     monkeypatch.setattr(train.PARTS["pseudo"], "Term", Term)
     monkeypatch.setattr(train, "git_head", lambda *a: "test")
+    saves = []
+    original_save = torch.save
+
+    def save(state, path):
+        saves.append(int(path.stem.removeprefix("ckpt_")))
+        original_save(state, path)
+
+    monkeypatch.setattr(torch, "save", save)
+    halt = f"halt_window=1\nhalt_above={{calls={halt_at - 1}}}\n" if halt_at else ""
     cfg = tmp_path / "main.toml"
     cfg.write_text('[model]\nname="roma"\n[optim]\nsteps=3\nlr=0.1\nwarmup=0\nsched="const"\n'
-                   f'[run]\nworkers=0\nsave_every=1\nrecord_hashes=true\ncount_updates={str(count_updates).lower()}\n'
+                   f'[run]\nworkers=0\nsave_every={save_every}\nrecord_hashes=true\n'
+                   f'count_updates={str(count_updates).lower()}\nsave_on_halt={str(save_on_halt).lower()}\n{halt}'
                    f'[pseudo]\nlabels={json.dumps(str(labels_file))}\n')
     out = tmp_path / "out"
     train.main([str(cfg), "--out", str(out), "--device", "cpu"])
     logs = [json.loads(x) for x in (out / "log.jsonl").read_text().splitlines()]
     assert SkipFirst.calls == expected_calls
-    assert [r["step"] for r in logs] == [1, 2, 3]
-    assert (out / "ckpt_3.pt").exists()
-    final = torch.load(out / "ckpt_3.pt")["model"]
-    assert final.item() < (0.75 if count_updates else 0.85)
+    assert [r["step"] for r in logs] == list(range(1, (halt_at or 3) + 1))
+    assert saves == expected_checkpoints
+    if halt_at:
+        assert json.loads((out / "halt.json").read_text())["step"] == halt_at
+    else:
+        final = torch.load(out / "ckpt_3.pt")["model"]
+        assert final.item() < (0.75 if count_updates else 0.85)
     assert (out / "overflow.jsonl").exists() == count_updates
     hashes = json.loads((out / "args.json").read_text())["source_hashes"]
     assert hashes["weights"]["sha256"] == hashlib.sha256(b"published weights").hexdigest()

@@ -73,9 +73,15 @@ geo = false
 
 在本票的 worktree 里用驱动跑：`GPU=<空卡> /opt/envs/loftr/bin/python scripts/finetune/run.py runs/<id>`。它逐个领取 `configs/` 里的方法：训练 → 逐 ckpt 在 Val 上评测 → 按 Val 峰值补评 Test → 写成正式记录。流程见 `.claude/skills/server/SKILL.md`，产物布局见 `.claude/skills/records/formats.md`「训练产物」。
 
+多卡时给 `GPU` 传入逗号分隔的卡号，数量须与 `[run] ddp` 一致。用 `--method <方法>` 指定一个方法；训练所需卡数不同的方法分别启动。
+
 单独训练（调试）：`python -m finetune.train runs/<id>/configs/<方法>.toml --out <目录> [--stop-at N]`；`--stop-at` 提前停下，lr 调度仍按配置的总步数。
 
-只训一段、从中间续训（#209）：`[run] stop_at` 与 `--stop-at` 相同；`save_optim = true` 时 ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序），`resume = "<ckpt 路径>"` 从这样的 ckpt 接着训（只支持第一个 epoch 内的存档）；`sweep = "last"` 让驱动只评最后一个 ckpt 的 Val、不评 Test。提前停（#221）：`halt_above = {d_ref = 100.0}`、`halt_below = {in_frame = 0.5}` 让某个日志量最近 `halt_window`（默认 50）个记录的中位数越线时停训，写 `ckpt/<方法>/halt.json`，不另存 ckpt。成分的逐步记录写在 `ckpt/<方法>/trace/`（`finetune/trace.py`，RLOO 的见 `parts/rloo_trace.py`）。
+只训一段、从中间续训（#209）：`[run] stop_at` 与 `--stop-at` 相同；`save_optim = true` 时 ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序），`resume = "<ckpt 路径>"` 从这样的 ckpt 接着训（只支持第一个 epoch 内的存档）。`sweep = "last"` 只评最后一个存档的 Val，`sweep = "last_test"` 评最后一个存档的 Val 和 Test。
+
+提前停（#221）：`halt_above = {d_ref = 100.0}`、`halt_below = {in_frame = 0.5}` 让某个日志量最近 `halt_window`（默认 50）个记录的中位数越线时停训，写 `ckpt/<方法>/halt.json`。`save_on_halt = true` 时额外保存停训步的权重。成分的逐步记录写在 `ckpt/<方法>/trace/`（`finetune/trace.py`，RLOO 的见 `parts/rloo_trace.py`）。
+
+`[rloo] fine_policy_levels` 可在 `fine_mode = "local"` 或 `"grad"` 且启用细化置信度 BCE 时单独指定位置奖励的层级。位置奖励默认覆盖 `levels`，填 `[]` 可关闭细化位置奖励。细化置信度 BCE 继续覆盖 `levels`，正常推理继续跑完整细化链。
 
 ## 单独评测一个 ckpt（loftr 环境）
 

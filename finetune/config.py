@@ -48,6 +48,7 @@ RUN = {
     "seed": 0,
     "workers": 4,           # DataLoader 进程数（A6000 的 /dev/shm 小，不超过 2）
     "save_every": 1000,     # 每多少步存一次 ckpt；0 = 不存
+    "rolling_checkpoint": False,  # 普通周期存档覆盖最新快照；显式和末次存档保留独立文件
     "save_at": [],          # 额外存 ckpt 的步数
     "save_zero": True,      # 训练前存 ckpt_0
     "limit": 0,             # 只用 Train 的 N 对（均匀取样，调试用）；0 = 全部
@@ -156,6 +157,8 @@ def expand(raw: dict) -> dict:
         raise ConfigError(f"[run] select 可选 {SELECT}，得到 {out['run']['select']!r}")
     if out["run"]["sweep"] not in SWEEP:
         raise ConfigError(f"[run] sweep 可选 {SWEEP}，得到 {out['run']['sweep']!r}")
+    if out["run"]["rolling_checkpoint"] and out["run"]["sweep"] == "all":
+        raise ConfigError("[run] rolling_checkpoint 要求末次评测（last / last_test）")
     if out["run"]["stop_at"] < 0 or out["run"]["stop_at"] > out["optim"]["steps"]:
         raise ConfigError(f"[run] stop_at 应在 0…[optim] steps，得到 {out['run']['stop_at']}")
     for k in ("halt_above", "halt_below"):

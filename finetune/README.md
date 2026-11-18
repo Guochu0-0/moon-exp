@@ -81,6 +81,8 @@ geo = false
 
 提前停（#221）：`halt_above = {d_ref = 100.0}`、`halt_below = {in_frame = 0.5}` 让某个日志量最近 `halt_window`（默认 50）个记录的中位数越线时停训，写 `ckpt/<方法>/halt.json`。`save_on_halt = true` 时额外保存停训步的权重。成分的逐步记录写在 `ckpt/<方法>/trace/`（`finetune/trace.py`，RLOO 的见 `parts/rloo_trace.py`）。
 
+末次评测可启用 `rolling_checkpoint = true`。训练中的周期存档原子替换 `latest.pt`，文件内记录 `snapshot_step`。指定步和末次存档继续写入各自的 `ckpt_<步>.pt`。
+
 `[rloo] fine_policy_levels` 可在 `fine_mode = "local"` 或 `"grad"` 且启用细化置信度 BCE 时单独指定位置奖励的层级。位置奖励默认覆盖 `levels`，填 `[]` 可关闭细化位置奖励。细化置信度 BCE 继续覆盖 `levels`，正常推理继续跑完整细化链。
 
 ## 单独评测一个 ckpt（loftr 环境）

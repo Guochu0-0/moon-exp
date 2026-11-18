@@ -252,7 +252,7 @@ def main(argv=None):
                 f.write(json.dumps(rec) + "\n")
             print(f"ddp sync step {st}: {rec}", flush=True)
 
-    def save(st):
+    def save(st, rolling=False):
         sync_check(st)
         if not main_:
             return
@@ -260,7 +260,14 @@ def main(argv=None):
         if r["save_optim"]:
             sd["train"] = {"step": st, "optim": optim.state_dict(), "rng": rng_state(rng), "loader": loader.state(),
                            "terms": {n: t.state_dict() for n, t in terms if hasattr(t, "state_dict")}}
-        torch.save(sd, out / f"ckpt_{st}.pt")
+        if rolling:
+            sd["snapshot_step"] = st
+            path = out / "latest.pt"
+            temp = path.with_suffix(".pt.tmp")
+            torch.save(sd, temp)
+            temp.replace(path)
+        else:
+            torch.save(sd, out / f"ckpt_{st}.pt")
 
     neg = "neg" in cfg
     stops = [x for x in (args.stop_at, r["stop_at"]) if x]
@@ -352,7 +359,8 @@ def main(argv=None):
                 halted = halt(*rows) if halt else None
                 saved = (r["save_every"] and step % r["save_every"] == 0) or step in save_at
                 if saved or (halted and r["save_on_halt"]):
-                    save(step)
+                    rolling = r["rolling_checkpoint"] and step < total and not halted and step not in save_at
+                    save(step, rolling=rolling)
                 if halted:
                     halted["step"] = step
                     if main_:

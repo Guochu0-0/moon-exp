@@ -342,15 +342,18 @@ def test_optimizer_reports_amp_skip_without_changing_default_budget():
     assert opt.skipped and torch.equal(before, p)
 
 
-@pytest.mark.parametrize("count_updates,halt_at,save_on_halt,save_every,expected_calls,expected_checkpoints", [
-    (True, None, False, 1, 4, [1, 2, 3]),
-    (False, None, False, 1, 3, [1, 2, 3]),
-    (False, 2, False, 3, 2, []),
-    (False, 2, True, 3, 2, [2]),
-    (False, 2, True, 2, 2, [2]),
+@pytest.mark.parametrize("count_updates,halt_at,save_on_halt,save_every,expected_calls,expected_checkpoints,rolling", [
+    (True, None, False, 1, 4, [1, 2, 3], False),
+    (False, None, False, 1, 3, [1, 2, 3], False),
+    (False, 2, False, 3, 2, [], False),
+    (False, 2, True, 3, 2, [2], False),
+    (False, 2, True, 2, 2, [2], False),
+    (False, None, False, 1, 3, [1, 2, 3], True),
+    (False, 2, True, 1, 2, [1, 2], True),
 ])
 def test_training_update_budget_and_checkpoint(
-        tmp_path, monkeypatch, count_updates, halt_at, save_on_halt, save_every, expected_calls, expected_checkpoints):
+        tmp_path, monkeypatch, count_updates, halt_at, save_on_halt, save_every, expected_calls, expected_checkpoints,
+        rolling):
     import hashlib
     import types
     import torch
@@ -409,7 +412,8 @@ def test_training_update_budget_and_checkpoint(
     original_save = torch.save
 
     def save(state, path):
-        saves.append(int(path.stem.removeprefix("ckpt_")))
+        step = state["snapshot_step"] if "snapshot_step" in state else int(path.stem.removeprefix("ckpt_"))
+        saves.append(step)
         original_save(state, path)
 
     monkeypatch.setattr(torch, "save", save)
@@ -418,6 +422,7 @@ def test_training_update_budget_and_checkpoint(
     cfg.write_text('[model]\nname="roma"\n[optim]\nsteps=3\nlr=0.1\nwarmup=0\nsched="const"\n'
                    f'[run]\nworkers=0\nsave_every={save_every}\nrecord_hashes=true\n'
                    f'count_updates={str(count_updates).lower()}\nsave_on_halt={str(save_on_halt).lower()}\n{halt}'
+                   f'sweep="last_test"\nrolling_checkpoint={str(rolling).lower()}\n'
                    f'[pseudo]\nlabels={json.dumps(str(labels_file))}\n')
     out = tmp_path / "out"
     train.main([str(cfg), "--out", str(out), "--device", "cpu"])
@@ -425,6 +430,11 @@ def test_training_update_budget_and_checkpoint(
     assert SkipFirst.calls == expected_calls
     assert [r["step"] for r in logs] == list(range(1, (halt_at or 3) + 1))
     assert saves == expected_checkpoints
+    if rolling:
+        last = halt_at or 3
+        assert torch.load(out / "latest.pt")["snapshot_step"] == last - 1
+        assert [p.name for p in out.glob("ckpt_*.pt")] == [f"ckpt_{last}.pt"]
+        assert not (out / "latest.pt.tmp").exists()
     if halt_at:
         assert json.loads((out / "halt.json").read_text())["step"] == halt_at
     else:

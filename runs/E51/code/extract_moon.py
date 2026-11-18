@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 from collections import Counter, defaultdict
+from io import BytesIO
 from pathlib import Path
 
 import numpy as np
@@ -92,7 +93,9 @@ def extract(detector, manifest, read_image, directory, prefix, method="redfeat")
 
     archive = directory / f"{prefix}_{method}.npz"
     temporary = directory / f"{prefix}_{method}.tmp.npz"
-    np.savez_compressed(temporary, **points_by_image)
+    with BytesIO() as buffer:
+        np.savez_compressed(buffer, **points_by_image)
+        temporary.write_bytes(buffer.getbuffer())
     with np.load(temporary, allow_pickle=False) as saved:
         if saved.files != list(points_by_image):
             raise ValueError("Archive keys do not match the image manifest")

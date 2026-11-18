@@ -131,6 +131,23 @@ def test_redfeat_real_multiscale_normalization_nms_ranking_and_coordinates():
     torch.testing.assert_close(seen[0][0, 0], seen[0][0, 1])
     np.testing.assert_allclose(desc[:, 0], [32, 38])
     np.testing.assert_allclose(kp, [[24.5, 24.5], [(12.5 * 64 / 38) - .5] * 2])
+    detected, scores = adapter.detect(image, "optical")
+    np.testing.assert_array_equal(detected, kp)
+    np.testing.assert_allclose(scores, [.75, .5 + (64 - 38) / 128])
+
+    def forward2(tensor):
+        desc, rep = adapter.model.forward1(tensor)
+        return desc, rep * .9
+
+    adapter.model.forward2 = forward2
+    sar_points, sar_scores = adapter.detect(image, "sar")
+    np.testing.assert_array_equal(sar_points, kp)
+    np.testing.assert_allclose(sar_scores, scores * .9)
+
+    adapter.threshold = 1
+    empty_points, empty_scores = adapter.detect(image, "sar")
+    assert empty_points.shape == (0, 2)
+    assert empty_scores.shape == (0,)
 
 
 def test_redfeat_real_ratio_matching_preserves_valid_raw_points():

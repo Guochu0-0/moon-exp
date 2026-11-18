@@ -158,5 +158,275 @@
    "upstream_lsr_flow_max_abs": 0.0009293556213378906
   },
   "reason": "Checkpoint unavailable at /remote-home/xufang/YGC/weights/gdros/GDROS-os512.pth"
+ },
+ {
+  "start": "2026-11-18 06:04:33 +0000",
+  "end": "2026-11-18 06:10:47 +0000",
+  "status": "ok",
+  "commit": "3801ab7e1dea965ab8184d85243603a2bcf21ee2",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-276",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/baseline269/bin/python",
+   "runs/B0/code/run_gdros276.py",
+   "os",
+   "val",
+   "--repo",
+   "/remote-home/xufang/YGC/weights/gdros-upstream",
+   "--weights-root",
+   "/remote-home/xufang/YGC/weights/gdros",
+   "--data",
+   "/remote-home/xufang/YGC/dataset/Moon"
+  ],
+  "entry": "runs/B0/code/run_gdros276.py",
+  "config_file": "runs/B0/configs/gdros_os_lsr.json",
+  "config": {
+   "checkpoint": "GDROS-os512.pth",
+   "checkpoint_source": "https://pan.baidu.com/s/1YKbw6FSWjcuJidtAeogjdg?pwd=4ykn",
+   "upstream_commit": "ee6b6216fe780bc03bfb4759ae094daa0cfddc60",
+   "fit": "lsr",
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "size": 512,
+   "iters": 32,
+   "flow_slice": [
+    10000,
+    210000
+   ],
+   "seed": 0,
+   "ransac": {
+    "threshold": 3,
+    "max_iterations": 10000,
+    "confidence": 0.99999,
+    "seed": 0
+   },
+   "direction": "optical_to_sar",
+   "image_channels": 3,
+   "model_input_range": [
+    0,
+    255
+   ],
+   "tf32": false
+  },
+  "args": {
+   "weight": "os",
+   "split": "val",
+   "repo": "/remote-home/xufang/YGC/weights/gdros-upstream",
+   "weights_root": "/remote-home/xufang/YGC/weights/gdros",
+   "data": "/remote-home/xufang/YGC/dataset/Moon"
+  },
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "7b3282290ade",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "synthetic_check": {
+   "lsr_corner_max_abs": 0.0009310372173789716,
+   "ransac_corner_max_abs": 4.881470166751001e-06,
+   "upstream_lsr_flow_max_abs": 0.0009293556213378906
+  },
+  "weights_sha256": "80fd768e2d5f2f3887ff8af62b165e43e073e6cec187544c542b6d4b591ba683",
+  "upstream_transformer": "featureformerwithlbl",
+  "upstream_model_config": {
+   "pe": "linear",
+   "dropout": 0.0,
+   "encoder_latent_dim": 256,
+   "query_latent_dim": 64,
+   "cost_latent_input_dim": 64,
+   "cost_latent_token_num": 8,
+   "cost_latent_dim": 128,
+   "arc_type": "transformer",
+   "cost_heads_num": 1,
+   "num_transformer_layers": 1,
+   "num_head": 1,
+   "feature_channels": 256,
+   "attention_type": "swin",
+   "ffn_dim_expansion": 4,
+   "attn_splits": 2,
+   "pretrain": true,
+   "context_concat": false,
+   "encoder_depth": 3,
+   "feat_cross_attn": false,
+   "patch_size": 8,
+   "patch_embed": "single",
+   "no_pe": false,
+   "gma": "GMA",
+   "kernel_size": 9,
+   "rm_res": true,
+   "vert_c_dim": 64,
+   "cost_encoder_res": true,
+   "cnet": "basicencoder",
+   "fnet": "basicencoder",
+   "no_sc": false,
+   "only_global": false,
+   "add_flow_token": true,
+   "use_mlp": false,
+   "vertical_conv": false,
+   "decoder_depth": 12,
+   "critical_params": [
+    "cost_heads_num",
+    "vert_c_dim",
+    "cnet",
+    "pretrain",
+    "add_flow_token",
+    "encoder_depth",
+    "gma",
+    "cost_encoder_res"
+   ],
+   "alternate_corr": false,
+   "corr_levels": 4,
+   "corr_radius": 4
+  },
+  "upstream_dependencies": {
+   "timm": "0.9.16",
+   "scipy": "1.11.4"
+  }
+ },
+ {
+  "start": "2026-11-18 06:11:28 +0000",
+  "end": "2026-11-18 06:19:46 +0000",
+  "status": "ok",
+  "commit": "3801ab7e1dea965ab8184d85243603a2bcf21ee2",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-276",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/baseline269/bin/python",
+   "runs/B0/code/run_gdros276.py",
+   "os",
+   "test",
+   "--repo",
+   "/remote-home/xufang/YGC/weights/gdros-upstream",
+   "--weights-root",
+   "/remote-home/xufang/YGC/weights/gdros",
+   "--data",
+   "/remote-home/xufang/YGC/dataset/Moon"
+  ],
+  "entry": "runs/B0/code/run_gdros276.py",
+  "config_file": "runs/B0/configs/gdros_os_lsr.json",
+  "config": {
+   "checkpoint": "GDROS-os512.pth",
+   "checkpoint_source": "https://pan.baidu.com/s/1YKbw6FSWjcuJidtAeogjdg?pwd=4ykn",
+   "upstream_commit": "ee6b6216fe780bc03bfb4759ae094daa0cfddc60",
+   "fit": "lsr",
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "size": 512,
+   "iters": 32,
+   "flow_slice": [
+    10000,
+    210000
+   ],
+   "seed": 0,
+   "ransac": {
+    "threshold": 3,
+    "max_iterations": 10000,
+    "confidence": 0.99999,
+    "seed": 0
+   },
+   "direction": "optical_to_sar",
+   "image_channels": 3,
+   "model_input_range": [
+    0,
+    255
+   ],
+   "tf32": false
+  },
+  "args": {
+   "weight": "os",
+   "split": "test",
+   "repo": "/remote-home/xufang/YGC/weights/gdros-upstream",
+   "weights_root": "/remote-home/xufang/YGC/weights/gdros",
+   "data": "/remote-home/xufang/YGC/dataset/Moon"
+  },
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "7b3282290ade",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "synthetic_check": {
+   "lsr_corner_max_abs": 0.0009310372173789716,
+   "ransac_corner_max_abs": 4.881470166751001e-06,
+   "upstream_lsr_flow_max_abs": 0.0009293556213378906
+  },
+  "weights_sha256": "80fd768e2d5f2f3887ff8af62b165e43e073e6cec187544c542b6d4b591ba683",
+  "upstream_transformer": "featureformerwithlbl",
+  "upstream_model_config": {
+   "pe": "linear",
+   "dropout": 0.0,
+   "encoder_latent_dim": 256,
+   "query_latent_dim": 64,
+   "cost_latent_input_dim": 64,
+   "cost_latent_token_num": 8,
+   "cost_latent_dim": 128,
+   "arc_type": "transformer",
+   "cost_heads_num": 1,
+   "num_transformer_layers": 1,
+   "num_head": 1,
+   "feature_channels": 256,
+   "attention_type": "swin",
+   "ffn_dim_expansion": 4,
+   "attn_splits": 2,
+   "pretrain": true,
+   "context_concat": false,
+   "encoder_depth": 3,
+   "feat_cross_attn": false,
+   "patch_size": 8,
+   "patch_embed": "single",
+   "no_pe": false,
+   "gma": "GMA",
+   "kernel_size": 9,
+   "rm_res": true,
+   "vert_c_dim": 64,
+   "cost_encoder_res": true,
+   "cnet": "basicencoder",
+   "fnet": "basicencoder",
+   "no_sc": false,
+   "only_global": false,
+   "add_flow_token": true,
+   "use_mlp": false,
+   "vertical_conv": false,
+   "decoder_depth": 12,
+   "critical_params": [
+    "cost_heads_num",
+    "vert_c_dim",
+    "cnet",
+    "pretrain",
+    "add_flow_token",
+    "encoder_depth",
+    "gma",
+    "cost_encoder_res"
+   ],
+   "alternate_corr": false,
+   "corr_levels": 4,
+   "corr_radius": 4
+  },
+  "upstream_dependencies": {
+   "timm": "0.9.16",
+   "scipy": "1.11.4"
+  }
  }
 ]

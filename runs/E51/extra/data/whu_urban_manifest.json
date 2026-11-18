@@ -1,0 +1,802 @@
+[
+  {
+    "id": "A1",
+    "group": "A",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NI49E024017",
+    "pair": "NI49E024017/A1",
+    "subject": "Riverside blocks",
+    "preview_xy": [
+      425,
+      406
+    ],
+    "window_xywh": [
+      2370,
+      2253,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NI49E024017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NI49E024017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 234.0
+      }
+    }
+  },
+  {
+    "id": "A2",
+    "group": "A",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NI49E024017",
+    "pair": "NI49E024017/A2",
+    "subject": "East-bank blocks",
+    "preview_xy": [
+      540,
+      390
+    ],
+    "window_xywh": [
+      3080,
+      2154,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NI49E024017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NI49E024017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 232.0
+      }
+    }
+  },
+  {
+    "id": "A3",
+    "group": "A",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NI49E024017",
+    "pair": "NI49E024017/A3",
+    "subject": "Large roofs",
+    "preview_xy": [
+      618,
+      110
+    ],
+    "window_xywh": [
+      3562,
+      426,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NI49E024017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NI49E024017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 237.0
+      }
+    }
+  },
+  {
+    "id": "A4",
+    "group": "A",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NI49E024017",
+    "pair": "NI49E024017/A4",
+    "subject": "Grid housing",
+    "preview_xy": [
+      265,
+      254
+    ],
+    "window_xywh": [
+      1383,
+      1315,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NI49E024017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NI49E024017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 239.0
+      }
+    }
+  },
+  {
+    "id": "B1",
+    "group": "B",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH50E009003",
+    "pair": "NH50E009003/B1",
+    "subject": "South-bank roofs",
+    "preview_xy": [
+      658,
+      512
+    ],
+    "window_xywh": [
+      3809,
+      2907,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH50E009003.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH50E009003.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 240.0
+      }
+    }
+  },
+  {
+    "id": "B2",
+    "group": "B",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH50E009003",
+    "pair": "NH50E009003/B2",
+    "subject": "Riverside industry",
+    "preview_xy": [
+      560,
+      420
+    ],
+    "window_xywh": [
+      3204,
+      2339,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH50E009003.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH50E009003.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 4.0,
+        "hi": 241.0
+      }
+    }
+  },
+  {
+    "id": "B3",
+    "group": "B",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH50E009003",
+    "pair": "NH50E009003/B3",
+    "subject": "North-bank sheds",
+    "preview_xy": [
+      680,
+      265
+    ],
+    "window_xywh": [
+      3944,
+      1383,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH50E009003.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH50E009003.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 243.0
+      }
+    }
+  },
+  {
+    "id": "B4",
+    "group": "B",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH50E009003",
+    "pair": "NH50E009003/B4",
+    "subject": "West-bank buildings",
+    "preview_xy": [
+      125,
+      88
+    ],
+    "window_xywh": [
+      518,
+      290,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH50E009003.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH50E009003.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 233.0
+      }
+    }
+  },
+  {
+    "id": "C1",
+    "group": "C",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E010020",
+    "pair": "NH49E010020/C1",
+    "subject": "East-bank blocks",
+    "preview_xy": [
+      498,
+      264
+    ],
+    "window_xywh": [
+      2821,
+      1376,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E010020.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E010020.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 220.0
+      }
+    }
+  },
+  {
+    "id": "C2",
+    "group": "C",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E010020",
+    "pair": "NH49E010020/C2",
+    "subject": "Bend-side industry",
+    "preview_xy": [
+      404,
+      313
+    ],
+    "window_xywh": [
+      2241,
+      1679,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E010020.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E010020.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 221.0
+      }
+    }
+  },
+  {
+    "id": "C3",
+    "group": "C",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E010020",
+    "pair": "NH49E010020/C3",
+    "subject": "Southern roofs",
+    "preview_xy": [
+      481,
+      469
+    ],
+    "window_xywh": [
+      2716,
+      2642,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E010020.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E010020.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 217.0
+      }
+    }
+  },
+  {
+    "id": "C4",
+    "group": "C",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E010020",
+    "pair": "NH49E010020/C4",
+    "subject": "Industrial blocks",
+    "preview_xy": [
+      547,
+      536
+    ],
+    "window_xywh": [
+      3123,
+      3055,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E010020.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E010020.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 215.0
+      }
+    }
+  },
+  {
+    "id": "D1",
+    "group": "D",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E012017",
+    "pair": "NH49E012017/D1",
+    "subject": "Riverside roofs",
+    "preview_xy": [
+      705,
+      277
+    ],
+    "window_xywh": [
+      4099,
+      1457,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E012017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E012017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 224.0
+      }
+    }
+  },
+  {
+    "id": "D2",
+    "group": "D",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E012017",
+    "pair": "NH49E012017/D2",
+    "subject": "Bend-side blocks",
+    "preview_xy": [
+      745,
+      342
+    ],
+    "window_xywh": [
+      4346,
+      1858,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E012017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E012017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 222.0
+      }
+    }
+  },
+  {
+    "id": "D3",
+    "group": "D",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E012017",
+    "pair": "NH49E012017/D3",
+    "subject": "Dense blocks",
+    "preview_xy": [
+      792,
+      378
+    ],
+    "window_xywh": [
+      4636,
+      2080,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E012017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E012017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 221.0
+      }
+    }
+  },
+  {
+    "id": "D4",
+    "group": "D",
+    "domain": "earth",
+    "dataset": "WHU-OPT-SAR",
+    "scene": "NH49E012017",
+    "pair": "NH49E012017/D4",
+    "subject": "Western sheds",
+    "preview_xy": [
+      700,
+      390
+    ],
+    "window_xywh": [
+      4068,
+      2154,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/optical/NH49E012017.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR/sar/NH49E012017.tif"
+    },
+    "input": {
+      "optical": {
+        "bands": [
+          1,
+          2,
+          3
+        ],
+        "mapping": "RGB luminance / 255",
+        "luma": [
+          0.299,
+          0.587,
+          0.114
+        ]
+      },
+      "sar": {
+        "bands": [
+          1
+        ],
+        "mapping": "raw intensity percentile stretch",
+        "percentiles": [
+          2.0,
+          98.0
+        ],
+        "lo": 1.0,
+        "hi": 219.0
+      }
+    }
+  }
+]

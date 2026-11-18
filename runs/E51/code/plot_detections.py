@@ -36,8 +36,8 @@ def examples(domain, group):
 
 def render(domain, dataset_name, rows, read_image):
     figure, axes = plt.subplots(len(rows), 4, figsize=(13.8, 13.2), dpi=150)
-    figure.subplots_adjust(left=.078, right=.992, top=.927, bottom=.012, wspace=.034, hspace=.038)
-    figure.text(.078, .972, dataset_name, fontsize=22, weight="bold", color="#17242a", va="center")
+    figure.subplots_adjust(left=.105, right=.992, top=.927, bottom=.012, wspace=.034, hspace=.038)
+    figure.text(figure.subplotpars.left, .972, dataset_name, fontsize=22, weight="bold", color="#17242a", va="center")
     try:
         with ExitStack() as stack:
             archives = {

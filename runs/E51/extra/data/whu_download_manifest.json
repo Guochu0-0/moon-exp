@@ -16,22 +16,26 @@
     {
       "filename": "NH49E001013.tif",
       "optical_drive_id": "1Nw2KmJtuaj3bwtmp0KQipuDscYzX27gZ",
-      "sar_drive_id": "14ZEHeaMmRzfHNM4cB5BRcYUvqfHQm3tY"
+      "sar_drive_id": "14ZEHeaMmRzfHNM4cB5BRcYUvqfHQm3tY",
+      "expected_bytes": {"optical": 56267480, "sar": 22408548}
     },
     {
       "filename": "NH49E001014.tif",
       "optical_drive_id": "1GZTRjQCUMtCrf7R829b4INSdTUGm0Wqt",
-      "sar_drive_id": "1I75axZj4F_D5jMtdScOkYAIsTBEenJlE"
+      "sar_drive_id": "1I75axZj4F_D5jMtdScOkYAIsTBEenJlE",
+      "expected_bytes": {"optical": 57926358, "sar": 23102974}
     },
     {
       "filename": "NH49E001017.tif",
       "optical_drive_id": "1YQlnD0YdEz9bfKWEPbzLiOEIShKU2hpV",
-      "sar_drive_id": "1njraWgQ5yh9Wbr7fXZvg2Q4gvFkjS4x7"
+      "sar_drive_id": "1njraWgQ5yh9Wbr7fXZvg2Q4gvFkjS4x7",
+      "expected_bytes": {"optical": 54021306, "sar": 21428458}
     },
     {
       "filename": "NH49E002012.tif",
       "optical_drive_id": "1uuazEpzJiKinmnvktVMb2Sd_jHAF3Gw7",
-      "sar_drive_id": "1vSasgCR6iEyiruQu46vruTAZ27yVu_Oq"
+      "sar_drive_id": "1vSasgCR6iEyiruQu46vruTAZ27yVu_Oq",
+      "expected_bytes": {"optical": 51531216, "sar": 22309718}
     }
   ]
 }

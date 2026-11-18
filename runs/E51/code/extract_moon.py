@@ -3,7 +3,7 @@ import argparse
 import json
 import subprocess
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -19,7 +19,7 @@ RUN = Path(__file__).resolve().parents[1]
 ROOT = RUN.parents[1]
 CONFIG = "configs/baselines/redfeat.json"
 GITLINK = "third_party/ReDFeat"
-MAPPINGS = {"optical": "Optical", "sar": "SAR"}
+MODALITY_DIRS = {"optical": "Optical", "sar": "SAR"}
 SIZE = 512
 
 
@@ -48,16 +48,29 @@ def make_manifest(data):
             manifest.append({
                 "domain": "moon", "split": "val", "roi": roi, "pair": pair,
                 "window_xywh": [0, 0, SIZE, SIZE],
-                "paths": {m: str(data.path("val", pair, kind)) for m, kind in MAPPINGS.items()},
+                "paths": {m: str(data.path("val", pair, kind)) for m, kind in MODALITY_DIRS.items()},
             })
     return manifest
+
+
+def validate_manifest(data, manifest):
+    counts = Counter(item["roi"] for item in manifest)
+    if len(counts) != 4 or set(counts.values()) != {4} or len({item["pair"] for item in manifest}) != 16:
+        raise ValueError("Expected 16 unique pairs from four ROIs with four pairs each")
+    for item in manifest:
+        pair = item["pair"]
+        expected_paths = {m: str(data.path("val", pair, kind)) for m, kind in MODALITY_DIRS.items()}
+        if (item["domain"], item["split"], item["roi"], item["window_xywh"], item["paths"]) != (
+            "moon", "val", pair.split("/")[0], [0, 0, SIZE, SIZE], expected_paths
+        ):
+            raise ValueError(f"Invalid Moon Val manifest entry for {pair}")
 
 
 def extract(detector, data, mappings, manifest, directory):
     points_by_image = {}
     records = []
     for item in manifest:
-        for modality in MAPPINGS:
+        for modality in MODALITY_DIRS:
             key = item["pair"].replace("/", "__") + "__" + modality
             try:
                 image = mappings[modality](getattr(data, modality)("val", item["pair"]))
@@ -89,8 +102,8 @@ def extract(detector, data, mappings, manifest, directory):
     write_json(directory / "moon_redfeat_counts.json", records)
     failures = [row for row in records if row["status"] == "failed"]
     print(f"{len(manifest)} pairs, {len(points_by_image)} images, {len(failures)} failures", flush=True)
-    if failures:
-        raise RuntimeError(str(failures))
+    if len(points_by_image) != len(manifest) * len(MODALITY_DIRS):
+        raise RuntimeError(f"Incomplete image coverage: {failures}")
 
 
 def main():
@@ -100,9 +113,9 @@ def main():
     parser.add_argument("--smoke", action="store_true")
     args = parser.parse_args()
     config = json.loads((ROOT / CONFIG).read_text(encoding="utf-8"))
-    rec = launch.begin(RUN, "main", [sys.executable, "-m", "runs.E51.code.extract_moon", *sys.argv[1:]],
-                       args={"data": str(args.data), "weights": str(args.weights), "smoke": args.smoke},
-                       config_file=CONFIG, config=config)
+    launch.begin(RUN, "main", [sys.executable, "-m", "runs.E51.code.extract_moon", *sys.argv[1:]],
+                 args={"data": str(args.data), "weights": str(args.weights), "smoke": args.smoke},
+                 config_file=CONFIG, config=config)
     try:
         output = RUN / "extra" / "data"
         output.mkdir(parents=True, exist_ok=True)
@@ -113,10 +126,7 @@ def main():
         else:
             manifest = make_manifest(data)
             write_json(manifest_file, manifest)
-        for item in manifest:
-            for modality, kind in MAPPINGS.items():
-                if item["paths"][modality] != str(data.path("val", item["pair"], kind)):
-                    raise ValueError(f"Data root does not match the fixed manifest for {item['pair']}")
+        validate_manifest(data, manifest)
 
         repo = ROOT / GITLINK
         pinned = subprocess.check_output(["git", "rev-parse", f"HEAD:{GITLINK}"], text=True).strip()
@@ -130,7 +140,7 @@ def main():
         torch.backends.cuda.matmul.allow_tf32 = False
         torch.backends.cudnn.allow_tf32 = False
         detector = ReDFeatAdapter(repo, args.weights, **config["params"])
-        mappings = {m: inputs.get(m, config["input"][m]) for m in MAPPINGS}
+        mappings = {m: inputs.get(m, config["input"][m]) for m in MODALITY_DIRS}
         if args.smoke:
             output = output / "smoke"
             output.mkdir(exist_ok=True)
@@ -139,8 +149,7 @@ def main():
     except BaseException:
         launch.end(RUN, "main", "failed")
         raise
-    launch.end(RUN, "main", "ok", env=env_info(), weights_sha256=weights_hash,
-               repo_commit=upstream, code_commit=rec["commit"], tf32=False)
+    launch.end(RUN, "main", "ok", env=env_info(), weights_sha256=weights_hash, repo_commit=upstream, tf32=False)
 
 
 if __name__ == "__main__":

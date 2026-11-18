@@ -46,6 +46,16 @@ B0 记录了 ReDFeat 在月球上的匹配输出。ReDFeat 先从光学和 SAR �
 
 表 2。原版 SuperPoint 在同一批 64 张图上的逐图点数。四组的执行失败和零检测均为 0。
 
+**检测点可视化**
+
+从固定清单的每个月球 ROI 和每个 WHU 场景各取第一对 patch。每行是一对，同一模态的两种方法使用相同的灰度底图。叠图显示归档中的全部检测点，青色为 ReDFeat，橙色为原版 SuperPoint，右下角是该图的点数。
+
+![月球 Val 上 ReDFeat 与原版 SuperPoint 的检测点叠图](extra/moon_detections.png)
+图 1。月球 Val 四个 ROI 的光学与 SAR 检测点。 [查看月球大图](extra/moon_detections.png)
+
+![WHU-OPT-SAR 上 ReDFeat 与原版 SuperPoint 的检测点叠图](extra/whu_detections.png)
+图 2。WHU-OPT-SAR 四个场景的光学与 SAR 检测点。 [查看地球大图](extra/whu_detections.png)
+
 **讨论**
 
 两域首批样本均已有两个检测器的结果。ReDFeat 逐图点数受 4096 点上限约束，原版 SuperPoint 使用其自身的阈值和点数设置。表中只量化实际导出的点。地球源 TIFF 缺少空间参考，裁切坐标表示各图的像素位置。

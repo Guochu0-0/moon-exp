@@ -1,0 +1,38 @@
+[
+ {
+  "start": "2026-11-18 08:32:50 +0000",
+  "end": "2026-11-18 08:32:59 +0000",
+  "status": "ok",
+  "commit": "c645205827e73bd01f5d6186131177ea8aabee4c",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-275",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E51.code.plot_detections"
+  ],
+  "matplotlib": "3.10.9"
+ },
+ {
+  "start": "2026-11-18 08:35:30 +0000",
+  "end": "2026-11-18 08:35:39 +0000",
+  "status": "ok",
+  "commit": "9cb77580ec23de7c001657885ac5653e94ec5d1e",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-275",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E51.code.plot_detections"
+  ],
+  "matplotlib": "3.10.9"
+ }
+]

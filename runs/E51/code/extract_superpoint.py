@@ -24,16 +24,17 @@ WEIGHTS_SHA256 = "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c4
 
 
 class OriginalSuperPoint:
-    def __init__(self, repo):
+    def __init__(self, repo, device):
         sys.path.insert(0, str(repo))
         from lightglue import SuperPoint
 
-        self.model = SuperPoint().eval().cuda()
+        self.device = device
+        self.model = SuperPoint().eval().to(device)
         self.threshold = self.model.conf.detection_threshold
         self.num_features = self.model.conf.max_num_keypoints
 
     def detect(self, image, _modality):
-        tensor = torch.from_numpy(np.ascontiguousarray(image, dtype=np.float32))[None, None].cuda()
+        tensor = torch.from_numpy(np.ascontiguousarray(image, dtype=np.float32))[None, None].to(self.device)
         with torch.inference_mode():
             result = self.model.extract(tensor)
         return result["keypoints"][0].cpu().numpy(), result["keypoint_scores"][0].cpu().numpy()
@@ -52,6 +53,7 @@ def main():
     parser.add_argument("--moon", type=Path, required=True)
     parser.add_argument("--weights", type=Path, required=True)
     parser.add_argument("--torch-home", type=Path, required=True)
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--smoke", action="store_true")
     args = parser.parse_args()
     config = json.loads((ROOT / CONFIG).read_text(encoding="utf-8"))
@@ -59,7 +61,7 @@ def main():
     manifests = {domain: output / f"{domain}_manifest.json" for domain in ("moon", "whu")}
     launch.begin(RUN, METHOD, [sys.executable, "-m", "runs.E51.code.extract_superpoint", *sys.argv[1:]],
                  args={"moon": str(args.moon), "weights": str(args.weights), "torch_home": str(args.torch_home),
-                       "smoke": args.smoke},
+                       "smoke": args.smoke, "device": args.device},
                  config_file=CONFIG, input_manifests={domain: str(path) for domain, path in manifests.items()})
     try:
         repo = ROOT / config["repo"]
@@ -73,7 +75,7 @@ def main():
         seed_all(config["seed"])
         torch.backends.cuda.matmul.allow_tf32 = False
         torch.backends.cudnn.allow_tf32 = False
-        detector = OriginalSuperPoint(repo)
+        detector = OriginalSuperPoint(repo, args.device)
 
         moon = Data(args.moon.resolve())
         mappings = {m: inputs.get(m, config["input"][m]) for m in MODALITY_DIRS}

@@ -36,14 +36,15 @@ def result(run, method, k, step, checkpoint, expected_pairs):
         raise ValueError(f"{run.name}/{method} 缺少成功的启动记录")
     if not checkpoint.is_file() or checkpoint.stat().st_size == 0:
         raise FileNotFoundError(checkpoint)
+    training = records[0] if k == 5 else read_json(checkpoint.with_name("args.json"))
     return {
         "k": k,
         "position_reward_scales": " ".join(map(str, LEVELS[:k])),
         "end_step": step,
         "test_auc5_percent": 100 * test["summary"]["auc@5"],
         "checkpoint": f"runs/{run.name}/ckpt/{method}/{checkpoint.name}",
-        "config_file": records[0]["config_file"],
-        "training_commit": records[0]["commit"],
+        "config_file": records[0 if k == 5 else -1]["config_file"],
+        "training_commit": training["commit"],
         "test_commit": records[-1]["commit"],
         "test_prediction": f"runs/{run.name}/preds/{method}/test.jsonl",
     }

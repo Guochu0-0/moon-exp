@@ -323,7 +323,8 @@ def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch
     stopping = "" if save_on_halt is None else (f"save_on_halt={str(save_on_halt).lower()}\n"
                                                "halt_above={d_ref=100.0}\nhalt_window=3\n")
     save_every = 1 if save_on_halt is None else 2
-    cfg.write_text('[model]\nname="roma"\n[optim]\nsteps=3\nlr=0.1\nwarmup=0\nsched="const"\n'
+    steps = 3 if save_on_halt is None else 4
+    cfg.write_text(f'[model]\nname="roma"\n[optim]\nsteps={steps}\nlr=0.1\nwarmup=0\nsched="const"\n'
                    f'[run]\nworkers=0\nsave_every={save_every}\nrecord_hashes=true\ncount_updates={str(count_updates).lower()}\n{stopping}'
                    f'[pseudo]\nlabels={json.dumps(str(labels_file))}\n')
     out = tmp_path / "out"

@@ -60,11 +60,14 @@ def main():
     source = RUN / "configs" / f"{args.method}.toml"
     configs = {m: D.C.load(RUN / "configs" / f"{m}.toml") for m in D.methods(RUN)}
     cfg = configs[args.method]
-    gpu = os.environ["GPU"]
     expected_gpu_count = cfg["run"]["ddp"] if args.phase == "train" else 1
-    gpus = gpu.split(",")
-    if len(set(gpus)) != expected_gpu_count or len(gpus) != expected_gpu_count or not all(x.isdigit() for x in gpus):
-        ap.error(f"{args.phase} requires {expected_gpu_count} distinct GPU indices")
+    try:
+        gpus = [int(index) for index in os.environ.get("GPU", "").split(",")]
+        if len(gpus) != expected_gpu_count or len(set(gpus)) != expected_gpu_count or min(gpus) < 0:
+            raise ValueError("wrong number of distinct nonnegative indices")
+    except ValueError:
+        ap.error(f"{args.phase} requires {expected_gpu_count} distinct GPU indices in GPU")
+    gpu = ",".join(map(str, gpus))
     os.chdir(REPO)
     os.environ.update(CUDA_VISIBLE_DEVICES=gpu, CUDA_DEVICE_ORDER=D.ENV["CUDA_DEVICE_ORDER"])
     D.launch.require_clean(REPO)

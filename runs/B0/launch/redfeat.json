@@ -1,0 +1,140 @@
+[
+ {
+  "start": "2026-11-17 14:20:17 +0000",
+  "end": "2026-11-17 14:26:38 +0000",
+  "status": "ok",
+  "commit": "d8f8b8f506b60c87399f474120bc6507907f7419",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-269",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/baseline269/bin/python",
+   "runs/B0/code/run_specialized269.py",
+   "redfeat",
+   "--stage",
+   "infer",
+   "--split",
+   "val"
+  ],
+  "entry": "/remote-home/xufang/YGC/wt/baseline-269/runs/B0/code/run_specialized269.py",
+  "config_file": "configs/baselines/redfeat.json",
+  "config": {
+   "method": "redfeat",
+   "adapter": "redfeat",
+   "repo": "third_party/ReDFeat",
+   "weights": "repo:Pretrained/VIS_SAR.pth",
+   "params": {
+    "num_features": 4096,
+    "min_size": 256,
+    "max_size": 1000,
+    "scale_factor": 1.189207115002721,
+    "repeatability_threshold": 0.4,
+    "border": 5,
+    "ratio": 0.9
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args": {
+   "method": "redfeat",
+   "stage": "infer",
+   "split": "val",
+   "data": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights_root": "/remote-home/xufang/YGC/weights"
+  },
+  "precision": {
+   "tf32": false,
+   "float32_matmul_precision": "highest"
+  },
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "7b3282290ade",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "weights_sha256": "6294dcbd7b116c02bba4b7704ed8495ead1666a81494b14630945014ffaeea24",
+  "repo_commit": "66df80027dcb649118259a91cadbff4b50adc880",
+  "runtime_metadata_source": "runs/B0/raw/redfeat/val.meta.json"
+ },
+ {
+  "start": "2026-11-17 14:28:50 +0000",
+  "end": "2026-11-17 14:37:25 +0000",
+  "status": "ok",
+  "commit": "d8f8b8f506b60c87399f474120bc6507907f7419",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-269",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/baseline269/bin/python",
+   "runs/B0/code/run_specialized269.py",
+   "redfeat",
+   "--stage",
+   "infer",
+   "--split",
+   "test"
+  ],
+  "entry": "/remote-home/xufang/YGC/wt/baseline-269/runs/B0/code/run_specialized269.py",
+  "config_file": "configs/baselines/redfeat.json",
+  "config": {
+   "method": "redfeat",
+   "adapter": "redfeat",
+   "repo": "third_party/ReDFeat",
+   "weights": "repo:Pretrained/VIS_SAR.pth",
+   "params": {
+    "num_features": 4096,
+    "min_size": 256,
+    "max_size": 1000,
+    "scale_factor": 1.189207115002721,
+    "repeatability_threshold": 0.4,
+    "border": 5,
+    "ratio": 0.9
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "args": {
+   "method": "redfeat",
+   "stage": "infer",
+   "split": "test",
+   "data": "/remote-home/xufang/YGC/dataset/Moon",
+   "weights_root": "/remote-home/xufang/YGC/weights"
+  },
+  "precision": {
+   "tf32": false,
+   "float32_matmul_precision": "highest"
+  },
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "7b3282290ade",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "1",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "weights_sha256": "6294dcbd7b116c02bba4b7704ed8495ead1666a81494b14630945014ffaeea24",
+  "repo_commit": "66df80027dcb649118259a91cadbff4b50adc880",
+  "runtime_metadata_source": "runs/B0/raw/redfeat/test.meta.json"
+ }
+]

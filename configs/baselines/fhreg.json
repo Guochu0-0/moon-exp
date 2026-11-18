@@ -1,0 +1,1 @@
+{"method":"fhreg","adapter":"fhreg","repo":"third_party/GUSO","weights":"official/fhreg/fhreg_guso.ckpt","params":{"image_size":512,"threshold":0.1},"input":{"optical":"div255","sar":"p2p98"},"seed":0}

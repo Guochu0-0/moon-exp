@@ -1,0 +1,366 @@
+{
+ "recorded_launch_fields": {
+  "splg": [
+   {
+    "start": "2026-11-17 14:00:43 +0000",
+    "end": "2026-11-17 14:00:55 +0000",
+    "status": "ok",
+    "commit": "761319b159851766fdd439aaa9c95e52135ce286",
+    "dirty": false,
+    "allow_dirty": false,
+    "args": {
+     "stage": "selfcheck",
+     "splits": [
+      "val",
+      "test"
+     ],
+     "seed": 0,
+     "pair_timeout": 120,
+     "ransac": 3.0,
+     "raw_out": "runs/B0/raw/supplement268",
+     "effective_config": null
+    },
+    "cmd": [
+     "/opt/envs/loftr/bin/python",
+     "runs/B0/code/supplement268.py",
+     "splg",
+     "--stage",
+     "selfcheck"
+    ]
+   },
+   {
+    "start": "2026-11-17 14:04:45 +0000",
+    "end": "2026-11-17 14:08:41 +0000",
+    "status": "ok",
+    "commit": "761319b159851766fdd439aaa9c95e52135ce286",
+    "dirty": false,
+    "allow_dirty": false,
+    "args": {
+     "stage": "infer",
+     "splits": [
+      "val"
+     ],
+     "seed": 0,
+     "pair_timeout": 120,
+     "ransac": 3.0,
+     "raw_out": "runs/B0/raw/supplement268",
+     "effective_config": {
+      "superpoint": {
+       "descriptor_dim": 256,
+       "nms_radius": 4,
+       "max_num_keypoints": null,
+       "detection_threshold": 0.0005,
+       "remove_borders": 4
+      },
+      "preprocess": {
+       "resize": 1024
+      },
+      "lightglue": {
+       "name": "lightglue",
+       "input_dim": 256,
+       "descriptor_dim": 256,
+       "add_scale_ori": false,
+       "n_layers": 9,
+       "num_heads": 4,
+       "flash": true,
+       "mp": false,
+       "depth_confidence": 0.95,
+       "width_confidence": 0.99,
+       "filter_threshold": 0.1,
+       "weights": "superpoint_lightglue"
+      }
+     }
+    },
+    "cmd": [
+     "/opt/envs/loftr/bin/python",
+     "runs/B0/code/supplement268.py",
+     "splg",
+     "--split",
+     "val"
+    ]
+   },
+   {
+    "start": "2026-11-17 14:10:18 +0000",
+    "end": "2026-11-17 14:14:46 +0000",
+    "status": "ok",
+    "commit": "761319b159851766fdd439aaa9c95e52135ce286",
+    "dirty": false,
+    "allow_dirty": false,
+    "args": {
+     "stage": "infer",
+     "splits": [
+      "test"
+     ],
+     "seed": 0,
+     "pair_timeout": 120,
+     "ransac": 3.0,
+     "raw_out": "runs/B0/raw/supplement268",
+     "effective_config": {
+      "superpoint": {
+       "descriptor_dim": 256,
+       "nms_radius": 4,
+       "max_num_keypoints": null,
+       "detection_threshold": 0.0005,
+       "remove_borders": 4
+      },
+      "preprocess": {
+       "resize": 1024
+      },
+      "lightglue": {
+       "name": "lightglue",
+       "input_dim": 256,
+       "descriptor_dim": 256,
+       "add_scale_ori": false,
+       "n_layers": 9,
+       "num_heads": 4,
+       "flash": true,
+       "mp": false,
+       "depth_confidence": 0.95,
+       "width_confidence": 0.99,
+       "filter_threshold": 0.1,
+       "weights": "superpoint_lightglue"
+      }
+     }
+    },
+    "cmd": [
+     "/opt/envs/loftr/bin/python",
+     "runs/B0/code/supplement268.py",
+     "splg",
+     "--split",
+     "test"
+    ]
+   }
+  ],
+  "roma": [
+   {
+    "start": "2026-11-17 14:01:47 +0000",
+    "end": "2026-11-17 14:02:17 +0000",
+    "status": "ok",
+    "commit": "761319b159851766fdd439aaa9c95e52135ce286",
+    "dirty": false,
+    "allow_dirty": false,
+    "args": {
+     "stage": "selfcheck",
+     "splits": [
+      "val",
+      "test"
+     ],
+     "seed": 0,
+     "pair_timeout": 120,
+     "ransac": 3.0,
+     "raw_out": "runs/B0/raw/supplement268",
+     "effective_config": null
+    },
+    "cmd": [
+     "/opt/envs/loftr/bin/python",
+     "runs/B0/code/supplement268.py",
+     "roma",
+     "--stage",
+     "selfcheck"
+    ]
+   },
+   {
+    "start": "2026-11-17 14:40:01 +0000",
+    "end": "2026-11-17 14:51:07 +0000",
+    "status": "ok",
+    "commit": "9f849fdcc2de1a9737805762dd4a18153a76b5d3",
+    "dirty": false,
+    "allow_dirty": false,
+    "args": {
+     "stage": "infer",
+     "splits": [
+      "val"
+     ],
+     "seed": 0,
+     "pair_timeout": 120,
+     "ransac": 3.0,
+     "raw_out": "runs/B0/raw/supplement268",
+     "effective_config": {
+      "coarse_res": [
+       560,
+       560
+      ],
+      "upsample_res": [
+       864,
+       864
+      ],
+      "outer_resize": null,
+      "symmetric": true,
+      "sample_mode": "threshold_balanced",
+      "sample_thresh": 0.05,
+      "sample_num": 10000,
+      "input": "float tensor, official bicubic antialias resize and ImageNet normalization",
+      "use_custom_corr": false
+     }
+    },
+    "cmd": [
+     "/opt/envs/loftr/bin/python",
+     "runs/B0/code/supplement268.py",
+     "roma",
+     "--split",
+     "val"
+    ]
+   },
+   {
+    "start": "2026-11-17 14:52:26 +0000",
+    "end": "2026-11-17 15:09:09 +0000",
+    "status": "ok",
+    "commit": "9f849fdcc2de1a9737805762dd4a18153a76b5d3",
+    "dirty": false,
+    "allow_dirty": false,
+    "args": {
+     "stage": "infer",
+     "splits": [
+      "test"
+     ],
+     "seed": 0,
+     "pair_timeout": 120,
+     "ransac": 3.0,
+     "raw_out": "runs/B0/raw/supplement268",
+     "effective_config": {
+      "coarse_res": [
+       560,
+       560
+      ],
+      "upsample_res": [
+       864,
+       864
+      ],
+      "outer_resize": null,
+      "symmetric": true,
+      "sample_mode": "threshold_balanced",
+      "sample_thresh": 0.05,
+      "sample_num": 10000,
+      "input": "float tensor, official bicubic antialias resize and ImageNet normalization",
+      "use_custom_corr": false
+     }
+    },
+    "cmd": [
+     "/opt/envs/loftr/bin/python",
+     "runs/B0/code/supplement268.py",
+     "roma",
+     "--split",
+     "test"
+    ]
+   }
+  ]
+ },
+ "recorded_prediction_meta": {
+  "splg/val": {
+   "commit": "761319b159851766fdd439aaa9c95e52135ce286",
+   "dirty": false,
+   "host": "7b3282290ade",
+   "written": "2026-11-17 14:08:41 +0000"
+  },
+  "splg/test": {
+   "commit": "761319b159851766fdd439aaa9c95e52135ce286",
+   "dirty": false,
+   "host": "7b3282290ade",
+   "written": "2026-11-17 14:14:45 +0000"
+  },
+  "roma/val": {
+   "commit": "9f849fdcc2de1a9737805762dd4a18153a76b5d3",
+   "dirty": false,
+   "host": "7b3282290ade",
+   "written": "2026-11-17 14:51:07 +0000"
+  },
+  "roma/test": {
+   "commit": "9f849fdcc2de1a9737805762dd4a18153a76b5d3",
+   "dirty": false,
+   "host": "7b3282290ade",
+   "written": "2026-11-17 15:09:09 +0000"
+  }
+ },
+ "recorded_raw_meta": {
+  "splg/val": {
+   "commit": "761319b159851766fdd439aaa9c95e52135ce286",
+   "repo_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+   "started": "2026-11-17 14:05:29",
+   "finished": "2026-11-17 14:07:46",
+   "n_pairs": 652,
+   "n_errors_this_session": 0
+  },
+  "splg/test": {
+   "commit": "761319b159851766fdd439aaa9c95e52135ce286",
+   "repo_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+   "started": "2026-11-17 14:10:58",
+   "finished": "2026-11-17 14:14:04",
+   "n_pairs": 953,
+   "n_errors_this_session": 0
+  },
+  "roma/val": {
+   "commit": "9f849fdcc2de1a9737805762dd4a18153a76b5d3-dirty",
+   "repo_commit": "77f8d68803526dcddfd9b7a46bc76125bdc25f15",
+   "started": "2026-11-17 14:40:35",
+   "finished": "2026-11-17 14:49:49",
+   "n_pairs": 652,
+   "n_errors_this_session": 0
+  },
+  "roma/test": {
+   "commit": "9f849fdcc2de1a9737805762dd4a18153a76b5d3-dirty",
+   "repo_commit": "77f8d68803526dcddfd9b7a46bc76125bdc25f15",
+   "started": "2026-11-17 14:53:02",
+   "finished": "2026-11-17 15:06:45",
+   "n_pairs": 953,
+   "n_errors_this_session": 0
+  }
+ },
+ "inference_code_diff_scope": [
+  "baselines",
+  "configs",
+  "moonlib",
+  "workbench",
+  "third_party",
+  ".gitmodules",
+  "runs/B0/code/supplement268.py"
+ ],
+ "inference_code_diff_from_recorded_commits": {
+  "761319b159851766fdd439aaa9c95e52135ce286": "",
+  "9f849fdcc2de1a9737805762dd4a18153a76b5d3": ""
+ },
+ "generic_git_head_definition": {
+  "commit": "9f849fdcc2de1a9737805762dd4a18153a76b5d3",
+  "path": "baselines/match.py",
+  "source": "def git_head(path) -> str | None:\n    stamp = Path(path) / \"COMMIT\"   # 没有 .git 的部署副本（git archive 解包，见 #49）在这里记 commit\n    if stamp.exists():\n        return stamp.read_text().strip()\n    try:\n        out = subprocess.run([\"git\", \"-C\", str(path), \"rev-parse\", \"HEAD\"], capture_output=True, text=True, timeout=10)\n        # --no-optional-locks：不刷新索引、不拿 index.lock。gpfs 上 status 很慢，被超时杀掉时会留下残锁\n        dirty = subprocess.run([\"git\", \"--no-optional-locks\", \"-C\", str(path), \"status\", \"--porcelain\",\n                                \"--untracked-files=no\"], capture_output=True, text=True, timeout=60)\n        return out.stdout.strip() + (\"-dirty\" if dirty.stdout.strip() else \"\") if out.returncode == 0 else None\n    except Exception:\n        return None\n"
+ },
+ "code_check_definition": {
+  "commit": "9f849fdcc2de1a9737805762dd4a18153a76b5d3",
+  "launch": "workbench/launch.py:repo_state; _CODE excludes runs, _RUN_CODE includes run code/configs",
+  "predictions": "workbench/records.py:git_state; excludes runs"
+ },
+ "known_tracked_runtime_record": {
+  "path": "runs/B0/launch/roma.json",
+  "tracked_at_source": true,
+  "entries_at_source": 1,
+  "entries_now": 3
+ },
+ "original_per_file_status": null,
+ "limitation": "Raw git_head did not save its original per-file status listing. No historical listing is reconstructed. The recorded code checks and differing status scopes can explain the raw dirty suffix.",
+ "contemporaneous_stdout_logs": [
+  {
+   "path": "ckpt/supplement268_selfchecks.log",
+   "bytes": 1899,
+   "sha256": "851a98b1b2d4d2e54539656286362afa147e820b968b4daae27b2a19672fdfed"
+  },
+  {
+   "path": "ckpt/supplement268_splg_val.log",
+   "bytes": 448,
+   "sha256": "ab76b613815289969993d09bc02f443538dd587e09de74aab072469c3baff363"
+  },
+  {
+   "path": "ckpt/supplement268_splg_test.log",
+   "bytes": 606,
+   "sha256": "e5f7fee21e5051d1dc6970a698608043de1e04d8c6f4a7cbde28f298343cce2b"
+  },
+  {
+   "path": "ckpt/supplement268_roma_val.log",
+   "bytes": 588,
+   "sha256": "058be078885cece3b002f3843c4fdce00819da966c2f3f8bf8b46c6bc535aae6"
+  },
+  {
+   "path": "ckpt/supplement268_roma_test.log",
+   "bytes": 746,
+   "sha256": "3c643d9ff83dde0b96e13cc38774ef79b5572d47c9ab14cd67d9d6283bc0ac72"
+  }
+ ]
+}

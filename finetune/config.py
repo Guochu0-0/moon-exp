@@ -37,6 +37,9 @@ OPTIM = {
     "warmup_start": 0.1,    # warmup 起点 lr 占 lr 的比例（上游 LoFTR 为 0.1）
     "sched": "cosine",      # warmup 之后：const 恒定 / cosine 降到 lr_min·lr
     "lr_min": 0.0,
+    "lr_milestones": [],    # multistep：已完成的更新次数；之后的更新乘 lr_gamma（#267）
+    "lr_gamma": 0.1,
+    "amp_growth_interval": 2000,  # GradScaler 默认；上游 RoMa 用 1000000（#267）
     "clip": 0.0,            # 梯度范数裁剪阈值；0 = 不裁
     "accum": 1,             # 梯度累积：每 accum 步更新一次；步数、存 ckpt 仍按前向步计
     "ema": 0.0,             # 权重 EMA 的 decay；>0 时 ckpt 存 EMA 权重（#120）；0 = 不用
@@ -54,6 +57,11 @@ RUN = {
     "stop_at": 0,           # 训到第几步停下（lr 调度仍按 [optim] steps，#209）；0 = 训满
     "save_optim": False,    # ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序，#209），供 resume 用
     "resume": "",           # 从 save_optim 存下的 ckpt 接着训（相对仓库根或绝对路径，#209）；空 = 从头训
+    "resume_epochs": False, # 允许后续 epoch 续训；只用于 workers=0 且数据加载无随机增强（#267）
+    "segment_steps": 0,    # 驱动每段训练的更新步数；段间释放CUDA进程并重新等空卡（#267）
+    "count_updates": False, # AMP溢出时不计入总更新预算；仅支持 accum=1（#267）
+    "eval_gpus": [],       # 非空时用这些卡并行评独立Val存档，全部完成后才选模/评Test（#267）
+    "record_hashes": False, # 启动时记录权重、固定标签、续训存档的SHA256（#267）
     "sweep": "all",         # 驱动评哪些 ckpt（#209）：all 逐个评 Val 再按 select 补评 Test / last 只评最后一个的 Val、不评 Test
     "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训（不另存 ckpt）
     "halt_below": {},       # 同上，中位数低于阈值就停
@@ -132,6 +140,15 @@ def expand(raw: dict) -> dict:
            "optim": _fill("optim", raw.pop("optim", {}), {**OPTIM, **model.OPTIM}),
            "run": _fill("run", raw.pop("run", {}), {**RUN, **model.RUN})}
     bad = [x for x in out["run"]["split"].split("+") if x not in SPLITS]
+    o = out["optim"]
+    if o["sched"] not in ("const", "cosine", "multistep"):
+        raise ConfigError("[optim] sched 可选 const / cosine / multistep")
+    if (any(type(x) is not int or x < 0 for x in o["lr_milestones"])
+            or o["lr_milestones"] != sorted(set(o["lr_milestones"])) or not 0 < o["lr_gamma"] <= 1
+            or o["amp_growth_interval"] < 1):
+        raise ConfigError("[optim] milestones 必须是递增非负整数，gamma 在 (0,1]，amp_growth_interval ≥ 1")
+    if o["sched"] == "multistep" and (o["warmup"] or not o["lr_milestones"]):
+        raise ConfigError("[optim] multistep 要求 warmup=0 且指定 lr_milestones")
     if bad:
         raise ConfigError(f"[run] split 只能由 {SPLITS} 用 + 连接，得到 {out['run']['split']!r}")
     if out["run"]["select"] not in SELECT:
@@ -153,6 +170,18 @@ def expand(raw: dict) -> dict:
         raise ConfigError("[run] ddp 应 ≥ 0；多卡时不支持 save_optim、resume、log_update")
     if out["run"]["resume"] and not hasattr(model, "load_weights"):
         raise ConfigError(f"[run] resume 只支持装得回全部权重的模型（有 load_weights 的），{m} 不支持")
+    if out["run"]["resume_epochs"] and (out["run"]["workers"] or "aug" in raw):
+        raise ConfigError("[run] resume_epochs 要求 workers=0 且不使用 [aug]（共同增强使用独立可恢复 RNG）")
+    if out["run"]["count_updates"] and (o["accum"] != 1 or out["run"]["ddp"] or out["run"]["log_update"]):
+        raise ConfigError("[run] count_updates 要求 accum=1、单卡、不启用 log_update")
+    if out["run"]["segment_steps"] < 0 or (out["run"]["segment_steps"] and
+            (not out["run"]["save_optim"] or not out["run"]["resume_epochs"] or out["run"]["stop_at"])):
+        raise ConfigError("[run] segment_steps 非负；分段要求 save_optim、resume_epochs 且 stop_at=0")
+    gpus = out["run"]["eval_gpus"]
+    if any(type(g) is not int or g < 0 for g in gpus) or len(set(gpus)) != len(gpus):
+        raise ConfigError("[run] eval_gpus 必须是互不重复的非负GPU编号")
+    if gpus and m == "loftr" and ("cexp" in raw or "neg" in raw):
+        raise ConfigError("[run] eval_gpus 不支持 LoFTR 在线信号的共享负样本诊断，请用默认串行评测")
     for name, part in PARTS.items():      # 按登记顺序：每步也按这个顺序算损失
         if name not in raw:
             continue

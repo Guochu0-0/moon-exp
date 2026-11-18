@@ -21,6 +21,15 @@ ENTRY = "scripts/finetune/run.py"
 # 所以改了某个参数的默认值照样变红。驱动每次都写展开后的完整配置，记录里缺键本身就说明它早于这个参数。
 # 以后新增参数时在这里加一条，默认值必须等于新增之前的行为。
 ADDED = {
+    "model.bn_mode": ("eval", "#267 新增；默认保持全部 BN eval"),
+    "run.resume_epochs": (False, "#267 新增；默认不允许后续 epoch 续训"),
+    "run.segment_steps": (0, "#267 新增；默认不分段"),
+    "run.count_updates": (False, "#267 新增；默认沿用前向计步"),
+    "run.eval_gpus": ([], "#267 新增；默认沿用单卡逐存档Val评测"),
+    "run.record_hashes": (False, "#267 新增；默认不额外读取大文件计算身份"),
+    "optim.lr_milestones": ([], "#267 新增；旧调度不用 MultiStep"),
+    "optim.lr_gamma": (0.1, "#267 新增；只对 MultiStep 生效"),
+    "optim.amp_growth_interval": (2000, "#267 新增；默认与旧 GradScaler 一致"),
     "run.select": ("val_peak", "#98 新增；之前驱动一律按 Val AUC@5 峰值选 ckpt"),
     "optim.ema": (0.0, "#120 新增权重 EMA；0 = 不用"),
     "model.train_decoder": (True, "#120 新增（RoMa）；之前总是训 decoder"),

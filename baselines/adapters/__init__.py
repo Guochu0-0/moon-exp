@@ -21,11 +21,16 @@ REGISTRY = {
     "matchanything": "baselines.adapters.matchanything:MatchAnythingAdapter",
     "romatch": "baselines.adapters.romatch:RomatchAdapter",
     "splg": "baselines.adapters.splg:SPLGAdapter",
+    "splg_original": "baselines.adapters.splg_original:OriginalSPLGAdapter",
+    "roma_original": "baselines.adapters.roma_original:OriginalRoMaAdapter",
     "eloftr": "baselines.adapters.eloftr:ELoFTRAdapter",
     "edm": "baselines.adapters.edm:EDMAdapter",
     "geoformer": "baselines.adapters.geoformer:GeoFormerAdapter",
     "rmso": "baselines.adapters.rmso:RMSOAdapter",
     "comir": "baselines.adapters.comir:CoMIRAdapter",
+    "redfeat": "baselines.adapters.redfeat:ReDFeatAdapter",
+    "fhreg": "baselines.adapters.fhreg:FHRegAdapter",
+    "vmgga": "baselines.adapters.vmgga:VMGGAAdapter",
 }
 
 

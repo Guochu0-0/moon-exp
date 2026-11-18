@@ -1,0 +1,21 @@
+[
+ {
+  "start": "2026-11-17 14:41:17 +0000",
+  "end": "2026-11-17 14:41:50 +0000",
+  "status": "ok",
+  "commit": "239780f614feefb67c1226e9fc176a3f83be9a2b",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-269",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "-m",
+   "workbench",
+   "eval",
+   "B0"
+  ]
+ }
+]

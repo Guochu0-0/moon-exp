@@ -1,0 +1,9 @@
+{
+    "url":  "https://huggingface.co/api/models/stabilityai/stable-diffusion-2-1",
+    "timestamp_utc":  "2026-11-17T14:51:19.1106410Z",
+    "origin":  "client metadata-only probe",
+    "anonymous":  true,
+    "weight_download_attempted":  false,
+    "http_status":  401,
+    "error":  "远程服务器返回错误: (401) 未经授权。"
+}

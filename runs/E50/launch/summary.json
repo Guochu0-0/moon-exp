@@ -1,0 +1,36 @@
+[
+ {
+  "start": "2026-11-17 23:07:51 +0000",
+  "end": "2026-11-17 23:08:24 +0000",
+  "status": "ok",
+  "commit": "95db60b746ce23e225eae662787a06cd7cadfbba",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E50/code/summary.py"
+  ],
+  "entry": "runs/E50/code/summary.py"
+ },
+ {
+  "start": "2026-11-18 07:11:46 +0800",
+  "end": "2026-11-18 07:12:37 +0800",
+  "status": "ok",
+  "commit": "67d8b6a9f81315111b428cfe78421d063ef6acd0",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E50/code/summary.py"
+  ],
+  "entry": "runs/E50/code/summary.py"
+ }
+]

@@ -1,0 +1,87 @@
+{
+ "records": [
+  {
+   "pair": "ROI_035/patch_0",
+   "n_matches": 905,
+   "n_inliers": 888,
+   "affine": [
+    [
+     1.0000872695843108,
+     2.84353917857005e-06,
+     7.013459159861915
+    ],
+    [
+     -0.00011634020305623886,
+     0.9996726255905299,
+     -4.8522967933237755
+    ]
+   ],
+   "median_match_residual": 0.5,
+   "max_transform_error": 0.1483151585193775
+  },
+  {
+   "pair": "ROI_035/patch_1",
+   "n_matches": 957,
+   "n_inliers": 951,
+   "affine": [
+    [
+     1.0000142118963642,
+     -0.0001667296472451078,
+     7.0854686203356465
+    ],
+    [
+     -4.301399295439332e-05,
+     1.0000786473481307,
+     -4.98362987852354
+    ]
+   ],
+   "median_match_residual": 0.5,
+   "max_transform_error": 0.09290044200073684
+  },
+  {
+   "pair": "ROI_035/patch_2",
+   "n_matches": 907,
+   "n_inliers": 899,
+   "affine": [
+    [
+     0.9999050814514352,
+     -4.937732289865825e-05,
+     7.049689179134244
+    ],
+    [
+     1.0161271382546133e-05,
+     0.9995179225873552,
+     -4.856374878152952
+    ]
+   ],
+   "median_match_residual": 0.5,
+   "max_transform_error": 0.1519775975221823
+  }
+ ],
+ "effective_config": {
+  "superpoint": {
+   "descriptor_dim": 256,
+   "nms_radius": 4,
+   "max_num_keypoints": null,
+   "detection_threshold": 0.0005,
+   "remove_borders": 4
+  },
+  "preprocess": {
+   "resize": 1024
+  },
+  "lightglue": {
+   "name": "lightglue",
+   "input_dim": 256,
+   "descriptor_dim": 256,
+   "add_scale_ori": false,
+   "n_layers": 9,
+   "num_heads": 4,
+   "flash": true,
+   "mp": false,
+   "depth_confidence": 0.95,
+   "width_confidence": 0.99,
+   "filter_threshold": 0.1,
+   "weights": "superpoint_lightglue"
+  }
+ }
+}

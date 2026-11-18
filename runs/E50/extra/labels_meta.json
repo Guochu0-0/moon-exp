@@ -1,0 +1,2348 @@
+{
+ "total": 7907,
+ "kept": 7907,
+ "labels_sha256": "d90a5faf76d1fedf3fa1675b73e050f2aa1a8c61ded06aee3db28d4c99bbeee7",
+ "keep_sha256": "4ab7c9a1de8a5aa488dee9e5d739a34b35fbf9baeaad2daa879227ecb0ea831f",
+ "n_inliers_quantiles": [
+  333.0,
+  1341.5,
+  3308.0,
+  5682.5,
+  10000.0
+ ],
+ "teacher_last_sessions_sec": 8446.2,
+ "teacher_process_sec": 8490.0,
+ "teacher_unfinished_attempts": 0,
+ "teacher_attempts": [
+  {
+   "start": "2026-11-17 10:59:49 +0000",
+   "end": "2026-11-17 11:08:41 +0000",
+   "status": "ok",
+   "commit": "6d1eae3674b3bfd5dd6fccc38067ac8c32896500",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "0",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_00",
+    "--shard",
+    "0/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "0/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 10:59:49 +0000",
+   "end": "2026-11-17 11:08:41 +0000",
+   "status": "ok",
+   "commit": "6d1eae3674b3bfd5dd6fccc38067ac8c32896500",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "1",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_01",
+    "--shard",
+    "1/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "1/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:09:24 +0000",
+   "end": "2026-11-17 11:18:13 +0000",
+   "status": "ok",
+   "commit": "6d1eae3674b3bfd5dd6fccc38067ac8c32896500",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "0",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_02",
+    "--shard",
+    "2/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "2/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:09:24 +0000",
+   "end": "2026-11-17 11:18:12 +0000",
+   "status": "ok",
+   "commit": "6d1eae3674b3bfd5dd6fccc38067ac8c32896500",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "1",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_03",
+    "--shard",
+    "3/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "3/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:19:24 +0000",
+   "end": "2026-11-17 11:28:11 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "0",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_04",
+    "--shard",
+    "4/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "4/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:19:24 +0000",
+   "end": "2026-11-17 11:28:10 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "1",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_05",
+    "--shard",
+    "5/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "5/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:29:24 +0000",
+   "end": "2026-11-17 11:38:16 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "0",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_06",
+    "--shard",
+    "6/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "6/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:29:24 +0000",
+   "end": "2026-11-17 11:38:16 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "1",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_07",
+    "--shard",
+    "7/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "7/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:39:29 +0000",
+   "end": "2026-11-17 11:48:19 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "0",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_08",
+    "--shard",
+    "8/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "8/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:39:29 +0000",
+   "end": "2026-11-17 11:48:19 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "1",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_09",
+    "--shard",
+    "9/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "9/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:49:32 +0000",
+   "end": "2026-11-17 11:58:23 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "0",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_10",
+    "--shard",
+    "10/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "10/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:49:32 +0000",
+   "end": "2026-11-17 11:58:23 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "1",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_11",
+    "--shard",
+    "11/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "11/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:59:34 +0000",
+   "end": "2026-11-17 12:08:28 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "0",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_12",
+    "--shard",
+    "12/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "12/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 11:59:34 +0000",
+   "end": "2026-11-17 12:08:29 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "1",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_13",
+    "--shard",
+    "13/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "13/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 12:09:41 +0000",
+   "end": "2026-11-17 12:18:33 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "0",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_14",
+    "--shard",
+    "14/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "14/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  },
+  {
+   "start": "2026-11-17 12:09:41 +0000",
+   "end": "2026-11-17 12:18:30 +0000",
+   "status": "ok",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "dirty": false,
+   "allow_dirty": false,
+   "host": "7b3282290ade",
+   "cwd": "/remote-home/xufang/YGC/wt/scenes-267",
+   "cuda_visible_devices": "1",
+   "cuda_device_order": "PCI_BUS_ID",
+   "cmd": [
+    "/opt/envs/loftr/bin/python",
+    "-m",
+    "baselines.match",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_15",
+    "--shard",
+    "15/16",
+    "--resume"
+   ],
+   "entry": "runs/E50/code/prepare.py",
+   "config": {
+    "method": "anymatch_roma__minmax",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "args": {
+    "shard": "15/16",
+    "seed": 0,
+    "sample_num": 10000,
+    "split": "train"
+   }
+  }
+ ],
+ "fit_sec": 248.34366081794724,
+ "upstream": {
+  "anymatch": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+  "train_roma_outdoor.py": "f7304bcd1e4888772d27ba8cfdfccf67338b15f51ee5337d8d1a502d00a2ce84",
+  "romatch/losses/robust_loss.py": "4c7f8097e1a0b53a4c603350f30e537aa31d1befb5830468d56bd6b63080a4af",
+  "romatch/datasets/megadepth.py": "02cf0ebbd45c4a61fa950bd89774850c29f0db082c99cb77882993c8ff14071d",
+  "romatch/models/encoders.py": "78b3139a3429f3a9ba1534100b7e8ddec6246ecc6ca67df609fcb142613b110e"
+ },
+ "teacher_sessions": [
+  {
+   "method": "teacher_00",
+   "split": "train",
+   "config": {
+    "method": "teacher_00",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "6d1eae3674b3bfd5dd6fccc38067ac8c32896500",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_00",
+    "--shard",
+    "0/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:00:25",
+   "load_sec": 21.33,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:08:39",
+   "total_sec": 529.3,
+   "n_pairs": 495,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_01",
+   "split": "train",
+   "config": {
+    "method": "teacher_01",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "6d1eae3674b3bfd5dd6fccc38067ac8c32896500",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_01",
+    "--shard",
+    "1/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:00:25",
+   "load_sec": 21.89,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "1",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:08:40",
+   "total_sec": 529.3,
+   "n_pairs": 495,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_02",
+   "split": "train",
+   "config": {
+    "method": "teacher_02",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "6d1eae3674b3bfd5dd6fccc38067ac8c32896500",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_02",
+    "--shard",
+    "2/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:10:00",
+   "load_sec": 21.47,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:18:11",
+   "total_sec": 525.7,
+   "n_pairs": 495,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_03",
+   "split": "train",
+   "config": {
+    "method": "teacher_03",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "6d1eae3674b3bfd5dd6fccc38067ac8c32896500",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_03",
+    "--shard",
+    "3/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:10:00",
+   "load_sec": 20.89,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "1",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:18:10",
+   "total_sec": 524.9,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_04",
+   "split": "train",
+   "config": {
+    "method": "teacher_04",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_04",
+    "--shard",
+    "4/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:19:59",
+   "load_sec": 20.5,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:28:09",
+   "total_sec": 524.3,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_05",
+   "split": "train",
+   "config": {
+    "method": "teacher_05",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_05",
+    "--shard",
+    "5/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:19:59",
+   "load_sec": 21.05,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "1",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:28:09",
+   "total_sec": 524.3,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_06",
+   "split": "train",
+   "config": {
+    "method": "teacher_06",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_06",
+    "--shard",
+    "6/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:29:58",
+   "load_sec": 21.9,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:38:14",
+   "total_sec": 528.8,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_07",
+   "split": "train",
+   "config": {
+    "method": "teacher_07",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_07",
+    "--shard",
+    "7/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:29:58",
+   "load_sec": 21.46,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "1",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:38:14",
+   "total_sec": 529.0,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_08",
+   "split": "train",
+   "config": {
+    "method": "teacher_08",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_08",
+    "--shard",
+    "8/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:40:04",
+   "load_sec": 21.7,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:48:18",
+   "total_sec": 527.7,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_09",
+   "split": "train",
+   "config": {
+    "method": "teacher_09",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_09",
+    "--shard",
+    "9/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:40:04",
+   "load_sec": 21.69,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "1",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:48:18",
+   "total_sec": 527.8,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_10",
+   "split": "train",
+   "config": {
+    "method": "teacher_10",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_10",
+    "--shard",
+    "10/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:50:08",
+   "load_sec": 22.72,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:58:21",
+   "total_sec": 528.4,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_11",
+   "split": "train",
+   "config": {
+    "method": "teacher_11",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_11",
+    "--shard",
+    "11/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 11:50:08",
+   "load_sec": 21.17,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "1",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 11:58:21",
+   "total_sec": 528.3,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_12",
+   "split": "train",
+   "config": {
+    "method": "teacher_12",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_12",
+    "--shard",
+    "12/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 12:00:12",
+   "load_sec": 22.91,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 12:08:26",
+   "total_sec": 530.6,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_13",
+   "split": "train",
+   "config": {
+    "method": "teacher_13",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_13",
+    "--shard",
+    "13/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 12:00:12",
+   "load_sec": 22.51,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "1",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 12:08:27",
+   "total_sec": 531.3,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_14",
+   "split": "train",
+   "config": {
+    "method": "teacher_14",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_14",
+    "--shard",
+    "14/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 12:10:17",
+   "load_sec": 23.52,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "0",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 12:18:31",
+   "total_sec": 529.6,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  },
+  {
+   "method": "teacher_15",
+   "split": "train",
+   "config": {
+    "method": "teacher_15",
+    "adapter": "romatch",
+    "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+    "weights": "anymatch/RoMa_AnyMatch.pth",
+    "params": {
+     "long_side": 640,
+     "weights_key": "model"
+    },
+    "input": {
+     "optical": "div255",
+     "sar": "minmax"
+    },
+    "seed": 0
+   },
+   "config_path": "configs/baselines/anymatch_roma__minmax.json",
+   "weights": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+   "weights_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+   "commit": "59f7452e7e0fbaac4da48f45b10947d8de44ce7c",
+   "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+   "perturb": null,
+   "argv": [
+    "/remote-home/xufang/YGC/wt/scenes-267/baselines/match.py",
+    "configs/baselines/anymatch_roma__minmax.json",
+    "--split",
+    "train",
+    "--data",
+    "/remote-home/xufang/YGC/dataset/Moon",
+    "--weights-root",
+    "/remote-home/xufang/YGC/weights",
+    "--out",
+    "/remote-home/xufang/YGC/wt/scenes-267/runs/E50/raw",
+    "--name",
+    "teacher_15",
+    "--shard",
+    "15/16",
+    "--resume"
+   ],
+   "started": "2026-11-17 12:10:17",
+   "load_sec": 21.57,
+   "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+   "resolved_params": {
+    "model_class": "romatch.models.matcher.RegressionMatcher",
+    "coarse_resolution": [
+     560,
+     560
+    ],
+    "upsample_resolution": [
+     864,
+     864
+    ],
+    "output_resolution": [
+     864,
+     864
+    ],
+    "symmetric": true,
+    "upsample_preds": true,
+    "attenuate_cert": true,
+    "sample_mode": "threshold_balanced",
+    "sample_thresh": 0.05,
+    "sample_signature": "(matches, certainty, num=10000)",
+    "sample_num": 10000,
+    "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+    "match_batched": false,
+    "adapter_long_side": 640,
+    "adapter_swap": false,
+    "model_training": false,
+    "encoder_amp_dtype": "torch.float16",
+    "decoder_amp_dtype": "torch.float16",
+    "matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+   },
+   "env": {
+    "python": "3.10.21",
+    "numpy": "1.26.4",
+    "host": "7b3282290ade",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+    "cuda_visible_devices": "1",
+    "torch": "2.1.2+cu118",
+    "cv2": "4.11.0",
+    "kornia": "0.6.12",
+    "gpu": "Tesla V100-SXM2-32GB",
+    "cuda": "11.8"
+   },
+   "finished": "2026-11-17 12:18:28",
+   "total_sec": 526.9,
+   "n_pairs": 494,
+   "n_errors_this_session": 0
+  }
+ ]
+}

@@ -263,8 +263,10 @@ def test_optimizer_reports_amp_skip_without_changing_default_budget():
     assert opt.skipped and torch.equal(before, p)
 
 
-@pytest.mark.parametrize("count_updates,expected_calls", [(True, 4), (False, 3)])
-def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch, count_updates, expected_calls):
+@pytest.mark.parametrize("count_updates,expected_calls,save_on_halt", [(True, 4, None), (False, 3, None),
+                                                                     (False, 3, True), (False, 3, False)])
+def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch, count_updates, expected_calls,
+                                                            save_on_halt):
     import hashlib
     import types
     import torch
@@ -296,7 +298,7 @@ def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch
         def __init__(self, p, model, ds):
             self.model = model
         def __call__(self, st):
-            return self.model.p.square().sum(), {}, True
+            return self.model.p.square().sum(), {"d_ref": 101.0}, True
 
     class SkipFirst(Optim):
         calls = 0
@@ -318,17 +320,23 @@ def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch
     monkeypatch.setattr(train.PARTS["pseudo"], "Term", Term)
     monkeypatch.setattr(train, "git_head", lambda *a: "test")
     cfg = tmp_path / "main.toml"
+    stopping = "" if save_on_halt is None else (f"save_on_halt={str(save_on_halt).lower()}\n"
+                                               "halt_above={d_ref=100.0}\nhalt_window=3\n")
+    save_every = 1 if save_on_halt is None else 2
     cfg.write_text('[model]\nname="roma"\n[optim]\nsteps=3\nlr=0.1\nwarmup=0\nsched="const"\n'
-                   f'[run]\nworkers=0\nsave_every=1\nrecord_hashes=true\ncount_updates={str(count_updates).lower()}\n'
+                   f'[run]\nworkers=0\nsave_every={save_every}\nrecord_hashes=true\ncount_updates={str(count_updates).lower()}\n{stopping}'
                    f'[pseudo]\nlabels={json.dumps(str(labels_file))}\n')
     out = tmp_path / "out"
     train.main([str(cfg), "--out", str(out), "--device", "cpu"])
     logs = [json.loads(x) for x in (out / "log.jsonl").read_text().splitlines()]
     assert SkipFirst.calls == expected_calls
     assert [r["step"] for r in logs] == [1, 2, 3]
-    assert (out / "ckpt_3.pt").exists()
-    final = torch.load(out / "ckpt_3.pt")["model"]
-    assert final.item() < (0.75 if count_updates else 0.85)
+    assert (out / "ckpt_3.pt").exists() is (save_on_halt is not False)
+    if save_on_halt is not False:
+        final = torch.load(out / "ckpt_3.pt")["model"]
+        assert final.item() < (0.75 if count_updates else 0.85)
+    if save_on_halt is not None:
+        assert json.loads((out / "halt.json").read_text())["step"] == 3
     assert (out / "overflow.jsonl").exists() == count_updates
     hashes = json.loads((out / "args.json").read_text())["source_hashes"]
     assert hashes["weights"]["sha256"] == hashlib.sha256(b"published weights").hexdigest()
@@ -2406,8 +2414,9 @@ def test_config_rloo_screen(tmp_path):
     assert d["rloo"]["screen"] == 0.0                                       # 默认不筛，同旧行为
     c = C.load(_write(tmp_path, "c", head + '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 0.35\n'))
     assert c["rloo"]["screen"] == 0.35
-    for bad in ('[rloo]\nreward = "ref"\nscreen = 0.35',                    # 参照取当前模型：没有参照模型可先推理
-                '[rloo]\nreward = "r1"\nref_ema = 0.996\nscreen = 0.35',
+    c = C.load(_write(tmp_path, "c", head + '[rloo]\nreward = "ref"\nscreen = 0.35\n'))
+    assert c["rloo"]["screen"] == 0.35 and c["rloo"]["ref_ema"] == 0.0
+    for bad in ('[rloo]\nreward = "r1"\nref_ema = 0.996\nscreen = 0.35',
                 '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 1.0',
                 '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = -0.1',
                 '[optim]\nbatch = 2\n[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 0.35',
@@ -2416,12 +2425,13 @@ def test_config_rloo_screen(tmp_path):
             C.load(_write(tmp_path, "b", head + bad + "\n"))
 
 
-def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypatch):
+@pytest.mark.parametrize("ref_ema, expected_fits", [(0.0, 3), (0.99, 4)])
+def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypatch, ref_ema, expected_fits):
     """screen：内点比例 = 参照拟合的内点数 ÷ num，拟合失败为 0；低于门槛的不学。学的那对在 __call__ 里沿用 screen 时的参照
     仿射（不再拟合参照，只拟合当前模型那一次），日志记这一步取了几对、所学对的比例与被丢对的比例均值；没经 screen 的对报错。"""
     import torch
     from finetune.parts import rloo as R
-    term, st, w = _fake_term(monkeypatch, ref_ema=0.99, num=20, screen=0.6)
+    term, st, w = _fake_term(monkeypatch, ref_ema=ref_ema, num=20, screen=0.6)
     I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
     far = np.array([[1.0, 0, 500.0], [0, 1.0, 0]])                         # 学的那对的参照：离恒等仿射 500 px
     queue, calls = [(I, 10), (None, 0), (far, 15)], []
@@ -2437,7 +2447,7 @@ def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypa
     st.batch = {"pair": ["c"]}
     loss, stats, _ = term(st)
     loss.backward()
-    assert len(calls) == 4                                                  # 3 次参照（screen）+ 1 次当前模型
+    assert len(calls) == expected_fits                                       # 3 次参照；EMA 时额外拟合当前模型供诊断
     assert (stats["scr_drawn"], stats["scr_ratio"], stats["scr_disc"]) == (3.0, 0.75, 0.25)
     d_far = stats["d_ref"]
     assert term.screen({"pair": ["d"], "image0": img, "image1": img}, "cpu")[0]   # 之后 (I, 20)：比例 1

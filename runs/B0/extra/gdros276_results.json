@@ -1,0 +1,54 @@
+{
+  "whu": {
+    "val": {
+      "methods": {
+        "gdros_whu_lsr": {
+          "status": "unmeasured",
+          "reason": "Checkpoint unavailable at /remote-home/xufang/YGC/weights/gdros/GDROS-whu-opt-sar512.pth"
+        },
+        "gdros_whu_ransac": {
+          "status": "unmeasured",
+          "reason": "Checkpoint unavailable at /remote-home/xufang/YGC/weights/gdros/GDROS-whu-opt-sar512.pth"
+        }
+      }
+    },
+    "test": {
+      "methods": {
+        "gdros_whu_lsr": {
+          "status": "unmeasured",
+          "reason": "Checkpoint unavailable at /remote-home/xufang/YGC/weights/gdros/GDROS-whu-opt-sar512.pth"
+        },
+        "gdros_whu_ransac": {
+          "status": "unmeasured",
+          "reason": "Checkpoint unavailable at /remote-home/xufang/YGC/weights/gdros/GDROS-whu-opt-sar512.pth"
+        }
+      }
+    }
+  },
+  "os": {
+    "val": {
+      "methods": {
+        "gdros_os_lsr": {
+          "status": "unmeasured",
+          "reason": "Checkpoint unavailable at /remote-home/xufang/YGC/weights/gdros/GDROS-os512.pth"
+        },
+        "gdros_os_ransac": {
+          "status": "unmeasured",
+          "reason": "Checkpoint unavailable at /remote-home/xufang/YGC/weights/gdros/GDROS-os512.pth"
+        }
+      }
+    },
+    "test": {
+      "methods": {
+        "gdros_os_lsr": {
+          "status": "unmeasured",
+          "reason": "Checkpoint unavailable at /remote-home/xufang/YGC/weights/gdros/GDROS-os512.pth"
+        },
+        "gdros_os_ransac": {
+          "status": "unmeasured",
+          "reason": "Checkpoint unavailable at /remote-home/xufang/YGC/weights/gdros/GDROS-os512.pth"
+        }
+      }
+    }
+  }
+}

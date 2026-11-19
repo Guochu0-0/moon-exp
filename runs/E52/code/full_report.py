@@ -12,7 +12,7 @@ from matplotlib.lines import Line2D
 import numpy as np
 from scipy.io import loadmat
 
-from .repeatability import RADII_PX, TEST_COUNTS, evaluate_geometry
+from .repeatability import RADII_PX, RUN, TEST_COUNTS, evaluate_geometry
 
 BUDGETS = (300, 1024)
 REPORT_METHODS = ("rift2_portable", "superpoint_original", "redfeat")
@@ -180,30 +180,38 @@ def plots(output, summary, rows, domains, methods):
 
 
 def plot_datasets_together(output, summary, methods):
-    fig, axes = plt.subplots(1, len(BUDGETS), figsize=(8.4, 3.1), sharex=True, sharey=True,
+    fig, axes = plt.subplots(1, len(BUDGETS), figsize=(9.3, 3.9), sharex=True, sharey=True,
                              layout="constrained")
-    styles = {"moon": ("#315b9a", "o", -0.16), "whu": ("#b94d26", "D", 0.16)}
-    groups = np.arange(len(methods))
-    rows = {(row["dataset"], row["top_k"], row["method"]): row
-            for row in summary if row["radius_px"] == 3}
+    colors = dict(zip(DISPLAY, plt.get_cmap("tab10").colors))
+    styles = {"moon": ("-", "o"), "whu": ("--", "s")}
+    rows = {(row["dataset"], row["top_k"], row["method"], row["radius_px"]): row for row in summary}
+    random = json.loads((RUN / "extra" / "e51_earth_checks.json").read_text(encoding="utf-8"))
+    random_radius = 3
+    random_index = random["radii_px"].index(random_radius)
     for ax, budget in zip(axes, BUDGETS):
-        for domain, (color, marker, offset) in styles.items():
-            series = [rows[domain, budget, method] for method in methods]
-            low, mean, high = ([100 * row[key] for row in series] for key in ("ci95_low", "mean", "ci95_high"))
-            y = groups + offset
-            ax.hlines(y, low, high, color=color, linewidth=2)
-            ax.scatter(mean, y, color=color, marker=marker, zorder=3, s=29)
+        for method in methods:
+            for domain, (linestyle, marker) in styles.items():
+                series = [rows[domain, budget, method, radius]["mean"] * 100 for radius in RADII_PX]
+                ax.plot(RADII_PX, series, color=colors[method], linestyle=linestyle,
+                        marker=marker, markersize=4, linewidth=1.8)
+        reference = random["uniform_means"][str(budget)][random_index] * 100
+        ax.axhline(reference, color="0.38", linestyle=":", linewidth=1.5, zorder=1)
+        ax.annotate(f"{reference:.2f}%", (0.98, reference), xycoords=ax.get_yaxis_transform(),
+                    xytext=(0, 3), textcoords="offset points", ha="right", color="0.3", fontsize=9)
         ax.set_title(f"Top {budget:,} points per image", loc="left")
-        ax.set_yticks(groups, [DISPLAY[method] for method in methods])
-        ax.set_xlabel("Mean repeatability at 3 px (%)")
-        ax.grid(axis="x", alpha=0.2)
-    upper = max(row["ci95_high"] for row in rows.values()) * 100
-    axes[0].set_xlim(0, np.ceil(upper / 2) * 2)
-    axes[0].invert_yaxis()
-    handles = [Line2D([], [], color=color, marker=marker, linewidth=2,
-                      label=f"{DATASETS[domain]} (n={rows[domain, BUDGETS[0], methods[0]]['joint_scored_pairs']:,})")
-               for domain, (color, marker, _) in styles.items()]
-    fig.legend(handles=handles, loc="outside lower center", ncol=2, frameon=False)
+        ax.set_xticks(RADII_PX)
+        ax.set_xlabel("Tolerance on SAR grid (px)")
+        ax.grid(axis="y", alpha=0.2)
+    axes[0].set_ylim(bottom=0)
+    axes[0].set_ylabel("Mean repeatability (%)")
+    method_handles = [Line2D([], [], color=colors[method], label=DISPLAY[method]) for method in methods]
+    context_handles = [Line2D([], [], color="0.25", linestyle=linestyle, marker=marker,
+                              label=f"{DATASETS[domain]} (n={rows[domain, BUDGETS[0], methods[0], random_radius]['joint_scored_pairs']:,})")
+                       for domain, (linestyle, marker) in styles.items()]
+    context_handles.append(Line2D([], [], color="0.38", linestyle=":", label=f"Uniform random at {random_radius} px"))
+    handles = [handle for pair in zip(method_handles, context_handles) for handle in pair]
+    handles.extend(method_handles[len(context_handles):] + context_handles[len(method_handles):])
+    fig.legend(handles=handles, loc="outside lower center", ncol=max(3, len(methods)), frameon=False)
     fig.savefig(output / "moon_whu_comparison.png", dpi=220)
     fig.savefig(output / "moon_whu_comparison.pdf")
     plt.close(fig)

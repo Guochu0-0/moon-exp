@@ -1,17 +1,20 @@
 function rift2_detect_batch(in_dir, out_dir)
 % RIFT2 FeatureDetection, returning the detector's FAST Metric before orientation.
-maxNumCompThreads(2);
+n_threads = maxNumCompThreads(2);
+restore_threads = onCleanup(@() maxNumCompThreads(n_threads)); %#ok<NASGU>
 if ~exist(out_dir, 'dir'), mkdir(out_dir); end
 files = dir(fullfile(in_dir, '*.mat'));
+[~, order] = sort({files.name}); files = files(order);
 for i = 1:numel(files)
     out = fullfile(out_dir, files(i).name);
     if exist(out, 'file'), continue; end
     S = load(fullfile(in_dir, files(i).name));
     optical = detect(S.optical);
     sar = detect(S.sar);
-    temporary = [out '.tmp'];
+    temporary = [out '.tmp.mat'];
     save(temporary, 'optical', 'sar', '-mat');
     movefile(temporary, out);
+    if mod(i, 25) == 0, fprintf('RIFT2 %d/%d\n', i, numel(files)); end
 end
 end
 

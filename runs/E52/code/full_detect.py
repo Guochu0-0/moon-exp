@@ -78,7 +78,7 @@ def detector(args, cfg):
         if info["weights_sha256"] != WEIGHTS_SHA256:
             raise ValueError(f"Unexpected SuperPoint weights: {path}")
     if method == "redfeat":
-        path = args.weights / cfg["weights"]
+        path = args.weights / "official" / "redfeat" / "VIS_SAR.pth"
         info["weights_sha256"] = sha256(path)
         if info["weights_sha256"] != RED_SHA256:
             raise ValueError(f"Unexpected ReDFeat weights: {path}")

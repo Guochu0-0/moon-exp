@@ -15,6 +15,7 @@ E51_DATA = RUN.parent / "E51" / "extra" / "data"
 TOP_K = 300
 RADII_PX = (1, 3, 5)
 METHODS = ("superpoint_original", "spsg", "minima_splg", "redfeat", "rift2", "comir")
+TEST_COUNTS = {"moon": (1130, 953), "whu": (1760, 1760)}
 
 
 def affine(source, target):

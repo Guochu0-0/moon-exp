@@ -19,7 +19,7 @@ from runs.E51.code.extract_moon import ROOT, SIZE, write_json
 from runs.E51.code.extract_superpoint import OriginalSuperPoint, WEIGHTS_SHA256
 from workbench import launch
 from .full_data import DOMAINS, MODALITIES, image_reader, moon_pairs, whu_pairs
-from .repeatability import METHODS, RUN
+from .repeatability import METHODS, RUN, TEST_COUNTS
 from .texture_detect import RED_SHA256, verified_commit
 
 def config(method):
@@ -163,6 +163,9 @@ def run(args):
     method_dir = directory / output_method
     method_dir.mkdir(parents=True, exist_ok=True)
     rows = list(moon_pairs(args.dataset) if args.domain == "moon" else whu_pairs(args.dataset))
+    counts = len(rows), sum(row["reference"] is not None for row in rows)
+    if counts != TEST_COUNTS[args.domain]:
+        raise ValueError(f"Unexpected image-pair and reference counts for {args.domain}: {counts}")
     if args.limit:
         rows = rows[:args.limit]
     manifest = directory / "manifest.json"

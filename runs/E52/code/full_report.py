@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.io import loadmat
 
-from .repeatability import METHODS, RADII_PX, evaluate_geometry
+from .repeatability import METHODS, RADII_PX, TEST_COUNTS, evaluate_geometry
 
 BUDGETS = (300, 1024)
 DISPLAY = {
@@ -168,6 +168,11 @@ def main():
     parser.add_argument("--allow-partial", action="store_true", help="Report jointly scored pairs of an interim batch")
     args = parser.parse_args()
     rows = [row for domain in args.datasets for row in result_rows(args.detections, domain, args.methods)]
+    for domain in args.datasets:
+        subset = [row for row in rows if row["dataset"] == domain and row["method"] == args.methods[0]
+                  and row["top_k"] == BUDGETS[0]]
+        if len(subset) != TEST_COUNTS[domain][0] and not args.allow_partial:
+            raise ValueError(f"Incomplete {domain} manifest: {len(subset)} test pairs")
     missing = [row for row in rows if row["status"] == "missing_detection"]
     if missing and not args.allow_partial:
         first = missing[0]

@@ -20,9 +20,9 @@ def nearest_distances(optical, sar, optical_tree, sar_tree, shift):
     return np.concatenate((sar_tree.query(optical + shift)[0], optical_tree.query(sar - shift)[0]))
 
 
-def rates(optical, sar):
+def rates(optical, sar, radii=RADII):
     distances = nearest_distances(optical, sar, cKDTree(optical), cKDTree(sar), 0)
-    return [float(np.mean(distances <= radius)) for radius in RADII]
+    return [float(np.mean(distances <= radius)) for radius in radii]
 
 
 def heldout_translation(optical, sar):
@@ -69,6 +69,16 @@ def scores_for_pair(archive, pair):
     }
 
 
+def uniform_reference(budgets, radii):
+    """Mean repeatability of independent uniform points on the full patch."""
+    rng = np.random.default_rng(SEED)
+    return {
+        budget: np.mean([rates(*rng.uniform(0, SIZE, size=(2, budget, 2)), radii=radii)
+                         for _ in range(TRIALS)], axis=0).tolist()
+        for budget in budgets
+    }
+
+
 def main():
     groups = {}
     for group in ("whu", "whu_urban"):
@@ -77,12 +87,7 @@ def main():
             raise ValueError(f"{group} must contain {SIZE} × {SIZE} patches")
         with np.load(E51_DATA / f"{group}_redfeat.npz") as archive:
             groups[group] = [scores_for_pair(archive, row["pair"]) for row in manifest]
-    rng = np.random.default_rng(SEED)
-    random_means = {
-        budget: np.mean([rates(*rng.uniform(0, SIZE, size=(2, budget, 2)))
-                         for _ in range(TRIALS)], axis=0).tolist()
-        for budget in BUDGETS
-    }
+    random_means = uniform_reference(BUDGETS, RADII)
     output = {"radii_px": RADII, "uniform_trials": TRIALS, "uniform_seed": SEED,
               "uniform_means": random_means, "groups": groups}
     (RUN / "extra" / "e51_earth_checks.json").write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")

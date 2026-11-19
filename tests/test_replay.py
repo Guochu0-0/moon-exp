@@ -21,6 +21,9 @@ ENTRY = "scripts/finetune/run.py"
 # 所以改了某个参数的默认值照样变红。驱动每次都写展开后的完整配置，记录里缺键本身就说明它早于这个参数。
 # 以后新增参数时在这里加一条，默认值必须等于新增之前的行为。
 ADDED = {
+    "rloo.fine_policy_levels": (None, "#284 新增；默认给 levels 中每一级施加位置奖励"),
+    "run.rolling_checkpoint": (False, "#284 新增；默认保留每步指定的独立存档"),
+    "run.save_on_halt": (False, "#284 新增；默认停训时不额外存档"),
     "model.bn_mode": ("eval", "#267 新增；默认保持全部 BN eval"),
     "run.resume_epochs": (False, "#267 新增；默认不允许后续 epoch 续训"),
     "run.segment_steps": (0, "#267 新增；默认不分段"),

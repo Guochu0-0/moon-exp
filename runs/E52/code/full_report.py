@@ -195,9 +195,10 @@ def plot_datasets_together(output, summary, methods):
             ax.scatter(mean, y, color=color, marker=marker, zorder=3, s=29)
         ax.set_title(f"Top {budget:,} points per image", loc="left")
         ax.set_yticks(groups, [DISPLAY[method] for method in methods])
-        ax.set_xlim(left=0)
         ax.set_xlabel("Mean repeatability at 3 px (%)")
         ax.grid(axis="x", alpha=0.2)
+    upper = max(row["ci95_high"] for row in rows.values()) * 100
+    axes[0].set_xlim(0, np.ceil(upper / 2) * 2)
     axes[0].invert_yaxis()
     handles = [Line2D([], [], color=color, marker=marker, linewidth=2,
                       label=f"{DATASETS[domain]} (n={rows[domain, BUDGETS[0], methods[0]]['joint_scored_pairs']:,})")

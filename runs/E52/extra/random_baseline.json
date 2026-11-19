@@ -1,0 +1,143 @@
+{
+  "seed": 20261119,
+  "trials_per_pair": 5000,
+  "results": [
+    {
+      "pair": "ROI_035/patch_26",
+      "thresholds": [
+        {
+          "radius_px": 1,
+          "superpoint": 0.0,
+          "uniform_mean": 0.0036546666666667257,
+          "uniform_central_95_percent": [
+            0.0,
+            0.013333333333333334
+          ],
+          "uniform_trials_at_or_above_superpoint": 5000
+        },
+        {
+          "radius_px": 3,
+          "superpoint": 0.04666666666666667,
+          "uniform_mean": 0.03218133333333321,
+          "uniform_central_95_percent": [
+            0.013333333333333334,
+            0.05333333333333334
+          ],
+          "uniform_trials_at_or_above_superpoint": 474
+        },
+        {
+          "radius_px": 5,
+          "superpoint": 0.135,
+          "uniform_mean": 0.08666633333333155,
+          "uniform_central_95_percent": [
+            0.056666666666666664,
+            0.12
+          ],
+          "uniform_trials_at_or_above_superpoint": 9
+        }
+      ]
+    },
+    {
+      "pair": "ROI_070/patch_21",
+      "thresholds": [
+        {
+          "radius_px": 1,
+          "superpoint": 0.01,
+          "uniform_mean": 0.0036996666666667265,
+          "uniform_central_95_percent": [
+            0.0,
+            0.013333333333333334
+          ],
+          "uniform_trials_at_or_above_superpoint": 530
+        },
+        {
+          "radius_px": 3,
+          "superpoint": 0.04,
+          "uniform_mean": 0.03245433333333316,
+          "uniform_central_95_percent": [
+            0.013333333333333334,
+            0.05333333333333334
+          ],
+          "uniform_trials_at_or_above_superpoint": 1302
+        },
+        {
+          "radius_px": 5,
+          "superpoint": 0.135,
+          "uniform_mean": 0.08725033333333167,
+          "uniform_central_95_percent": [
+            0.056666666666666664,
+            0.12166666666666667
+          ],
+          "uniform_trials_at_or_above_superpoint": 14
+        }
+      ]
+    },
+    {
+      "pair": "ROI_071/patch_5",
+      "thresholds": [
+        {
+          "radius_px": 1,
+          "superpoint": 0.006666666666666667,
+          "uniform_mean": 0.0036893333333333986,
+          "uniform_central_95_percent": [
+            0.0,
+            0.011666666666666667
+          ],
+          "uniform_trials_at_or_above_superpoint": 1507
+        },
+        {
+          "radius_px": 3,
+          "superpoint": 0.051666666666666666,
+          "uniform_mean": 0.032980999999999795,
+          "uniform_central_95_percent": [
+            0.013333333333333334,
+            0.055
+          ],
+          "uniform_trials_at_or_above_superpoint": 232
+        },
+        {
+          "radius_px": 5,
+          "superpoint": 0.12,
+          "uniform_mean": 0.08897199999999883,
+          "uniform_central_95_percent": [
+            0.058333333333333334,
+            0.12166666666666667
+          ],
+          "uniform_trials_at_or_above_superpoint": 173
+        }
+      ]
+    }
+  ],
+  "mean_across_pairs": [
+    {
+      "radius_px": 1,
+      "superpoint": 0.005555555555555556,
+      "uniform_mean": 0.003681222222222442,
+      "uniform_central_95_percent": [
+        0.0,
+        0.007777777777777778
+      ],
+      "uniform_trials_at_or_above_superpoint": 1202
+    },
+    {
+      "radius_px": 3,
+      "superpoint": 0.04611111111111111,
+      "uniform_mean": 0.032538888888888826,
+      "uniform_central_95_percent": [
+        0.021652777777777785,
+        0.044444444444444446
+      ],
+      "uniform_trials_at_or_above_superpoint": 70
+    },
+    {
+      "radius_px": 5,
+      "superpoint": 0.13,
+      "uniform_mean": 0.08762955555555534,
+      "uniform_central_95_percent": [
+        0.07,
+        0.10611111111111111
+      ],
+      "uniform_trials_at_or_above_superpoint": 0
+    }
+  ]
+}

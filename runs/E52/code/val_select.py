@@ -19,7 +19,7 @@ from workbench.evaluate import evaluate_preds
 from workbench.records import Run
 
 ENTRY = "runs/E52/code/val_select.py"
-GRID = (*range(1000, 8000, 1000), 7907)
+GRID = (*range(250, 7907, 250), 7907)
 METHODS = ("no_screen", "frozen_dino")
 
 

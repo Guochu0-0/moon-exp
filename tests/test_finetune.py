@@ -2228,6 +2228,24 @@ def test_rloo_term_fine_policy_levels_keep_all_certainty_losses(monkeypatch):
             assert stats["l_fine"] == pytest.approx(0.01 * sum(stats[f"l_cert_{s}"] for s in levels), abs=1e-5)
 
 
+def test_rloo_term_k3_position_gradients_without_certainty_losses(monkeypatch):
+    import torch
+
+    torch.manual_seed(3)
+    levels = [16, 8, 4, 2, 1]
+    active_levels = levels[:3]
+    term, st, coarse, dec = _fake_term_fine(
+        monkeypatch, levels=levels, fine_policy_levels=active_levels, cert_bce=0.0, fine_cert_bce=0.0,
+    )
+    loss, stats, _ = term(st)
+    loss.backward()
+    assert coarse.grad.abs() > 0
+    assert {s for s in levels if f"rew_{s}" in stats} == set(active_levels)
+    assert not any(key == "l_cert" or key.startswith("l_cert_") for key in stats)
+    assert all(_fine_grad(dec, s) > 0 for s in active_levels)
+    assert all(q.grad is None for s in levels[3:] for q in dec.conv_refiner[str(s)].parameters())
+
+
 def test_config_rloo_fine_policy_levels(tmp_path):
     from finetune import config as C
 
@@ -2235,11 +2253,13 @@ def test_config_rloo_fine_policy_levels(tmp_path):
     fine = 'fine_mode = "local"\nfine_cert_bce = 0.01\n'
     good = C.load(_write(tmp_path, "ok", base + fine + 'fine_policy_levels = []\n'))
     assert good["rloo"]["fine_policy_levels"] == []
+    zero_bce = C.load(_write(tmp_path, "no_bce", base + 'fine_mode = "local"\nfine_policy_levels = [16]\n'))
+    assert zero_bce["rloo"]["fine_policy_levels"] == [16]
+    assert zero_bce["rloo"]["fine_cert_bce"] == 0.0
     for text in (
         fine + 'fine_policy_levels = [16, 16]',
         fine + 'fine_policy_levels = [4]',
         fine + 'fine_policy_levels = 16',
-        'fine_mode = "local"\nfine_policy_levels = []',
         'fine_policy_levels = []',
     ):
         with pytest.raises(C.ConfigError, match="fine_policy_levels"):

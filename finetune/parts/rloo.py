@@ -178,7 +178,7 @@ PARAMS = {"reward": "r1",   # r1 | ncc | rand | ref
           "shape": "ripe",  # ref：奖励随距离的形式 ripe | clip | gauss（#191）| cauchy（#197）
           "fine_shape": "", # 细化各级的奖励形式（#197）；空 = 同 shape
           "levels": [],     # 细化中加高斯噪声的级（16、8、4、2、1 的子集，#192、#197）；空 = 细化不加噪
-          "fine_policy_levels": None,  # #284：grad/local 的位置奖励子集，置信度 BCE 仍覆盖 levels
+          "fine_policy_levels": None,  # #284：grad/local 的位置奖励子集；若启用置信度 BCE，仍覆盖 levels
           "k": 0.5,         # 加噪级的 σ = k × 这一级的尺度（原网格 px，#192）
           "frozen_ref": False,  # ref：参照取训练开始时的模型、全程冻结（#202）；False = 当前模型
           "fine_mode": "chain",  # 细化训练方式（#201）：chain（整链抽签）| grad（精确梯度）| local（逐级局部抽签）
@@ -261,9 +261,9 @@ def check(cfg):
                 or any(type(s) is not int or s not in lv for s in policy_levels)
                 or len(set(policy_levels)) != len(policy_levels)):
             raise ConfigError("[rloo] fine_policy_levels 应是 levels 的无重复子集")
-        if (p["fine_mode"] == "chain" or not p["fine_cert_bce"]
+        if (p["fine_mode"] == "chain"
                 or any(p[k] for k in ("occ", "eqv", "cyc", "selfpair", "cos_every"))):
-            raise ConfigError("[rloo] fine_policy_levels 只配 grad / local 和启用的 fine_cert_bce，"
+            raise ConfigError("[rloo] fine_policy_levels 只配 grad / local，"
                               "不与额外细化奖励或 cos_every 同用")
     if p["frozen_ref"] and p["reward"] != "ref":
         raise ConfigError("[rloo] frozen_ref 只配 reward = 'ref'")

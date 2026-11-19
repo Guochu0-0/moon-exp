@@ -1,0 +1,50 @@
+[
+ {
+  "start": "2026-11-19 15:49:18 +0800",
+  "end": "2026-11-19 15:51:54 +0800",
+  "status": "ok",
+  "commit": "4f4e1a1ea94ee7d999c3b115cd259d15c2c3d90f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-full-repeatability",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_detect",
+   "whu",
+   "superpoint_original",
+   "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
+   "runs/E52/raw/full",
+   "--weights",
+   "/remote-home/xufang/YGC/weights"
+  ],
+  "args": {
+   "domain": "whu",
+   "method": "superpoint_original",
+   "dataset": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
+   "output": "runs/E52/raw/full",
+   "weights": "/remote-home/xufang/YGC/weights",
+   "rift2_backend": "matlab",
+   "device": "cuda",
+   "limit": 0,
+   "workers": 1
+  },
+  "config": {
+   "method": "splg",
+   "adapter": "splg_original",
+   "repo": "third_party/LightGlue",
+   "weights": null,
+   "params": {},
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "upstream_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+  "weights_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e"
+ }
+]

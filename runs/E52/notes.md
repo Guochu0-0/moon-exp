@@ -102,3 +102,42 @@
 可视化每个 ROI 在入选样例中的最低分和最高分 patch，共用光学显示灰度范围。低纹理检测叠图只画实际进入几何评测的点。 [月球纹理对照](extra/texture_comparison/moon_texture_examples.jpg) · [月球低纹理检测叠图](extra/texture_comparison/moon_low_texture_detections.jpg) · [高于随机的逐对分布](extra/texture_comparison/texture_repeatability.png) · [E51 地球城市叠图](../E51/notes.md)
 
 复现代码按顺序为 `runs.E52.code.texture_sample`、`runs.E52.code.texture_detect`、`runs.E52.code.texture_evaluate` 和 `runs.E52.code.texture_plots`，各模块通过 `--help` 列出输入参数。 [原始逐对结果](extra/texture_comparison/texture_evaluation.json)
+
+## 完整测试集上的六种稀疏关键点检测配置
+
+**方法**
+
+*测试集。* 月球使用官方 Test 的 7 个 ROI、1,130 对 patch，其中 953 对有人工评测真值点。WHU-OPT-SAR 使用作者发布的 20 景 Test。两种模态共 40 个 TIFF（1,528,152,296 字节），已按同名配对入库并校验。每景在原始像素网格上以 512 像素为边长和步长切片，最后一列与一行贴到图像边缘。边缘窗口与相邻窗口部分重叠，每景固定 88 对，共 1,760 对，保留全部像素。 [WHU 官方划分](https://github.com/AmberHen/WHU-OPT-SAR-dataset/blob/main/The%20division%20of%20the%20dataset.txt) · [下载与校验清单](extra/whu_test_download.json)
+
+*检测配置。* 取各流程在匹配前输出的单图关键点。SuperPoint 使用 B0 中原版 LightGlue、SuperGlue 和 MINIMA LightGlue 的三套检测配置，保持各自的缩放、阈值和点数上限。ReDFeat 使用 VIS-SAR 权重。CoMIR 在 Zurich 模型输出的第 0 通道上执行 mpicbg SIFT，按 SIFT 尺度从大到小取点。RIFT2 使用 CPU 实现，从原始相位一致性最大矩图上用浮点 FAST-9 检测并按响应排序。MATLAB 会话用于 HiMO，RIFT2 的两个后端尚未交叉验证。输入映射与前面的 E52 对照一致。 [检测代码](code/full_detect.py) · [RIFT2 CPU 实现](code/rift2_portable.py)
+
+*几何与统计。* 月球用每对人工点拟合光学到 SAR 的参考仿射，另存留一误差。没有人工真值的 177 对执行检测并记录点数。WHU 用发布影像的同像素位置作参考。两侧先筛共同可见区，再独立保留至多 300 或 1,024 个点。沿用 E52 的双向最近邻命中占比，在 SAR 网格上计算 1、3、5 px 容差，两侧都无点时计为 0。同一数据集各方法用同一批可评分样本。均值以 patch 对为单位，95% 区间用 ROI 或场景为单位做 5,000 次 bootstrap 重采样。 [评测代码](code/full_report.py)
+
+**结果**
+
+*每侧最多 1,024 点时，月球和 WHU-OPT-SAR 的最高均值来自不同的检测配置。* 在 3 px 容差下，月球的 RIFT2 CPU 实现为 13.85%（95% 区间 13.48%–14.11%），WHU-OPT-SAR 的 ReDFeat 为 16.89%（14.75%–19.08%）。缩到每侧 300 点后，月球的 RIFT2 与原版 LightGlue、MINIMA LightGlue 两套 SuperPoint 配置都在 5% 左右。WHU 的 ReDFeat 仍有最高均值，为 10.10%。
+
+| 检测配置 | 月球 300 点 | 月球 1,024 点 | WHU 300 点 | WHU 1,024 点 |
+| --- | ---: | ---: | ---: | ---: |
+| 原版 SuperPoint + LightGlue | 5.08% | 12.17% | 6.37% | 12.31% |
+| SuperPoint + SuperGlue | 4.44% | 10.32% | 4.44% | 10.83% |
+| MINIMA SuperPoint + LightGlue | 5.03% | 12.66% | 6.13% | 12.26% |
+| ReDFeat | 4.08% | 11.74% | 10.10% | 16.89% |
+| RIFT2（CPU 实现） | 5.16% | 13.85% | 5.99% | 15.06% |
+| CoMIR + SIFT | 3.65% | 10.01% | 3.87% | 9.63% |
+
+表 1。3 px 容差下的逐对可重复率均值。六种配置均完成月球 1,130 对和 WHU 1,760 对的检测，用于评分的样本数分别为 953 和 1,760。 [完整汇总表](extra/full_test/summary.csv) · [逐对结果](extra/full_test/per_pair.csv)
+
+![两个测试集在 1、3、5 px 容差下的平均可重复率](extra/full_test/repeatability_curves.png)
+
+图 1。阴影表示按月球 ROI 或 WHU 场景重采样得到的 95% bootstrap 区间。 [PDF](extra/full_test/repeatability_curves.pdf)
+
+![两个测试集在 3 px 容差下的逐对可重复率分布](extra/full_test/repeatability_distributions.png)
+
+图 2。箱线图显示中位数、四分位数和 1.5 倍四分位距内的范围。全部样本均可在逐对表中查到。 [PDF](extra/full_test/repeatability_distributions.pdf)
+
+**讨论**
+
+1,024 点是检测点上限。原版 SuperPoint + LightGlue 的月球光学侧中位数实际为 839 点，WHU 的 SAR 侧中位数为 818 点。RIFT2 和 ReDFeat 在两个数据集的两侧中位数都达到上限。完整汇总表保留了实际点数，可与可重复率读数一起看。
+
+月球参考仿射的逐对留一平均误差中位数为 4.12 px，四分位范围为 2.84–6.09 px，676 对的留一平均误差高于 3 px。WHU 使用发布像素网格，局部残差缺少独立同名点核验。两个数据集的严格容差读数都受参考几何精度影响。

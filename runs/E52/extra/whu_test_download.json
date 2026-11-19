@@ -1,0 +1,453 @@
+{
+  "source": "https://github.com/AmberHen/WHU-OPT-SAR-dataset",
+  "split_source": "https://raw.githubusercontent.com/AmberHen/WHU-OPT-SAR-dataset/main/The%20division%20of%20the%20dataset.txt",
+  "drive_folders": {
+    "optical": "1FEjzFEpIN8WDwNpY0JnU3CwOrW6uGnN5",
+    "sar": "1Zb_vh-dBGQaE2RCMdgdQflBG5NzC16Pp"
+  },
+  "test": {
+    "NH49E001014.tif": {
+      "optical": "1GZTRjQCUMtCrf7R829b4INSdTUGm0Wqt",
+      "sar": "1I75axZj4F_D5jMtdScOkYAIsTBEenJlE"
+    },
+    "NH49E001017.tif": {
+      "optical": "1YQlnD0YdEz9bfKWEPbzLiOEIShKU2hpV",
+      "sar": "1njraWgQ5yh9Wbr7fXZvg2Q4gvFkjS4x7"
+    },
+    "NH49E002012.tif": {
+      "optical": "1uuazEpzJiKinmnvktVMb2Sd_jHAF3Gw7",
+      "sar": "1vSasgCR6iEyiruQu46vruTAZ27yVu_Oq"
+    },
+    "NH49E002016.tif": {
+      "optical": "1Etyhva6BH45iqzDsU-aLnPS6JvUMnVj7",
+      "sar": "1XVlkAwybdLRkcJecviMeMKIxFTPu-xU1"
+    },
+    "NH49E003014.tif": {
+      "optical": "1Fpeym9yolXff4c6MqB5IbdnCiwekGC9A",
+      "sar": "1lcnZFEckqiSR08FGymetPt_uoE3dxE0W"
+    },
+    "NH49E003024.tif": {
+      "optical": "1xDhBop9eWb1_hENb56GmaWcpShpvtibK",
+      "sar": "1zc3Y8RDuvGq1KxcDWK_2OoNYqitd7u51"
+    },
+    "NH49E004011.tif": {
+      "optical": "1tIzHc3jroAPxhov7gT8GQ1ZCTE_Yu-as",
+      "sar": "1rQ91-Dr2HDhX3NDKSYqa-eSxC2E9-yQ3"
+    },
+    "NH49E005011.tif": {
+      "optical": "1ki7rYo4nk1VBahFzdJ3N20G9wxfapPpm",
+      "sar": "1JVMUArNIkqd-THEBsaqGgvlskXdDwB4n"
+    },
+    "NH49E005019.tif": {
+      "optical": "1frnS7YxpbAPkT3Y6rxFahbTaDsOZjajz",
+      "sar": "1qFQ0TniQd0bDV7FsSZcVqhh1_iDtrhpy"
+    },
+    "NH49E006019.tif": {
+      "optical": "1RAai7j9PPQDsFfrFiDMClb-Ke8cFxqDU",
+      "sar": "1uWbyXljLQhZTygDPRWuMpxtDjohhz3AR"
+    },
+    "NH49E007014.tif": {
+      "optical": "1Z8AexVthMRjFu3VKav8nG731X0jqx0JQ",
+      "sar": "1pZJsGKC4OjH0gXnWryyZWCLwpekqKI-v"
+    },
+    "NH49E008013.tif": {
+      "optical": "1e36rXEctyRxnWVz1Wd_4FQf0HxBQhW-D",
+      "sar": "10z9l53mGWhi-wHFmbgy0GW7ODQaiUHAH"
+    },
+    "NH49E009017.tif": {
+      "optical": "1oXSlU82PvE929ykrm39nhekBGLnZ6hNs",
+      "sar": "1ED9ODQAa0oooe_MdJ0fIUnku8BipZQv_"
+    },
+    "NH49E010020.tif": {
+      "optical": "10KWesPAFEJ4njSODruvSiXyASbQyWKqt",
+      "sar": "1gScJ6b8XUlpx7feEfSuLnYqxKxawoLSg"
+    },
+    "NH49E011024.tif": {
+      "optical": "1bN9V1mBOWu0iX84MNjazKbKlS1N304ZX",
+      "sar": "1MK3bCsjeZsTfqQQdho54n599xgSECg8t"
+    },
+    "NH49E012020.tif": {
+      "optical": "1Dk6c7jAJ4F9lHj_t5-_B75JzLWKdDj3q",
+      "sar": "1xYaucMJxpgoPNVUQh-9IIxyu-7UHFM75"
+    },
+    "NH49E013010.tif": {
+      "optical": "1dTS9Hg9R1oX1pZklpBESmoFd8VrpGVUn",
+      "sar": "1UFlJ5HkPKcQk_SxHO-083xPqacED9V2y"
+    },
+    "NH50E007002.tif": {
+      "optical": "1FrqUrKjDhVf_D21Y0s2CIMaCQc2UrjtR",
+      "sar": "1e8S-gXiLPLFlD-6Gk-Av0lYrlLEL3tGs"
+    },
+    "NH50E011005.tif": {
+      "optical": "1FsB9740UFYoFaD-cgEHWE1j0iNijJIf0",
+      "sar": "1X8cu5MBU_wLBSMZy1qzqBRZvrLBY7P7Z"
+    },
+    "NH50E014003.tif": {
+      "optical": "11pw0lcTlJVfzeeddqzDwhZ54oekwISee",
+      "sar": "1OyBATXoEYNUkUQ8h6E68fFvateDYkW7S"
+    }
+  },
+  "verified": {
+    "NH49E001014.tif": {
+      "optical": {
+        "drive_id": "1GZTRjQCUMtCrf7R829b4INSdTUGm0Wqt",
+        "source": "existing",
+        "bytes": 57926358,
+        "sha256": "e29167e737e18cbe1076a501892f8fbbad6aec84c44cb51ded5918a74e2b91af",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1I75axZj4F_D5jMtdScOkYAIsTBEenJlE",
+        "source": "existing",
+        "bytes": 23102974,
+        "sha256": "4dc7eb723175d1b19d37a841d352685d3e5631750b2b50035d9726a8d13bb6bd",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E001017.tif": {
+      "optical": {
+        "drive_id": "1YQlnD0YdEz9bfKWEPbzLiOEIShKU2hpV",
+        "source": "existing",
+        "bytes": 54021306,
+        "sha256": "3f9c5b4a600d7dd6afe0844d9cb1ffdacb5832a2a7e65ea7736ef6f8a6d1d46f",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1njraWgQ5yh9Wbr7fXZvg2Q4gvFkjS4x7",
+        "source": "existing",
+        "bytes": 21428458,
+        "sha256": "e9919e89a0eb5b63a8cc9a7b4fc82502b3994f4f1f3df248dca322e3a147060c",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E002012.tif": {
+      "optical": {
+        "drive_id": "1uuazEpzJiKinmnvktVMb2Sd_jHAF3Gw7",
+        "source": "existing",
+        "bytes": 51531216,
+        "sha256": "920c5bce5b10f86460f11dede8a454ef45ffe7c4534726d755082c459f9847c7",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1vSasgCR6iEyiruQu46vruTAZ27yVu_Oq",
+        "source": "existing",
+        "bytes": 22309718,
+        "sha256": "0fefb8d0e7e957a06d45e85b353cc68905d089c1b313c526ccfe47345025223e",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E002016.tif": {
+      "optical": {
+        "drive_id": "1Etyhva6BH45iqzDsU-aLnPS6JvUMnVj7",
+        "source": "existing",
+        "bytes": 59238396,
+        "sha256": "f5959cea0c208997fc84d599def21f52e2c855bf037e07d7db19f070d41540e8",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1XVlkAwybdLRkcJecviMeMKIxFTPu-xU1",
+        "source": "existing",
+        "bytes": 22386710,
+        "sha256": "ca203ac05e2977d6bd5496142e95f9d3c1c247bcb06c5ef8bed766f262d228c4",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E003014.tif": {
+      "optical": {
+        "drive_id": "1Fpeym9yolXff4c6MqB5IbdnCiwekGC9A",
+        "source": "existing",
+        "bytes": 56964740,
+        "sha256": "a9f3e5086cac6abe24a25911a4ad6f400032115c42136f5f444c16725d8675a1",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1lcnZFEckqiSR08FGymetPt_uoE3dxE0W",
+        "source": "existing",
+        "bytes": 23023044,
+        "sha256": "a140382cdbc782ce29eb9d303f6bcec2a9eca4222bf85d2b87dcea83e43098e4",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E003024.tif": {
+      "optical": {
+        "drive_id": "1xDhBop9eWb1_hENb56GmaWcpShpvtibK",
+        "source": "existing",
+        "bytes": 62211592,
+        "sha256": "393abdc642b44d1fe2512cfd689c27908432ec93c3423189bae32ecb633b5d6f",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1zc3Y8RDuvGq1KxcDWK_2OoNYqitd7u51",
+        "source": "existing",
+        "bytes": 23242050,
+        "sha256": "f4e793e0be8c9ba44aa7bf769fd1c3137bdd2e1aaafd5fd7df82abee13206e15",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E004011.tif": {
+      "optical": {
+        "drive_id": "1tIzHc3jroAPxhov7gT8GQ1ZCTE_Yu-as",
+        "source": "existing",
+        "bytes": 41381654,
+        "sha256": "ce8b0afba2d19551ba1967a26a3b2ef3815aadf4c77f6b41459100df13da66a0",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1rQ91-Dr2HDhX3NDKSYqa-eSxC2E9-yQ3",
+        "source": "existing",
+        "bytes": 22086892,
+        "sha256": "15310730f5b8087bdac65768f5d956bef554c9bc4994cfee15bcca175375f44e",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E005011.tif": {
+      "optical": {
+        "drive_id": "1ki7rYo4nk1VBahFzdJ3N20G9wxfapPpm",
+        "source": "existing",
+        "bytes": 44986536,
+        "sha256": "be1ccb5e66c4d7b7cb63929be3a3d81c1fa58f503bf69037ca0d6b5bccc552d3",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1JVMUArNIkqd-THEBsaqGgvlskXdDwB4n",
+        "source": "existing",
+        "bytes": 22730980,
+        "sha256": "a1efce51ad22c964b6b0c98a5e4f9377c2295b2fb57fcc6257ea15c6a468df63",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E005019.tif": {
+      "optical": {
+        "drive_id": "1frnS7YxpbAPkT3Y6rxFahbTaDsOZjajz",
+        "source": "https://huggingface.co/datasets/125oii/whu_opt_sar/resolve/fe1ef62c80217c02259c232dc8e325271be4eaf0/optical.zip",
+        "bytes": 53223354,
+        "sha256": "5c4323c2b4ca3b6d78f0d3fedbd7b9d071f4c1c11ca4191b2270f48623ee867b",
+        "width": 5555,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1qFQ0TniQd0bDV7FsSZcVqhh1_iDtrhpy",
+        "source": "https://huggingface.co/datasets/125oii/whu_opt_sar/resolve/fe1ef62c80217c02259c232dc8e325271be4eaf0/sar.zip",
+        "bytes": 22653976,
+        "sha256": "9c76f3666661b638ed7d833c1881b02b3117249942c2ed626b1153a20f4c4ce5",
+        "width": 5555,
+        "height": 3704
+      }
+    },
+    "NH49E006019.tif": {
+      "optical": {
+        "drive_id": "1RAai7j9PPQDsFfrFiDMClb-Ke8cFxqDU",
+        "source": "https://huggingface.co/datasets/125oii/whu_opt_sar/resolve/fe1ef62c80217c02259c232dc8e325271be4eaf0/optical.zip",
+        "bytes": 49163512,
+        "sha256": "7fc6758b162207cef3d78591fb8007a6097d3f9781ef81bf3d601d980da2036b",
+        "width": 5555,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1uWbyXljLQhZTygDPRWuMpxtDjohhz3AR",
+        "source": "https://huggingface.co/datasets/125oii/whu_opt_sar/resolve/fe1ef62c80217c02259c232dc8e325271be4eaf0/sar.zip",
+        "bytes": 21684458,
+        "sha256": "29ae43106fea904ec414456672ab75b7c4fa71d20ef81a87d76fa7129a2cd40e",
+        "width": 5555,
+        "height": 3704
+      }
+    },
+    "NH49E007014.tif": {
+      "optical": {
+        "drive_id": "1Z8AexVthMRjFu3VKav8nG731X0jqx0JQ",
+        "source": "existing",
+        "bytes": 56871164,
+        "sha256": "297812472a5fbef9caa5c24efacb8dfbd41753fddd5c5ada21915528312ae370",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1pZJsGKC4OjH0gXnWryyZWCLwpekqKI-v",
+        "source": "existing",
+        "bytes": 23821764,
+        "sha256": "9366a50e7a6ce7647c4dd04eb9e926976ee9453f32a4620693505d3d4d817ff5",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E008013.tif": {
+      "optical": {
+        "drive_id": "1e36rXEctyRxnWVz1Wd_4FQf0HxBQhW-D",
+        "source": "existing",
+        "bytes": 57637392,
+        "sha256": "853082479ad01a0b9ec92d099c65eae3c56aed2fe90a220d2ae22163a8a3c78c",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "10z9l53mGWhi-wHFmbgy0GW7ODQaiUHAH",
+        "source": "existing",
+        "bytes": 23412980,
+        "sha256": "26e76b0de2e3b854da7ea84fa2b51ee8dcedad6202a9ebc63641955c504ee319",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E009017.tif": {
+      "optical": {
+        "drive_id": "1oXSlU82PvE929ykrm39nhekBGLnZ6hNs",
+        "source": "existing",
+        "bytes": 60232486,
+        "sha256": "ebe66e6c221a4bf38f9247c0f5891f4914c8cfa057e9b0e737104a0c799d4c9d",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1ED9ODQAa0oooe_MdJ0fIUnku8BipZQv_",
+        "source": "existing",
+        "bytes": 22848022,
+        "sha256": "a13e70307eb3de8985b6bd77d9cb0aa5943843ae0f7be678a80610e7dbc446cc",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E010020.tif": {
+      "optical": {
+        "drive_id": "10KWesPAFEJ4njSODruvSiXyASbQyWKqt",
+        "source": "existing",
+        "bytes": 57004144,
+        "sha256": "1052301cf9ddeb7b2dbd51a4a2ab8ff7268005cae3f40ef0f670c59651e1cbf5",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1gScJ6b8XUlpx7feEfSuLnYqxKxawoLSg",
+        "source": "existing",
+        "bytes": 23435862,
+        "sha256": "a388ddf8dc48d5a20c38cfa1a71fe91a28a84c452ebbe69379143f857df000d9",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E011024.tif": {
+      "optical": {
+        "drive_id": "1bN9V1mBOWu0iX84MNjazKbKlS1N304ZX",
+        "source": "existing",
+        "bytes": 39675634,
+        "sha256": "93ef160a661e34c8573da0fadc55003eafa757b7f6f43af57dac370b5103a10a",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1MK3bCsjeZsTfqQQdho54n599xgSECg8t",
+        "source": "existing",
+        "bytes": 21894652,
+        "sha256": "0b847ed604016a42ebf40731c9ee41f8748707fb17f66b7fe4d3421bf7b8c4db",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E012020.tif": {
+      "optical": {
+        "drive_id": "1Dk6c7jAJ4F9lHj_t5-_B75JzLWKdDj3q",
+        "source": "existing",
+        "bytes": 52825334,
+        "sha256": "3a4b65770e533674c588061ab9ba53e6aee3b197718d3ce32dac7601717e08b8",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1xYaucMJxpgoPNVUQh-9IIxyu-7UHFM75",
+        "source": "existing",
+        "bytes": 24943774,
+        "sha256": "1e36f5994b3cf3dbe910253bb2a360d3abeb9eea4001d451fafc369178dea68c",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH49E013010.tif": {
+      "optical": {
+        "drive_id": "1dTS9Hg9R1oX1pZklpBESmoFd8VrpGVUn",
+        "source": "https://huggingface.co/datasets/125oii/whu_opt_sar/resolve/fe1ef62c80217c02259c232dc8e325271be4eaf0/optical.zip",
+        "bytes": 51961862,
+        "sha256": "75e1725863628a8090dcedeaf353bd54e9d9042a7640f15c9bbca7e9ce2eb0df",
+        "width": 5555,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1UFlJ5HkPKcQk_SxHO-083xPqacED9V2y",
+        "source": "https://huggingface.co/datasets/125oii/whu_opt_sar/resolve/fe1ef62c80217c02259c232dc8e325271be4eaf0/sar.zip",
+        "bytes": 23081142,
+        "sha256": "cff208d318010b092928682964f7332a94adce6a803b653a27b0b6a52ed03461",
+        "width": 5555,
+        "height": 3704
+      }
+    },
+    "NH50E007002.tif": {
+      "optical": {
+        "drive_id": "1FrqUrKjDhVf_D21Y0s2CIMaCQc2UrjtR",
+        "source": "existing",
+        "bytes": 52375466,
+        "sha256": "32bc5f5bb411ed033d4ba9ad53d457bef6ecbfd69c7f9e76b5d24330c8c914de",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1e8S-gXiLPLFlD-6Gk-Av0lYrlLEL3tGs",
+        "source": "existing",
+        "bytes": 24708640,
+        "sha256": "1a165b9980b5eb24cd23e6f4265241f0fb584180d3695ba7c34ac1371e39e3a6",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH50E011005.tif": {
+      "optical": {
+        "drive_id": "1FsB9740UFYoFaD-cgEHWE1j0iNijJIf0",
+        "source": "existing",
+        "bytes": 54651342,
+        "sha256": "2e87e8b8f7fa1af65e0612a8ddeb27c95b31ef49b1ad412731cff33a1abfee35",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1X8cu5MBU_wLBSMZy1qzqBRZvrLBY7P7Z",
+        "source": "existing",
+        "bytes": 23164448,
+        "sha256": "e6598556fc376f77a734b40c66ebfd66de0bc3aab6ef834e2263bc80831c9a6c",
+        "width": 5556,
+        "height": 3704
+      }
+    },
+    "NH50E014003.tif": {
+      "optical": {
+        "drive_id": "11pw0lcTlJVfzeeddqzDwhZ54oekwISee",
+        "source": "existing",
+        "bytes": 53930722,
+        "sha256": "bc26559df9b9fda430886dbfca723221a97e739e561cffcce9252153d7261e8f",
+        "width": 5556,
+        "height": 3704
+      },
+      "sar": {
+        "drive_id": "1OyBATXoEYNUkUQ8h6E68fFvateDYkW7S",
+        "source": "existing",
+        "bytes": 24377542,
+        "sha256": "2a8d54a5acc07952ff9239261603b71e937785823519a896ef13c5c9306f1ff3",
+        "width": 5556,
+        "height": 3704
+      }
+    }
+  },
+  "errors": {}
+}

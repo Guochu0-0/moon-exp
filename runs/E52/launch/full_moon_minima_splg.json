@@ -1,0 +1,52 @@
+[
+ {
+  "start": "2026-11-19 15:47:43 +0800",
+  "end": "2026-11-19 15:52:24 +0800",
+  "status": "ok",
+  "commit": "a3a5b295fe3729aeb86e52786e7accc9e855ec5d",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-full-repeatability",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_detect",
+   "moon",
+   "minima_splg",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "runs/E52/raw/full",
+   "--weights",
+   "/remote-home/xufang/YGC/weights"
+  ],
+  "args": {
+   "domain": "moon",
+   "method": "minima_splg",
+   "dataset": "/remote-home/xufang/YGC/dataset/Moon",
+   "output": "runs/E52/raw/full",
+   "weights": "/remote-home/xufang/YGC/weights",
+   "rift2_backend": "matlab",
+   "device": "cuda",
+   "limit": 0,
+   "workers": 1
+  },
+  "config": {
+   "method": "minima_splg",
+   "adapter": "splg",
+   "repo": "third_party/LightGlue",
+   "weights": "minima/minima_lightglue.pth",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "upstream_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+  "weights_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e"
+ }
+]

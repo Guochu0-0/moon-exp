@@ -1,0 +1,55 @@
+[
+ {
+  "start": "2026-11-19 15:42:50 +0800",
+  "end": "2026-11-19 15:46:39 +0800",
+  "status": "ok",
+  "commit": "4608580e57781d8f6897eed67f3bcc294be1ca93",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-full-repeatability",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_detect",
+   "moon",
+   "rift2",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "runs/E52/raw/full",
+   "--weights",
+   "/remote-home/xufang/YGC/weights"
+  ],
+  "args": {
+   "domain": "moon",
+   "method": "rift2",
+   "dataset": "/remote-home/xufang/YGC/dataset/Moon",
+   "output": "runs/E52/raw/full",
+   "weights": "/remote-home/xufang/YGC/weights",
+   "device": "cuda",
+   "limit": 0
+  },
+  "config": {
+   "method": "rift2",
+   "adapter": "matlab:rift2_split",
+   "repo": "third_party/RIFT2",
+   "params": {
+    "s": 4,
+    "o": 6,
+    "npt": 5000,
+    "patch_size": 96,
+    "no": 6,
+    "nbin": 6,
+    "n_threads": 4
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+  },
+  "stage": "prepare_matlab_inputs"
+ }
+]

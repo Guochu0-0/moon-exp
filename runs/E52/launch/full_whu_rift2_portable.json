@@ -1,0 +1,120 @@
+[
+ {
+  "start": "2026-11-19 07:55:10 +0000",
+  "end": "2026-11-19 08:10:21 +0000",
+  "status": "failed",
+  "commit": "f88f5f849ebb94902c12169baac5b14ed5a5440d",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-full-repeatability",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_detect",
+   "whu",
+   "rift2",
+   "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
+   "runs/E52/raw/full",
+   "--device",
+   "cpu",
+   "--rift2-backend",
+   "portable",
+   "--workers",
+   "4"
+  ],
+  "args": {
+   "domain": "whu",
+   "method": "rift2",
+   "dataset": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
+   "output": "runs/E52/raw/full",
+   "weights": null,
+   "rift2_backend": "portable",
+   "device": "cpu",
+   "limit": 0,
+   "workers": 4
+  },
+  "config": {
+   "method": "rift2",
+   "adapter": "matlab:rift2_split",
+   "repo": "third_party/RIFT2",
+   "params": {
+    "s": 4,
+    "o": 6,
+    "npt": 5000,
+    "patch_size": 96,
+    "no": 6,
+    "nbin": 6,
+    "n_threads": 4
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+  }
+ },
+ {
+  "start": "2026-11-19 08:13:52 +0000",
+  "end": "2026-11-19 08:14:41 +0000",
+  "status": "ok",
+  "commit": "f88f5f849ebb94902c12169baac5b14ed5a5440d",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-full-repeatability",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_detect",
+   "whu",
+   "rift2",
+   "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
+   "runs/E52/raw/full",
+   "--workers",
+   "4",
+   "--device",
+   "cpu",
+   "--rift2-backend",
+   "portable"
+  ],
+  "args": {
+   "domain": "whu",
+   "method": "rift2",
+   "dataset": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
+   "output": "runs/E52/raw/full",
+   "weights": null,
+   "rift2_backend": "portable",
+   "device": "cpu",
+   "limit": 0,
+   "workers": 4
+  },
+  "config": {
+   "method": "rift2",
+   "adapter": "matlab:rift2_split",
+   "repo": "third_party/RIFT2",
+   "params": {
+    "s": 4,
+    "o": 6,
+    "npt": 5000,
+    "patch_size": 96,
+    "no": 6,
+    "nbin": 6,
+    "n_threads": 4
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+  },
+  "backend": "SciPy FFT and floating-point FAST-9",
+  "upstream_commit": "0e980ce4124d2abd62727dcf040198db0a18b269"
+ }
+]

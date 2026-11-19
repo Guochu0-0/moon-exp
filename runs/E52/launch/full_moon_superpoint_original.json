@@ -1,0 +1,48 @@
+[
+ {
+  "start": "2026-11-19 15:31:40 +0800",
+  "end": "2026-11-19 15:36:18 +0800",
+  "status": "ok",
+  "commit": "2883e507b8df57f3a9ef4d2868ce9139d8d5d188",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-full-repeatability",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_detect",
+   "moon",
+   "superpoint_original",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "runs/E52/raw/full",
+   "--weights",
+   "/remote-home/xufang/YGC/weights"
+  ],
+  "args": {
+   "domain": "moon",
+   "method": "superpoint_original",
+   "dataset": "/remote-home/xufang/YGC/dataset/Moon",
+   "output": "runs/E52/raw/full",
+   "weights": "/remote-home/xufang/YGC/weights",
+   "device": "cuda",
+   "limit": 0
+  },
+  "config": {
+   "method": "splg",
+   "adapter": "splg_original",
+   "repo": "third_party/LightGlue",
+   "weights": null,
+   "params": {},
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "upstream_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+  "weights_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e"
+ }
+]

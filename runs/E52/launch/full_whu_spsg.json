@@ -1,0 +1,56 @@
+[
+ {
+  "start": "2026-11-19 15:52:47 +0800",
+  "end": "2026-11-19 15:58:52 +0800",
+  "status": "ok",
+  "commit": "4f4e1a1ea94ee7d999c3b115cd259d15c2c3d90f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-full-repeatability",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_detect",
+   "whu",
+   "spsg",
+   "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
+   "runs/E52/raw/full",
+   "--weights",
+   "/remote-home/xufang/YGC/weights"
+  ],
+  "args": {
+   "domain": "whu",
+   "method": "spsg",
+   "dataset": "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
+   "output": "runs/E52/raw/full",
+   "weights": "/remote-home/xufang/YGC/weights",
+   "rift2_backend": "matlab",
+   "device": "cuda",
+   "limit": 0,
+   "workers": 1
+  },
+  "config": {
+   "method": "spsg",
+   "adapter": "spsg",
+   "repo": "third_party/SuperGlue",
+   "params": {
+    "long_side": 1600,
+    "superglue": "outdoor",
+    "max_keypoints": 2048,
+    "nms_radius": 3,
+    "keypoint_threshold": 0.005,
+    "sinkhorn_iterations": 20,
+    "match_threshold": 0.2
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "upstream_commit": "ddcf11f42e7e0732a0c4607648f9448ea8d73590"
+ }
+]

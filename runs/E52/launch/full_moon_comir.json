@@ -1,0 +1,106 @@
+[
+ {
+  "start": "2026-11-19 15:45:35 +0800",
+  "end": "2026-11-19 15:52:21 +0800",
+  "status": "failed",
+  "commit": "a3a5b295fe3729aeb86e52786e7accc9e855ec5d",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-full-repeatability",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_detect",
+   "moon",
+   "comir",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "runs/E52/raw/full",
+   "--weights",
+   "/remote-home/xufang/YGC/weights"
+  ],
+  "args": {
+   "domain": "moon",
+   "method": "comir",
+   "dataset": "/remote-home/xufang/YGC/dataset/Moon",
+   "output": "runs/E52/raw/full",
+   "weights": "/remote-home/xufang/YGC/weights",
+   "rift2_backend": "matlab",
+   "device": "cuda",
+   "limit": 0,
+   "workers": 1
+  },
+  "config": {
+   "method": "comir",
+   "adapter": "comir",
+   "repo": "third_party/CoMIR",
+   "weights": "official/comir/model_zurich_rot90_enabled.pt",
+   "params": {
+    "channel": 0,
+    "classpath": "/opt/mpicbg/*"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "zero-shot：官方 Release 1.0 的 Zurich（RGB↔NIR）模型；光学灰度×3 送 A、SAR 送 B；CoMIR 第 0 通道上跑 mpicbg SIFT（官方 Fiji 脚本参数，rod 0.9），取官方 RANSAC 之前的匹配"
+  }
+ },
+ {
+  "start": "2026-11-19 15:52:55 +0800",
+  "end": "2026-11-19 15:59:22 +0800",
+  "status": "ok",
+  "commit": "f88f5f849ebb94902c12169baac5b14ed5a5440d",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-full-repeatability",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_detect",
+   "moon",
+   "comir",
+   "/remote-home/xufang/YGC/dataset/Moon",
+   "runs/E52/raw/full",
+   "--weights",
+   "/remote-home/xufang/YGC/weights",
+   "--workers",
+   "4"
+  ],
+  "args": {
+   "domain": "moon",
+   "method": "comir",
+   "dataset": "/remote-home/xufang/YGC/dataset/Moon",
+   "output": "runs/E52/raw/full",
+   "weights": "/remote-home/xufang/YGC/weights",
+   "rift2_backend": "matlab",
+   "device": "cuda",
+   "limit": 0,
+   "workers": 4
+  },
+  "config": {
+   "method": "comir",
+   "adapter": "comir",
+   "repo": "third_party/CoMIR",
+   "weights": "official/comir/model_zurich_rot90_enabled.pt",
+   "params": {
+    "channel": 0,
+    "classpath": "/opt/mpicbg/*"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "zero-shot：官方 Release 1.0 的 Zurich（RGB↔NIR）模型；光学灰度×3 送 A、SAR 送 B；CoMIR 第 0 通道上跑 mpicbg SIFT（官方 Fiji 脚本参数，rod 0.9），取官方 RANSAC 之前的匹配"
+  },
+  "upstream_commit": "1750b11e29532cd4096bd3060d086ecac9b9291c",
+  "weights_sha256": "c02a1e72a04638c83939992f271f1a3396f01133bd47589404a68ba22340a8aa"
+ }
+]

@@ -1,0 +1,101 @@
+[
+ {
+  "start": "2026-11-19 21:42:59 +0800",
+  "end": "2026-11-19 21:45:55 +0800",
+  "status": "ok",
+  "commit": "4d0fdf5d4fc158f2aab25432cd4dbcf74453c799",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-three-detectors",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.whu_minima",
+   "match",
+   "/remote-home/xufang/YGC/dataset/WHU-OPT-SAR",
+   "/remote-home/xufang/YGC/weights",
+   "runs/E52/raw/whu_minima",
+   "--shard",
+   "0",
+   "--shards",
+   "2"
+  ],
+  "config_file": "configs/baselines/minima_splg.json",
+  "config": {
+   "method": "minima_splg",
+   "adapter": "splg",
+   "repo": "third_party/LightGlue",
+   "weights": "minima/minima_lightglue.pth",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "shift_magnitudes": [
+   20,
+   15
+  ],
+  "ransac_threshold_px": 3.0,
+  "checkpoints": [
+   [
+    64,
+    64
+   ],
+   [
+    256,
+    64
+   ],
+   [
+    448,
+    64
+   ],
+   [
+    64,
+    256
+   ],
+   [
+    256,
+    256
+   ],
+   [
+    448,
+    256
+   ],
+   [
+    64,
+    448
+   ],
+   [
+    256,
+    448
+   ],
+   [
+    448,
+    448
+   ]
+  ],
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "afb5eacb8165",
+   "platform": "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "NVIDIA TITAN RTX",
+   "cuda": "11.8"
+  },
+  "lightglue_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+  "weights_sha256": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126",
+  "superpoint_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+  "matcher": "sp={'descriptor_dim': 256, 'nms_radius': 4, 'max_num_keypoints': 2048, 'detection_threshold': 0.0005, 'remove_borders': 4}, lg filter 0.1 depth 0.95 width 0.99 flash, long_side=640 then extract resize 1024; unexpected_keys=0"
+ }
+]

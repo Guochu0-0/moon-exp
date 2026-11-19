@@ -1,0 +1,22 @@
+[
+ {
+  "start": "2026-11-19 21:46:12 +0800",
+  "end": "2026-11-19 21:46:16 +0800",
+  "status": "ok",
+  "commit": "4d0fdf5d4fc158f2aab25432cd4dbcf74453c799",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-three-detectors",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.whu_minima",
+   "summarize",
+   "runs/E52/raw/whu_minima",
+   "runs/E52/extra/whu_minima_lightglue"
+  ]
+ }
+]

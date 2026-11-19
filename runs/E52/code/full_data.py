@@ -87,7 +87,7 @@ def open_whu(paths):
     with ExitStack() as stack:
         datasets = {m: stack.enter_context(rasterio.open(path)) for m, path in paths.items()}
         validate_grid(**datasets)
-        if datasets["optical"].shape != (3704, 5556):
+        if datasets["optical"].shape not in ((3704, 5555), (3704, 5556)):
             raise ValueError(f"Unexpected WHU source dimensions: {paths}")
         yield datasets
 

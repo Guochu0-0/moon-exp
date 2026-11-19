@@ -18,7 +18,8 @@ def inspect(path, modality):
 
     with rasterio.open(path) as source:
         expected_bands = {"optical": 4, "sar": 1}[modality]
-        if (source.width, source.height, source.count) != (5556, 3704, expected_bands):
+        width, height = source.width, source.height
+        if width not in (5555, 5556) or (height, source.count) != (3704, expected_bands):
             raise ValueError(f"Unexpected TIFF dimensions or band count: {path}")
         for _, window in source.block_windows(1):
             source.read(window=window)
@@ -26,7 +27,7 @@ def inspect(path, modality):
     with path.open("rb") as stream:
         for block in iter(lambda: stream.read(1 << 20), b""):
             digest.update(block)
-    return {"bytes": path.stat().st_size, "sha256": digest.hexdigest()}
+    return {"bytes": path.stat().st_size, "sha256": digest.hexdigest(), "width": width, "height": height}
 
 
 def mirror_crc(path, entry):
@@ -40,6 +41,9 @@ def mirror_crc(path, entry):
 
 def fetch_mirror(path, link, entry):
     partial = path.with_suffix(".hf.part")
+    if partial.exists() and partial.stat().st_size == entry["tiff_bytes"]:
+        mirror_crc(partial, entry)
+        return partial
     start, end = entry["data_offset"], entry["data_end_inclusive"]
     try:
         request = Request(link, headers={"Range": f"bytes={start}-{end}"})
@@ -117,6 +121,16 @@ def main():
                 verified.setdefault(filename, {})[modality] = job.result()
             except Exception as error:
                 errors[f"{modality}/{filename}"] = str(error)
+    if args.report.exists():
+        previous = json.loads(args.report.read_text(encoding="utf-8"))["verified"]
+        for filename, pair in verified.items():
+            for modality, info in pair.items():
+                old = previous.get(filename, {}).get(modality, {})
+                if old.get("sha256") == info["sha256"] and info["source"] == "existing":
+                    info["source"] = old.get("source", "existing")
+    for filename, pair in verified.items():
+        if len(pair) == 2 and len({(info["width"], info["height"]) for info in pair.values()}) != 1:
+            errors[filename] = "Optical and SAR dimensions differ"
     report = {**manifest, "verified": verified, "errors": errors}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.report.with_suffix(".tmp")

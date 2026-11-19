@@ -2236,13 +2236,16 @@ def test_rloo_term_k3_position_gradients_without_certainty_losses(monkeypatch):
     active_levels = levels[:3]
     term, st, coarse, dec = _fake_term_fine(
         monkeypatch, levels=levels, fine_policy_levels=active_levels, cert_bce=0.0, fine_cert_bce=0.0,
+        frame_mask=True, fine_mask=True,
     )
     loss, stats, _ = term(st)
     loss.backward()
     assert coarse.grad.abs() > 0
     assert {s for s in levels if f"rew_{s}" in stats} == set(active_levels)
     assert not any(key == "l_cert" or key.startswith("l_cert_") for key in stats)
+    assert "in_frame" in stats and all(f"in_{s}" in stats for s in levels)
     assert all(_fine_grad(dec, s) > 0 for s in active_levels)
+    assert all(torch.count_nonzero(dec.conv_refiner[str(s)].conv.weight.grad[2]) == 0 for s in active_levels)
     assert all(q.grad is None for s in levels[3:] for q in dec.conv_refiner[str(s)].parameters())
 
 

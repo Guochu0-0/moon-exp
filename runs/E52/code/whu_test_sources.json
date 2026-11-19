@@ -1,0 +1,90 @@
+{
+  "source": "https://github.com/AmberHen/WHU-OPT-SAR-dataset",
+  "split_source": "https://raw.githubusercontent.com/AmberHen/WHU-OPT-SAR-dataset/main/The%20division%20of%20the%20dataset.txt",
+  "drive_folders": {
+    "optical": "1FEjzFEpIN8WDwNpY0JnU3CwOrW6uGnN5",
+    "sar": "1Zb_vh-dBGQaE2RCMdgdQflBG5NzC16Pp"
+  },
+  "test": {
+    "NH49E001014.tif": {
+      "optical": "1GZTRjQCUMtCrf7R829b4INSdTUGm0Wqt",
+      "sar": "1I75axZj4F_D5jMtdScOkYAIsTBEenJlE"
+    },
+    "NH49E001017.tif": {
+      "optical": "1YQlnD0YdEz9bfKWEPbzLiOEIShKU2hpV",
+      "sar": "1njraWgQ5yh9Wbr7fXZvg2Q4gvFkjS4x7"
+    },
+    "NH49E002012.tif": {
+      "optical": "1uuazEpzJiKinmnvktVMb2Sd_jHAF3Gw7",
+      "sar": "1vSasgCR6iEyiruQu46vruTAZ27yVu_Oq"
+    },
+    "NH49E002016.tif": {
+      "optical": "1Etyhva6BH45iqzDsU-aLnPS6JvUMnVj7",
+      "sar": "1XVlkAwybdLRkcJecviMeMKIxFTPu-xU1"
+    },
+    "NH49E003014.tif": {
+      "optical": "1Fpeym9yolXff4c6MqB5IbdnCiwekGC9A",
+      "sar": "1lcnZFEckqiSR08FGymetPt_uoE3dxE0W"
+    },
+    "NH49E003024.tif": {
+      "optical": "1xDhBop9eWb1_hENb56GmaWcpShpvtibK",
+      "sar": "1zc3Y8RDuvGq1KxcDWK_2OoNYqitd7u51"
+    },
+    "NH49E004011.tif": {
+      "optical": "1tIzHc3jroAPxhov7gT8GQ1ZCTE_Yu-as",
+      "sar": "1rQ91-Dr2HDhX3NDKSYqa-eSxC2E9-yQ3"
+    },
+    "NH49E005011.tif": {
+      "optical": "1ki7rYo4nk1VBahFzdJ3N20G9wxfapPpm",
+      "sar": "1JVMUArNIkqd-THEBsaqGgvlskXdDwB4n"
+    },
+    "NH49E005019.tif": {
+      "optical": "1frnS7YxpbAPkT3Y6rxFahbTaDsOZjajz",
+      "sar": "1qFQ0TniQd0bDV7FsSZcVqhh1_iDtrhpy"
+    },
+    "NH49E006019.tif": {
+      "optical": "1RAai7j9PPQDsFfrFiDMClb-Ke8cFxqDU",
+      "sar": "1uWbyXljLQhZTygDPRWuMpxtDjohhz3AR"
+    },
+    "NH49E007014.tif": {
+      "optical": "1Z8AexVthMRjFu3VKav8nG731X0jqx0JQ",
+      "sar": "1pZJsGKC4OjH0gXnWryyZWCLwpekqKI-v"
+    },
+    "NH49E008013.tif": {
+      "optical": "1e36rXEctyRxnWVz1Wd_4FQf0HxBQhW-D",
+      "sar": "10z9l53mGWhi-wHFmbgy0GW7ODQaiUHAH"
+    },
+    "NH49E009017.tif": {
+      "optical": "1oXSlU82PvE929ykrm39nhekBGLnZ6hNs",
+      "sar": "1ED9ODQAa0oooe_MdJ0fIUnku8BipZQv_"
+    },
+    "NH49E010020.tif": {
+      "optical": "10KWesPAFEJ4njSODruvSiXyASbQyWKqt",
+      "sar": "1gScJ6b8XUlpx7feEfSuLnYqxKxawoLSg"
+    },
+    "NH49E011024.tif": {
+      "optical": "1bN9V1mBOWu0iX84MNjazKbKlS1N304ZX",
+      "sar": "1MK3bCsjeZsTfqQQdho54n599xgSECg8t"
+    },
+    "NH49E012020.tif": {
+      "optical": "1Dk6c7jAJ4F9lHj_t5-_B75JzLWKdDj3q",
+      "sar": "1xYaucMJxpgoPNVUQh-9IIxyu-7UHFM75"
+    },
+    "NH49E013010.tif": {
+      "optical": "1dTS9Hg9R1oX1pZklpBESmoFd8VrpGVUn",
+      "sar": "1UFlJ5HkPKcQk_SxHO-083xPqacED9V2y"
+    },
+    "NH50E007002.tif": {
+      "optical": "1FrqUrKjDhVf_D21Y0s2CIMaCQc2UrjtR",
+      "sar": "1e8S-gXiLPLFlD-6Gk-Av0lYrlLEL3tGs"
+    },
+    "NH50E011005.tif": {
+      "optical": "1FsB9740UFYoFaD-cgEHWE1j0iNijJIf0",
+      "sar": "1X8cu5MBU_wLBSMZy1qzqBRZvrLBY7P7Z"
+    },
+    "NH50E014003.tif": {
+      "optical": "11pw0lcTlJVfzeeddqzDwhZ54oekwISee",
+      "sar": "1OyBATXoEYNUkUQ8h6E68fFvateDYkW7S"
+    }
+  }
+}

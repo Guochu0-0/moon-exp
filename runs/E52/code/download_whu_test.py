@@ -1,0 +1,83 @@
+"""Resume downloading the author's WHU-OPT-SAR Test pairs and record verified TIFFs."""
+
+import argparse
+from concurrent.futures import ThreadPoolExecutor
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+
+SOURCE_MANIFEST = Path(__file__).with_name("whu_test_sources.json")
+
+
+def inspect(path, modality):
+    import rasterio
+
+    with rasterio.open(path) as source:
+        expected_bands = {"optical": 4, "sar": 1}[modality]
+        if (source.width, source.height, source.count) != (5556, 3704, expected_bands):
+            raise ValueError(f"Unexpected TIFF dimensions or band count: {path}")
+        for _, window in source.block_windows(1):
+            source.read(window=window)
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1 << 20), b""):
+            digest.update(block)
+    return {"bytes": path.stat().st_size, "sha256": digest.hexdigest()}
+
+
+def fetch(root, filename, modality, file_id, proxy, verify_only):
+    path = root / modality / filename
+    path.parent.mkdir(parents=True, exist_ok=True)
+    downloaded = not path.exists()
+    if downloaded:
+        if verify_only:
+            raise FileNotFoundError(path)
+        partial = path.with_suffix(".part")
+        url = f"https://drive.usercontent.google.com/download?id={file_id}&export=download&confirm=t"
+        command = ["curl", "--fail", "--location", "--silent", "--show-error", "--retry", "2",
+                   "--connect-timeout", "12", "--max-time", "240",
+                   "--continue-at", "-", "--output", str(partial), url]
+        if proxy:
+            command[1:1] = ["--proxy", proxy]
+        subprocess.run(command, check=True)
+        info = inspect(partial, modality)
+        partial.replace(path)
+    else:
+        info = inspect(path, modality)
+    print(f"{modality}/{filename} {info['bytes']} bytes", flush=True)
+    return {"drive_id": file_id, **info}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("root", type=Path)
+    parser.add_argument("report", type=Path)
+    parser.add_argument("--proxy")
+    parser.add_argument("--verify-only", action="store_true")
+    args = parser.parse_args()
+    manifest = json.loads(SOURCE_MANIFEST.read_text(encoding="utf-8"))
+    verified, errors = {}, {}
+    with ThreadPoolExecutor(max_workers=3) as workers:
+        jobs = {
+            (filename, modality): workers.submit(fetch, args.root, filename, modality, file_id,
+                                                 args.proxy, args.verify_only)
+            for filename, pair in manifest["test"].items() for modality, file_id in pair.items()
+        }
+        for (filename, modality), job in jobs.items():
+            try:
+                verified.setdefault(filename, {})[modality] = job.result()
+            except Exception as error:
+                errors[f"{modality}/{filename}"] = str(error)
+    report = {**manifest, "verified": verified, "errors": errors}
+    args.report.parent.mkdir(parents=True, exist_ok=True)
+    temporary = args.report.with_suffix(".tmp")
+    temporary.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(args.report)
+    print(f"{sum(len(pair) for pair in verified.values())}/{len(jobs)} TIFFs verified", flush=True)
+    if errors:
+        raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    main()

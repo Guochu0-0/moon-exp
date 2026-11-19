@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 import numpy as np
-from scipy.spatial.distance import cdist
+from scipy.spatial import cKDTree
 
 
 RUN = Path(__file__).resolve().parents[1]
@@ -29,18 +29,17 @@ def inside(points, size):
     return ((points >= 0) & (points < size)).all(axis=1)
 
 
-def top_points(points, scores, mask):
+def top_points(points, scores, mask, top_k):
     indices = np.flatnonzero(mask)
     order = np.argsort(-scores[indices], kind="stable")
-    return points[indices[order[:TOP_K]]]
+    return points[indices[order[:top_k]]]
 
 
 def point_repeatability(optical, sar):
     if len(optical) + len(sar) == 0:
         return []
-    distances = cdist(optical, sar)
-    optical_nearest = distances.min(axis=1, initial=np.inf)
-    sar_nearest = distances.min(axis=0, initial=np.inf)
+    optical_nearest = cKDTree(sar).query(optical)[0]
+    sar_nearest = cKDTree(optical).query(sar)[0]
     rows = []
     for radius in RADII_PX:
         optical_hits = int(np.count_nonzero(optical_nearest <= radius))
@@ -54,7 +53,7 @@ def point_repeatability(optical, sar):
     return rows
 
 
-def evaluate_geometry(row, detections, linear, shift):
+def evaluate_geometry(row, detections, linear, shift, *, top_k=TOP_K):
     pair = row["pair"]
     key = pair.replace("/", "__")
     optical = detections[f"{key}__optical"]
@@ -66,8 +65,8 @@ def evaluate_geometry(row, detections, linear, shift):
     inverse_sar = (xy_sar - shift) @ np.linalg.inv(linear)
     optical_overlap = inside(xy_optical, size) & inside(mapped_optical, size)
     sar_overlap = inside(xy_sar, size) & inside(inverse_sar, size)
-    optical_top = top_points(mapped_optical, optical[:, 2], optical_overlap)
-    sar_top = top_points(xy_sar, sar[:, 2], sar_overlap)
+    optical_top = top_points(mapped_optical, optical[:, 2], optical_overlap, top_k)
+    sar_top = top_points(xy_sar, sar[:, 2], sar_overlap, top_k)
 
     return {
         "optical_overlap_points": int(optical_overlap.sum()),
@@ -78,7 +77,7 @@ def evaluate_geometry(row, detections, linear, shift):
     }
 
 
-def evaluate(row, labels, detections):
+def evaluate(row, labels, detections, *, top_k=TOP_K):
     # The label archive stores y upwards.
     points = np.loadtxt(labels, dtype=np.float64, ndmin=2)[:, :4]
     points[:, [1, 3]] *= -1
@@ -98,7 +97,7 @@ def evaluate(row, labels, detections):
         "reference_affine": np.vstack((linear, shift)).T.tolist(),
         "reference_leave_one_out_mean_px": float(np.mean(holdout_errors)),
         "reference_leave_one_out_errors_px": holdout_errors,
-        **evaluate_geometry(row, detections, linear, shift),
+        **evaluate_geometry(row, detections, linear, shift, top_k=top_k),
     }
 
 

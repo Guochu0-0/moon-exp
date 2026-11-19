@@ -5,6 +5,7 @@ This diagnostic prints JSON and never writes predictions or formal metrics.
 """
 import argparse
 from collections import defaultdict
+import importlib
 import json
 from pathlib import Path
 import sys
@@ -67,11 +68,24 @@ def main():
         pairs = pairs[:args.limit]
     opt_map = inputs.get("optical", opts["input"]["optical"])
     sar_map = inputs.get("sar", opts["input"]["sar"])
-    print(json.dumps({"input": opts["input"], "params": opts["params"], "seed": opts["seed"], "pairs": pairs}), flush=True)
+    print(json.dumps({"input": opts["input"], "params": opts["params"], "seed": opts["seed"], "pairs": pairs,
+                      "device": args.device, "kde": "fp32-blocks" if args.device == "cpu" else "original"}), flush=True)
 
     for item in args.weights:
         name, weights = item.split("=", 1)
         matcher = RomatchAdapter(args.repo / opts["repo"], weights, device=args.device, **opts["params"])
+        if args.device == "cpu":
+            # The upstream KDE casts to half, but CPU torch.cdist has no Half kernel.
+            # Keep the same queries/references and Gaussian kernel in small FP32 blocks.
+            def cpu_kde(x, std=0.1, half=True, down=None):
+                x = x.half().float() if half else x.float()
+                reference = x[::down] if down is not None else x
+                return torch.cat([
+                    torch.cdist(block, reference).square_().mul_(-0.5 / std ** 2).exp_().sum(dim=-1)
+                    for block in x.split(512)
+                ])
+
+            importlib.import_module("romatch.models.matcher").kde = cpu_kde
         refiner = matcher.model.decoder.conv_refiner["1"]
         calls = []
 
@@ -102,6 +116,7 @@ def main():
                     raise RuntimeError("Scale-1 output hook did not run")
                 stats["hook_shapes"] = calls.copy()
                 result[mode] = stats
+                print(f"{name} {pair} {mode}: {json.dumps(stats)}", file=sys.stderr, flush=True)
             result["seconds"] = time.monotonic() - t0
             print(json.dumps(result), flush=True)
         del refiner, matcher

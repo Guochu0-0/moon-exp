@@ -9,6 +9,7 @@ import argparse
 import importlib.util
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -37,12 +38,13 @@ def train(job, source):
     job.sh(cmd, "train.log")
 
 
-def test(job, ckpt):
-    raw = job.sw / "match"
+def test(job, ckpt, scratch=None):
+    stage = scratch if scratch is not None else RUN
+    raw = stage / "match" if scratch is not None else job.sw / "match"
     job.sh([D.PY, "-m", "baselines.match", job.infer, "--split", "test", "--weights", ckpt,
             "--name", job.m, "--out", raw], "test.log")
-    job.sh([D.WB, "-m", "baselines.fit", raw / job.m, "--split", "test", "--run", RUN], "test.log", gpu=False)
-    predictions = RUN / "preds" / job.m / "test.jsonl"
+    job.sh([D.WB, "-m", "baselines.fit", raw / job.m, "--split", "test", "--run", stage], "test.log", gpu=False)
+    predictions = stage / "preds" / job.m / "test.jsonl"
     with predictions.open(encoding="utf-8") as stream:
         pairs = {json.loads(line)["pair"] for line in stream}
     reference = REPO / "runs/E41/preds/main__screen0.8/test.jsonl"
@@ -50,13 +52,21 @@ def test(job, ckpt):
         expected = {json.loads(line)["pair"] for line in stream}
     if len(expected) != 953 or pairs != expected:
         raise RuntimeError(f"Expected the 953 labelled Test pairs from E41, got {len(pairs)}")
+    if scratch is not None:
+        target = RUN / "preds" / job.m
+        pending = target.with_name(f".{job.m}.publish")
+        shutil.copytree(predictions.parent, pending)
+        pending.rename(target)
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("phase", choices=("train", "test"))
     ap.add_argument("method", choices=D.methods(RUN))
+    ap.add_argument("--retry-in", type=Path, help="retry a failed Test and stage its files in this new local directory")
     args = ap.parse_args()
+    if args.retry_in and args.phase != "test":
+        ap.error("--retry-in requires test")
     source = RUN / "configs" / f"{args.method}.toml"
     configs = {m: D.C.load(RUN / "configs" / f"{m}.toml") for m in D.methods(RUN)}
     cfg = configs[args.method]
@@ -77,7 +87,14 @@ def main():
         ap.error(f"Training must finish first: {job.ck / 'train.done'}")
     claims = RUN / ".claims"
     claims.mkdir(exist_ok=True)
-    (claims / record).mkdir()
+    if args.retry_in:
+        history = json.loads((RUN / "launch" / f"{record}.json").read_text(encoding="utf-8"))
+        if history[-1]["status"] != "fail" or (RUN / "preds" / args.method).exists():
+            ap.error("--retry-in requires an earlier failed Test and no published predictions")
+        args.retry_in.mkdir()
+        (claims / f"{record}_retry").mkdir()
+    else:
+        (claims / record).mkdir()
     job.ck.mkdir(parents=True, exist_ok=True)
     infer = json.loads((REPO / job.infer).read_text(encoding="utf-8"))
     D.launch.begin(RUN, record, [sys.executable, *sys.argv], repo=REPO, entry=ENTRY,
@@ -87,7 +104,7 @@ def main():
             train(job, source)
         ckpt, step, halt = terminal_checkpoint(job)
         if args.phase == "test":
-            test(job, ckpt)
+            test(job, ckpt, args.retry_in)
     except BaseException:
         D.launch.end(RUN, record, "fail")
         raise

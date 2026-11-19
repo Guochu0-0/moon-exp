@@ -215,12 +215,13 @@ def main():
     parser.add_argument("--rift2-backend", choices=("matlab", "portable"), default="matlab")
     parser.add_argument("--device", default="cuda", choices=("cpu", "cuda"))
     parser.add_argument("--limit", type=int, default=0)
-    parser.add_argument("--workers", type=int, default=1, help="CPU workers for the portable RIFT2 detector")
+    parser.add_argument("--workers", type=int, default=1, help="Parallel pairs for CoMIR or the portable RIFT2 detector")
     args = parser.parse_args()
     if not 1 <= args.workers <= 4:
         parser.error("--workers must be between 1 and 4")
-    if args.workers > 1 and (args.method != "rift2" or args.rift2_backend != "portable" or args.device != "cpu"):
-        parser.error("--workers > 1 requires the portable RIFT2 CPU detector")
+    parallel_rift = args.method == "rift2" and args.rift2_backend == "portable" and args.device == "cpu"
+    if args.workers > 1 and args.method != "comir" and not parallel_rift:
+        parser.error("--workers > 1 requires CoMIR or the portable RIFT2 CPU detector")
 
     config_name = f"full_{args.domain}_{args.method}"
     if args.method == "rift2" and args.rift2_backend == "portable":

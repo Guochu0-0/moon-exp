@@ -135,12 +135,22 @@ def run(args):
     torch.set_num_threads(2)
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
-    prepare_rift = args.method == "rift2"
+    portable_rift = args.method == "rift2" and args.rift2_backend == "portable"
+    prepare_rift = args.method == "rift2" and not portable_rift
     if prepare_rift:
         process, info = save_mat, {"stage": "prepare_matlab_inputs"}
         extension = ".mat"
     else:
-        detect_pair, info = detector(args, cfg)
+        if portable_rift:
+            from .rift2_portable import detect
+
+            def detect_pair(images):
+                return {modality: detect(image) for modality, image in images.items()}
+
+            info = {"backend": "SciPy FFT and floating-point FAST-9",
+                    "upstream_commit": verified_commit(ROOT / cfg["repo"], cfg["repo"])}
+        else:
+            detect_pair, info = detector(args, cfg)
 
         def process(path, images):
             atomic_npz(path, detect_pair(images))
@@ -148,7 +158,8 @@ def run(args):
         extension = ".npz"
 
     directory = args.output / args.domain
-    method_dir = directory / ("rift2_input" if prepare_rift else args.method)
+    output_method = "rift2_portable" if portable_rift else "rift2_input" if prepare_rift else args.method
+    method_dir = directory / output_method
     method_dir.mkdir(parents=True, exist_ok=True)
     rows = list(moon_pairs(args.dataset) if args.domain == "moon" else whu_pairs(args.dataset))
     if args.limit:
@@ -183,11 +194,14 @@ def main():
     parser.add_argument("dataset", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--weights", type=Path)
+    parser.add_argument("--rift2-backend", choices=("matlab", "portable"), default="matlab")
     parser.add_argument("--device", default="cuda", choices=("cpu", "cuda"))
     parser.add_argument("--limit", type=int, default=0)
     args = parser.parse_args()
 
     config_name = f"full_{args.domain}_{args.method}"
+    if args.method == "rift2" and args.rift2_backend == "portable":
+        config_name += "_portable"
     if args.limit:
         config_name += "_smoke"
     launch.begin(RUN, config_name, [sys.executable, "-m", __spec__.name, *sys.argv[1:]],

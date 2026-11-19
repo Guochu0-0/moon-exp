@@ -19,7 +19,8 @@ DISPLAY = {
     "spsg": "SuperPoint + SuperGlue",
     "minima_splg": "MINIMA SuperPoint + LightGlue",
     "redfeat": "ReDFeat",
-    "rift2": "RIFT2",
+    "rift2": "RIFT2 (MATLAB)",
+    "rift2_portable": "RIFT2 (SciPy / FAST-9)",
     "comir": "CoMIR + SIFT",
 }
 DATASETS = {"moon": "Moon Test", "whu": "WHU-OPT-SAR Test"}
@@ -111,7 +112,7 @@ def summarize(rows, domains, methods):
 
 def plots(output, summary, rows, domains, methods):
     plt.rcParams.update({"axes.spines.top": False, "axes.spines.right": False, "font.size": 10})
-    colors = dict(zip(METHODS, plt.get_cmap("tab10").colors))
+    colors = dict(zip(DISPLAY, plt.get_cmap("tab10").colors))
     fig, axes = plt.subplots(len(domains), len(BUDGETS), figsize=(10.5, 3.5 * len(domains)), squeeze=False,
                              sharex=True, sharey=True, layout="constrained")
     for domain, panels in zip(domains, axes):
@@ -163,7 +164,7 @@ def main():
     parser.add_argument("detections", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=tuple(DATASETS))
-    parser.add_argument("--methods", nargs="+", choices=METHODS, default=METHODS)
+    parser.add_argument("--methods", nargs="+", choices=DISPLAY, default=METHODS)
     parser.add_argument("--allow-partial", action="store_true", help="Report jointly scored pairs of an interim batch")
     args = parser.parse_args()
     rows = [row for domain in args.datasets for row in result_rows(args.detections, domain, args.methods)]

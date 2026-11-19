@@ -45,6 +45,7 @@ def main():
     parser.add_argument("--per-roi", type=int, default=4)
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
+    parser.add_argument("--skip-normal", action="store_true", help="Only repeat the masked mode for an existing normal result")
     args = parser.parse_args()
     if args.per_roi < 1 or args.limit < 0:
         parser.error("--per-roi must be positive and --limit nonnegative")
@@ -66,6 +67,7 @@ def main():
     pairs = chosen_pairs(data, args.per_roi)
     if args.limit:
         pairs = pairs[:args.limit]
+    modes = ("no_scale1_position",) if args.skip_normal else ("normal", "no_scale1_position")
     opt_map = inputs.get("optical", opts["input"]["optical"])
     sar_map = inputs.get("sar", opts["input"]["sar"])
     print(json.dumps({"input": opts["input"], "params": opts["params"], "seed": opts["seed"], "pairs": pairs,
@@ -100,7 +102,7 @@ def main():
             sar = sar_map(data.sar("val", pair))
             cp = labels.checkpoints("val", pair)
             result = {"method": name, "pair": pair}
-            for mode in ("normal", "no_scale1_position"):
+            for mode in modes:
                 seed_all(opts["seed"])
                 calls.clear()
                 hook = refiner.register_forward_hook(omit_position) if mode == "no_scale1_position" else None

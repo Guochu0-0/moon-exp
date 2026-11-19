@@ -1,0 +1,414 @@
+{
+  "optical": {
+    "url": "https://huggingface.co/datasets/125oii/whu_opt_sar/resolve/fe1ef62c80217c02259c232dc8e325271be4eaf0/optical.zip",
+    "zip_bytes": 10542351536,
+    "records": {
+      "NH49E001014.tif": {
+        "member": "optical/NH49E001014.tif",
+        "method": 8,
+        "crc32": "5e3c3917",
+        "compressed_bytes": 57051498,
+        "tiff_bytes": 57926358,
+        "local_offset": 167896123,
+        "data_offset": 167896176,
+        "data_end_inclusive": 224947673
+      },
+      "NH49E001017.tif": {
+        "member": "optical/NH49E001017.tif",
+        "method": 8,
+        "crc32": "0dbbfe67",
+        "compressed_bytes": 53288668,
+        "tiff_bytes": 54021306,
+        "local_offset": 278236398,
+        "data_offset": 278236451,
+        "data_end_inclusive": 331525118
+      },
+      "NH49E002012.tif": {
+        "member": "optical/NH49E002012.tif",
+        "method": 8,
+        "crc32": "35373e98",
+        "compressed_bytes": 50922722,
+        "tiff_bytes": 51531216,
+        "local_offset": 382447897,
+        "data_offset": 382447950,
+        "data_end_inclusive": 433370671
+      },
+      "NH49E002016.tif": {
+        "member": "optical/NH49E002016.tif",
+        "method": 8,
+        "crc32": "73bddf41",
+        "compressed_bytes": 58206149,
+        "tiff_bytes": 59238396,
+        "local_offset": 603988930,
+        "data_offset": 603988983,
+        "data_end_inclusive": 662195131
+      },
+      "NH49E003014.tif": {
+        "member": "optical/NH49E003014.tif",
+        "method": 8,
+        "crc32": "e0771abd",
+        "compressed_bytes": 56119852,
+        "tiff_bytes": 56964740,
+        "local_offset": 718315040,
+        "data_offset": 718315093,
+        "data_end_inclusive": 774434944
+      },
+      "NH49E003024.tif": {
+        "member": "optical/NH49E003024.tif",
+        "method": 8,
+        "crc32": "eaf0cf33",
+        "compressed_bytes": 60904389,
+        "tiff_bytes": 62211592,
+        "local_offset": 835339390,
+        "data_offset": 835339443,
+        "data_end_inclusive": 896243831
+      },
+      "NH49E004011.tif": {
+        "member": "optical/NH49E004011.tif",
+        "method": 8,
+        "crc32": "d5e228f9",
+        "compressed_bytes": 41158662,
+        "tiff_bytes": 41381654,
+        "local_offset": 937402550,
+        "data_offset": 937402603,
+        "data_end_inclusive": 978561264
+      },
+      "NH49E005011.tif": {
+        "member": "optical/NH49E005011.tif",
+        "method": 8,
+        "crc32": "7bbd658d",
+        "compressed_bytes": 44661243,
+        "tiff_bytes": 44986536,
+        "local_offset": 1243450704,
+        "data_offset": 1243450757,
+        "data_end_inclusive": 1288111999
+      },
+      "NH49E005019.tif": {
+        "member": "optical/NH49E005019.tif",
+        "method": 8,
+        "crc32": "229fc648",
+        "compressed_bytes": 52547742,
+        "tiff_bytes": 53223354,
+        "local_offset": 1452108271,
+        "data_offset": 1452108324,
+        "data_end_inclusive": 1504656065
+      },
+      "NH49E006019.tif": {
+        "member": "optical/NH49E006019.tif",
+        "method": 8,
+        "crc32": "cdcd2915",
+        "compressed_bytes": 48646988,
+        "tiff_bytes": 49163512,
+        "local_offset": 2107452915,
+        "data_offset": 2107452968,
+        "data_end_inclusive": 2156099955
+      },
+      "NH49E007014.tif": {
+        "member": "optical/NH49E007014.tif",
+        "method": 8,
+        "crc32": "971c0ccf",
+        "compressed_bytes": 55977394,
+        "tiff_bytes": 56871164,
+        "local_offset": 2553434013,
+        "data_offset": 2553434066,
+        "data_end_inclusive": 2609411459
+      },
+      "NH49E008013.tif": {
+        "member": "optical/NH49E008013.tif",
+        "method": 8,
+        "crc32": "d836915a",
+        "compressed_bytes": 56729346,
+        "tiff_bytes": 57637392,
+        "local_offset": 3014597397,
+        "data_offset": 3014597450,
+        "data_end_inclusive": 3071326795
+      },
+      "NH49E009017.tif": {
+        "member": "optical/NH49E009017.tif",
+        "method": 8,
+        "crc32": "3a5a31b4",
+        "compressed_bytes": 59132206,
+        "tiff_bytes": 60232486,
+        "local_offset": 3674619611,
+        "data_offset": 3674619664,
+        "data_end_inclusive": 3733751869
+      },
+      "NH49E010020.tif": {
+        "member": "optical/NH49E010020.tif",
+        "method": 8,
+        "crc32": "28522f9b",
+        "compressed_bytes": 56066900,
+        "tiff_bytes": 57004144,
+        "local_offset": 4331437767,
+        "data_offset": 4331437820,
+        "data_end_inclusive": 4387504719
+      },
+      "NH49E011024.tif": {
+        "member": "optical/NH49E011024.tif",
+        "method": 8,
+        "crc32": "2d68af4a",
+        "compressed_bytes": 39419956,
+        "tiff_bytes": 39675634,
+        "local_offset": 4748780985,
+        "data_offset": 4748781038,
+        "data_end_inclusive": 4788200993
+      },
+      "NH49E012020.tif": {
+        "member": "optical/NH49E012020.tif",
+        "method": 8,
+        "crc32": "65c0d2fa",
+        "compressed_bytes": 52061123,
+        "tiff_bytes": 52825334,
+        "local_offset": 5148431768,
+        "data_offset": 5148431821,
+        "data_end_inclusive": 5200492943
+      },
+      "NH49E013010.tif": {
+        "member": "optical/NH49E013010.tif",
+        "method": 8,
+        "crc32": "14603128",
+        "compressed_bytes": 51381787,
+        "tiff_bytes": 51961862,
+        "local_offset": 5458150399,
+        "data_offset": 5458150452,
+        "data_end_inclusive": 5509532238
+      },
+      "NH50E007002.tif": {
+        "member": "optical/NH50E007002.tif",
+        "method": 8,
+        "crc32": "32ceddf6",
+        "compressed_bytes": 51726160,
+        "tiff_bytes": 52375466,
+        "local_offset": 6777951463,
+        "data_offset": 6777951516,
+        "data_end_inclusive": 6829677675
+      },
+      "NH50E011005.tif": {
+        "member": "optical/NH50E011005.tif",
+        "method": 8,
+        "crc32": "5d529ab8",
+        "compressed_bytes": 53885993,
+        "tiff_bytes": 54651342,
+        "local_offset": 8142217239,
+        "data_offset": 8142217292,
+        "data_end_inclusive": 8196103284
+      },
+      "NH50E014003.tif": {
+        "member": "optical/NH50E014003.tif",
+        "method": 8,
+        "crc32": "93a85dfa",
+        "compressed_bytes": 53260039,
+        "tiff_bytes": 53930722,
+        "local_offset": 8985281523,
+        "data_offset": 8985281576,
+        "data_end_inclusive": 9038541614
+      }
+    }
+  },
+  "sar": {
+    "url": "https://huggingface.co/datasets/125oii/whu_opt_sar/resolve/fe1ef62c80217c02259c232dc8e325271be4eaf0/sar.zip",
+    "zip_bytes": 4332069920,
+    "records": {
+      "NH49E001014.tif": {
+        "member": "sar/NH49E001014.tif",
+        "method": 8,
+        "crc32": "25b43709",
+        "compressed_bytes": 21567007,
+        "tiff_bytes": 23102974,
+        "local_offset": 63631172,
+        "data_offset": 63631221,
+        "data_end_inclusive": 85198227
+      },
+      "NH49E001017.tif": {
+        "member": "sar/NH49E001017.tif",
+        "method": 8,
+        "crc32": "71cec47a",
+        "compressed_bytes": 20394879,
+        "tiff_bytes": 21428458,
+        "local_offset": 105593159,
+        "data_offset": 105593208,
+        "data_end_inclusive": 125988086
+      },
+      "NH49E002012.tif": {
+        "member": "sar/NH49E002012.tif",
+        "method": 8,
+        "crc32": "a04ba9b0",
+        "compressed_bytes": 20923858,
+        "tiff_bytes": 22309718,
+        "local_offset": 146911997,
+        "data_offset": 146912046,
+        "data_end_inclusive": 167835903
+      },
+      "NH49E002016.tif": {
+        "member": "sar/NH49E002016.tif",
+        "method": 8,
+        "crc32": "75748e8c",
+        "compressed_bytes": 21181222,
+        "tiff_bytes": 22386710,
+        "local_offset": 232325071,
+        "data_offset": 232325120,
+        "data_end_inclusive": 253506341
+      },
+      "NH49E003014.tif": {
+        "member": "sar/NH49E003014.tif",
+        "method": 8,
+        "crc32": "320372d3",
+        "compressed_bytes": 21511497,
+        "tiff_bytes": 23023044,
+        "local_offset": 275017891,
+        "data_offset": 275017940,
+        "data_end_inclusive": 296529436
+      },
+      "NH49E003024.tif": {
+        "member": "sar/NH49E003024.tif",
+        "method": 8,
+        "crc32": "17835b3d",
+        "compressed_bytes": 21858582,
+        "tiff_bytes": 23242050,
+        "local_offset": 318388071,
+        "data_offset": 318388120,
+        "data_end_inclusive": 340246701
+      },
+      "NH49E004011.tif": {
+        "member": "sar/NH49E004011.tif",
+        "method": 8,
+        "crc32": "775de597",
+        "compressed_bytes": 20777771,
+        "tiff_bytes": 22086892,
+        "local_offset": 361024525,
+        "data_offset": 361024574,
+        "data_end_inclusive": 381802344
+      },
+      "NH49E005011.tif": {
+        "member": "sar/NH49E005011.tif",
+        "method": 8,
+        "crc32": "66ead511",
+        "compressed_bytes": 21281114,
+        "tiff_bytes": 22730980,
+        "local_offset": 490811629,
+        "data_offset": 490811678,
+        "data_end_inclusive": 512092791
+      },
+      "NH49E005019.tif": {
+        "member": "sar/NH49E005019.tif",
+        "method": 8,
+        "crc32": "1326cce4",
+        "compressed_bytes": 21337069,
+        "tiff_bytes": 22653976,
+        "local_offset": 576973218,
+        "data_offset": 576973267,
+        "data_end_inclusive": 598310335
+      },
+      "NH49E006019.tif": {
+        "member": "sar/NH49E006019.tif",
+        "method": 8,
+        "crc32": "d058c346",
+        "compressed_bytes": 20505570,
+        "tiff_bytes": 21684458,
+        "local_offset": 832520383,
+        "data_offset": 832520432,
+        "data_end_inclusive": 853026001
+      },
+      "NH49E007014.tif": {
+        "member": "sar/NH49E007014.tif",
+        "method": 8,
+        "crc32": "0d5bf2e8",
+        "compressed_bytes": 22119215,
+        "tiff_bytes": 23821764,
+        "local_offset": 1008851658,
+        "data_offset": 1008851707,
+        "data_end_inclusive": 1030970921
+      },
+      "NH49E008013.tif": {
+        "member": "sar/NH49E008013.tif",
+        "method": 8,
+        "crc32": "399c4afa",
+        "compressed_bytes": 21775071,
+        "tiff_bytes": 23412980,
+        "local_offset": 1181289760,
+        "data_offset": 1181289809,
+        "data_end_inclusive": 1203064879
+      },
+      "NH49E009017.tif": {
+        "member": "sar/NH49E009017.tif",
+        "method": 8,
+        "crc32": "75503459",
+        "compressed_bytes": 21453591,
+        "tiff_bytes": 22848022,
+        "local_offset": 1442567532,
+        "data_offset": 1442567581,
+        "data_end_inclusive": 1464021171
+      },
+      "NH49E010020.tif": {
+        "member": "sar/NH49E010020.tif",
+        "method": 8,
+        "crc32": "52533443",
+        "compressed_bytes": 22059025,
+        "tiff_bytes": 23435862,
+        "local_offset": 1704948556,
+        "data_offset": 1704948605,
+        "data_end_inclusive": 1727007629
+      },
+      "NH49E011024.tif": {
+        "member": "sar/NH49E011024.tif",
+        "method": 8,
+        "crc32": "e3764eb1",
+        "compressed_bytes": 20354381,
+        "tiff_bytes": 21894652,
+        "local_offset": 1874619358,
+        "data_offset": 1874619407,
+        "data_end_inclusive": 1894973787
+      },
+      "NH49E012020.tif": {
+        "member": "sar/NH49E012020.tif",
+        "method": 8,
+        "crc32": "73c2b110",
+        "compressed_bytes": 23112839,
+        "tiff_bytes": 24943774,
+        "local_offset": 2046183394,
+        "data_offset": 2046183443,
+        "data_end_inclusive": 2069296281
+      },
+      "NH49E013010.tif": {
+        "member": "sar/NH49E013010.tif",
+        "method": 8,
+        "crc32": "c78d8ded",
+        "compressed_bytes": 21549413,
+        "tiff_bytes": 23081142,
+        "local_offset": 2178780639,
+        "data_offset": 2178780688,
+        "data_end_inclusive": 2200330100
+      },
+      "NH50E007002.tif": {
+        "member": "sar/NH50E007002.tif",
+        "method": 8,
+        "crc32": "b6df5f17",
+        "compressed_bytes": 22927234,
+        "tiff_bytes": 24708640,
+        "local_offset": 2736281697,
+        "data_offset": 2736281746,
+        "data_end_inclusive": 2759208979
+      },
+      "NH50E011005.tif": {
+        "member": "sar/NH50E011005.tif",
+        "method": 8,
+        "crc32": "0f8bda0f",
+        "compressed_bytes": 21637000,
+        "tiff_bytes": 23164448,
+        "local_offset": 3304281226,
+        "data_offset": 3304281275,
+        "data_end_inclusive": 3325918274
+      },
+      "NH50E014003.tif": {
+        "member": "sar/NH50E014003.tif",
+        "method": 8,
+        "crc32": "c9ed09a1",
+        "compressed_bytes": 22619108,
+        "tiff_bytes": 24377542,
+        "local_offset": 3654334890,
+        "data_offset": 3654334939,
+        "data_end_inclusive": 3676954046
+      }
+    }
+  }
+}

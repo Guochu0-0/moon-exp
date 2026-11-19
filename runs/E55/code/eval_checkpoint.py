@@ -20,7 +20,7 @@ from workbench.evaluate import evaluate_preds  # noqa: E402
 from workbench.records import Run  # noqa: E402
 
 STEPS = (*range(250, 7907, 250), 7907)
-METHODS = ("k0", "k1", "k2", "k3", "k4", "k5", "k4_seed1")
+METHODS = ("k0", "k1", "k2", "k3", "k4", "k5", "k4_seed1", "k3_no_screen")
 E41_BEST_HASH = "052af2db0c18dea9f1f562749ccb1673a4aa63f8487925df06d56062e8b57019"
 
 
@@ -104,6 +104,8 @@ def main():
             shutil.copy2(preds / "val.jsonl", val / "val.jsonl")
             write_json(sweep / "scores" / f"{args.step}.json", {"step": args.step, "summary": summary, "match": meta})
         return
+    if method == 'k3_no_screen':
+        parser.error('k3_no_screen is a validation-only diagnostic')
     if args.step is not None:
         parser.error("test reads the selected step")
     step, val, source = select(method)

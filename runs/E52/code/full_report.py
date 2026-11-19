@@ -8,19 +8,21 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 from scipy.io import loadmat
 
-from .repeatability import METHODS, RADII_PX, TEST_COUNTS, evaluate_geometry
+from .repeatability import RADII_PX, TEST_COUNTS, evaluate_geometry
 
 BUDGETS = (300, 1024)
+REPORT_METHODS = ("rift2_portable", "superpoint_original", "redfeat")
 DISPLAY = {
-    "superpoint_original": "SuperPoint + LightGlue",
+    "superpoint_original": "SuperPoint",
     "spsg": "SuperPoint + SuperGlue",
     "minima_splg": "MINIMA SuperPoint + LightGlue",
     "redfeat": "ReDFeat",
     "rift2": "RIFT2 (MATLAB)",
-    "rift2_portable": "RIFT2 (SciPy / FAST-9)",
+    "rift2_portable": "RIFT2 (CPU)",
     "comir": "CoMIR + SIFT",
 }
 DATASETS = {"moon": "Moon Test", "whu": "WHU-OPT-SAR Test"}
@@ -64,6 +66,24 @@ def result_rows(root, domain, methods):
                            sar_evaluated=result["sar_top_points"], reference_loo_px=reference.get("leave_one_out_mean_px"))
                 scores = {item["radius_px"]: item["repeatability"] for item in result["thresholds"]}
                 yield {**row, **{f"repeatability_{r}px": scores.get(r, 0.0) for r in RADII_PX}}
+
+
+def load_pair_csv(path, domains, methods):
+    with path.open(encoding="utf-8", newline="") as stream:
+        reader = csv.DictReader(stream)
+        if not set(FIELDS).issubset(reader.fieldnames or ()):
+            raise ValueError(f"Missing per-pair columns in {path}")
+        for row in reader:
+            if row["dataset"] not in domains or row["method"] not in methods:
+                continue
+            row["top_k"] = int(row["top_k"])
+            if row["status"] == "scored":
+                for field in ("optical_evaluated", "sar_evaluated"):
+                    row[field] = int(row[field])
+                for radius in RADII_PX:
+                    field = f"repeatability_{radius}px"
+                    row[field] = float(row[field])
+            yield {field: row[field] for field in FIELDS}
 
 
 def write_csv(path, rows, fields=None):
@@ -159,15 +179,48 @@ def plots(output, summary, rows, domains, methods):
     plt.close(fig)
 
 
+def plot_datasets_together(output, summary, methods):
+    fig, axes = plt.subplots(1, len(BUDGETS), figsize=(8.4, 3.1), sharex=True, sharey=True,
+                             layout="constrained")
+    styles = {"moon": ("#315b9a", "o", -0.16), "whu": ("#b94d26", "D", 0.16)}
+    groups = np.arange(len(methods))
+    rows = {(row["dataset"], row["top_k"], row["method"]): row
+            for row in summary if row["radius_px"] == 3}
+    for ax, budget in zip(axes, BUDGETS):
+        for domain, (color, marker, offset) in styles.items():
+            series = [rows[domain, budget, method] for method in methods]
+            low, mean, high = ([100 * row[key] for row in series] for key in ("ci95_low", "mean", "ci95_high"))
+            y = groups + offset
+            ax.hlines(y, low, high, color=color, linewidth=2)
+            ax.scatter(mean, y, color=color, marker=marker, zorder=3, s=29)
+        ax.set_title(f"Top {budget:,} points per image", loc="left")
+        ax.set_yticks(groups, [DISPLAY[method] for method in methods])
+        ax.set_xlim(left=0)
+        ax.set_xlabel("Mean repeatability at 3 px (%)")
+        ax.grid(axis="x", alpha=0.2)
+    axes[0].invert_yaxis()
+    handles = [Line2D([], [], color=color, marker=marker, linewidth=2,
+                      label=f"{DATASETS[domain]} (n={rows[domain, BUDGETS[0], methods[0]]['joint_scored_pairs']:,})")
+               for domain, (color, marker, _) in styles.items()]
+    fig.legend(handles=handles, loc="outside lower center", ncol=2, frameon=False)
+    fig.savefig(output / "moon_whu_comparison.png", dpi=220)
+    fig.savefig(output / "moon_whu_comparison.pdf")
+    plt.close(fig)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("detections", type=Path)
+    parser.add_argument("detections", type=Path, help="Detection directory or per-pair CSV with --from-pair-csv")
     parser.add_argument("output", type=Path)
     parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=tuple(DATASETS))
-    parser.add_argument("--methods", nargs="+", choices=DISPLAY, default=METHODS)
+    parser.add_argument("--methods", nargs="+", choices=DISPLAY, default=REPORT_METHODS)
     parser.add_argument("--allow-partial", action="store_true", help="Report jointly scored pairs of an interim batch")
+    parser.add_argument("--from-pair-csv", action="store_true", help="Reuse saved per-pair results")
     args = parser.parse_args()
-    rows = [row for domain in args.datasets for row in result_rows(args.detections, domain, args.methods)]
+    if args.from_pair_csv:
+        rows = list(load_pair_csv(args.detections, args.datasets, args.methods))
+    else:
+        rows = [row for domain in args.datasets for row in result_rows(args.detections, domain, args.methods)]
     for domain in args.datasets:
         subset = [row for row in rows if row["dataset"] == domain and row["method"] == args.methods[0]
                   and row["top_k"] == BUDGETS[0]]
@@ -182,6 +235,8 @@ def main():
     write_csv(args.output / "per_pair.csv", rows, FIELDS)
     write_csv(args.output / "summary.csv", summary)
     plots(args.output, summary, rows, args.datasets, args.methods)
+    if set(args.datasets) == set(DATASETS):
+        plot_datasets_together(args.output, summary, args.methods)
 
 
 if __name__ == "__main__":

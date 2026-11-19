@@ -54,24 +54,36 @@ def point_repeatability(optical, sar):
     return rows
 
 
-def evaluate(row, labels, detections):
-    # The label archive stores y upwards. Detection coordinates use pixel centers.
-    points = np.loadtxt(labels, dtype=np.float64, ndmin=2)[:, :4]
-    points[:, [1, 3]] *= -1
-    source, target = points[:, :2], points[:, 2:]
+def evaluate_geometry(row, detections, linear, shift):
     pair = row["pair"]
     key = pair.replace("/", "__")
     optical = detections[f"{key}__optical"]
     sar = detections[f"{key}__sar"]
+    # Detection coordinates use pixel centers, with (0, 0) at the first center.
     xy_optical, xy_sar = optical[:, :2] + 0.5, sar[:, :2] + 0.5
     size = row["window_xywh"][2:]
-    linear, shift = affine(source, target)
     mapped_optical = xy_optical @ linear + shift
     inverse_sar = (xy_sar - shift) @ np.linalg.inv(linear)
     optical_overlap = inside(xy_optical, size) & inside(mapped_optical, size)
     sar_overlap = inside(xy_sar, size) & inside(inverse_sar, size)
     optical_top = top_points(mapped_optical, optical[:, 2], optical_overlap)
     sar_top = top_points(xy_sar, sar[:, 2], sar_overlap)
+
+    return {
+        "optical_overlap_points": int(optical_overlap.sum()),
+        "sar_overlap_points": int(sar_overlap.sum()),
+        "optical_top_points": len(optical_top),
+        "sar_top_points": len(sar_top),
+        "thresholds": point_repeatability(optical_top, sar_top),
+    }
+
+
+def evaluate(row, labels, detections):
+    # The label archive stores y upwards.
+    points = np.loadtxt(labels, dtype=np.float64, ndmin=2)[:, :4]
+    points[:, [1, 3]] *= -1
+    source, target = points[:, :2], points[:, 2:]
+    linear, shift = affine(source, target)
 
     holdout_errors = []
     for index in range(len(source)):
@@ -81,16 +93,12 @@ def evaluate(row, labels, detections):
         holdout_errors.append(float(np.linalg.norm(predicted - target[index])))
 
     return {
-        "pair": pair,
+        "pair": row["pair"],
         "evaluation_points": len(source),
         "reference_affine": np.vstack((linear, shift)).T.tolist(),
         "reference_leave_one_out_mean_px": float(np.mean(holdout_errors)),
         "reference_leave_one_out_errors_px": holdout_errors,
-        "optical_overlap_points": int(optical_overlap.sum()),
-        "sar_overlap_points": int(sar_overlap.sum()),
-        "optical_top_points": len(optical_top),
-        "sar_top_points": len(sar_top),
-        "thresholds": point_repeatability(optical_top, sar_top),
+        **evaluate_geometry(row, detections, linear, shift),
     }
 
 

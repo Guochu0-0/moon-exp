@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.io import loadmat
 
-from .full_detect import METHODS
-from .repeatability import RADII_PX, evaluate_geometry
+from .repeatability import METHODS, RADII_PX, evaluate_geometry
 
 BUDGETS = (300, 1024)
 DISPLAY = {

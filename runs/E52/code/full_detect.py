@@ -7,7 +7,6 @@ from pathlib import Path
 import sys
 
 import numpy as np
-from scipy.io import savemat
 import torch
 
 from baselines.adapters.base import long_side_size, to_original
@@ -19,11 +18,8 @@ from runs.E51.code.extract_moon import ROOT, SIZE, write_json
 from runs.E51.code.extract_superpoint import OriginalSuperPoint, WEIGHTS_SHA256
 from workbench import launch
 from .full_data import DOMAINS, MODALITIES, image_reader, moon_pairs, whu_pairs
-from .repeatability import RUN
+from .repeatability import METHODS, RUN
 from .texture_detect import RED_SHA256, verified_commit
-
-METHODS = ("superpoint_original", "spsg", "minima_splg", "redfeat", "rift2", "comir")
-
 
 def config(method):
     name = "splg" if method == "superpoint_original" else method
@@ -82,7 +78,7 @@ def detector(args, cfg):
         if info["weights_sha256"] != WEIGHTS_SHA256:
             raise ValueError(f"Unexpected SuperPoint weights: {path}")
     if method == "redfeat":
-        path = repo / "Pretrained" / "VIS_SAR.pth"
+        path = args.weights / cfg["weights"]
         info["weights_sha256"] = sha256(path)
         if info["weights_sha256"] != RED_SHA256:
             raise ValueError(f"Unexpected ReDFeat weights: {path}")
@@ -126,6 +122,8 @@ def atomic_npz(path, points):
 
 
 def save_mat(path, images):
+    from scipy.io import savemat
+
     temporary = path.with_suffix(".tmp")
     savemat(temporary, images, appendmat=False)
     temporary.replace(path)
@@ -160,9 +158,12 @@ def run(args):
         if json.loads(manifest.read_text(encoding="utf-8")) != rows:
             raise ValueError(f"Manifest changed: {manifest}")
     else:
-        write_json(manifest, rows)
+        method_manifest = method_dir / "manifest.json"
+        write_json(method_manifest, rows)
+        method_manifest.replace(manifest)
     for group, group_rows in groupby(rows, key=lambda row: row["group"]):
-        with image_reader(args.domain, next(row["paths"] for row in rows if row["group"] == group)) as read:
+        group_rows = list(group_rows)
+        with image_reader(args.domain, group_rows[0]["paths"]) as read:
             for row in group_rows:
                 path = method_dir / (row["pair"].replace("/", "__") + extension)
                 if not path.exists():

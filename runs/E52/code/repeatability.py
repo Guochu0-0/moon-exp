@@ -8,13 +8,13 @@ import json
 from pathlib import Path
 
 import numpy as np
-from scipy.spatial import cKDTree
 
 
 RUN = Path(__file__).resolve().parents[1]
 E51_DATA = RUN.parent / "E51" / "extra" / "data"
 TOP_K = 300
 RADII_PX = (1, 3, 5)
+METHODS = ("superpoint_original", "spsg", "minima_splg", "redfeat", "rift2", "comir")
 
 
 def affine(source, target):
@@ -36,6 +36,8 @@ def top_points(points, scores, mask, top_k):
 
 
 def point_repeatability(optical, sar):
+    from scipy.spatial import cKDTree
+
     if len(optical) + len(sar) == 0:
         return []
     optical_nearest = cKDTree(sar).query(optical)[0]

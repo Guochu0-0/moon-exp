@@ -1,0 +1,29 @@
+{
+  "device": "cuda",
+  "torch": "2.2.2",
+  "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+  },
+  "redfeat_commit": "66df80027dcb649118259a91cadbff4b50adc880",
+  "redfeat_sha256": "6294dcbd7b116c02bba4b7704ed8495ead1666a81494b14630945014ffaeea24",
+  "redfeat_config": {
+    "num_features": 4096,
+    "min_size": 256,
+    "max_size": 1000,
+    "scale_factor": 1.189207115002721,
+    "repeatability_threshold": 0.4,
+    "border": 5,
+    "ratio": 0.9
+  },
+  "superpoint_commit": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+  "superpoint_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+  "superpoint_config": {
+    "descriptor_dim": 256,
+    "nms_radius": 4,
+    "max_num_keypoints": null,
+    "detection_threshold": 0.0005,
+    "remove_borders": 4
+  },
+  "superpoint_resize": 1024
+}

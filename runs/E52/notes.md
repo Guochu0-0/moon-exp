@@ -84,3 +84,21 @@
 3 px 下三组均值依次为 11.09%、14.27%、21.88%，对应随机均值为 10.77%、10.39%、10.39%。5 px 下月球为 26.22%，对应随机均值为 27.06%。这批月球样例的参考仿射来自人工点拟合，地球样例使用发布像素网格，且城市候选经过场景挑选。
 
 从 `moon-exp` 根目录复现 `python -m runs.E52.code.compare_e51 ../moon-dataset/data/ground-truth --detector redfeat --top-k 1024`。
+
+## 扩大月球样本并对照地球城市（300 点）
+
+在 6 个 Val ROI 中筛查 642 对带人工评测真值点的月球 patch，排除 E51 已归档的 patch。对光学影像先按 `/255` 归一化，用 σ=2 px 的高斯滤波减弱细小噪声，再计算梯度幅值。取各 32 × 32 小块内的平均梯度幅值，再取整幅 patch 的块中位数，描述典型局部起伏强度。每个 ROI 分别从该分数的最低和最高四分位各等距取 4 对，得到 24 对低纹理和 24 对较高纹理。选样独立于检测和匹配结果。两组光学纹理分数的中位数分别为 0.00142 和 0.00254。 [样例清单](extra/texture_comparison/selection.json)
+
+对新月球样例用 E51 的原版 SuperPoint 和 ReDFeat 权重、输入映射与检测参数重新提取点。共同可见区内每侧最多取 300 点，按 1、3、5 px 统计点级可重复率。月球用人工点拟合参考仿射，WHU 城市样例用发布像素网格。城市组使用 E51 A1–D4 的 16 对归档检测坐标重新计算，逐对结果与原 E52 一致。随机对照使用各自区域和实际点数，每种配置模拟 5,000 次。 [推理配置与权重校验](extra/texture_comparison/provenance.json) · [WHU 数据说明](https://www.sciencedirect.com/science/article/pii/S0303243421003457)
+
+| 样例组 | 对数 | SuperPoint @3 px | ReDFeat @3 px | 随机 @3 px |
+| --- | ---: | ---: | ---: | ---: |
+| 月球低纹理 | 24 | 5.56% | 3.93% | 3.40% |
+| 月球较高纹理 | 24 | 4.15% | 3.51% | 3.48% |
+| 地球 WHU 城市 | 16 | 6.26% | 12.17% | 3.16% |
+
+两种检测器在 64 对样例的两侧均能保留 300 点。月球两组的 ReDFeat 读数接近随机，低纹理组的均值略高于较高纹理组。两组参考仿射留一平均误差的中位数分别为 3.34 和 3.88 px。此次分层依据是光学梯度，跨组参考几何、地形和成像条件并未控制，读数不足以将月球与地球城市之间的差异归因于纹理。 [逐图结果表](extra/texture_comparison/per_patch.md)
+
+可视化每个 ROI 在入选样例中的最低分和最高分 patch，共用光学显示灰度范围。低纹理检测叠图只画实际进入几何评测的点。 [月球纹理对照](extra/texture_comparison/moon_texture_examples.jpg) · [月球低纹理检测叠图](extra/texture_comparison/moon_low_texture_detections.jpg) · [高于随机的逐对分布](extra/texture_comparison/texture_repeatability.png) · [E51 地球城市叠图](../E51/notes.md)
+
+复现代码按顺序为 `runs.E52.code.texture_sample`、`runs.E52.code.texture_detect`、`runs.E52.code.texture_evaluate` 和 `runs.E52.code.texture_plots`，各模块通过 `--help` 列出输入参数。 [原始逐对结果](extra/texture_comparison/texture_evaluation.json)

@@ -1,0 +1,674 @@
+[
+  {
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_79",
+    "texture_group": "low",
+    "texture_score": 0.0017387161497026682,
+    "rank_in_roi": 6,
+    "eligible_in_roi": 170,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_105",
+    "texture_group": "low",
+    "texture_score": 0.0019555077888071537,
+    "rank_in_roi": 16,
+    "eligible_in_roi": 170,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_56",
+    "texture_group": "low",
+    "texture_score": 0.002057680394500494,
+    "rank_in_roi": 27,
+    "eligible_in_roi": 170,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_62",
+    "texture_group": "low",
+    "texture_score": 0.002162052784115076,
+    "rank_in_roi": 37,
+    "eligible_in_roi": 170,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_161",
+    "texture_group": "higher",
+    "texture_score": 0.0027731982991099358,
+    "rank_in_roi": 134,
+    "eligible_in_roi": 170,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_16",
+    "texture_group": "higher",
+    "texture_score": 0.002894294448196888,
+    "rank_in_roi": 144,
+    "eligible_in_roi": 170,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_196",
+    "texture_group": "higher",
+    "texture_score": 0.003010787535458803,
+    "rank_in_roi": 155,
+    "eligible_in_roi": 170,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_170",
+    "texture_group": "higher",
+    "texture_score": 0.0032808068208396435,
+    "rank_in_roi": 165,
+    "eligible_in_roi": 170,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_049",
+    "pair": "ROI_049/patch_24",
+    "texture_group": "low",
+    "texture_score": 0.0008521907730028033,
+    "rank_in_roi": 3,
+    "eligible_in_roi": 88,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_049",
+    "pair": "ROI_049/patch_6",
+    "texture_group": "low",
+    "texture_score": 0.0008789481362327933,
+    "rank_in_roi": 9,
+    "eligible_in_roi": 88,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_049",
+    "pair": "ROI_049/patch_16",
+    "texture_group": "low",
+    "texture_score": 0.000929644622374326,
+    "rank_in_roi": 14,
+    "eligible_in_roi": 88,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_049",
+    "pair": "ROI_049/patch_27",
+    "texture_group": "low",
+    "texture_score": 0.0010038400068879128,
+    "rank_in_roi": 20,
+    "eligible_in_roi": 88,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_049",
+    "pair": "ROI_049/patch_53",
+    "texture_group": "higher",
+    "texture_score": 0.0016562558012083173,
+    "rank_in_roi": 69,
+    "eligible_in_roi": 88,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_049",
+    "pair": "ROI_049/patch_77",
+    "texture_group": "higher",
+    "texture_score": 0.0016982678789645433,
+    "rank_in_roi": 75,
+    "eligible_in_roi": 88,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_049",
+    "pair": "ROI_049/patch_112",
+    "texture_group": "higher",
+    "texture_score": 0.0017787108663469553,
+    "rank_in_roi": 80,
+    "eligible_in_roi": 88,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_049",
+    "pair": "ROI_049/patch_99",
+    "texture_group": "higher",
+    "texture_score": 0.0019509927369654179,
+    "rank_in_roi": 86,
+    "eligible_in_roi": 88,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_10",
+    "texture_group": "low",
+    "texture_score": 0.0009921948658302426,
+    "rank_in_roi": 4,
+    "eligible_in_roi": 110,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_0",
+    "texture_group": "low",
+    "texture_score": 0.001040685921907425,
+    "rank_in_roi": 11,
+    "eligible_in_roi": 110,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_9",
+    "texture_group": "low",
+    "texture_score": 0.001064145821146667,
+    "rank_in_roi": 17,
+    "eligible_in_roi": 110,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_16",
+    "texture_group": "low",
+    "texture_score": 0.0010975865880027413,
+    "rank_in_roi": 24,
+    "eligible_in_roi": 110,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_158",
+    "texture_group": "higher",
+    "texture_score": 0.0017664150800555944,
+    "rank_in_roi": 87,
+    "eligible_in_roi": 110,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_58",
+    "texture_group": "higher",
+    "texture_score": 0.0018150433897972107,
+    "rank_in_roi": 94,
+    "eligible_in_roi": 110,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_57",
+    "texture_group": "higher",
+    "texture_score": 0.0019475698936730623,
+    "rank_in_roi": 100,
+    "eligible_in_roi": 110,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_155",
+    "texture_group": "higher",
+    "texture_score": 0.0023094527423381805,
+    "rank_in_roi": 107,
+    "eligible_in_roi": 110,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_3",
+    "texture_group": "low",
+    "texture_score": 0.0008218448492698371,
+    "rank_in_roi": 1,
+    "eligible_in_roi": 26,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_23",
+    "texture_group": "low",
+    "texture_score": 0.0008924516732804477,
+    "rank_in_roi": 3,
+    "eligible_in_roi": 26,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_7",
+    "texture_group": "low",
+    "texture_score": 0.0009009231580421329,
+    "rank_in_roi": 4,
+    "eligible_in_roi": 26,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_0",
+    "texture_group": "low",
+    "texture_score": 0.000919097859878093,
+    "rank_in_roi": 6,
+    "eligible_in_roi": 26,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_38",
+    "texture_group": "higher",
+    "texture_score": 0.001199830323457718,
+    "rank_in_roi": 21,
+    "eligible_in_roi": 26,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_18",
+    "texture_group": "higher",
+    "texture_score": 0.0012276871129870415,
+    "rank_in_roi": 23,
+    "eligible_in_roi": 26,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_37",
+    "texture_group": "higher",
+    "texture_score": 0.0012537820730358362,
+    "rank_in_roi": 24,
+    "eligible_in_roi": 26,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_16",
+    "texture_group": "higher",
+    "texture_score": 0.0014223892940208316,
+    "rank_in_roi": 26,
+    "eligible_in_roi": 26,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_075",
+    "pair": "ROI_075/patch_171",
+    "texture_group": "low",
+    "texture_score": 0.0022557368502020836,
+    "rank_in_roi": 6,
+    "eligible_in_roi": 174,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_075",
+    "pair": "ROI_075/patch_147",
+    "texture_group": "low",
+    "texture_score": 0.002494212705641985,
+    "rank_in_roi": 17,
+    "eligible_in_roi": 174,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_075",
+    "pair": "ROI_075/patch_149",
+    "texture_group": "low",
+    "texture_score": 0.002642374951392412,
+    "rank_in_roi": 27,
+    "eligible_in_roi": 174,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_075",
+    "pair": "ROI_075/patch_157",
+    "texture_group": "low",
+    "texture_score": 0.002838053973391652,
+    "rank_in_roi": 38,
+    "eligible_in_roi": 174,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_075",
+    "pair": "ROI_075/patch_70",
+    "texture_group": "higher",
+    "texture_score": 0.0038952454924583435,
+    "rank_in_roi": 137,
+    "eligible_in_roi": 174,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_075",
+    "pair": "ROI_075/patch_71",
+    "texture_group": "higher",
+    "texture_score": 0.003956553526222706,
+    "rank_in_roi": 148,
+    "eligible_in_roi": 174,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_075",
+    "pair": "ROI_075/patch_38",
+    "texture_group": "higher",
+    "texture_score": 0.0041533964686095715,
+    "rank_in_roi": 158,
+    "eligible_in_roi": 174,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_075",
+    "pair": "ROI_075/patch_109",
+    "texture_group": "higher",
+    "texture_score": 0.004822302609682083,
+    "rank_in_roi": 169,
+    "eligible_in_roi": 174,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_100",
+    "texture_group": "low",
+    "texture_score": 0.0018067320343106985,
+    "rank_in_roi": 3,
+    "eligible_in_roi": 74,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_90",
+    "texture_group": "low",
+    "texture_score": 0.0019169440492987633,
+    "rank_in_roi": 7,
+    "eligible_in_roi": 74,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_84",
+    "texture_group": "low",
+    "texture_score": 0.0019887033849954605,
+    "rank_in_roi": 12,
+    "eligible_in_roi": 74,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_72",
+    "texture_group": "low",
+    "texture_score": 0.0020456118509173393,
+    "rank_in_roi": 16,
+    "eligible_in_roi": 74,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_24",
+    "texture_group": "higher",
+    "texture_score": 0.0028675198554992676,
+    "rank_in_roi": 59,
+    "eligible_in_roi": 74,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_11",
+    "texture_group": "higher",
+    "texture_score": 0.0029647983610630035,
+    "rank_in_roi": 63,
+    "eligible_in_roi": 74,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_7",
+    "texture_group": "higher",
+    "texture_score": 0.0030653844587504864,
+    "rank_in_roi": 68,
+    "eligible_in_roi": 74,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  },
+  {
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_4",
+    "texture_group": "higher",
+    "texture_score": 0.0032819723710417747,
+    "rank_in_roi": 72,
+    "eligible_in_roi": 74,
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ]
+  }
+]

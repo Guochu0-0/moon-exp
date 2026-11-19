@@ -53,7 +53,7 @@ def point_repeatability(optical, sar):
     return rows
 
 
-def evaluate_geometry(row, detections, linear, shift, *, top_k=TOP_K):
+def overlap_points(row, detections, linear, shift, top_k=TOP_K):
     pair = row["pair"]
     key = pair.replace("/", "__")
     optical = detections[f"{key}__optical"]
@@ -67,10 +67,14 @@ def evaluate_geometry(row, detections, linear, shift, *, top_k=TOP_K):
     sar_overlap = inside(xy_sar, size) & inside(inverse_sar, size)
     optical_top = top_points(mapped_optical, optical[:, 2], optical_overlap, top_k)
     sar_top = top_points(xy_sar, sar[:, 2], sar_overlap, top_k)
+    return optical_top, sar_top, int(optical_overlap.sum()), int(sar_overlap.sum())
 
+
+def evaluate_geometry(row, detections, linear, shift, *, top_k=TOP_K):
+    optical_top, sar_top, optical_count, sar_count = overlap_points(row, detections, linear, shift, top_k)
     return {
-        "optical_overlap_points": int(optical_overlap.sum()),
-        "sar_overlap_points": int(sar_overlap.sum()),
+        "optical_overlap_points": optical_count,
+        "sar_overlap_points": sar_count,
         "optical_top_points": len(optical_top),
         "sar_top_points": len(sar_top),
         "thresholds": point_repeatability(optical_top, sar_top),

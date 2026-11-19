@@ -1,6 +1,7 @@
 """Export before-matching detections for an entire Test split, with per-pair resume."""
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 from itertools import groupby
 import json
 from pathlib import Path
@@ -172,17 +173,31 @@ def run(args):
         method_manifest = method_dir / "manifest.json"
         write_json(method_manifest, rows)
         method_manifest.replace(manifest)
-    for group, group_rows in groupby(rows, key=lambda row: row["group"]):
-        group_rows = list(group_rows)
-        with image_reader(args.domain, group_rows[0]["paths"]) as read:
-            for row in group_rows:
-                path = method_dir / (row["pair"].replace("/", "__") + extension)
-                if not path.exists():
-                    images = read(row)
-                    if any(image.shape != (SIZE, SIZE) or not np.isfinite(image).all() for image in images.values()):
-                        raise ValueError(f"Invalid mapped images for {row['pair']}")
-                    process(path, images)
-        print(f"{args.domain} {args.method} {group}", flush=True)
+    def pending(group_rows, read):
+        for row in group_rows:
+            path = method_dir / (row["pair"].replace("/", "__") + extension)
+            if path.exists():
+                continue
+            images = read(row)
+            if any(image.shape != (SIZE, SIZE) or not np.isfinite(image).all() for image in images.values()):
+                raise ValueError(f"Invalid mapped images for {row['pair']}")
+            yield path, images
+
+    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        for group, group_rows in groupby(rows, key=lambda row: row["group"]):
+            group_rows = list(group_rows)
+            with image_reader(args.domain, group_rows[0]["paths"]) as read:
+                jobs = []
+                for path, images in pending(group_rows, read):
+                    if args.workers == 1:
+                        process(path, images)
+                    else:
+                        jobs.append(pool.submit(process, path, images))
+                        if len(jobs) >= 2 * args.workers:
+                            jobs.pop(0).result()
+                for job in jobs:
+                    job.result()
+            print(f"{args.domain} {args.method} {group}", flush=True)
     print(f"{args.domain} {args.method}: {len(rows)} pairs", flush=True)
     return info
 
@@ -197,7 +212,12 @@ def main():
     parser.add_argument("--rift2-backend", choices=("matlab", "portable"), default="matlab")
     parser.add_argument("--device", default="cuda", choices=("cpu", "cuda"))
     parser.add_argument("--limit", type=int, default=0)
+    parser.add_argument("--workers", type=int, default=1, help="CPU workers for the portable RIFT2 detector")
     args = parser.parse_args()
+    if not 1 <= args.workers <= 4:
+        parser.error("--workers must be between 1 and 4")
+    if args.workers > 1 and (args.method != "rift2" or args.rift2_backend != "portable" or args.device != "cpu"):
+        parser.error("--workers > 1 requires the portable RIFT2 CPU detector")
 
     config_name = f"full_{args.domain}_{args.method}"
     if args.method == "rift2" and args.rift2_backend == "portable":

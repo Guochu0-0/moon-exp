@@ -1,0 +1,22 @@
+[
+ {
+  "start": "2026-11-19 12:05:28 +0000",
+  "end": "2026-11-19 12:05:33 +0000",
+  "status": "ok",
+  "commit": "c822fdbc5bb58247d18d7dc64073a5b587f0d680",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/e52-three-detectors",
+  "cuda_visible_devices": "",
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E52.code.full_report",
+   "runs/E52/extra/full_test/per_pair.csv",
+   "runs/E52/raw/moon_whu_curves",
+   "--from-pair-csv"
+  ]
+ }
+]

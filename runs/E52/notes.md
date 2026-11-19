@@ -137,7 +137,7 @@
 
 ![RIFT2、SuperPoint 和 ReDFeat 在月球与 WHU 上的同轴对比](extra/full_test/moon_whu_comparison.png)
 
-图 3。点表示 3 px 容差下的逐对均值，横线表示 95% bootstrap 区间。 [PDF](extra/full_test/moon_whu_comparison.pdf)
+图 3。曲线给出 1、3、5 px 容差下的平均可重复率。颜色区分检测器，实线表示月球，虚线表示 WHU。灰色水平点线标出 3 px 容差下的均匀随机点参照。随机点在完整的 512 × 512 像素窗口内独立采样，每侧取 300 点时为 3.19%，每侧取 1,024 点时为 10.41%。 [PDF](extra/full_test/moon_whu_comparison.pdf) · [随机点参照数据](extra/e51_earth_checks.json)
 
 **讨论**
 

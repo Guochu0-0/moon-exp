@@ -1,0 +1,164 @@
+{
+  "top_k_per_image": 300,
+  "results": [
+    {
+      "pair": "ROI_035/patch_26",
+      "evaluation_points": 8,
+      "reference_affine": [
+        [
+          1.0156591334919836,
+          0.019055903544866727,
+          2.1130885711972742
+        ],
+        [
+          0.000490329382839573,
+          1.0041777795496758,
+          -0.7993572508153254
+        ]
+      ],
+      "reference_leave_one_out_mean_px": 7.30008420978512,
+      "reference_leave_one_out_errors_px": [
+        4.708887889801607,
+        10.259635642635915,
+        10.290603470440569,
+        1.72747442205217,
+        3.196752512437541,
+        4.850900493770413,
+        7.330777322156848,
+        16.035641924985896
+      ],
+      "optical_overlap_points": 909,
+      "sar_overlap_points": 1736,
+      "optical_top_points": 300,
+      "sar_top_points": 300,
+      "thresholds": [
+        {
+          "radius_px": 1,
+          "optical_hits": 0,
+          "sar_hits": 0,
+          "repeatability": 0.0
+        },
+        {
+          "radius_px": 3,
+          "optical_hits": 14,
+          "sar_hits": 14,
+          "repeatability": 0.04666666666666667
+        },
+        {
+          "radius_px": 5,
+          "optical_hits": 40,
+          "sar_hits": 41,
+          "repeatability": 0.135
+        }
+      ]
+    },
+    {
+      "pair": "ROI_070/patch_21",
+      "evaluation_points": 8,
+      "reference_affine": [
+        [
+          0.9753457019993729,
+          0.005901896107517013,
+          6.334793597880381
+        ],
+        [
+          -0.0026756639112983653,
+          1.00223171015721,
+          -0.6315359212435033
+        ]
+      ],
+      "reference_leave_one_out_mean_px": 2.0586617832629384,
+      "reference_leave_one_out_errors_px": [
+        1.3589962642904878,
+        1.174099487309822,
+        2.794031345213775,
+        1.1456665183750803,
+        0.928731663038002,
+        1.4904482483713057,
+        4.178255997169893,
+        3.399064742335142
+      ],
+      "optical_overlap_points": 682,
+      "sar_overlap_points": 2270,
+      "optical_top_points": 300,
+      "sar_top_points": 300,
+      "thresholds": [
+        {
+          "radius_px": 1,
+          "optical_hits": 3,
+          "sar_hits": 3,
+          "repeatability": 0.01
+        },
+        {
+          "radius_px": 3,
+          "optical_hits": 13,
+          "sar_hits": 11,
+          "repeatability": 0.04
+        },
+        {
+          "radius_px": 5,
+          "optical_hits": 45,
+          "sar_hits": 36,
+          "repeatability": 0.135
+        }
+      ]
+    },
+    {
+      "pair": "ROI_071/patch_5",
+      "evaluation_points": 8,
+      "reference_affine": [
+        [
+          0.9610428964288382,
+          0.022040527725964845,
+          2.0152566593432026
+        ],
+        [
+          0.0020966635222431245,
+          0.998120097030271,
+          1.6403319722278595
+        ]
+      ],
+      "reference_leave_one_out_mean_px": 3.9225314842887746,
+      "reference_leave_one_out_errors_px": [
+        6.941676962212001,
+        2.2909433076981056,
+        3.9340601767119625,
+        4.863380201243189,
+        2.6801832594736594,
+        6.756798795198638,
+        1.0342470980699627,
+        2.8789620737026795
+      ],
+      "optical_overlap_points": 599,
+      "sar_overlap_points": 1348,
+      "optical_top_points": 300,
+      "sar_top_points": 300,
+      "thresholds": [
+        {
+          "radius_px": 1,
+          "optical_hits": 2,
+          "sar_hits": 2,
+          "repeatability": 0.006666666666666667
+        },
+        {
+          "radius_px": 3,
+          "optical_hits": 17,
+          "sar_hits": 14,
+          "repeatability": 0.051666666666666666
+        },
+        {
+          "radius_px": 5,
+          "optical_hits": 39,
+          "sar_hits": 33,
+          "repeatability": 0.12
+        }
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "pair": "ROI_080/patch_13",
+      "reason": "no_evaluation_ground_truth"
+    }
+  ]
+}

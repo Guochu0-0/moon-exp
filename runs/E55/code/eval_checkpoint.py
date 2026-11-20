@@ -21,7 +21,7 @@ from workbench.records import Run  # noqa: E402
 
 STEPS = (*range(250, 7907, 250), 7907)
 NO_BCE_SERIES = tuple(f"k{k}_no_bce" for k in range(6))
-METHODS = ("k0", "k1", "k2", "k3", "k4", "k5", "k4_seed1", *NO_BCE_SERIES, "k3_no_screen", "k3_no_screen_no_bce")
+METHODS = ("k0", "k1", "k2", "k3", "k4", "k5", "k4_seed1", *NO_BCE_SERIES, "k3_no_screen", "k3_no_screen_no_bce", "k4_bce_seed0_replay")
 E41_BEST_HASH = "052af2db0c18dea9f1f562749ccb1673a4aa63f8487925df06d56062e8b57019"
 
 
@@ -89,7 +89,7 @@ def select(method):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("split", choices=("val", "test"))
+    parser.add_argument("split", choices=("val", "test", "last-test"))
     parser.add_argument("method", choices=METHODS)
     parser.add_argument("--step", type=int, choices=STEPS)
     args = parser.parse_args()
@@ -107,6 +107,28 @@ def main():
         return
     if args.step is not None:
         parser.error("test reads the selected step")
+    if args.split == "last-test":
+        if method not in ("k5", "k5_no_bce"):
+            parser.error("last-test is limited to the two K5 conditions")
+        if not (ROOT / "ckpt" / method / "train.done").is_file():
+            parser.error("last-test requires a completed training run")
+        record = f"{method}_last_eval"
+        step = STEPS[-1]
+        launch.begin(ROOT, record, sys.argv, repo=REPO, step=step, phase="fixed_last_test")
+        try:
+            with tempfile.TemporaryDirectory(prefix="moon-e55-last-") as tmp:
+                summary, meta, preds = evaluate(method, step, "test", Path(tmp))
+                dst = sweep / "last-test"
+                dst.mkdir(parents=True, exist_ok=True)
+                for file in preds.iterdir():
+                    shutil.copy2(file, dst / file.name)
+                write_json(dst / "result.json", {"step": step, "selection": "predefined last step",
+                                                "test": summary, "match": meta})
+        except Exception:
+            launch.end(ROOT, record, "fail")
+            raise
+        launch.end(ROOT, record, "ok")
+        return
     step, val, source = select(method)
     selected = {"step": step, "val": val, "source": source, "tie_break": "earliest"}
     write_json(sweep / "selection.json", selected)

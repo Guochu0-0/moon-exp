@@ -10,6 +10,10 @@ if [[ "$phase" == workflow ]]; then
     method=full
     module=runs.E60.code.workflow
     shift
+elif [[ "$phase" == diagnose ]]; then
+    method=first_update
+    module=runs.E60.code.diagnose_first_update
+    shift
 else
     method=${2:?method required}
     module=runs.E60.code.run

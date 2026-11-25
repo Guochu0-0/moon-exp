@@ -49,7 +49,13 @@ ENV = {
     "TORCH_HOME": str(WEIGHTS / "torch_home"), "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
     "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPYCACHEPREFIX": str(RUN / "ckpt" / "bytecode-cache"),
 }
-REAL_FAILURES = {"few_matches", "few_inliers", "no_affine", "ransac_failed", "degenerate"}
+REAL_FAILURES = {"few_matches", "few_inliers", "no_affine", "ransac_failed", "degenerate", "non_finite"}
+REFIT = {
+    ("rift2", "val"): "原 Val 拟合提交缺失，使用原始匹配点对重拟合",
+    ("minima_eloftr", "test"): "历史仿射含非有限值，使用原始匹配点对复核",
+    ("anymatch_edm", "val"): "历史仿射含非有限值，使用原始匹配点对复核",
+    ("anymatch_edm", "test"): "历史仿射含非有限值，使用原始匹配点对复核",
+}
 
 
 def read(path):
@@ -140,6 +146,8 @@ def baseline_launch(origin, method, split):
 def baseline_raw(origin, method, split):
     if method == "anymatch_roma__minmax" and split == "test":
         return origin / f"sweep/{method}/match/{method}"
+    if method == "redfeat":
+        return origin / "raw/redfeat"
     area = "baselines_ablation" if origin.name == "B0m" else "baselines"
     return YGC / "results" / area / method
 
@@ -171,6 +179,8 @@ def baseline(method, split):
         elif config.get("weights"):
             weight = config["weights"]
             weight = REPO / config["repo"] / weight[5:] if weight.startswith("repo:") else WEIGHTS / weight
+            if method == "redfeat" and not weight.is_file():
+                weight = WEIGHTS / "official/redfeat/VIS_SAR.pth"
             weights = [checked_weights(weight, record.get("weights_sha256") or args.get("weights_sha256"))]
         elif method == "gdros_os_lsr":
             weights = [checked_weights(Path(args["weights_root"]) / config["checkpoint"], record["weights_sha256"])]
@@ -199,9 +209,13 @@ def baseline(method, split):
     mode, reason = "reuse", "历史预测与运行、配置和权重记录吻合"
     if method in ("xoftr", "minima_xoftr"):
         mode, reason = "inference", "原匹配器上游存在未提交改动，重新确认有效推理"
-    if method == "rift2" and split == "val":
+    if (method, split) in REFIT:
         check_matches(raw, split)
-        mode, reason = "refit", "原 Val 拟合提交缺失，使用原始匹配点对重拟合"
+        mode, reason = "refit", REFIT[method, split]
+    fit_meta = path.with_suffix(".meta.json")
+    if mode == "reuse":
+        evidence["historical_fit_metadata"] = str(fit_meta)
+        evidence["historical_fit_commit"] = read(fit_meta).get("commit")
     return config_path, path, raw, mode, reason, evidence
 
 

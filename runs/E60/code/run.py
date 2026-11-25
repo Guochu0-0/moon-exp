@@ -82,9 +82,10 @@ def load_model(repo, files, baseline, extractor=None, matcher=None):
 def verify_init(adapter, repo, files, config, data_root):
     reference = SPLGAdapter(repo, files["minima"], **config["params"])
     data = Data(data_root)
-    pairs = data.pairs("val")[:4]
-    if len(pairs) != 4:
+    val = data.pairs("val")
+    if len(val) < 4:
         raise RuntimeError("Val is missing the pairs for the init comparison")
+    pairs = [val[i] for i in np.linspace(0, len(val) - 1, 4, dtype=int)]
     differences = []
     for pair in pairs:
         images = [inputs.get(key, config["input"][key])(getattr(data, key)("val", pair))
@@ -140,7 +141,7 @@ def predict(adapter, baseline, data_root, out, method, split, stop):
             writer.write(pair, matrix, matches=matches, sec=time.monotonic() - started, **fields)
             if index % 100 == 0:
                 print(f"{method}/{split} {index}/{len(ids)}", flush=True)
-    result = Run(out, {}).preds(method, split)
+    result = Run(out.name, out, {}, [method]).preds(method, split)
     if set(result) != set(ids):
         raise RuntimeError(f"Incomplete prediction coverage for {method}/{split}")
     return {"prediction_count": len(result), "fit_failures": failures,

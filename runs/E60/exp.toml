@@ -1,0 +1,16 @@
+id = "E60"
+title = "SuperPoint 与 MINIMA-LightGlue 的 RIPE++ 两阶段月面微调"
+parent = "B0"
+init = "B0/minima_splg"
+date = "2026-11-26"
+
+[methods.init]
+name = "初始 SuperPoint + MINIMA-LightGlue"
+
+[methods.extractor_final]
+name = "第一阶段末步"
+ref = "E60/init"
+
+[methods.matcher_final]
+name = "第二阶段末步"
+ref = "E60/extractor_final"

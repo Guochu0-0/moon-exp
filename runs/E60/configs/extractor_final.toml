@@ -1,0 +1,32 @@
+[source]
+revision = "0666e62bf00569870bbcc1fe4b2e03976fc563f8"
+baseline = "configs/baselines/minima_splg.json"
+
+[train]
+seed = 0
+epochs = 8
+batch_size = 6
+accumulation = 4
+workers = 4
+precision = "bf16-if-native-else-fp32"
+checkpoint_every = 50
+observation_passes = [1, 2, 4, 6, 8]
+
+[optim]
+lr = 0.001
+final_lr = 0.000001
+weight_decay = 0.00001
+
+[signal]
+min_candidates = 8
+threshold_px = 3.0
+min_keypoints = 16
+background = -0.0000001
+inlier = 1.0
+outlier = -0.1
+keypoint_penalty = -0.0000007
+entropy_weight = 0.000001
+descriptor_weight = 2.5
+descriptor_margin = 0.2
+descriptor_fallback_below = 8
+ramp_fraction = 0.3333333333333333

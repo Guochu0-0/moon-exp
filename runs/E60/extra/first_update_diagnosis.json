@@ -1,0 +1,454 @@
+{
+ "completed_optimizer_updates": 1,
+ "replayed_microbatch_losses": [
+  0.8026959140417915,
+  0.7766677660527477,
+  0.8199752687225104,
+  0.8078856363642202
+ ],
+ "minimum_keypoints_per_side": 16,
+ "before_update": [
+  [
+   {
+    "pair": "ROI_052/patch_156",
+    "keypoints": [
+     102,
+     115
+    ]
+   },
+   {
+    "pair": "ROI_066/patch_102",
+    "keypoints": [
+     133,
+     116
+    ]
+   },
+   {
+    "pair": "ROI_027/patch_50",
+    "keypoints": [
+     142,
+     79
+    ]
+   },
+   {
+    "pair": "ROI_067/patch_9",
+    "keypoints": [
+     47,
+     278
+    ]
+   },
+   {
+    "pair": "ROI_034/patch_62",
+    "keypoints": [
+     110,
+     130
+    ]
+   },
+   {
+    "pair": "ROI_052/patch_26",
+    "keypoints": [
+     136,
+     102
+    ]
+   }
+  ],
+  [
+   {
+    "pair": "ROI_025/patch_51",
+    "keypoints": [
+     85,
+     137
+    ]
+   },
+   {
+    "pair": "ROI_005/patch_121",
+    "keypoints": [
+     40,
+     115
+    ]
+   },
+   {
+    "pair": "ROI_008/patch_164",
+    "keypoints": [
+     134,
+     67
+    ]
+   },
+   {
+    "pair": "ROI_055/patch_98",
+    "keypoints": [
+     123,
+     89
+    ]
+   },
+   {
+    "pair": "ROI_058/patch_137",
+    "keypoints": [
+     66,
+     116
+    ]
+   },
+   {
+    "pair": "ROI_074/patch_75",
+    "keypoints": [
+     71,
+     61
+    ]
+   }
+  ],
+  [
+   {
+    "pair": "ROI_069/patch_73",
+    "keypoints": [
+     134,
+     68
+    ]
+   },
+   {
+    "pair": "ROI_074/patch_119",
+    "keypoints": [
+     60,
+     74
+    ]
+   },
+   {
+    "pair": "ROI_012/patch_100",
+    "keypoints": [
+     88,
+     58
+    ]
+   },
+   {
+    "pair": "ROI_053/patch_75",
+    "keypoints": [
+     109,
+     144
+    ]
+   },
+   {
+    "pair": "ROI_033/patch_187",
+    "keypoints": [
+     74,
+     102
+    ]
+   },
+   {
+    "pair": "ROI_067/patch_33",
+    "keypoints": [
+     43,
+     134
+    ]
+   }
+  ],
+  [
+   {
+    "pair": "ROI_067/patch_64",
+    "keypoints": [
+     65,
+     100
+    ]
+   },
+   {
+    "pair": "ROI_052/patch_162",
+    "keypoints": [
+     109,
+     91
+    ]
+   },
+   {
+    "pair": "ROI_050/patch_144",
+    "keypoints": [
+     126,
+     105
+    ]
+   },
+   {
+    "pair": "ROI_010/patch_143",
+    "keypoints": [
+     121,
+     65
+    ]
+   },
+   {
+    "pair": "ROI_025/patch_28",
+    "keypoints": [
+     54,
+     102
+    ]
+   },
+   {
+    "pair": "ROI_024/patch_191",
+    "keypoints": [
+     78,
+     202
+    ]
+   }
+  ],
+  [
+   {
+    "pair": "ROI_023/patch_21",
+    "keypoints": [
+     120,
+     64
+    ]
+   },
+   {
+    "pair": "ROI_066/patch_99",
+    "keypoints": [
+     176,
+     114
+    ]
+   },
+   {
+    "pair": "ROI_012/patch_72",
+    "keypoints": [
+     165,
+     87
+    ]
+   },
+   {
+    "pair": "ROI_043/patch_23",
+    "keypoints": [
+     119,
+     142
+    ]
+   },
+   {
+    "pair": "ROI_003/patch_162",
+    "keypoints": [
+     98,
+     114
+    ]
+   },
+   {
+    "pair": "ROI_033/patch_265",
+    "keypoints": [
+     110,
+     164
+    ]
+   }
+  ]
+ ],
+ "after_update": [
+  [
+   {
+    "pair": "ROI_052/patch_156",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_066/patch_102",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_027/patch_50",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_067/patch_9",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_034/patch_62",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_052/patch_26",
+    "keypoints": [
+     0,
+     0
+    ]
+   }
+  ],
+  [
+   {
+    "pair": "ROI_025/patch_51",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_005/patch_121",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_008/patch_164",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_055/patch_98",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_058/patch_137",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_074/patch_75",
+    "keypoints": [
+     0,
+     0
+    ]
+   }
+  ],
+  [
+   {
+    "pair": "ROI_069/patch_73",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_074/patch_119",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_012/patch_100",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_053/patch_75",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_033/patch_187",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_067/patch_33",
+    "keypoints": [
+     0,
+     0
+    ]
+   }
+  ],
+  [
+   {
+    "pair": "ROI_067/patch_64",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_052/patch_162",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_050/patch_144",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_010/patch_143",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_025/patch_28",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_024/patch_191",
+    "keypoints": [
+     0,
+     0
+    ]
+   }
+  ],
+  [
+   {
+    "pair": "ROI_023/patch_21",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_066/patch_99",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_012/patch_72",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_043/patch_23",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_003/patch_162",
+    "keypoints": [
+     0,
+     0
+    ]
+   },
+   {
+    "pair": "ROI_033/patch_265",
+    "keypoints": [
+     0,
+     0
+    ]
+   }
+  ]
+ ]
+}

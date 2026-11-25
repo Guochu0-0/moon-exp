@@ -1,0 +1,116 @@
+[
+ {
+  "start": "2026-11-26 06:06:30 +0800",
+  "end": "2026-11-26 06:06:40 +0800",
+  "status": "ok",
+  "commit": "8e762e5c8e464373ac2d09734c26e4e94b606bab",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-299",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E60.code.run",
+   "preflight",
+   "init"
+  ],
+  "entry": "runs.E60.code.run",
+  "config_file": "configs/baselines/minima_splg.json",
+  "config": {
+   "method": "minima_splg",
+   "adapter": "splg",
+   "repo": "third_party/LightGlue",
+   "weights": "minima/minima_lightglue.pth",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "superpoint": {
+    "descriptor_dim": 256,
+    "nms_radius": 4,
+    "max_num_keypoints": 2048,
+    "detection_threshold": 0.0005,
+    "remove_borders": 4
+   },
+   "lightglue": {
+    "name": "lightglue",
+    "input_dim": 256,
+    "descriptor_dim": 256,
+    "add_scale_ori": false,
+    "n_layers": 9,
+    "num_heads": 4,
+    "flash": true,
+    "mp": false,
+    "depth_confidence": 0.95,
+    "width_confidence": 0.99,
+    "filter_threshold": 0.1,
+    "weights": null
+   },
+   "inference_affine_threshold_px": 3.0
+  },
+  "args": null,
+  "phase": "preflight",
+  "split": null,
+  "observation_pass": 8,
+  "data_root": "/remote-home/xufang/YGC/dataset/Moon",
+  "weight_files": {
+   "superpoint": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+   "minima": "/remote-home/xufang/YGC/weights/minima/minima_lightglue.pth",
+   "lightglue_before_minima_override": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_lightglue_v0-1_arxiv.pth"
+  },
+  "checkpoint_files": {},
+  "identity": {
+   "release": {
+    "superpoint": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+    "minima": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126",
+    "lightglue_before_minima_override": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a"
+   },
+   "revision": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+   "checkpoints": {}
+  },
+  "segment_seconds": 13000,
+  "same_as_minima_splg": [
+   {
+    "pair": "ROI_035/patch_0",
+    "matches": 0,
+    "same": true
+   },
+   {
+    "pair": "ROI_049/patch_51",
+    "matches": 0,
+    "same": true
+   },
+   {
+    "pair": "ROI_075/patch_32",
+    "matches": 2,
+    "same": true
+   },
+   {
+    "pair": "ROI_080/patch_106",
+    "matches": 0,
+    "same": true
+   }
+  ],
+  "synthetic_affine_mask": [
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   false
+  ]
+ }
+]

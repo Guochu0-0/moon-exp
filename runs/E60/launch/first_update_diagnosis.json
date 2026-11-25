@@ -1,0 +1,83 @@
+[
+ {
+  "start": "2026-11-26 06:16:06 +0800",
+  "end": "2026-11-26 06:16:26 +0800",
+  "status": "ok",
+  "commit": "b1f882949c0f80ee8128ad8b0ab94909e5c714cd",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-299",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E60.code.diagnose_first_update"
+  ],
+  "config_file": "runs/E60/configs/extractor_final.toml",
+  "args": {
+   "source": {
+    "revision": "0666e62bf00569870bbcc1fe4b2e03976fc563f8",
+    "baseline": "configs/baselines/minima_splg.json"
+   },
+   "train": {
+    "seed": 0,
+    "epochs": 8,
+    "batch_size": 6,
+    "accumulation": 4,
+    "workers": 4,
+    "precision": "bf16-if-native-else-fp32",
+    "checkpoint_every": 50,
+    "observation_passes": [
+     1,
+     2,
+     4,
+     6,
+     8
+    ]
+   },
+   "optim": {
+    "lr": 0.001,
+    "final_lr": 1e-06,
+    "weight_decay": 1e-05
+   },
+   "signal": {
+    "min_candidates": 8,
+    "threshold_px": 3.0,
+    "min_keypoints": 16,
+    "background": -1e-07,
+    "inlier": 1.0,
+    "outlier": -0.1,
+    "keypoint_penalty": -7e-07,
+    "entropy_weight": 1e-06,
+    "descriptor_weight": 2.5,
+    "descriptor_margin": 0.2,
+    "descriptor_fallback_below": 8,
+    "ramp_fraction": 0.3333333333333333
+   }
+  },
+  "config": {
+   "method": "minima_splg",
+   "adapter": "splg",
+   "repo": "third_party/LightGlue",
+   "weights": "minima/minima_lightglue.pth",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "hashes": {
+   "superpoint": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+   "minima": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126",
+   "lightglue_before_minima_override": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a"
+  },
+  "data_root": "/remote-home/xufang/YGC/dataset/Moon",
+  "replayed_microbatches": 4,
+  "diagnostic_pairs": 30
+ }
+]

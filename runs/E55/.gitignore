@@ -1,0 +1,3 @@
+/sweep/*/val/
+/sweep/*/top5-test/*/*_matches.npz
+/sweep/*/last-test/*_matches.npz

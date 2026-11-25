@@ -1,0 +1,145 @@
+{
+ "step": 750,
+ "summary": {
+  "n": 652,
+  "fail_rate": 0.0,
+  "median": 3.365088148690016,
+  "auc@3": 0.09814171769222013,
+  "auc@5": 0.30709050376676034,
+  "auc@10": 0.6053852964909209,
+  "auc@20": 0.7956198113821907,
+  "sr@1": 0.0015337423312883436,
+  "sr@2": 0.11503067484662577,
+  "sr@3": 0.4049079754601227,
+  "sr@5": 0.7868098159509203,
+  "sr@10": 0.9647239263803681,
+  "sr@20": 0.995398773006135,
+  "auc@3_ci": [
+   0.08722314033978,
+   0.10984473671439064
+  ],
+  "auc@5_ci": [
+   0.28945775240138355,
+   0.32525048618574687
+  ],
+  "auc@10_ci": [
+   0.5900839425344652,
+   0.6208539090743943
+  ],
+  "auc@20_ci": [
+   0.7859803786880215,
+   0.805414601784227
+  ],
+  "sr@1_ci": [
+   0.0,
+   0.004601226993865031
+  ],
+  "sr@2_ci": [
+   0.09202453987730061,
+   0.1411042944785276
+  ],
+  "sr@3_ci": [
+   0.36809815950920244,
+   0.44175613496932514
+  ],
+  "sr@5_ci": [
+   0.7561349693251533,
+   0.8174846625766872
+  ],
+  "sr@10_ci": [
+   0.950920245398773,
+   0.9785276073619632
+  ],
+  "sr@20_ci": [
+   0.9892638036809815,
+   1.0
+  ]
+ },
+ "match": {
+  "method": "step750",
+  "split": "val",
+  "config": {
+   "method": "step750",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "/remote-home/xufang/YGC/wt/roma-rl-284-val/runs/E55/ckpt/k3_no_screen/ckpt_750.pt",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "config_path": "configs/baselines/anymatch_roma__minmax.json",
+  "weights": "/remote-home/xufang/YGC/wt/roma-rl-284-val/runs/E55/ckpt/k3_no_screen/ckpt_750.pt",
+  "weights_sha256": "986f1ac16c8a7dc8a82dbbc63b3bf5d3b4271a275116d8399ff3931afa50b5da",
+  "commit": "8a0f96d23fd2240844e380c25d0e0bd41c00a80e",
+  "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+  "perturb": null,
+  "argv": [
+   "/remote-home/xufang/YGC/wt/roma-rl-284-val/baselines/match.py",
+   "configs/baselines/anymatch_roma__minmax.json",
+   "--split",
+   "val",
+   "--weights",
+   "/remote-home/xufang/YGC/wt/roma-rl-284-val/runs/E55/ckpt/k3_no_screen/ckpt_750.pt",
+   "--name",
+   "step750",
+   "--out",
+   "/tmp/moon-e55-1p2uerdq/match"
+  ],
+  "started": "2026-11-20 08:26:03",
+  "load_sec": 27.78,
+  "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+  "resolved_params": {
+   "model_class": "romatch.models.matcher.RegressionMatcher",
+   "coarse_resolution": [
+    560,
+    560
+   ],
+   "upsample_resolution": [
+    864,
+    864
+   ],
+   "output_resolution": [
+    864,
+    864
+   ],
+   "symmetric": true,
+   "upsample_preds": true,
+   "attenuate_cert": true,
+   "sample_mode": "threshold_balanced",
+   "sample_thresh": 0.05,
+   "sample_signature": "(matches, certainty, num=10000)",
+   "sample_num": 10000,
+   "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+   "match_batched": false,
+   "adapter_long_side": 640,
+   "adapter_swap": false,
+   "model_training": false,
+   "encoder_amp_dtype": "torch.float16",
+   "decoder_amp_dtype": "torch.float16",
+   "matmul_allow_tf32": false,
+   "cudnn_allow_tf32": true
+  },
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "bcb626e99cea",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.31",
+   "cuda_visible_devices": "7",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "NVIDIA GeForce RTX 3090",
+   "cuda": "11.8"
+  },
+  "finished": "2026-11-20 08:38:32",
+  "total_sec": 762.1,
+  "n_pairs": 652,
+  "n_errors_this_session": 0
+ }
+}

@@ -1,0 +1,21 @@
+[
+ {
+  "start": "2026-11-20 18:17:48 +0800",
+  "end": "2026-11-20 18:46:04 +0800",
+  "status": "ok",
+  "commit": "7f68f3f4bf6a11e1b1766d50f855dd0b5e4f9932",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "bcb626e99cea",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-284-val",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "runs/E55/code/eval_checkpoint.py",
+   "last-test",
+   "k5_no_bce"
+  ],
+  "step": 7907,
+  "phase": "fixed_last_test"
+ }
+]

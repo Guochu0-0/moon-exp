@@ -1,0 +1,145 @@
+{
+ "step": 4000,
+ "summary": {
+  "n": 652,
+  "fail_rate": 0.0,
+  "median": 3.34459190553208,
+  "auc@3": 0.09590152994791716,
+  "auc@5": 0.31499946972354326,
+  "auc@10": 0.6219986229180923,
+  "auc@20": 0.8080647928048879,
+  "sr@1": 0.0,
+  "sr@2": 0.12116564417177914,
+  "sr@3": 0.40797546012269936,
+  "sr@5": 0.8067484662576687,
+  "sr@10": 0.9831288343558282,
+  "sr@20": 1.0,
+  "auc@3_ci": [
+   0.08498327018129881,
+   0.10695608358346827
+  ],
+  "auc@5_ci": [
+   0.2983457113396144,
+   0.3315276422526
+  ],
+  "auc@10_ci": [
+   0.6079606776638049,
+   0.6357285553186129
+  ],
+  "auc@20_ci": [
+   0.8001938666341976,
+   0.8160763770507484
+  ],
+  "sr@1_ci": [
+   0.0,
+   0.0
+  ],
+  "sr@2_ci": [
+   0.09815950920245399,
+   0.14570552147239263
+  ],
+  "sr@3_ci": [
+   0.36809815950920244,
+   0.4447852760736196
+  ],
+  "sr@5_ci": [
+   0.7760736196319018,
+   0.8358895705521472
+  ],
+  "sr@10_ci": [
+   0.9739263803680982,
+   0.9923312883435583
+  ],
+  "sr@20_ci": [
+   1.0,
+   1.0
+  ]
+ },
+ "match": {
+  "method": "step4000",
+  "split": "val",
+  "config": {
+   "method": "step4000",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "/remote-home/xufang/YGC/wt/roma-rl-284-val/runs/E55/ckpt/k3_no_screen_no_bce/ckpt_4000.pt",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "config_path": "configs/baselines/anymatch_roma__minmax.json",
+  "weights": "/remote-home/xufang/YGC/wt/roma-rl-284-val/runs/E55/ckpt/k3_no_screen_no_bce/ckpt_4000.pt",
+  "weights_sha256": "19f18e9c06f039a97679dc4156ae812cec3a0d1de4e3ee6893699b12eb333422",
+  "commit": "8a0f96d23fd2240844e380c25d0e0bd41c00a80e",
+  "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+  "perturb": null,
+  "argv": [
+   "/remote-home/xufang/YGC/wt/roma-rl-284-val/baselines/match.py",
+   "configs/baselines/anymatch_roma__minmax.json",
+   "--split",
+   "val",
+   "--weights",
+   "/remote-home/xufang/YGC/wt/roma-rl-284-val/runs/E55/ckpt/k3_no_screen_no_bce/ckpt_4000.pt",
+   "--name",
+   "step4000",
+   "--out",
+   "/tmp/moon-e55-hkb8rmkt/match"
+  ],
+  "started": "2026-11-20 04:22:06",
+  "load_sec": 18.99,
+  "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+  "resolved_params": {
+   "model_class": "romatch.models.matcher.RegressionMatcher",
+   "coarse_resolution": [
+    560,
+    560
+   ],
+   "upsample_resolution": [
+    864,
+    864
+   ],
+   "output_resolution": [
+    864,
+    864
+   ],
+   "symmetric": true,
+   "upsample_preds": true,
+   "attenuate_cert": true,
+   "sample_mode": "threshold_balanced",
+   "sample_thresh": 0.05,
+   "sample_signature": "(matches, certainty, num=10000)",
+   "sample_num": 10000,
+   "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+   "match_batched": false,
+   "adapter_long_side": 640,
+   "adapter_swap": false,
+   "model_training": false,
+   "encoder_amp_dtype": "torch.float16",
+   "decoder_amp_dtype": "torch.float16",
+   "matmul_allow_tf32": false,
+   "cudnn_allow_tf32": true
+  },
+  "env": {
+   "python": "3.10.21",
+   "numpy": "1.26.4",
+   "host": "e36d63048d55",
+   "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35",
+   "cuda_visible_devices": "0",
+   "torch": "2.1.2+cu118",
+   "cv2": "4.11.0",
+   "kornia": "0.6.12",
+   "gpu": "Tesla V100-SXM2-32GB",
+   "cuda": "11.8"
+  },
+  "finished": "2026-11-20 04:33:21",
+  "total_sec": 685.8,
+  "n_pairs": 652,
+  "n_errors_this_session": 0
+ }
+}

@@ -2587,8 +2587,9 @@ def test_config_rloo_screen(tmp_path):
     assert d["rloo"]["screen"] == 0.0                                       # 默认不筛，同旧行为
     c = C.load(_write(tmp_path, "c", head + '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 0.35\n'))
     assert c["rloo"]["screen"] == 0.35
-    for bad in ('[rloo]\nreward = "ref"\nscreen = 0.35',                    # 参照取当前模型：没有参照模型可先推理
-                '[rloo]\nreward = "r1"\nref_ema = 0.996\nscreen = 0.35',
+    c = C.load(_write(tmp_path, "c", head + '[rloo]\nreward = "ref"\nscreen = 0.35\n'))
+    assert c["rloo"]["screen"] == 0.35 and c["rloo"]["ref_ema"] == 0.0
+    for bad in ('[rloo]\nreward = "r1"\nref_ema = 0.996\nscreen = 0.35',
                 '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 1.0',
                 '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = -0.1',
                 '[optim]\nbatch = 2\n[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 0.35',
@@ -2597,12 +2598,13 @@ def test_config_rloo_screen(tmp_path):
             C.load(_write(tmp_path, "b", head + bad + "\n"))
 
 
-def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypatch):
+@pytest.mark.parametrize("ref_ema, expected_fits", [(0.0, 3), (0.99, 4)])
+def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypatch, ref_ema, expected_fits):
     """screen：内点比例 = 参照拟合的内点数 ÷ num，拟合失败为 0；低于门槛的不学。学的那对在 __call__ 里沿用 screen 时的参照
     仿射（不再拟合参照，只拟合当前模型那一次），日志记这一步取了几对、所学对的比例与被丢对的比例均值；没经 screen 的对报错。"""
     import torch
     from finetune.parts import rloo as R
-    term, st, w = _fake_term(monkeypatch, ref_ema=0.99, num=20, screen=0.6)
+    term, st, w = _fake_term(monkeypatch, ref_ema=ref_ema, num=20, screen=0.6)
     I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
     far = np.array([[1.0, 0, 500.0], [0, 1.0, 0]])                         # 学的那对的参照：离恒等仿射 500 px
     queue, calls = [(I, 10), (None, 0), (far, 15)], []
@@ -2618,7 +2620,7 @@ def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypa
     st.batch = {"pair": ["c"]}
     loss, stats, _ = term(st)
     loss.backward()
-    assert len(calls) == 4                                                  # 3 次参照（screen）+ 1 次当前模型
+    assert len(calls) == expected_fits                                       # 3 次参照；EMA 时额外拟合当前模型供诊断
     assert (stats["scr_drawn"], stats["scr_ratio"], stats["scr_disc"]) == (3.0, 0.75, 0.25)
     d_far = stats["d_ref"]
     assert term.screen({"pair": ["d"], "image0": img, "image1": img}, "cpu")[0]   # 之后 (I, 20)：比例 1

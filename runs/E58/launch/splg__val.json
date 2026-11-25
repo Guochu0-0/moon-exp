@@ -1,0 +1,57 @@
+[
+ {
+  "start": "2026-11-25 23:25:07 +0800",
+  "end": "2026-11-25 23:25:07 +0800",
+  "status": "ok",
+  "commit": "35e68b070fec6fd038109d2ae962aaafe7408e2e",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/splg.json",
+  "config": {
+   "method": "splg",
+   "adapter": "splg_original",
+   "repo": "third_party/LightGlue",
+   "weights": null,
+   "params": {},
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "split": "val",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/splg/val.jsonl",
+  "prediction_sha256": "3bbd326f9cd765eea55950e205a2ad617bbc89a63e1749b39c231f0ac174bbd1",
+  "prediction_count": 652,
+  "fit_failures": 74,
+  "failure_reasons": {
+   "few_matches": 74
+  },
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/splg.json",
+  "source_launch_commit": "761319b159851766fdd439aaa9c95e52135ce286",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+    "sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+    "historical_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e"
+   },
+   {
+    "path": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_lightglue_v0-1_arxiv.pth",
+    "sha256": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a",
+    "historical_sha256": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a"
+   }
+  ],
+  "fit": "RANSAC 3 px"
+ }
+]

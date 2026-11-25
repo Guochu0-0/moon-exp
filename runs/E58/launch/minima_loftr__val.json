@@ -1,0 +1,57 @@
+[
+ {
+  "start": "2026-11-25 23:32:19 +0800",
+  "end": "2026-11-25 23:32:19 +0800",
+  "status": "ok",
+  "commit": "c9b4ba07fd86fa753cefe2bcd6a197b148d4553f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/minima_loftr.json",
+  "config": {
+   "method": "minima_loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "minima/minima_loftr.ckpt",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "MINIMA load_loftr（load_model.py:37-61）：上游 LoFTR 推理代码（LoFTR_minima 9ba0871 只改训练），非 outdoor_ds 权重设 temp_bug_fix=True，coarse thr 0.2（= default_cfg），MINIMA 测试长边 640（src/config/default.py:188-193）"
+  },
+  "split": "val",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/minima_loftr/val.jsonl",
+  "prediction_sha256": "c2e4e4c10c57b85efc3ca24bc49d52a39d7816ea6d5bbadc1a669a92db3fc21d",
+  "prediction_count": 652,
+  "fit_failures": 0,
+  "failure_reasons": {},
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/minima_loftr.json",
+  "source_launch_commit": "563b7380344287951e1dea843b781505407531e4",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/minima/minima_loftr.ckpt",
+    "sha256": "810d19773ff898ba04a68c99a3eff9c112210bf884214bd76aec885e83b0e257",
+    "historical_sha256": "810d19773ff898ba04a68c99a3eff9c112210bf884214bd76aec885e83b0e257"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/minima_loftr/val.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "df7ca80f917334b94cfbe32cc2901e09a80e70a8"
+ }
+]

@@ -1,0 +1,59 @@
+[
+ {
+  "start": "2026-11-25 23:32:51 +0800",
+  "end": "2026-11-25 23:32:51 +0800",
+  "status": "ok",
+  "commit": "c9b4ba07fd86fa753cefe2bcd6a197b148d4553f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/ma_eloftr.json",
+  "config": {
+   "method": "ma_eloftr",
+   "adapter": "matchanything",
+   "repo": "third_party/MatchAnything",
+   "weights": "matchanything/matchanything_eloftr.ckpt",
+   "params": {
+    "model": "eloftr",
+    "size": 832,
+    "coarse_thr": 0.05
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "split": "val",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/ma_eloftr/val.jsonl",
+  "prediction_sha256": "4683c77382d5de07a377ae51fd3a8600e5da4851cc370c8dbf4f6ee5041c737b",
+  "prediction_count": 652,
+  "fit_failures": 2,
+  "failure_reasons": {
+   "few_matches": 2
+  },
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/ma_eloftr.json",
+  "source_launch_commit": "563b7380344287951e1dea843b781505407531e4",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/matchanything/matchanything_eloftr.ckpt",
+    "sha256": "b394fd368488e5e3136906daac825fadd3dd5376755dcdf5cb6ede0de20f6e7e",
+    "historical_sha256": "b394fd368488e5e3136906daac825fadd3dd5376755dcdf5cb6ede0de20f6e7e"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/ma_eloftr/val.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "6a7bcb589ec8da3a9e861e799122beaa5eba2193"
+ }
+]

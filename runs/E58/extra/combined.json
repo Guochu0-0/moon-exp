@@ -1,0 +1,2835 @@
+{
+ "n_pairs": 1955,
+ "n_labelled": 1605,
+ "split_counts": {
+  "val": 652,
+  "test": 953
+ },
+ "methods": {
+  "identity": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/identity/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/identity/val.jsonl",
+     "weights": [],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/identity/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/identity/test.jsonl",
+     "weights": [],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 25.62712040688097,
+    "auc@3": 0.00044330737029882593,
+    "auc@5": 0.009470839400502607,
+    "auc@10": 0.08267476713818957,
+    "auc@20": 0.20855548386697326,
+    "sr@1": 0.0,
+    "sr@2": 0.0,
+    "sr@3": 0.003115264797507788,
+    "sr@5": 0.0529595015576324,
+    "sr@10": 0.2398753894080997,
+    "sr@20": 0.41682242990654206,
+    "auc@3_ci": [
+     6.921999963057836e-05,
+     0.0009405304458147406
+    ],
+    "auc@5_ci": [
+     0.007179477231181009,
+     0.0119698589064983
+    ],
+    "auc@10_ci": [
+     0.07523234829678431,
+     0.09101019574225251
+    ],
+    "auc@20_ci": [
+     0.19562192386199603,
+     0.22431433712587054
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@3_ci": [
+     0.0006230529595015577,
+     0.006230529595015576
+    ],
+    "sr@5_ci": [
+     0.04236760124610592,
+     0.06355140186915888
+    ],
+    "sr@10_ci": [
+     0.22118380062305296,
+     0.2623052959501558
+    ],
+    "sr@20_ci": [
+     0.3937538940809969,
+     0.44113707165109034
+    ]
+   }
+  },
+  "spsg": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 603,
+     "prediction": "preds/spsg/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/spsg/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/wt/moon-296/third_party/SuperGlue/models/weights/superpoint_v1.pth",
+       "sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+       "historical_sha256": null,
+       "historical_git_blob": "107a444ca318d487390137d619d49f2f0a3b1ad8"
+      },
+      {
+       "path": "/remote-home/xufang/YGC/wt/moon-296/third_party/SuperGlue/models/weights/superglue_outdoor.pth",
+       "sha256": "2f5f5e9bb3febf07b69df633c4c3ff7a17f8af26a023aae2b9303d22339195bd",
+       "historical_sha256": null,
+       "historical_git_blob": "5ca3392bd5349790d7bc1c246961fc041b88c1e8"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 894,
+     "prediction": "preds/spsg/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/spsg/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/wt/moon-296/third_party/SuperGlue/models/weights/superpoint_v1.pth",
+       "sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+       "historical_sha256": null,
+       "historical_git_blob": "107a444ca318d487390137d619d49f2f0a3b1ad8"
+      },
+      {
+       "path": "/remote-home/xufang/YGC/wt/moon-296/third_party/SuperGlue/models/weights/superglue_outdoor.pth",
+       "sha256": "2f5f5e9bb3febf07b69df633c4c3ff7a17f8af26a023aae2b9303d22339195bd",
+       "historical_sha256": null,
+       "historical_git_blob": "5ca3392bd5349790d7bc1c246961fc041b88c1e8"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.9327102803738317,
+    "median": null,
+    "auc@3": 0.0,
+    "auc@5": 0.0,
+    "auc@10": 0.0,
+    "auc@20": 0.0,
+    "sr@1": 0.0,
+    "sr@2": 0.0,
+    "sr@3": 0.0,
+    "sr@5": 0.0,
+    "sr@10": 0.0,
+    "sr@20": 0.0,
+    "auc@3_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@5_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@10_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@20_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@3_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@5_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@10_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@20_ci": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "splg": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 74,
+     "prediction": "preds/splg/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/splg/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+       "sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+       "historical_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e"
+      },
+      {
+       "path": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_lightglue_v0-1_arxiv.pth",
+       "sha256": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a",
+       "historical_sha256": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 138,
+     "prediction": "preds/splg/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/splg/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+       "sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+       "historical_sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e"
+      },
+      {
+       "path": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_lightglue_v0-1_arxiv.pth",
+       "sha256": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a",
+       "historical_sha256": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.1320872274143302,
+    "median": 343.5794744299335,
+    "auc@3": 0.0,
+    "auc@5": 0.0001323069030240149,
+    "auc@10": 0.0017827641077346927,
+    "auc@20": 0.0038054824373079457,
+    "sr@1": 0.0,
+    "sr@2": 0.0,
+    "sr@3": 0.0,
+    "sr@5": 0.001869158878504673,
+    "sr@10": 0.004361370716510903,
+    "sr@20": 0.006230529595015576,
+    "auc@3_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@5_ci": [
+     0.0,
+     0.00036087716695891605
+    ],
+    "auc@10_ci": [
+     0.0005494466645751482,
+     0.0033955664315690553
+    ],
+    "auc@20_ci": [
+     0.001487782537336778,
+     0.0064946791797685114
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@3_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@5_ci": [
+     0.0,
+     0.004361370716510903
+    ],
+    "sr@10_ci": [
+     0.0012461059190031153,
+     0.00809968847352025
+    ],
+    "sr@20_ci": [
+     0.0024922118380062306,
+     0.01059190031152648
+    ]
+   }
+  },
+  "rift2": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "refit",
+     "reason": "原 Val 拟合提交缺失，使用原始匹配点对重拟合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/rift2/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/rift2/val/51a40602ecec40228813556c3a77bf40/preds/rift2/val.jsonl",
+     "weights": [],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/rift2/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/rift2/test.jsonl",
+     "weights": [],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 252.41398426974217,
+    "auc@3": 0.0,
+    "auc@5": 0.0,
+    "auc@10": 0.0,
+    "auc@20": 0.0,
+    "sr@1": 0.0,
+    "sr@2": 0.0,
+    "sr@3": 0.0,
+    "sr@5": 0.0,
+    "sr@10": 0.0,
+    "sr@20": 0.0,
+    "auc@3_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@5_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@10_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@20_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@3_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@5_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@10_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@20_ci": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "redfeat": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 60,
+     "prediction": "preds/redfeat/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/redfeat/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/official/redfeat/VIS_SAR.pth",
+       "sha256": "6294dcbd7b116c02bba4b7704ed8495ead1666a81494b14630945014ffaeea24",
+       "historical_sha256": "6294dcbd7b116c02bba4b7704ed8495ead1666a81494b14630945014ffaeea24"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 86,
+     "prediction": "preds/redfeat/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/redfeat/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/official/redfeat/VIS_SAR.pth",
+       "sha256": "6294dcbd7b116c02bba4b7704ed8495ead1666a81494b14630945014ffaeea24",
+       "historical_sha256": "6294dcbd7b116c02bba4b7704ed8495ead1666a81494b14630945014ffaeea24"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.09096573208722741,
+    "median": 386.0302142220108,
+    "auc@3": 0.0,
+    "auc@5": 0.0002289862960770717,
+    "auc@10": 0.0005693434922571723,
+    "auc@20": 0.0018145284549991633,
+    "sr@1": 0.0,
+    "sr@2": 0.0,
+    "sr@3": 0.0,
+    "sr@5": 0.0006230529595015577,
+    "sr@10": 0.001869158878504673,
+    "sr@20": 0.003738317757009346,
+    "auc@3_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@5_ci": [
+     0.0,
+     0.0006869588882312151
+    ],
+    "auc@10_ci": [
+     0.0,
+     0.0016884030106140975
+    ],
+    "auc@20_ci": [
+     0.00046632927421117506,
+     0.00359553354573308
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@3_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@5_ci": [
+     0.0,
+     0.001869158878504673
+    ],
+    "sr@10_ci": [
+     0.0,
+     0.004361370716510903
+    ],
+    "sr@20_ci": [
+     0.0012461059190031153,
+     0.006853582554517134
+    ]
+   }
+  },
+  "minima_splg": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 611,
+     "prediction": "preds/minima_splg/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/minima_splg/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_lightglue.pth",
+       "sha256": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126",
+       "historical_sha256": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 789,
+     "prediction": "preds/minima_splg/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/minima_splg/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_lightglue.pth",
+       "sha256": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126",
+       "historical_sha256": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.8722741433021807,
+    "median": null,
+    "auc@3": 0.00013580761402808356,
+    "auc@5": 0.0005799269360180962,
+    "auc@10": 0.0011930108623938447,
+    "auc@20": 0.002487336440896414,
+    "sr@1": 0.0,
+    "sr@2": 0.0,
+    "sr@3": 0.0012461059190031153,
+    "sr@5": 0.0012461059190031153,
+    "sr@10": 0.001869158878504673,
+    "sr@20": 0.005607476635514018,
+    "auc@3_ci": [
+     0.0,
+     0.00036642488937275487
+    ],
+    "auc@5_ci": [
+     0.0,
+     0.0014659608526267681
+    ],
+    "auc@10_ci": [
+     0.0,
+     0.002834861770066766
+    ],
+    "auc@20_ci": [
+     0.0008144614904939178,
+     0.0047573949666653015
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@3_ci": [
+     0.0,
+     0.003115264797507788
+    ],
+    "sr@5_ci": [
+     0.0,
+     0.003115264797507788
+    ],
+    "sr@10_ci": [
+     0.0,
+     0.004361370716510903
+    ],
+    "sr@20_ci": [
+     0.0024922118380062306,
+     0.009345794392523364
+    ]
+   }
+  },
+  "loftr": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/loftr/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/loftr/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/official/loftr/outdoor_ds.ckpt",
+       "sha256": "21f5bec5968178e8bc8b7633441836fe5de4f47d861dd2cd7dc38e271b0479ec",
+       "historical_sha256": "21f5bec5968178e8bc8b7633441836fe5de4f47d861dd2cd7dc38e271b0479ec"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/loftr/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/loftr/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/official/loftr/outdoor_ds.ckpt",
+       "sha256": "21f5bec5968178e8bc8b7633441836fe5de4f47d861dd2cd7dc38e271b0479ec",
+       "historical_sha256": "21f5bec5968178e8bc8b7633441836fe5de4f47d861dd2cd7dc38e271b0479ec"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 78.37461735387939,
+    "auc@3": 0.0063498671136117775,
+    "auc@5": 0.02448674791987909,
+    "auc@10": 0.07103951111155238,
+    "auc@20": 0.13285289414322746,
+    "sr@1": 0.0,
+    "sr@2": 0.004984423676012461,
+    "sr@3": 0.029906542056074768,
+    "sr@5": 0.0735202492211838,
+    "sr@10": 0.1526479750778816,
+    "sr@20": 0.22305295950155762,
+    "auc@3_ci": [
+     0.004471817247635977,
+     0.00856740068093324
+    ],
+    "auc@5_ci": [
+     0.019850192578656247,
+     0.02954380233016414
+    ],
+    "auc@10_ci": [
+     0.06238959475609147,
+     0.08068007756091618
+    ],
+    "auc@20_ci": [
+     0.12072094290916162,
+     0.1461947979852687
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.001869158878504673,
+     0.008722741433021807
+    ],
+    "sr@3_ci": [
+     0.022429906542056073,
+     0.038644859813084104
+    ],
+    "sr@5_ci": [
+     0.06228971962616822,
+     0.08722741433021806
+    ],
+    "sr@10_ci": [
+     0.13643302180685357,
+     0.17009345794392525
+    ],
+    "sr@20_ci": [
+     0.20498442367601247,
+     0.2442367601246106
+    ]
+   }
+  },
+  "xoftr": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "inference",
+     "reason": "原匹配器上游存在未提交改动，重新确认有效推理",
+     "coverage": 652,
+     "failures": 160,
+     "prediction": "preds/xoftr/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/xoftr/val/2d93994bd3174562a041a07a9cbf2a35/preds/xoftr/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/official/xoftr/weights_xoftr_640.ckpt",
+       "sha256": "6e7f24e553f76746ef49061bf44c7d11252e56057470d1421bcd4e6506af3a67",
+       "historical_sha256": "6e7f24e553f76746ef49061bf44c7d11252e56057470d1421bcd4e6506af3a67"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "inference",
+     "reason": "原匹配器上游存在未提交改动，重新确认有效推理",
+     "coverage": 953,
+     "failures": 309,
+     "prediction": "preds/xoftr/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/xoftr/test/1de54d162bc64db98d4002ba513dd046/preds/xoftr/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/official/xoftr/weights_xoftr_640.ckpt",
+       "sha256": "6e7f24e553f76746ef49061bf44c7d11252e56057470d1421bcd4e6506af3a67",
+       "historical_sha256": "6e7f24e553f76746ef49061bf44c7d11252e56057470d1421bcd4e6506af3a67"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.2922118380062305,
+    "median": 313.53143220465824,
+    "auc@3": 0.0,
+    "auc@5": 1.0052838812701706e-05,
+    "auc@10": 0.0006124682068844535,
+    "auc@20": 0.0017784524763872303,
+    "sr@1": 0.0,
+    "sr@2": 0.0,
+    "sr@3": 0.0,
+    "sr@5": 0.0006230529595015577,
+    "sr@10": 0.001869158878504673,
+    "sr@20": 0.004984423676012461,
+    "auc@3_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@5_ci": [
+     0.0,
+     3.0409837408422434e-05
+    ],
+    "auc@10_ci": [
+     0.0,
+     0.0014783844426779244
+    ],
+    "auc@20_ci": [
+     0.00044385818380572074,
+     0.0032973099736684345
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@3_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@5_ci": [
+     0.0,
+     0.0018847352024921977
+    ],
+    "sr@10_ci": [
+     0.0,
+     0.004361370716510903
+    ],
+    "sr@20_ci": [
+     0.001869158878504673,
+     0.008722741433021807
+    ]
+   }
+  },
+  "minima_xoftr": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "inference",
+     "reason": "原匹配器上游存在未提交改动，重新确认有效推理",
+     "coverage": 652,
+     "failures": 652,
+     "prediction": "preds/minima_xoftr/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/minima_xoftr/val/5a654aaaaaf3482ab9ef64d27f3e7b95/preds/minima_xoftr/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_xoftr.ckpt",
+       "sha256": "551eaa814713b3c60ca380eda022be9b7609e51737302e12370f8943a1e864d7",
+       "historical_sha256": "551eaa814713b3c60ca380eda022be9b7609e51737302e12370f8943a1e864d7"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "inference",
+     "reason": "原匹配器上游存在未提交改动，重新确认有效推理",
+     "coverage": 953,
+     "failures": 953,
+     "prediction": "preds/minima_xoftr/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/minima_xoftr/test/6c7097974c624ee39b85293e2d10fd95/preds/minima_xoftr/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_xoftr.ckpt",
+       "sha256": "551eaa814713b3c60ca380eda022be9b7609e51737302e12370f8943a1e864d7",
+       "historical_sha256": "551eaa814713b3c60ca380eda022be9b7609e51737302e12370f8943a1e864d7"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 1.0,
+    "median": null,
+    "auc@3": 0.0,
+    "auc@5": 0.0,
+    "auc@10": 0.0,
+    "auc@20": 0.0,
+    "sr@1": 0.0,
+    "sr@2": 0.0,
+    "sr@3": 0.0,
+    "sr@5": 0.0,
+    "sr@10": 0.0,
+    "sr@20": 0.0,
+    "auc@3_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@5_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@10_ci": [
+     0.0,
+     0.0
+    ],
+    "auc@20_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@3_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@5_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@10_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@20_ci": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "minima_eloftr": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 379,
+     "prediction": "preds/minima_eloftr/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/minima_eloftr/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_eloftr.ckpt",
+       "sha256": "535dabbe4f8c89640526bcf0253b9ccf0941d268f0c9afc1084aa3dd8a26dc64",
+       "historical_sha256": "535dabbe4f8c89640526bcf0253b9ccf0941d268f0c9afc1084aa3dd8a26dc64"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "refit",
+     "reason": "历史仿射含非有限值，使用原始匹配点对复核",
+     "coverage": 953,
+     "failures": 631,
+     "prediction": "preds/minima_eloftr/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/minima_eloftr/test/bc6dd933b78340698371c30466733fbc/preds/minima_eloftr/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_eloftr.ckpt",
+       "sha256": "535dabbe4f8c89640526bcf0253b9ccf0941d268f0c9afc1084aa3dd8a26dc64",
+       "historical_sha256": "535dabbe4f8c89640526bcf0253b9ccf0941d268f0c9afc1084aa3dd8a26dc64"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.6292834890965732,
+    "median": null,
+    "auc@3": 0.0014260944028408314,
+    "auc@5": 0.010628224177838836,
+    "auc@10": 0.048314437322479614,
+    "auc@20": 0.10661757037455204,
+    "sr@1": 0.0,
+    "sr@2": 0.0012461059190031153,
+    "sr@3": 0.007476635514018692,
+    "sr@5": 0.044859813084112146,
+    "sr@10": 0.12024922118380062,
+    "sr@20": 0.1956386292834891,
+    "auc@3_ci": [
+     0.0004974733491028193,
+     0.0025409449782730713
+    ],
+    "auc@5_ci": [
+     0.007699801965468433,
+     0.013317131254607165
+    ],
+    "auc@10_ci": [
+     0.04086332009374128,
+     0.05545647152398653
+    ],
+    "auc@20_ci": [
+     0.09547657011486003,
+     0.11867071629097058
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.003115264797507788
+    ],
+    "sr@3_ci": [
+     0.003115264797507788,
+     0.011838006230529595
+    ],
+    "sr@5_ci": [
+     0.03489096573208723,
+     0.05420560747663551
+    ],
+    "sr@10_ci": [
+     0.10467289719626169,
+     0.13644859813084112
+    ],
+    "sr@20_ci": [
+     0.17757009345794392,
+     0.21495327102803738
+    ]
+   }
+  },
+  "minima_loftr": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/minima_loftr/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/minima_loftr/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_loftr.ckpt",
+       "sha256": "810d19773ff898ba04a68c99a3eff9c112210bf884214bd76aec885e83b0e257",
+       "historical_sha256": "810d19773ff898ba04a68c99a3eff9c112210bf884214bd76aec885e83b0e257"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/minima_loftr/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/minima_loftr/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_loftr.ckpt",
+       "sha256": "810d19773ff898ba04a68c99a3eff9c112210bf884214bd76aec885e83b0e257",
+       "historical_sha256": "810d19773ff898ba04a68c99a3eff9c112210bf884214bd76aec885e83b0e257"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 37.02083554666318,
+    "auc@3": 0.0073843432428118425,
+    "auc@5": 0.036777090654837204,
+    "auc@10": 0.11811730586986675,
+    "auc@20": 0.21328977545204117,
+    "sr@1": 0.0,
+    "sr@2": 0.004984423676012461,
+    "sr@3": 0.04423676012461059,
+    "sr@5": 0.12149532710280374,
+    "sr@10": 0.2498442367601246,
+    "sr@20": 0.35389408099688474,
+    "auc@3_ci": [
+     0.005377994455609061,
+     0.009357930392175539
+    ],
+    "auc@5_ci": [
+     0.03099605110754656,
+     0.042526091394259856
+    ],
+    "auc@10_ci": [
+     0.10665433232539656,
+     0.1297892233790155
+    ],
+    "auc@20_ci": [
+     0.1961615669304096,
+     0.2296643489397355
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.001869158878504673,
+     0.00809968847352025
+    ],
+    "sr@3_ci": [
+     0.03426791277258567,
+     0.05482866043613707
+    ],
+    "sr@5_ci": [
+     0.10652647975077882,
+     0.1370872274143302
+    ],
+    "sr@10_ci": [
+     0.22802180685358253,
+     0.2722741433021807
+    ],
+    "sr@20_ci": [
+     0.3295638629283489,
+     0.3763239875389408
+    ]
+   }
+  },
+  "ma_eloftr": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 2,
+     "prediction": "preds/ma_eloftr/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/ma_eloftr/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/matchanything/matchanything_eloftr.ckpt",
+       "sha256": "b394fd368488e5e3136906daac825fadd3dd5376755dcdf5cb6ede0de20f6e7e",
+       "historical_sha256": "b394fd368488e5e3136906daac825fadd3dd5376755dcdf5cb6ede0de20f6e7e"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 8,
+     "prediction": "preds/ma_eloftr/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/ma_eloftr/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/matchanything/matchanything_eloftr.ckpt",
+       "sha256": "b394fd368488e5e3136906daac825fadd3dd5376755dcdf5cb6ede0de20f6e7e",
+       "historical_sha256": "b394fd368488e5e3136906daac825fadd3dd5376755dcdf5cb6ede0de20f6e7e"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.006230529595015576,
+    "median": 95.78166745643676,
+    "auc@3": 0.006323971640072207,
+    "auc@5": 0.02663337652951748,
+    "auc@10": 0.08267778972040883,
+    "auc@20": 0.15716900225192934,
+    "sr@1": 0.0,
+    "sr@2": 0.006853582554517134,
+    "sr@3": 0.030529595015576325,
+    "sr@5": 0.0853582554517134,
+    "sr@10": 0.18629283489096574,
+    "sr@20": 0.2635514018691589,
+    "auc@3_ci": [
+     0.004468835203802623,
+     0.008380557607263745
+    ],
+    "auc@5_ci": [
+     0.02208974754597794,
+     0.0320025514008875
+    ],
+    "auc@10_ci": [
+     0.07350597915483897,
+     0.09309472347128675
+    ],
+    "auc@20_ci": [
+     0.14421900759791417,
+     0.17145693794501002
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.003115264797507788,
+     0.011214953271028037
+    ],
+    "sr@3_ci": [
+     0.023052959501557634,
+     0.03925233644859813
+    ],
+    "sr@5_ci": [
+     0.07289719626168224,
+     0.09844236760124611
+    ],
+    "sr@10_ci": [
+     0.16884735202492213,
+     0.20498442367601247
+    ],
+    "sr@20_ci": [
+     0.24236760124610593,
+     0.28473520249221185
+    ]
+   }
+  },
+  "anymatch_edm": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "refit",
+     "reason": "历史仿射含非有限值，使用原始匹配点对复核",
+     "coverage": 652,
+     "failures": 483,
+     "prediction": "preds/anymatch_edm/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/anymatch_edm/val/cc70c93235e44e3f8064283ff80c269f/preds/anymatch_edm/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/anymatch/EDM_AnyMatch.ckpt",
+       "sha256": "b1b1a73280d64d980d58c0c7d55d279634c80931be07b7eaa27d26c0d01856bc",
+       "historical_sha256": "b1b1a73280d64d980d58c0c7d55d279634c80931be07b7eaa27d26c0d01856bc"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "refit",
+     "reason": "历史仿射含非有限值，使用原始匹配点对复核",
+     "coverage": 953,
+     "failures": 816,
+     "prediction": "preds/anymatch_edm/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/anymatch_edm/test/65207a106bb440a8ab9f804d3ac56c89/preds/anymatch_edm/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/anymatch/EDM_AnyMatch.ckpt",
+       "sha256": "b1b1a73280d64d980d58c0c7d55d279634c80931be07b7eaa27d26c0d01856bc",
+       "historical_sha256": "b1b1a73280d64d980d58c0c7d55d279634c80931be07b7eaa27d26c0d01856bc"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.8093457943925234,
+    "median": null,
+    "auc@3": 0.00020584412862387913,
+    "auc@5": 0.0018498587659423278,
+    "auc@10": 0.00837798510907997,
+    "auc@20": 0.024167119929859347,
+    "sr@1": 0.0,
+    "sr@2": 0.0,
+    "sr@3": 0.003115264797507788,
+    "sr@5": 0.006230529595015576,
+    "sr@10": 0.024299065420560748,
+    "sr@20": 0.051713395638629284,
+    "auc@3_ci": [
+     3.061225342196187e-05,
+     0.00042670486991750487
+    ],
+    "auc@5_ci": [
+     0.0007165641959567575,
+     0.0032601318658310656
+    ],
+    "auc@10_ci": [
+     0.005537909427455367,
+     0.011542134695491308
+    ],
+    "auc@20_ci": [
+     0.018855375772124133,
+     0.029790269226256553
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@3_ci": [
+     0.0006230529595015577,
+     0.006230529595015576
+    ],
+    "sr@5_ci": [
+     0.003115264797507788,
+     0.009968847352024923
+    ],
+    "sr@10_ci": [
+     0.017445482866043614,
+     0.03177570093457944
+    ],
+    "sr@20_ci": [
+     0.041121495327102804,
+     0.06230529595015576
+    ]
+   }
+  },
+  "anymatch_loftr": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/anymatch_loftr/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/anymatch_loftr/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/anymatch/LoFTR_AnyMatch.ckpt",
+       "sha256": "5c0851fa7db76fc776fe6a67f0e5f85a10c2c0e7e8b9b6a7afa9d01ce958a624",
+       "historical_sha256": "5c0851fa7db76fc776fe6a67f0e5f85a10c2c0e7e8b9b6a7afa9d01ce958a624"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/anymatch_loftr/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/anymatch_loftr/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/anymatch/LoFTR_AnyMatch.ckpt",
+       "sha256": "5c0851fa7db76fc776fe6a67f0e5f85a10c2c0e7e8b9b6a7afa9d01ce958a624",
+       "historical_sha256": "5c0851fa7db76fc776fe6a67f0e5f85a10c2c0e7e8b9b6a7afa9d01ce958a624"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 4.702910014956561,
+    "auc@3": 0.05841721792658256,
+    "auc@5": 0.2005804813331676,
+    "auc@10": 0.4450519615962707,
+    "auc@20": 0.6376177385722447,
+    "sr@1": 0.0,
+    "sr@2": 0.06043613707165109,
+    "sr@3": 0.26666666666666666,
+    "sr@5": 0.5264797507788161,
+    "sr@10": 0.7813084112149533,
+    "sr@20": 0.8535825545171339,
+    "auc@3_ci": [
+     0.05254249316600503,
+     0.06420804090610183
+    ],
+    "auc@5_ci": [
+     0.18971656152535635,
+     0.2116983143601024
+    ],
+    "auc@10_ci": [
+     0.430645936206301,
+     0.46049809278749676
+    ],
+    "auc@20_ci": [
+     0.62284562593765,
+     0.6525066571118674
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.04984423676012461,
+     0.07165109034267912
+    ],
+    "sr@3_ci": [
+     0.24485981308411214,
+     0.2884890965732087
+    ],
+    "sr@5_ci": [
+     0.5034267912772585,
+     0.5520249221183801
+    ],
+    "sr@10_ci": [
+     0.7607320872274144,
+     0.8006386292834891
+    ],
+    "sr@20_ci": [
+     0.8367601246105919,
+     0.870404984423676
+    ]
+   }
+  },
+  "roma": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/roma/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/roma/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/dinov2_vitl14_pretrain.pth",
+       "sha256": "d5383ea8f4877b2472eb973e0fd72d557c7da5d3611bd527ceeb1d7162cbf428",
+       "historical_sha256": "d5383ea8f4877b2472eb973e0fd72d557c7da5d3611bd527ceeb1d7162cbf428"
+      },
+      {
+       "path": "/remote-home/xufang/YGC/weights/official/roma/roma_outdoor.pth",
+       "sha256": "c7a45c80d41ad788a63c641d1b686d7cb3f297f40097c6f4e75039889e5cc8ba",
+       "historical_sha256": "c7a45c80d41ad788a63c641d1b686d7cb3f297f40097c6f4e75039889e5cc8ba"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/roma/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/roma/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/dinov2_vitl14_pretrain.pth",
+       "sha256": "d5383ea8f4877b2472eb973e0fd72d557c7da5d3611bd527ceeb1d7162cbf428",
+       "historical_sha256": "d5383ea8f4877b2472eb973e0fd72d557c7da5d3611bd527ceeb1d7162cbf428"
+      },
+      {
+       "path": "/remote-home/xufang/YGC/weights/official/roma/roma_outdoor.pth",
+       "sha256": "c7a45c80d41ad788a63c641d1b686d7cb3f297f40097c6f4e75039889e5cc8ba",
+       "historical_sha256": "c7a45c80d41ad788a63c641d1b686d7cb3f297f40097c6f4e75039889e5cc8ba"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 157.5050953296403,
+    "auc@3": 0.01887959322916254,
+    "auc@5": 0.05406786616147277,
+    "auc@10": 0.11432062843734958,
+    "auc@20": 0.17252893154253646,
+    "sr@1": 0.0,
+    "sr@2": 0.019314641744548288,
+    "sr@3": 0.07227414330218068,
+    "sr@5": 0.13395638629283488,
+    "sr@10": 0.2012461059190031,
+    "sr@20": 0.2504672897196262,
+    "auc@3_ci": [
+     0.015346017774780112,
+     0.022410269795899326
+    ],
+    "auc@5_ci": [
+     0.046690220288913994,
+     0.06144615263005572
+    ],
+    "auc@10_ci": [
+     0.10256836256887833,
+     0.12640213996038002
+    ],
+    "auc@20_ci": [
+     0.15696691466234028,
+     0.18818556601144246
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.013084112149532711,
+     0.02679127725856698
+    ],
+    "sr@3_ci": [
+     0.06043613707165109,
+     0.08411214953271028
+    ],
+    "sr@5_ci": [
+     0.11774143302180685,
+     0.15077881619937694
+    ],
+    "sr@10_ci": [
+     0.18253894080996882,
+     0.21995327102803736
+    ],
+    "sr@20_ci": [
+     0.23052959501557632,
+     0.27165109034267915
+    ]
+   }
+  },
+  "gdros_os_lsr": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/gdros_os_lsr/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/gdros_os_lsr/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/gdros/GDROS-os512.pth",
+       "sha256": "80fd768e2d5f2f3887ff8af62b165e43e073e6cec187544c542b6d4b591ba683",
+       "historical_sha256": "80fd768e2d5f2f3887ff8af62b165e43e073e6cec187544c542b6d4b591ba683"
+      }
+     ],
+     "fit": "GDROS OS least squares",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/gdros_os_lsr/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/gdros_os_lsr/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/gdros/GDROS-os512.pth",
+       "sha256": "80fd768e2d5f2f3887ff8af62b165e43e073e6cec187544c542b6d4b591ba683",
+       "historical_sha256": "80fd768e2d5f2f3887ff8af62b165e43e073e6cec187544c542b6d4b591ba683"
+      }
+     ],
+     "fit": "GDROS OS least squares",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 7.586047682614108,
+    "auc@3": 0.004297979803399957,
+    "auc@5": 0.05075702010513169,
+    "auc@10": 0.261317701926179,
+    "auc@20": 0.5170646548314572,
+    "sr@1": 0.0,
+    "sr@2": 0.003115264797507788,
+    "sr@3": 0.029283489096573207,
+    "sr@5": 0.22990654205607478,
+    "sr@10": 0.6598130841121496,
+    "sr@20": 0.8330218068535825,
+    "auc@3_ci": [
+     0.0027941886942559296,
+     0.005862649028509296
+    ],
+    "auc@5_ci": [
+     0.04490053501276389,
+     0.05649473139633894
+    ],
+    "auc@10_ci": [
+     0.24919765281577333,
+     0.27326140011601313
+    ],
+    "auc@20_ci": [
+     0.5029746065118444,
+     0.5306875639701973
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.0006230529595015577,
+     0.006230529595015576
+    ],
+    "sr@3_ci": [
+     0.02116822429906542,
+     0.037383177570093455
+    ],
+    "sr@5_ci": [
+     0.20995327102803737,
+     0.2504672897196262
+    ],
+    "sr@10_ci": [
+     0.6361214953271028,
+     0.6828816199376947
+    ],
+    "sr@20_ci": [
+     0.8149532710280374,
+     0.8504828660436137
+    ]
+   }
+  },
+  "minima_roma": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/minima_roma/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/minima_roma/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_roma.pth",
+       "sha256": "17f3923bd780e8f1450792706e0643f70c8864ad11bf5fd4f2b54714bac23538",
+       "historical_sha256": "17f3923bd780e8f1450792706e0643f70c8864ad11bf5fd4f2b54714bac23538"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/minima_roma/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/minima_roma/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/minima/minima_roma.pth",
+       "sha256": "17f3923bd780e8f1450792706e0643f70c8864ad11bf5fd4f2b54714bac23538",
+       "historical_sha256": "17f3923bd780e8f1450792706e0643f70c8864ad11bf5fd4f2b54714bac23538"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 4.705324786258839,
+    "auc@3": 0.07519940631098695,
+    "auc@5": 0.21279286847281265,
+    "auc@10": 0.44116352906695466,
+    "auc@20": 0.6273629814508789,
+    "sr@1": 0.0,
+    "sr@2": 0.09345794392523364,
+    "sr@3": 0.28161993769470406,
+    "sr@5": 0.5283489096573208,
+    "sr@10": 0.7526479750778816,
+    "sr@20": 0.8442367601246106,
+    "auc@3_ci": [
+     0.06779221912285024,
+     0.08222992212549518
+    ],
+    "auc@5_ci": [
+     0.20107405566645428,
+     0.22482124732456973
+    ],
+    "auc@10_ci": [
+     0.42541426865166326,
+     0.45691400598248394
+    ],
+    "auc@20_ci": [
+     0.6103455296231908,
+     0.6434249275043835
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.07850467289719626,
+     0.10778816199376948
+    ],
+    "sr@3_ci": [
+     0.26042056074766357,
+     0.3040498442367601
+    ],
+    "sr@5_ci": [
+     0.503411214953271,
+     0.5520249221183801
+    ],
+    "sr@10_ci": [
+     0.7302180685358255,
+     0.7750778816199377
+    ],
+    "sr@20_ci": [
+     0.8255451713395638,
+     0.8629283489096573
+    ]
+   }
+  },
+  "ma_roma": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/ma_roma/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/ma_roma/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/matchanything/matchanything_roma.ckpt",
+       "sha256": "fc85ea43162d606545a7c7491c878fe7fa7db79e7350f83432e0eb5a6898f74d",
+       "historical_sha256": "fc85ea43162d606545a7c7491c878fe7fa7db79e7350f83432e0eb5a6898f74d"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/ma_roma/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/ma_roma/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/matchanything/matchanything_roma.ckpt",
+       "sha256": "fc85ea43162d606545a7c7491c878fe7fa7db79e7350f83432e0eb5a6898f74d",
+       "historical_sha256": "fc85ea43162d606545a7c7491c878fe7fa7db79e7350f83432e0eb5a6898f74d"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 4.266594033043622,
+    "auc@3": 0.07595067461469802,
+    "auc@5": 0.22692784430096474,
+    "auc@10": 0.4790152747359048,
+    "auc@20": 0.6735713024883169,
+    "sr@1": 0.0,
+    "sr@2": 0.0940809968847352,
+    "sr@3": 0.29657320872274145,
+    "sr@5": 0.584423676012461,
+    "sr@10": 0.8161993769470405,
+    "sr@20": 0.8965732087227415,
+    "auc@3_ci": [
+     0.0689754395473022,
+     0.08287600281526607
+    ],
+    "auc@5_ci": [
+     0.21567201709674802,
+     0.23918471005418296
+    ],
+    "auc@10_ci": [
+     0.4644777894250911,
+     0.4929405048990724
+    ],
+    "auc@20_ci": [
+     0.6598070678233874,
+     0.6866720091053216
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.08037383177570094,
+     0.10841121495327102
+    ],
+    "sr@3_ci": [
+     0.2766355140186916,
+     0.31901869158878504
+    ],
+    "sr@5_ci": [
+     0.5601246105919003,
+     0.6074922118380062
+    ],
+    "sr@10_ci": [
+     0.7968847352024923,
+     0.8348909657320872
+    ],
+    "sr@20_ci": [
+     0.881619937694704,
+     0.9102959501557633
+    ]
+   }
+  },
+  "anymatch_roma__minmax": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/anymatch_roma__minmax/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0m/preds/anymatch_roma__minmax/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+       "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+       "historical_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "历史预测与运行、配置和权重记录吻合",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/anymatch_roma__minmax/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/B0m/preds/anymatch_roma__minmax/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+       "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+       "historical_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": null,
+     "successful_updates": null,
+     "amp_skips": null,
+     "stop": null
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.9395190216789833,
+    "auc@3": 0.08382655251878948,
+    "auc@5": 0.2505830476707605,
+    "auc@10": 0.5181109594434572,
+    "auc@20": 0.7132737475521627,
+    "sr@1": 0.0,
+    "sr@2": 0.10218068535825545,
+    "sr@3": 0.3370716510903427,
+    "sr@5": 0.6361370716510903,
+    "sr@10": 0.8685358255451714,
+    "sr@20": 0.9289719626168225,
+    "auc@3_ci": [
+     0.07614916762048743,
+     0.09099030129308537
+    ],
+    "auc@5_ci": [
+     0.2381410264503963,
+     0.2626901582332014
+    ],
+    "auc@10_ci": [
+     0.5042405725792524,
+     0.5313177750808686
+    ],
+    "auc@20_ci": [
+     0.7008260100436766,
+     0.7255102861389675
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.08660436137071652,
+     0.1165264797507788
+    ],
+    "sr@3_ci": [
+     0.31401869158878504,
+     0.36074766355140186
+    ],
+    "sr@5_ci": [
+     0.6130841121495327,
+     0.6598130841121496
+    ],
+    "sr@10_ci": [
+     0.8517133956386292,
+     0.8859813084112149
+    ],
+    "sr@20_ci": [
+     0.9165109034267913,
+     0.9414485981308411
+    ]
+   }
+  },
+  "k0_no_bce": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/k0_no_bce/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E55/sweep/k0_no_bce/val/7907/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k0_no_bce/ckpt_7907.pt",
+       "sha256": "71c93d58d624d413d7c7f9c02b0955d6289f12430a0e01608b651673a7022285",
+       "historical_sha256": "71c93d58d624d413d7c7f9c02b0955d6289f12430a0e01608b651673a7022285"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7901,
+     "amp_skips": 6,
+     "stop": "training_budget"
+    },
+    "test": {
+     "mode": "inference",
+     "reason": "缺少训练末步逐对预测或原始推理记录",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/k0_no_bce/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/k0_no_bce/test/59ebb374348c4c00908727301481a5cb/preds/k0_no_bce/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k0_no_bce/ckpt_7907.pt",
+       "sha256": "71c93d58d624d413d7c7f9c02b0955d6289f12430a0e01608b651673a7022285",
+       "historical_sha256": null
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7901,
+     "amp_skips": 6,
+     "stop": "training_budget"
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.5659539968230107,
+    "auc@3": 0.0922096485861871,
+    "auc@5": 0.28399311196316335,
+    "auc@10": 0.5775857371602348,
+    "auc@20": 0.7752943824282925,
+    "sr@1": 0.0006230529595015577,
+    "sr@2": 0.1059190031152648,
+    "sr@3": 0.3850467289719626,
+    "sr@5": 0.7202492211838006,
+    "sr@10": 0.9389408099688473,
+    "sr@20": 0.9894080996884735,
+    "auc@3_ci": [
+     0.08486132049787354,
+     0.09958272166596302
+    ],
+    "auc@5_ci": [
+     0.27291187194437944,
+     0.2959014961786385
+    ],
+    "auc@10_ci": [
+     0.56648233498759,
+     0.5885232894216772
+    ],
+    "auc@20_ci": [
+     0.7676426261374999,
+     0.7832978776740185
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.001869158878504673
+    ],
+    "sr@2_ci": [
+     0.08970404984423676,
+     0.12024922118380062
+    ],
+    "sr@3_ci": [
+     0.36199376947040496,
+     0.40809968847352024
+    ],
+    "sr@5_ci": [
+     0.6990654205607477,
+     0.7420716510903427
+    ],
+    "sr@10_ci": [
+     0.9277258566978193,
+     0.950778816199377
+    ],
+    "sr@20_ci": [
+     0.9838006230529595,
+     0.9937694704049844
+    ]
+   }
+  },
+  "k1_no_bce": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/k1_no_bce/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E55/sweep/k1_no_bce/val/7907/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k1_no_bce/ckpt_7907.pt",
+       "sha256": "2e81762e7ab6fefb4ac0201e3dba252f366db4db34991b1a12306eb1433df4c4",
+       "historical_sha256": "2e81762e7ab6fefb4ac0201e3dba252f366db4db34991b1a12306eb1433df4c4"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7899,
+     "amp_skips": 8,
+     "stop": "training_budget"
+    },
+    "test": {
+     "mode": "inference",
+     "reason": "缺少训练末步逐对预测或原始推理记录",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/k1_no_bce/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/k1_no_bce/test/112ae1b49e494167ad5d68daf874e663/preds/k1_no_bce/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k1_no_bce/ckpt_7907.pt",
+       "sha256": "2e81762e7ab6fefb4ac0201e3dba252f366db4db34991b1a12306eb1433df4c4",
+       "historical_sha256": null
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7899,
+     "amp_skips": 8,
+     "stop": "training_budget"
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.5731440139304405,
+    "auc@3": 0.0931319951523428,
+    "auc@5": 0.28697057186702496,
+    "auc@10": 0.5805769653095338,
+    "auc@20": 0.7785346175290409,
+    "sr@1": 0.0006230529595015577,
+    "sr@2": 0.11152647975077881,
+    "sr@3": 0.3844236760124611,
+    "sr@5": 0.729595015576324,
+    "sr@10": 0.9439252336448598,
+    "sr@20": 0.9887850467289719,
+    "auc@3_ci": [
+     0.08576721266602375,
+     0.1006950445604068
+    ],
+    "auc@5_ci": [
+     0.27522355050115777,
+     0.2983856149806223
+    ],
+    "auc@10_ci": [
+     0.5691513884239786,
+     0.5919691540505181
+    ],
+    "auc@20_ci": [
+     0.7709890694751851,
+     0.7863760774771404
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.001869158878504673
+    ],
+    "sr@2_ci": [
+     0.09470404984423676,
+     0.12649532710280373
+    ],
+    "sr@3_ci": [
+     0.3613707165109034,
+     0.40686915887850467
+    ],
+    "sr@5_ci": [
+     0.708411214953271,
+     0.7495482866043613
+    ],
+    "sr@10_ci": [
+     0.9333333333333333,
+     0.9557632398753894
+    ],
+    "sr@20_ci": [
+     0.9837850467289719,
+     0.9937694704049844
+    ]
+   }
+  },
+  "k2_no_bce": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/k2_no_bce/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E55/sweep/k2_no_bce/val/7907/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k2_no_bce/ckpt_7907.pt",
+       "sha256": "aac305a97b34ead29f995adcb4e2755a613c71d1f858a1570efff871817127b4",
+       "historical_sha256": "aac305a97b34ead29f995adcb4e2755a613c71d1f858a1570efff871817127b4"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7899,
+     "amp_skips": 8,
+     "stop": "training_budget"
+    },
+    "test": {
+     "mode": "inference",
+     "reason": "缺少训练末步逐对预测或原始推理记录",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/k2_no_bce/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/k2_no_bce/test/2efd23f936494486a37a387aaa16097c/preds/k2_no_bce/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k2_no_bce/ckpt_7907.pt",
+       "sha256": "aac305a97b34ead29f995adcb4e2755a613c71d1f858a1570efff871817127b4",
+       "historical_sha256": null
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7899,
+     "amp_skips": 8,
+     "stop": "training_budget"
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.6183224680849473,
+    "auc@3": 0.061611855020106535,
+    "auc@5": 0.26382636074293486,
+    "auc@10": 0.5713549112493422,
+    "auc@20": 0.77626023055875,
+    "sr@1": 0.0,
+    "sr@2": 0.04299065420560748,
+    "sr@3": 0.32710280373831774,
+    "sr@5": 0.7345794392523365,
+    "sr@10": 0.9545171339563863,
+    "sr@20": 0.9937694704049844,
+    "auc@3_ci": [
+     0.055785841011439546,
+     0.06746458252523149
+    ],
+    "auc@5_ci": [
+     0.2532009562998556,
+     0.2743430658308808
+    ],
+    "auc@10_ci": [
+     0.5612681947149836,
+     0.5814553795761703
+    ],
+    "auc@20_ci": [
+     0.7691436772513567,
+     0.783036702844622
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.03302180685358255,
+     0.05358255451713396
+    ],
+    "sr@3_ci": [
+     0.3052803738317757,
+     0.3501713395638629
+    ],
+    "sr@5_ci": [
+     0.7121495327102804,
+     0.7545327102803738
+    ],
+    "sr@10_ci": [
+     0.9445482866043614,
+     0.9644859813084112
+    ],
+    "sr@20_ci": [
+     0.9894080996884735,
+     0.9975077881619938
+    ]
+   }
+  },
+  "k3_no_bce": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/k3_no_bce/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E55/sweep/k3_no_bce/val/7907/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k3_no_bce/ckpt_7907.pt",
+       "sha256": "1f2c7064fe0a39dbefddcb2ef5c9d3ff2a91cf081b2f7e0c67162b343ec9cf46",
+       "historical_sha256": "1f2c7064fe0a39dbefddcb2ef5c9d3ff2a91cf081b2f7e0c67162b343ec9cf46"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7900,
+     "amp_skips": 7,
+     "stop": "training_budget"
+    },
+    "test": {
+     "mode": "inference",
+     "reason": "缺少训练末步逐对预测或原始推理记录",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/k3_no_bce/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/k3_no_bce/test/ccbad6a1e40e452a902a30e403ccf9b7/preds/k3_no_bce/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k3_no_bce/ckpt_7907.pt",
+       "sha256": "1f2c7064fe0a39dbefddcb2ef5c9d3ff2a91cf081b2f7e0c67162b343ec9cf46",
+       "historical_sha256": null
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7900,
+     "amp_skips": 7,
+     "stop": "training_budget"
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.430646056805176,
+    "auc@3": 0.0841016638157779,
+    "auc@5": 0.2985627240807212,
+    "auc@10": 0.6102967992084493,
+    "auc@20": 0.800043804378822,
+    "sr@1": 0.0012461059190031153,
+    "sr@2": 0.08411214953271028,
+    "sr@3": 0.3850467289719626,
+    "sr@5": 0.7856697819314642,
+    "sr@10": 0.9757009345794393,
+    "sr@20": 0.9950155763239875,
+    "auc@3_ci": [
+     0.07727722281055564,
+     0.09107173750982706
+    ],
+    "auc@5_ci": [
+     0.2873470385855866,
+     0.3099444044701454
+    ],
+    "auc@10_ci": [
+     0.6012607676774888,
+     0.6197521090967133
+    ],
+    "auc@20_ci": [
+     0.7939282188582388,
+     0.8058248520325144
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.003115264797507788
+    ],
+    "sr@2_ci": [
+     0.06978193146417445,
+     0.09781931464174455
+    ],
+    "sr@3_ci": [
+     0.36199376947040496,
+     0.40998442367601245
+    ],
+    "sr@5_ci": [
+     0.7650934579439252,
+     0.805607476635514
+    ],
+    "sr@10_ci": [
+     0.9682242990654205,
+     0.9825545171339564
+    ],
+    "sr@20_ci": [
+     0.9912772585669782,
+     0.9981308411214953
+    ]
+   }
+  },
+  "k4_no_bce": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/k4_no_bce/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E55/sweep/k4_no_bce/val/7907/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k4_no_bce/ckpt_7907.pt",
+       "sha256": "cf3b31d625942f58bbfb273a53c34d4d7fa695be8b69cfd01359a9d1ca65f653",
+       "historical_sha256": "cf3b31d625942f58bbfb273a53c34d4d7fa695be8b69cfd01359a9d1ca65f653"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7900,
+     "amp_skips": 7,
+     "stop": "training_budget"
+    },
+    "test": {
+     "mode": "inference",
+     "reason": "缺少训练末步逐对预测或原始推理记录",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/k4_no_bce/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/k4_no_bce/test/2227194b9aca4e97817e82ded922e2c3/preds/k4_no_bce/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k4_no_bce/ckpt_7907.pt",
+       "sha256": "cf3b31d625942f58bbfb273a53c34d4d7fa695be8b69cfd01359a9d1ca65f653",
+       "historical_sha256": null
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7900,
+     "amp_skips": 7,
+     "stop": "training_budget"
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.392811469077303,
+    "auc@3": 0.09543603825856509,
+    "auc@5": 0.3059483340847266,
+    "auc@10": 0.6180053378460875,
+    "auc@20": 0.8060919162724647,
+    "sr@1": 0.0,
+    "sr@2": 0.11775700934579439,
+    "sr@3": 0.3844236760124611,
+    "sr@5": 0.7881619937694704,
+    "sr@10": 0.9844236760124611,
+    "sr@20": 0.9975077881619938,
+    "auc@3_ci": [
+     0.08805345244277679,
+     0.10284828532012615
+    ],
+    "auc@5_ci": [
+     0.29450907229911877,
+     0.31759465964860245
+    ],
+    "auc@10_ci": [
+     0.6088341080495636,
+     0.626837502269123
+    ],
+    "auc@20_ci": [
+     0.8005400951291569,
+     0.8110775764845092
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.0
+    ],
+    "sr@2_ci": [
+     0.10218068535825545,
+     0.13333333333333333
+    ],
+    "sr@3_ci": [
+     0.36074766355140186,
+     0.4087227414330218
+    ],
+    "sr@5_ci": [
+     0.7675856697819314,
+     0.8087227414330218
+    ],
+    "sr@10_ci": [
+     0.9781931464174455,
+     0.990031152647975
+    ],
+    "sr@20_ci": [
+     0.994392523364486,
+     0.9993769470404984
+    ]
+   }
+  },
+  "k5_no_bce": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/k5_no_bce/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E55/sweep/k5_no_bce/val/7907/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k5_no_bce/ckpt_7907.pt",
+       "sha256": "e3affb6416bc17dfddbaba5cf99082eda667403aa0a84f39901b2d2fad71500a",
+       "historical_sha256": "e3affb6416bc17dfddbaba5cf99082eda667403aa0a84f39901b2d2fad71500a"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7899,
+     "amp_skips": 8,
+     "stop": "training_budget"
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/k5_no_bce/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E55/sweep/k5_no_bce/last-test/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k5_no_bce/ckpt_7907.pt",
+       "sha256": "e3affb6416bc17dfddbaba5cf99082eda667403aa0a84f39901b2d2fad71500a",
+       "historical_sha256": "e3affb6416bc17dfddbaba5cf99082eda667403aa0a84f39901b2d2fad71500a"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7899,
+     "amp_skips": 8,
+     "stop": "training_budget"
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.385621847284084,
+    "auc@3": 0.10018750421893259,
+    "auc@5": 0.3102092315934952,
+    "auc@10": 0.6212781820795944,
+    "auc@20": 0.8073710693551366,
+    "sr@1": 0.0006230529595015577,
+    "sr@2": 0.12461059190031153,
+    "sr@3": 0.4012461059190031,
+    "sr@5": 0.7919003115264798,
+    "sr@10": 0.9819314641744549,
+    "sr@20": 0.9975077881619938,
+    "auc@3_ci": [
+     0.09255161674035742,
+     0.10785796752433172
+    ],
+    "auc@5_ci": [
+     0.2985253789429672,
+     0.321326706861356
+    ],
+    "auc@10_ci": [
+     0.6122419553771002,
+     0.6304584475627133
+    ],
+    "auc@20_ci": [
+     0.8019529957281372,
+     0.8127545523126835
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.001869158878504673
+    ],
+    "sr@2_ci": [
+     0.10778816199376948,
+     0.14080996884735203
+    ],
+    "sr@3_ci": [
+     0.37694704049844235,
+     0.4255451713395639
+    ],
+    "sr@5_ci": [
+     0.77196261682243,
+     0.811214953271028
+    ],
+    "sr@10_ci": [
+     0.9756853582554518,
+     0.9881619937694704
+    ],
+    "sr@20_ci": [
+     0.994392523364486,
+     0.9993769470404984
+    ]
+   }
+  },
+  "frozen_dino": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/frozen_dino/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E56/extra/data/val_selection/frozen_dino/7907.val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E56/ckpt/frozen_dino/ckpt_7907.pt",
+       "sha256": "d11a86034972dee5ab5441a2dcbf32c2b5eae5460d3926cffd35a9bd5f676909",
+       "historical_sha256": "d11a86034972dee5ab5441a2dcbf32c2b5eae5460d3926cffd35a9bd5f676909"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7900,
+     "amp_skips": 7,
+     "stop": "training_budget"
+    },
+    "test": {
+     "mode": "inference",
+     "reason": "缺少训练末步逐对预测或原始推理记录",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/frozen_dino/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/frozen_dino/test/2688c3277dc148189039d0e8ef3d2dc9/preds/frozen_dino/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E56/ckpt/frozen_dino/ckpt_7907.pt",
+       "sha256": "d11a86034972dee5ab5441a2dcbf32c2b5eae5460d3926cffd35a9bd5f676909",
+       "historical_sha256": null
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7900,
+     "amp_skips": 7,
+     "stop": "training_budget"
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.4908520073949725,
+    "auc@3": 0.09086694638685511,
+    "auc@5": 0.2931217920650555,
+    "auc@10": 0.5907071670729307,
+    "auc@20": 0.781207342762961,
+    "sr@1": 0.0012461059190031153,
+    "sr@2": 0.10841121495327102,
+    "sr@3": 0.37694704049844235,
+    "sr@5": 0.7588785046728972,
+    "sr@10": 0.9526479750778816,
+    "sr@20": 0.9800623052959502,
+    "auc@3_ci": [
+     0.0835719496445178,
+     0.09858690284833901
+    ],
+    "auc@5_ci": [
+     0.28210056782146614,
+     0.30496751485798906
+    ],
+    "auc@10_ci": [
+     0.5799978812460693,
+     0.6015651271088364
+    ],
+    "auc@20_ci": [
+     0.7730655213484846,
+     0.7884265714703688
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.003115264797507788
+    ],
+    "sr@2_ci": [
+     0.09283489096573208,
+     0.1233644859813084
+    ],
+    "sr@3_ci": [
+     0.35389408099688474,
+     0.40126168224299064
+    ],
+    "sr@5_ci": [
+     0.7376791277258568,
+     0.7794392523364486
+    ],
+    "sr@10_ci": [
+     0.9420560747663551,
+     0.9626168224299065
+    ],
+    "sr@20_ci": [
+     0.973208722741433,
+     0.9862928348909658
+    ]
+   }
+  },
+  "no_screen": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/no_screen/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E56/extra/data/val_selection/no_screen/7907.val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E56/ckpt/no_screen/ckpt_7907.pt",
+       "sha256": "379e170bba0f926f27a73ea26133bb98319afbc62a511aa8d5984651279e783a",
+       "historical_sha256": "379e170bba0f926f27a73ea26133bb98319afbc62a511aa8d5984651279e783a"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7899,
+     "amp_skips": 8,
+     "stop": "training_budget"
+    },
+    "test": {
+     "mode": "inference",
+     "reason": "缺少训练末步逐对预测或原始推理记录",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/no_screen/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/no_screen/test/3217de52bf0e485585e6ddf5cbdc371b/preds/no_screen/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E56/ckpt/no_screen/ckpt_7907.pt",
+       "sha256": "379e170bba0f926f27a73ea26133bb98319afbc62a511aa8d5984651279e783a",
+       "historical_sha256": null
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7899,
+     "amp_skips": 8,
+     "stop": "training_budget"
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.4042559693909444,
+    "auc@3": 0.09661825188963293,
+    "auc@5": 0.3029369499969271,
+    "auc@10": 0.6120831481106036,
+    "auc@20": 0.8020718941992216,
+    "sr@1": 0.0006230529595015577,
+    "sr@2": 0.12024922118380062,
+    "sr@3": 0.3912772585669782,
+    "sr@5": 0.778816199376947,
+    "sr@10": 0.9763239875389408,
+    "sr@20": 0.9975077881619938,
+    "auc@3_ci": [
+     0.08909846006570411,
+     0.10409854385013705
+    ],
+    "auc@5_ci": [
+     0.29128864960519457,
+     0.31448139348393667
+    ],
+    "auc@10_ci": [
+     0.6028358970680918,
+     0.6214406426402603
+    ],
+    "auc@20_ci": [
+     0.7964433142445511,
+     0.8077819638940958
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.001869158878504673
+    ],
+    "sr@2_ci": [
+     0.1040342679127726,
+     0.1358411214953271
+    ],
+    "sr@3_ci": [
+     0.367601246105919,
+     0.4174610591900311
+    ],
+    "sr@5_ci": [
+     0.7582398753894081,
+     0.7981464174454829
+    ],
+    "sr@10_ci": [
+     0.9688473520249221,
+     0.983177570093458
+    ],
+    "sr@20_ci": [
+     0.9950155763239875,
+     0.9993769470404984
+    ]
+   }
+  },
+  "scenes": {
+   "status": "scored",
+   "splits": {
+    "val": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 652,
+     "failures": 0,
+     "prediction": "preds/scenes/val.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E50/preds/main/val.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E50/ckpt/main/ckpt_7907.pt",
+       "sha256": "1517d2734b949e521375356c4a4027749442c713617bbcd1d094855ec423fd2e",
+       "historical_sha256": "1517d2734b949e521375356c4a4027749442c713617bbcd1d094855ec423fd2e"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7907,
+     "amp_skips": 2,
+     "stop": "training_budget"
+    },
+    "test": {
+     "mode": "reuse",
+     "reason": "训练末步预测已核对原始权重 SHA-256 和推理配置",
+     "coverage": 953,
+     "failures": 0,
+     "prediction": "preds/scenes/test.jsonl",
+     "source_prediction": "/remote-home/xufang/YGC/moon-exp/runs/E50/preds/main/test.jsonl",
+     "weights": [
+      {
+       "path": "/remote-home/xufang/YGC/moon-exp/runs/E50/ckpt/main/ckpt_7907.pt",
+       "sha256": "1517d2734b949e521375356c4a4027749442c713617bbcd1d094855ec423fd2e",
+       "historical_sha256": "1517d2734b949e521375356c4a4027749442c713617bbcd1d094855ec423fd2e"
+      }
+     ],
+     "fit": "RANSAC 3 px",
+     "step": 7907,
+     "successful_updates": 7907,
+     "amp_skips": 2,
+     "stop": "training_budget"
+    }
+   },
+   "summary": {
+    "n": 1605,
+    "fail_rate": 0.0,
+    "median": 3.483753954082169,
+    "auc@3": 0.10101189328317497,
+    "auc@5": 0.2954446265287871,
+    "auc@10": 0.58256315115692,
+    "auc@20": 0.7719881261661661,
+    "sr@1": 0.0006230529595015577,
+    "sr@2": 0.12710280373831775,
+    "sr@3": 0.394392523364486,
+    "sr@5": 0.7283489096573209,
+    "sr@10": 0.935202492211838,
+    "sr@20": 0.9744548286604361,
+    "auc@3_ci": [
+     0.09301247359694717,
+     0.1085667801474282
+    ],
+    "auc@5_ci": [
+     0.2832477737725589,
+     0.3074502558659961
+    ],
+    "auc@10_ci": [
+     0.5709782161973382,
+     0.593446188945967
+    ],
+    "auc@20_ci": [
+     0.763086283465345,
+     0.7799720787978214
+    ],
+    "sr@1_ci": [
+     0.0,
+     0.001869158878504673
+    ],
+    "sr@2_ci": [
+     0.1102803738317757,
+     0.14269470404984422
+    ],
+    "sr@3_ci": [
+     0.3707165109034268,
+     0.41806853582554515
+    ],
+    "sr@5_ci": [
+     0.7052959501557632,
+     0.7489252336448597
+    ],
+    "sr@10_ci": [
+     0.9233644859813084,
+     0.9470404984423676
+    ],
+    "sr@20_ci": [
+     0.9663551401869159,
+     0.9813084112149533
+    ]
+   }
+  },
+  "no_ema": {
+   "status": "training_failed",
+   "splits": {},
+   "source": "E56/no_ema",
+   "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/E56/launch/no_ema.json",
+   "summary": {
+    "auc@3": 0.0,
+    "auc@5": 0.0,
+    "auc@10": 0.0,
+    "sr@3": 0.0,
+    "sr@5": 0.0,
+    "sr@10": 0.0
+   },
+   "zero_convention": true
+  }
+ }
+}

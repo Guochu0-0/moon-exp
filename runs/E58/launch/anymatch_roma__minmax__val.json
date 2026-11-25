@@ -1,0 +1,56 @@
+[
+ {
+  "start": "2026-11-25 23:36:33 +0800",
+  "end": "2026-11-25 23:36:33 +0800",
+  "status": "ok",
+  "commit": "c9b4ba07fd86fa753cefe2bcd6a197b148d4553f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/anymatch_roma__minmax.json",
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "split": "val",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0m/preds/anymatch_roma__minmax/val.jsonl",
+  "prediction_sha256": "ce85c10da493215387a619542a81f75bb90fe6e6215f0f77efaac6efca669c4c",
+  "prediction_count": 652,
+  "fit_failures": 0,
+  "failure_reasons": {},
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0m/launch/anymatch_roma__minmax.json",
+  "source_launch_commit": "9e85c61735e110935762998f62da0236bc8d65d6",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/RoMa_AnyMatch.pth",
+    "sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56",
+    "historical_sha256": "386bcc2173737b5b9309a54ee7f0f7268045d73438be9946fa93bb5afe6b3f56"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines_ablation/anymatch_roma__minmax/val.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1"
+ }
+]

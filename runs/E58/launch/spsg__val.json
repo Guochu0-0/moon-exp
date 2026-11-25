@@ -1,0 +1,69 @@
+[
+ {
+  "start": "2026-11-25 23:24:06 +0800",
+  "end": "2026-11-25 23:24:06 +0800",
+  "status": "ok",
+  "commit": "35e68b070fec6fd038109d2ae962aaafe7408e2e",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/spsg.json",
+  "config": {
+   "method": "spsg",
+   "adapter": "spsg",
+   "repo": "third_party/SuperGlue",
+   "params": {
+    "long_side": 1600,
+    "superglue": "outdoor",
+    "max_keypoints": 2048,
+    "nms_radius": 3,
+    "keypoint_threshold": 0.005,
+    "sinkhorn_iterations": 20,
+    "match_threshold": 0.2
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "split": "val",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/spsg/val.jsonl",
+  "prediction_sha256": "aa71173845ba49d83d880473f3fe2da1d4c3532d528c7a2882e79a63eeec5e31",
+  "prediction_count": 652,
+  "fit_failures": 603,
+  "failure_reasons": {
+   "few_matches": 603
+  },
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/spsg.json",
+  "source_launch_commit": "23d65aad1220ec99d653e1bee705a5e95fca6e2e",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/wt/moon-296/third_party/SuperGlue/models/weights/superpoint_v1.pth",
+    "sha256": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+    "historical_sha256": null,
+    "historical_git_blob": "107a444ca318d487390137d619d49f2f0a3b1ad8"
+   },
+   {
+    "path": "/remote-home/xufang/YGC/wt/moon-296/third_party/SuperGlue/models/weights/superglue_outdoor.pth",
+    "sha256": "2f5f5e9bb3febf07b69df633c4c3ff7a17f8af26a023aae2b9303d22339195bd",
+    "historical_sha256": null,
+    "historical_git_blob": "5ca3392bd5349790d7bc1c246961fc041b88c1e8"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/spsg/val.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "ddcf11f42e7e0732a0c4607648f9448ea8d73590"
+ }
+]

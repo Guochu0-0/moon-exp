@@ -1,0 +1,68 @@
+[
+ {
+  "start": "2026-11-25 23:34:46 +0800",
+  "end": "2026-11-25 23:34:46 +0800",
+  "status": "ok",
+  "commit": "c9b4ba07fd86fa753cefe2bcd6a197b148d4553f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "runs/B0/configs/gdros_os_lsr.json",
+  "config": {
+   "checkpoint": "GDROS-os512.pth",
+   "checkpoint_source": "https://pan.baidu.com/s/1YKbw6FSWjcuJidtAeogjdg?pwd=4ykn",
+   "upstream_commit": "ee6b6216fe780bc03bfb4759ae094daa0cfddc60",
+   "fit": "lsr",
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "size": 512,
+   "iters": 32,
+   "flow_slice": [
+    10000,
+    210000
+   ],
+   "seed": 0,
+   "ransac": {
+    "threshold": 3,
+    "max_iterations": 10000,
+    "confidence": 0.99999,
+    "seed": 0
+   },
+   "direction": "optical_to_sar",
+   "image_channels": 3,
+   "model_input_range": [
+    0,
+    255
+   ],
+   "tf32": false
+  },
+  "split": "val",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/gdros_os_lsr/val.jsonl",
+  "prediction_sha256": "78a565ee01626d4875580bb50adb183fe0e2bc6ea1d28128a87c1c1f7d523f2b",
+  "prediction_count": 652,
+  "fit_failures": 0,
+  "failure_reasons": {},
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/gdros_os_lsr.json",
+  "source_launch_commit": "3801ab7e1dea965ab8184d85243603a2bcf21ee2",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/gdros/GDROS-os512.pth",
+    "sha256": "80fd768e2d5f2f3887ff8af62b165e43e073e6cec187544c542b6d4b591ba683",
+    "historical_sha256": "80fd768e2d5f2f3887ff8af62b165e43e073e6cec187544c542b6d4b591ba683"
+   }
+  ],
+  "fit": "GDROS OS least squares"
+ }
+]

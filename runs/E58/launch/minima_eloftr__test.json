@@ -1,0 +1,65 @@
+[
+ {
+  "start": "2026-11-25 23:41:03 +0800",
+  "end": "2026-11-25 23:41:25 +0800",
+  "status": "ok",
+  "commit": "768a737235109596d273af8cee71605481334f53",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py",
+   "--methods",
+   "redfeat",
+   "minima_eloftr",
+   "anymatch_edm"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/minima_eloftr.json",
+  "config": {
+   "method": "minima_eloftr",
+   "adapter": "eloftr",
+   "repo": "third_party/EfficientLoFTR",
+   "weights": "minima/minima_eloftr.ckpt",
+   "params": {
+    "long_side": 640,
+    "model_type": "full",
+    "coarse_thr": 0.2
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "MINIMA 无 ELoFTR 推理代码，用上游官方路径；长边 640 沿用 MINIMA LoFTR 系惯例"
+  },
+  "split": "test",
+  "mode": "refit",
+  "reason": "历史仿射含非有限值，使用原始匹配点对复核",
+  "prediction_source": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/minima_eloftr/test/bc6dd933b78340698371c30466733fbc/preds/minima_eloftr/test.jsonl",
+  "prediction_sha256": "74284404ef149c5ee5532d0787e678040bc24fa1fee774338fac5047d27a28c2",
+  "prediction_count": 953,
+  "fit_failures": 631,
+  "failure_reasons": {
+   "few_matches": 629,
+   "non_finite": 2
+  },
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/minima_eloftr.json",
+  "source_launch_commit": "563b7380344287951e1dea843b781505407531e4",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/minima/minima_eloftr.ckpt",
+    "sha256": "535dabbe4f8c89640526bcf0253b9ccf0941d268f0c9afc1084aa3dd8a26dc64",
+    "historical_sha256": "535dabbe4f8c89640526bcf0253b9ccf0941d268f0c9afc1084aa3dd8a26dc64"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/minima_eloftr/test.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "07e9c1401e71e9c556b1fda9d86d060af36ba176"
+ }
+]

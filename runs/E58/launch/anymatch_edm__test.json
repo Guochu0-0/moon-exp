@@ -1,0 +1,68 @@
+[
+ {
+  "start": "2026-11-25 23:42:05 +0800",
+  "end": "2026-11-25 23:42:21 +0800",
+  "status": "ok",
+  "commit": "768a737235109596d273af8cee71605481334f53",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py",
+   "--methods",
+   "redfeat",
+   "minima_eloftr",
+   "anymatch_edm"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/anymatch_edm.json",
+  "config": {
+   "method": "anymatch_edm",
+   "adapter": "edm",
+   "repo": "third_party/AnyMatch/third_party/EDM_AnyMatch",
+   "weights": "anymatch/EDM_AnyMatch.ckpt",
+   "params": {
+    "long_side": 640,
+    "train_res": 832,
+    "mconf_thr": 0.05,
+    "sigma_thr": 1e-06,
+    "border_rm": 0,
+    "topk_ratio": 0.35
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch 未给出 EDM 推理配置；这里是推断的配方（outdoor edm_base + NPE [832,832,640,640] + TOPK 公式），见 adapters/edm.py"
+  },
+  "split": "test",
+  "mode": "refit",
+  "reason": "历史仿射含非有限值，使用原始匹配点对复核",
+  "prediction_source": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/anymatch_edm/test/65207a106bb440a8ab9f804d3ac56c89/preds/anymatch_edm/test.jsonl",
+  "prediction_sha256": "2ca543ada54612fca6189758f52c0d6cd053d67e4f44eb8fc645e97417410ba2",
+  "prediction_count": 953,
+  "fit_failures": 816,
+  "failure_reasons": {
+   "few_matches": 813,
+   "non_finite": 3
+  },
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/anymatch_edm.json",
+  "source_launch_commit": "563b7380344287951e1dea843b781505407531e4",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/EDM_AnyMatch.ckpt",
+    "sha256": "b1b1a73280d64d980d58c0c7d55d279634c80931be07b7eaa27d26c0d01856bc",
+    "historical_sha256": "b1b1a73280d64d980d58c0c7d55d279634c80931be07b7eaa27d26c0d01856bc"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/anymatch_edm/test.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1"
+ }
+]

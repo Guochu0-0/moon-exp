@@ -1,0 +1,4 @@
+base = "_e41"
+
+[model]
+lora_r = 0

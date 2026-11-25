@@ -95,8 +95,8 @@ T_i 与这几份抽点的随机数取自以 (torch 初始种子, 调用次数, �
 - fine_cert_bce > 0（只配 grad / local）：每个训练级输出的 certainty（这一级的输入 certainty + 细化层算出的增量，带梯度）
   对这张掩码加 BCE，权重 fine_cert_bce，不乘 fine_w；同粗级 cert_bce，参照合理性检查没过时不做，多扰动核对没过时照常。
 
-样本筛选（#245，screen = 门槛 > 0；只配 reward = ref 且参照来自参照模型，即 ref_ema 或 frozen_ref；[optim] batch = 1）：
-训练循环每取到一对图，先调用 screen(batch)：参照模型对这对（已扰动的）图正常推理、拟合参照仿射（同训练时的参照，
+样本筛选（#245，screen = 门槛 > 0；只配 reward = ref；[optim] batch = 1）：
+训练循环每取到一对图，先调用 screen(batch)：参照模型（无副本时用当前模型）对这对（已扰动的）图正常推理、拟合参照仿射（同训练时的参照，
 num 个点、RANSAC ransac px），内点比例 = 内点数 ÷ num，拟合失败记 0。比例 ≥ 门槛时这对照常抽签、打分、参与更新，
 参照仿射直接沿用这次拟合的结果，不再推理一次；< 门槛时丢掉，不抽签，训练循环接着取下一对（finetune/train.py
 「样本筛选」），每张卡各自取到一对过门槛的才做这一步。日志记 scr_ratio（这一步所学的对的内点比例）、scr_drawn（这一步
@@ -307,9 +307,9 @@ def check(cfg):
                           "不与 frozen_ref 同用（掩码要来自自估仿射、EMA 参照或多扰动核对的参照）")
     if not 0 <= p["screen"] < 1:
         raise ConfigError(f"[rloo] screen 应在 [0, 1)，得到 {p['screen']!r}")
-    if p["screen"] and (p["reward"] != "ref" or not (p["ref_ema"] or p["frozen_ref"]) or p["mp_n"]
+    if p["screen"] and (p["reward"] != "ref" or p["mp_n"]
                         or cfg["optim"]["batch"] != 1):
-        raise ConfigError("[rloo] screen 只配 reward = 'ref' 且 ref_ema 或 frozen_ref 打开、mp_n = 0、[optim] batch = 1")
+        raise ConfigError("[rloo] screen 只配 reward = 'ref'、mp_n = 0、[optim] batch = 1")
     if p["occ"] and (p["reward"] != "ref" or not lv or p["fine_mode"] == "chain" or p["mp_n"] or p["gate"]
                      or p["spread"] or p["trace"] or p["cos_every"] or cfg["optim"]["batch"] != 1
                      or cfg["optim"]["accum"] != 1):
@@ -908,12 +908,13 @@ class Term:
 
     @torch.no_grad()
     def ref_fit(self, i0, i1):
-        """参照模型（frozen_copy / EMA 参照）对一对图（(1,1,H,W) 输入）正常推理、拟合参照仿射，同 __call__ 里的参照：
+        """参照模型（无副本时用当前模型）对一对图（(1,1,H,W) 输入）正常推理、拟合参照仿射，同 __call__ 里的参照：
         粗级每格取最高分位置、细化到尺度 1，按可信度抽 num 个点、RANSAC ransac px。返回 (A_ref 或 None, 内点数)。"""
-        z1, z2 = features(self.frozen, i0, i1)
-        zcls, zcert = coarse(self.frozen, z1, z2)
+        ref = self.model if self.frozen is None else self.frozen
+        z1, z2 = features(ref, i0, i1)
+        zcls, zcert = coarse(ref, z1, z2)
         Pz = zcls.float().softmax(1)
-        zf, zc = refine(self.frozen, z1, z2, anchor_flow(Pz, Pz.argmax(1)), zcert.float())
+        zf, zc = refine(ref, z1, z2, anchor_flow(Pz, Pz.argmax(1)), zcert.float())
         return fit_many(zf, zc, self.p["num"], self.p["ransac"])[0]
 
     def screen(self, batch, device):
@@ -1044,7 +1045,10 @@ class Term:
                     flow, ce = rollout(model, fb, gb, P, cert[b:b + 1].float(), k, p["chunk"])
                 torch.cuda.synchronize()
                 t1 = time.time()
-                fits = fit_many(flow, ce, p["num"], p["ransac"])
+                if kept is not None and self.frozen is None:
+                    fits = [(kept.A, kept.n)]
+                else:
+                    fits = fit_many(flow, ce, p["num"], p["ransac"])
                 stats["t_roll"].append(t1 - t0)
                 stats["t_fit"].append(time.time() - t1)
                 if p["reward"] == "ref":

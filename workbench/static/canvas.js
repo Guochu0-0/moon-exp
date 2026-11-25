@@ -145,11 +145,19 @@ export function mountCanvas(root, { onOpen }) {
   }
   function setSel(keys) { S.sel = new Set(keys); paintSel(); }
   function centerOf(el) {
-    const r = el.getBoundingClientRect(), w = world.getBoundingClientRect();
-    return [(r.left + r.width / 2 - w.left) / S.k, (r.top + r.height / 2 - w.top) / S.k];
+    // 极小的缩放比例下，屏幕坐标会丢失端口的位置精度。
+    let x = el.offsetWidth / 2, y = el.offsetHeight / 2;
+    for (let box = el; box !== world;) {
+      const parent = box.offsetParent;
+      x += box.offsetLeft + parent.clientLeft;
+      y += box.offsetTop + parent.clientTop;
+      box = parent;
+    }
+    return [x, y];
   }
   function outPort(id, m) { const el = nodeEl(id)?.querySelector(`.port.out${sel('data-m', m || '_')}`); return el && centerOf(el); }
   function drawEdges() {
+    if (root.hidden) return;   // 在途的刷新可能在切到节点页后才完成，隐藏端口没有布局几何
     let svg = EXPS.filter(e => e.parent && byId.has(e.parent)).map(e => {
       const m = initMethod(e), a = outPort(e.parent, m) || outPort(e.parent, '_'), b = centerOf(nodeEl(e.id).querySelector('.port.in'));
       return `<path class="edge fam-${fam(m)}${e.lit ? '' : ' off'}" d="${curve(a, b)}"/>`;
@@ -163,7 +171,8 @@ export function mountCanvas(root, { onOpen }) {
     const g = 20 * S.k;
     vp.style.backgroundSize = `${g}px ${g}px, ${g}px ${g}px, ${g * 5}px ${g * 5}px, ${g * 5}px ${g * 5}px`;
     vp.style.backgroundPosition = `${S.tx}px ${S.ty}px`;
-    $('.pc').textContent = Math.round(S.k * 100) + '%';
+    const percent = S.k * 100;
+    $('.pc').textContent = (percent < 1 ? Number(percent.toPrecision(2)) : Math.round(percent)) + '%';
     localStorage.setItem(VIEW_KEY, JSON.stringify({ tx: S.tx, ty: S.ty, k: S.k }));
     drawMini();
   }
@@ -187,7 +196,16 @@ export function mountCanvas(root, { onOpen }) {
     S.tx = (r.width - (b.x1 - b.x0) * S.k) / 2 - b.x0 * S.k; S.ty = (r.height - (b.y1 - b.y0) * S.k) / 2 - b.y0 * S.k;
     applyView();
   }
-  function zoomAt(k, mx, my) { k = Math.min(2, Math.max(.3, k)); S.tx = mx - (mx - S.tx) * k / S.k; S.ty = my - (my - S.ty) * k / S.k; S.k = k; applyView(); }
+  function zoomAt(k, mx, my) {
+    k = Math.min(2, k);
+    // 极端输入可能下溢到 0，或让屏幕坐标无法换回世界坐标。
+    if (!(k > 0) || !Number.isFinite(Math.max(innerWidth, innerHeight) / k)) return;
+    const ratio = k / S.k;
+    const tx = mx - (mx - S.tx) * ratio, ty = my - (my - S.ty) * ratio;
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
+    Object.assign(S, { tx, ty, k });
+    applyView();
+  }
   function zoomBy(f) { const r = vp.getBoundingClientRect(); zoomAt(S.k * f, r.width / 2, r.height / 2); }
   function lookAt(wx, wy) { const r = vp.getBoundingClientRect(); S.tx = r.width / 2 - wx * S.k; S.ty = r.height / 2 - wy * S.k; applyView(); }
   function centerOn(id) {

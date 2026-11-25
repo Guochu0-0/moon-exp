@@ -1,7 +1,7 @@
-"""Run one E52 train or fixed Test job on externally allocated GPUs.
+"""Run one E57 train or fixed Test job on externally allocated GPUs.
 
-    GPU=0,1,2,3 python runs/E52/code/run.py train no_ema
-    GPU=0 python runs/E52/code/run.py test no_ema
+    GPU=0,1,2,3 python runs/E57/code/run.py train no_ema
+    GPU=0 python runs/E57/code/run.py test no_ema
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from pathlib import Path
 
 RUN = Path(__file__).resolve().parents[1]
 REPO = RUN.parents[1]
-ENTRY = "runs/E52/code/run.py"
+ENTRY = "runs/E57/code/run.py"
 spec = importlib.util.spec_from_file_location("finetune_driver", REPO / "scripts/finetune/run.py")
 D = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(D)

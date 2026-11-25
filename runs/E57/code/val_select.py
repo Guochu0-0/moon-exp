@@ -1,6 +1,6 @@
-"""E52: score the fixed checkpoint grid on Val, then Test only its winner.
+"""E57: score the fixed checkpoint grid on Val, then Test only its winner.
 
-GPU=5 /opt/envs/wb/bin/python runs/E52/code/val_select.py no_screen --scratch /tmp
+GPU=5 /opt/envs/wb/bin/python runs/E57/code/val_select.py no_screen --scratch /tmp
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from workbench.dataset import Dataset
 from workbench.evaluate import evaluate_preds
 from workbench.records import Run
 
-ENTRY = "runs/E52/code/val_select.py"
+ENTRY = "runs/E57/code/val_select.py"
 GRID = (*range(250, 7907, 250), 7907)
 METHODS = ("no_screen", "frozen_dino")
 
@@ -65,7 +65,7 @@ def select_and_test(job, scratch, ds, report, official):
         if result_path.exists():
             rec = json.loads(result_path.read_text(encoding="utf-8"))
         else:
-            with tempfile.TemporaryDirectory(prefix=f"e52-val-{job.m}-{step}-", dir=scratch) as tmp:
+            with tempfile.TemporaryDirectory(prefix=f"e57-val-{job.m}-{step}-", dir=scratch) as tmp:
                 prediction, rec = evaluate(job, ckpt, "val", job.m, Path(tmp), ds)
                 shutil.copyfile(prediction, report / f"{step}.val.jsonl")
             rec.update(step=step, checkpoint=ckpt.relative_to(RUN).as_posix())
@@ -87,7 +87,7 @@ def select_and_test(job, scratch, ds, report, official):
         test_method = job.m
         test = dict(score=test_score, source="historical_terminal")
     else:
-        with tempfile.TemporaryDirectory(prefix=f"e52-test-{job.m}-{step}-", dir=scratch) as tmp:
+        with tempfile.TemporaryDirectory(prefix=f"e57-test-{job.m}-{step}-", dir=scratch) as tmp:
             pred, test = evaluate(job, ckpt, "test", official, Path(tmp), ds)
             target = RUN / "preds" / official
             pending = target.with_name(f".{official}.publish")

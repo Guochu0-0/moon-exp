@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import random
+import subprocess
 import time
 from collections import Counter
 from functools import partial
@@ -158,7 +160,17 @@ def prepare_log(path, completed_batches):
     pending.replace(path)
 
 
-def train(run_dir, data_path, weights, weight_hash, cfg, *, smoke, seconds):
+def other_compute_process_present(gpu):
+    try:
+        result = subprocess.run(["nvidia-smi", "-i", gpu, "--query-compute-apps=pid", "--format=csv,noheader"],
+                                text=True, capture_output=True, check=True, timeout=4)
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(f"GPU occupancy check failed: {exc}", flush=True)
+        return False
+    return len(result.stdout.split()) > 1
+
+
+def train(run_dir, data_path, weights, weight_hash, cfg, *, smoke, seconds, stop_requested):
     from kornia.feature import DescriptorMatcher
     from ripe import vgg_hyper
     from ripe.losses.contrastive_loss import ContrastiveLoss
@@ -211,6 +223,9 @@ def train(run_dir, data_path, weights, weight_hash, cfg, *, smoke, seconds):
     log_path = checkpoint_dir / "log.jsonl"
     prepare_log(log_path, batch_count)
     started = time.monotonic()
+    next_gpu_check = started + 15
+    gpu = os.environ.get("CUDA_VISIBLE_DEVICES", "")
+    stop_reason = None
     first_batch = batch_count
     status = Counter()
     check_update = smoke
@@ -258,23 +273,32 @@ def train(run_dir, data_path, weights, weight_hash, cfg, *, smoke, seconds):
                           f"peak_GiB={torch.cuda.max_memory_allocated() / 2**30:.2f}", flush=True)
                 if batch_count % accumulation:
                     continue
-                budget_reached = time.monotonic() - started >= seconds
+                now = time.monotonic()
+                if stop_requested.is_set():
+                    stop_reason = "withdrawal_signal"
+                elif now - started >= seconds:
+                    stop_reason = "time_budget"
+                elif gpu.isdigit() and now >= next_gpu_check:
+                    next_gpu_check = now + 15
+                    if other_compute_process_present(gpu):
+                        stop_reason = "gpu_shared"
                 if not smoke:
                     val_due = update_count % options["val_every_updates"] == 0
                     if val_due:
                         save_atomic(model.state_dict(), checkpoint_dir / f"ckpt_{update_count}.pt")
-                    if val_due or budget_reached or update_count % options["resume_every_updates"] == 0:
+                    if val_due or stop_reason or update_count % options["resume_every_updates"] == 0:
                         save_atomic({"model": model.state_dict(), "optimizer": optimizer.state_dict(),
                                      "batch": batch_count, "updates": update_count, "config": cfg,
                                      "weights_sha256": weight_hash, "cpu_rng": torch.get_rng_state(),
                                      "cuda_rng": torch.cuda.get_rng_state()}, resume)
-                if budget_reached:
+                if stop_reason:
                     break
     finally:
         matcher.executor.shutdown()
     if smoke and check_update:
         raise RuntimeError("Preflight did not observe a finite, nonzero update")
     return {"batches": batch_count, "updates": update_count, "complete": batch_count == stop,
+            "stop_reason": "complete" if batch_count == stop else stop_reason,
             "sec_per_batch": (time.monotonic() - started) / (batch_count - first_batch),
             "peak_cuda_allocated_gib": torch.cuda.max_memory_allocated() / 2**30,
             "geometry_counts": {f"{'positive' if positive else 'negative'}/{name}": n

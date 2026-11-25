@@ -1,13 +1,14 @@
 """Regression checks against RIPE's dense reference objective and Moon coordinates."""
 from pathlib import Path
 import sys
+from subprocess import CompletedProcess
 
 import numpy as np
 import pytest
 import torch
 
 from runs.E59.code.predictions import prediction_location, run_record
-from runs.E59.code.train import affine_mask, pair_batches, reward_sum
+from runs.E59.code.train import affine_mask, other_compute_process_present, pair_batches, reward_sum
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "third_party/RIPE"))
 from ripe.utils.utils import get_rewards
@@ -22,6 +23,18 @@ def test_positive_negative_pairing_and_deterministic_resume():
         assert any(optical != sar and optical // 3 == sar // 3 for optical, sar in pairs)
         assert all(0 <= sar < 9 for _, sar in pairs)
     assert list(pair_batches(9, 6, 19, 2, 6)) == full[2:]
+
+
+@pytest.mark.parametrize("pids,shared", [("7311\n", False), ("7311\n9876\n", True)])
+def test_gpu_sharing_detection(monkeypatch, pids, shared):
+    from runs.E59.code import train
+
+    def query(args, **kwargs):
+        assert args[:3] == ["nvidia-smi", "-i", "1"]
+        return CompletedProcess(args, 0, pids, "")
+
+    monkeypatch.setattr(train.subprocess, "run", query)
+    assert other_compute_process_present("1") == shared
 
 
 @pytest.mark.parametrize("update,method", [(0, "init"), (1000, "step1000"), (20000, "main")])

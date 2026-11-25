@@ -4,10 +4,12 @@ from __future__ import annotations
 import argparse
 import fcntl
 import os
+import signal
 import subprocess
 import sys
 import time
 from pathlib import Path
+from threading import Event
 
 try:
     import tomllib
@@ -154,7 +156,13 @@ def main():
                     (out_dir / "exp.toml").write_text('id = "S"\ntitle = "RIPE Val checkpoints"\n', encoding="utf-8")
                 result = infer(cli.data, weights, checkpoint, cfg, out_dir, method, cli.split)
             else:
-                result = train(RUN, cli.data, weights, weight_hash, cfg, smoke=phase == "preflight", seconds=cli.seconds)
+                stop_requested = Event()
+                previous_handler = signal.signal(signal.SIGTERM, lambda *_: stop_requested.set())
+                try:
+                    result = train(RUN, cli.data, weights, weight_hash, cfg, smoke=phase == "preflight",
+                                   seconds=cli.seconds, stop_requested=stop_requested)
+                finally:
+                    signal.signal(signal.SIGTERM, previous_handler)
             print(result, flush=True)
         except BaseException as exc:
             launch.end(RUN, name, "fail", error_type=type(exc).__name__, error=str(exc))

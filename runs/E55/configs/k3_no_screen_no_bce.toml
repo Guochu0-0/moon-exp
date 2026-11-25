@@ -1,0 +1,4 @@
+base = "k3_no_bce"
+
+[rloo]
+screen = 0.0

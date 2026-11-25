@@ -48,6 +48,7 @@ RUN = {
     "seed": 0,
     "workers": 4,           # DataLoader 进程数（A6000 的 /dev/shm 小，不超过 2）
     "save_every": 1000,     # 每多少步存一次 ckpt；0 = 不存
+    "rolling_checkpoint": False,  # 普通周期存档覆盖最新快照；显式和末次存档保留独立文件
     "save_at": [],          # 额外存 ckpt 的步数
     "save_zero": True,      # 训练前存 ckpt_0
     "limit": 0,             # 只用 Train 的 N 对（均匀取样，调试用）；0 = 全部
@@ -62,7 +63,7 @@ RUN = {
     "count_updates": False, # AMP溢出时不计入总更新预算；仅支持 accum=1（#267）
     "eval_gpus": [],       # 非空时用这些卡并行评独立Val存档，全部完成后才选模/评Test（#267）
     "record_hashes": False, # 启动时记录权重、固定标签、续训存档的SHA256（#267）
-    "sweep": "all",         # 驱动评哪些 ckpt（#209）：all 逐个评 Val 再按 select 补评 Test / last 只评最后一个的 Val、不评 Test
+    "sweep": "all",         # all：逐个评 Val 再按 select 评 Test；last：末次 Val；last_test：末次 Val 和 Test
     "halt_above": {},       # 提前停（#221）：日志量 → 阈值；最近 halt_window 个记录的中位数超过阈值就停训
     "halt_below": {},       # 同上，中位数低于阈值就停
     "save_on_halt": False,  # 提前停时保存触发停训的权重
@@ -70,7 +71,7 @@ RUN = {
     "ddp": 0,               # 单机多卡数据并行的卡数（#226，由 torchrun 起这么多个进程，见 finetune/train.py）；0 = 单卡
 }
 SELECT = ("val_peak", "last")
-SWEEP = ("all", "last")
+SWEEP = ("all", "last", "last_test")
 SPLITS = ("train", "val", "test")
 TOP = ("base", "model", "optim", "run")
 
@@ -156,6 +157,8 @@ def expand(raw: dict) -> dict:
         raise ConfigError(f"[run] select 可选 {SELECT}，得到 {out['run']['select']!r}")
     if out["run"]["sweep"] not in SWEEP:
         raise ConfigError(f"[run] sweep 可选 {SWEEP}，得到 {out['run']['sweep']!r}")
+    if out["run"]["rolling_checkpoint"] and out["run"]["sweep"] == "all":
+        raise ConfigError("[run] rolling_checkpoint 要求末次评测（last / last_test）")
     if out["run"]["stop_at"] < 0 or out["run"]["stop_at"] > out["optim"]["steps"]:
         raise ConfigError(f"[run] stop_at 应在 0…[optim] steps，得到 {out['run']['stop_at']}")
     for k in ("halt_above", "halt_below"):

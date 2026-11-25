@@ -3,7 +3,7 @@
     MOON_DATA=G:/Lunar_Optical_SAR_Registration_Dataset python scripts/smoke_canvas.py [--shots DIR]
 
 把仓库 runs/ 里的 B0、B0m（exp.toml 与 preds/*.jsonl）复制到临时目录，起一个工作台服务，然后覆盖：
-按 E 新建、菜单派生、拖到空白派生、拖到实验改父、成环被拒、已点亮实验的删除项置灰、
+手动缩小到 30% 以下并放大、按 E 新建、菜单派生、拖到空白派生、拖到实验改父、成环被拒、已点亮实验的删除项置灰、
 拖动后刷新位置保持、终端写 exp.toml 后几秒内出现、便签新建与编辑、Ctrl+G 打组并重命名、
 拖分组框标题带走框内实验、便签和内框、分组框调大小与换色、`?` 面板、框选加多选拖动、Ctrl+A、
 各类右键菜单的内容、Del 删除选中对象时跳过已点亮实验、双击进入节点页并返回；
@@ -97,6 +97,9 @@ class Page:
 
     def move(self, x, y):
         self.cmd("Input.dispatchMouseEvent", type="mouseMoved", x=x, y=y, button="none", buttons=0)
+
+    def wheel(self, x, y, dy):
+        self.cmd("Input.dispatchMouseEvent", type="mouseWheel", x=x, y=y, deltaX=0, deltaY=dy)
 
     def click(self, x, y, button="left", clicks=1, mods=0):
         self.move(x, y)
@@ -335,6 +338,49 @@ def visual(p, has_matches, step):
     shot_detail(p, step, "28-B0m可视化结果")
 
 
+def manual_zoom(p):
+    def percent():
+        return p.js("parseFloat(document.querySelector('.pc').textContent)")
+
+    for name, shrink in (
+        ("滚轮", lambda: p.wheel(750, 475, 140)),
+        ("按钮", lambda: p.click(*p.center('.act [aria-label="缩小"]'))),
+        ("键盘", lambda: p.key("-", "Minus", "-")),
+    ):
+        p.key(".", "Period", ".")
+        for _ in range(8):
+            shrink()
+        zoom = percent()
+        assert 0 < zoom < 30, (name, zoom)
+        shrink()
+        assert 0 < percent() < zoom, name
+
+    anchor = p.center(node("B0"))
+    zoom = percent()
+    p.wheel(*anchor, 3600)
+    assert 0 < percent() < 1, "低于 1% 时仍有有效比例"
+    assert math.dist(p.center(node("B0")), anchor) < 0.5
+    tiny = percent()
+    p.wheel(*anchor, 1_000_000)
+    assert percent() == tiny, "极端滚轮输入不应使视口失效"
+    p.wheel(*anchor, -3600)
+    assert percent() == zoom, "可从很小的比例放大回来"
+    assert math.dist(p.center(node("B0")), anchor) < 0.5
+
+    # 很小的比例下刷新，再放大，连线的终点仍应对准实验的入口。
+    p.wheel(*anchor, 10_000)
+    p.js("window.beforeZoomReload = true")
+    p.cmd("Page.reload")
+    p.wait("!window.beforeZoomReload && document.querySelector('.edge')", what="刷新后重新显示派生连线")
+    p.js("document.fonts.ready.then(() => true)")
+    p.wheel(*anchor, -10_000)
+    end = p.js("""(() => { const edge = document.querySelector('.edge');
+        const end = edge.getPointAtLength(edge.getTotalLength()).matrixTransform(edge.getScreenCTM());
+        return [end.x, end.y]; })()""")
+    assert math.dist(end, p.center(f'{node("B0m")} .port.in')) < 0.5, "缩小后刷新并放大时，派生连线仍对准端口"
+    p.key(".", "Period", ".")
+
+
 def nested_group_drag(p):
     # 内框贴边。拖动前右侧框只部分重叠，拖动结束时才完全落入外框。
     groups = [
@@ -435,6 +481,8 @@ def main():
         assert p.js("document.querySelectorAll('.edge').length") == 1
         assert "实验画布" in p.js("document.querySelector('.title').textContent")
         step("01-浏览")
+        manual_zoom(p)
+        step("01b-手动缩小与放大")
 
         # 按 E 新建：建议 E1，立即进入标题编辑
         p.click(700, 800)                 # 先点空白，让画布拿到焦点
@@ -580,18 +628,22 @@ def main():
         grp = f'.grp[data-g="{g["id"]}"]'
         step("14-Ctrl+G打组")
 
-        # 拖分组框标题：框内的 B0 和便签一起移动，松手后坐标都已保存
+        # 缩小后拖分组框标题：框内的 B0 和便签一起移动，松手后坐标都已保存
         c0 = canvas_all()
         g0, e0, n0 = c0["groups"][0], c0["experiments"]["B0"], c0["stickies"][0]
-        t = p.center(f"{grp} .gt")
-        p.drag((t[0] - 60, t[1]), (t[0] - 60 + 90, t[1] + 60))
+        x, y = p.center(f"{grp} .gt")
+        x -= 60
+        p.wheel(x, y, 1000)
+        p.wait("parseFloat(document.querySelector('.pc').textContent) < 30", what="缩小后拖分组框")
+        p.drag((x, y), (x + 20, y + 13))
         until(lambda: canvas_all()["groups"][0]["x"] != g0["x"], "分组框坐标写回 canvas.json")
         c1 = canvas_all()
         dx, dy = c1["groups"][0]["x"] - g0["x"], c1["groups"][0]["y"] - g0["y"]
         assert dx > 0 and dy > 0
         assert (c1["experiments"]["B0"]["x"] - e0["x"], c1["experiments"]["B0"]["y"] - e0["y"]) == (dx, dy)
         assert (c1["stickies"][0]["x"] - n0["x"], c1["stickies"][0]["y"] - n0["y"]) == (dx, dy)
-        step("15-拖分组框")
+        step("15-缩小后拖分组框")
+        p.wheel(x, y, -1000)
 
         # 按 G 在鼠标处新建分组框（找一块放得下的空白），再拖右下角手柄调大小
         p.key("-", "Minus", "-")
@@ -643,33 +695,37 @@ def main():
         p.click(*p.center(".keysbtn"))
         p.wait("!document.querySelector('.keys.on')", what="快捷键按钮关闭面板")
 
-        # 框选：Ctrl+从空白处拖，框住 E1 和 E3；再拖其中一个，两个一起移动
+        # 缩小后框选 E1、E3 和便签，再拖其中一个，选中的对象一起移动
         fit()
         p.key("Escape")
-        u = p.js(f"""(() => {{ const a = document.querySelector('{node('E1')}').getBoundingClientRect(),
-                    b = document.querySelector('{node('E3')}').getBoundingClientRect();
-                    return [Math.min(a.left, b.left), Math.min(a.top, b.top), Math.max(a.right, b.right), Math.max(a.bottom, b.bottom)]; }})()""")
-        start, end = (u[0] - 12, u[1] - 12), (u[2] + 12, u[3] + 12)
-        assert p.js(f"!document.elementFromPoint({start[0]}, {start[1]}).closest('.node, .sticky, .gt, .rz')"), \
-            "框选起点应在空白处或分组框体上"
-        p.drag(start, end, mods=CTRL)
+        p.wheel(750, 475, 1000)
+        p.wait("parseFloat(document.querySelector('.pc').textContent) < 30", what="缩小后框选")
+        p.drag((550, 350), (950, 600), mods=CTRL)
         selected = p.js("[...document.querySelectorAll('.node.sel')].map(e => e.dataset.id)")
         assert {"E1", "E3"} <= set(selected), selected
-        p.click(*p.center(f"{node('E1')} .hdr .nid"), mods=CTRL)      # Ctrl 单击：减选，再加回来
+        assert p.js(f"document.querySelector('{sticky}').classList.contains('sel')")
+        p.click(*p.center(f"{node('E1')} .hdr"), mods=CTRL)      # Ctrl 单击：减选，再加回来
         assert not p.js(f"document.querySelector('{node('E1')}').classList.contains('sel')")
-        p.click(*p.center(f"{node('E1')} .hdr .nid"), mods=CTRL)
-        before = canvas_all()["experiments"]
-        a = p.center(f"{node('E3')} .hdr .nid")
-        p.drag(a, (a[0] + 50, a[1] + 40))
-        until(lambda: canvas_all()["experiments"]["E3"] != before["E3"], "多选拖动写回 canvas.json")
-        after = canvas_all()["experiments"]
-        d1 = (after["E1"]["x"] - before["E1"]["x"], after["E1"]["y"] - before["E1"]["y"])
-        d3 = (after["E3"]["x"] - before["E3"]["x"], after["E3"]["y"] - before["E3"]["y"])
-        assert d1 == d3 and d1 != (0, 0), (d1, d3)
+        p.click(*p.center(f"{node('E1')} .hdr"), mods=CTRL)
+        items = (node("E1"), node("E3"), sticky)
+        before = [p.center(item) for item in items]
+        saved_e3 = canvas_all()["experiments"]["E3"]
+        x, y = p.center(f"{node('E3')} .hdr")
+        p.drag((x, y), (x + 11, y + 9))
+        for (x0, y0), (x1, y1) in zip(before, (p.center(item) for item in items)):
+            assert math.dist((x1 - x0, y1 - y0), (11, 9)) < 1
+        until(lambda: canvas_all()["experiments"]["E3"] != saved_e3, "多选拖动写回 canvas.json")
         # 在多选中单击（不拖）：只留这一个
-        p.click(*p.center(f"{node('E3')} .hdr .nid"))
+        p.click(*p.center(f"{node('E3')} .hdr"))
         assert p.js("[...document.querySelectorAll('.node.sel, .sticky.sel')].map(e => e.dataset.id)") == ["E3"]
-        step("19-框选与多选拖动")
+        step("19-缩小后框选与多选拖动")
+        p.wheel(750, 475, -1000)
+        moved = [p.center(item) for item in items]
+        p.js("window.beforeLayoutReload = true")
+        p.cmd("Page.reload")
+        p.wait(f"!window.beforeLayoutReload && document.querySelector('{sticky}')", what="刷新后重新显示画布")
+        for expected, item in zip(moved, items):
+            assert math.dist(p.center(item), expected) < 0.5, item
 
         # Ctrl+A 全选实验和便签；单击空白取消选择
         p.key("a", "KeyA", mods=CTRL)
@@ -728,6 +784,28 @@ def main():
         p.key("Enter")
         p.wait("location.hash === '#/exp/E1'", what="Enter 进入节点页")
         step("22-返回画布")
+
+        # 暂停一次真实的画布响应，切回节点页后才交给应用。
+        p.wait("document.querySelector('#page:not([hidden]) .back')", what="节点页可返回画布")
+        p.js("""(() => { const fetch = window.fetch;
+            window.fetch = async (...args) => {
+                if (args[0] !== '/api/data') return fetch(...args);
+                window.fetch = fetch;
+                const response = await fetch(...args);
+                await response.clone().arrayBuffer();
+                return new Promise(resolve => { window.releaseCanvasResponse = () => resolve(response); });
+            };
+        })()""")
+        p.click(*p.center("#page .back"))
+        p.wait("!!window.releaseCanvasResponse", what="画布响应等待放行")
+        p.js("location.hash = '#/exp/E1'")
+        p.wait("document.querySelector('#canvas').hidden", what="切回节点页并隐藏画布")
+        p.js("""new Promise(resolve => {
+            window.releaseCanvasResponse();
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)));
+        })""")
+        assert not p.js("window.__errors"), p.js("window.__errors")
+        step("22b-切页后返回画布响应")
 
         # B0：Notes 里引用的 offset 附件图能显示
         p.js("location.hash = '#/exp/B0'")

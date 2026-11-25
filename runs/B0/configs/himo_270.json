@@ -1,0 +1,29 @@
+{
+  "method": "himo",
+  "repo": "third_party/HIMO",
+  "upstream_commit": "1a525611a22e15c0862d2af6e3f53857f09a7e70",
+  "seed": 0,
+  "input": {"optical": "div255", "sar": "p2p98", "auxiliary": "official Deal_Extreme and Preproscessing P-code"},
+  "params": {
+    "octaves": 3,
+    "layers": 2,
+    "resize": 1.2,
+    "sigma": 1.6,
+    "patch_size": 72,
+    "location_bins": 12,
+    "orientation_bins": 12,
+    "intensity_difference": 1,
+    "detector": "PC-ShiTomasi",
+    "detector_border": 6,
+    "detector_threshold": 0.01,
+    "suppression_radius": 1,
+    "keypoint_limit": 5000,
+    "internal_threshold": 5,
+    "internal_repetitions": 1,
+    "internal_transform": "affine",
+    "rotation": 0,
+    "scale": 0,
+    "parallel": 0
+  },
+  "candidate_stage": "MATLAB 1-based converted to 0-based; original multiscale geometry through deduplication, exported before the last global outlier removal"
+}

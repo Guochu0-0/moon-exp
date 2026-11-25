@@ -1,0 +1,9 @@
+{
+  "method": "rift",
+  "repo": "third_party/RIFT",
+  "upstream_commit": "7ea830e2f13cc3c226f975fe9e98b7666a8f26fb",
+  "seed": 0,
+  "input": {"optical": "div255", "sar": "p2p98"},
+  "params": {"scales": 4, "orientations": 6, "patch_size": 96, "max_ratio": 1, "match_threshold": 100},
+  "caveat": "Official simplest no-rotation-invariance implementation; no uint8 quantization, no FSC"
+}

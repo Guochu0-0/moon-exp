@@ -417,11 +417,16 @@ export function mountCanvas(root, { onOpen }) {
       const g = groupOf(gr.dataset.g);
       drag = { kind: 'resize', g, el: gr, sx: wx, sy: wy, w: g.w, h: g.h, moved: 0 }; return;
     }
-    if (gr && ev.target.closest('.gt')) {   // 拖标题栏：几何包含的实验和便签一起移动
+    if (gr && ev.target.closest('.gt')) {   // 拖标题栏：冻结框内成员及其起点
       const g = groupOf(gr.dataset.g), m = members(g);
-      drag = { kind: 'group', g, el: gr, w0: [wx, wy], g0: [g.x, g.y], moved: 0, sx: ev.clientX, sy: ev.clientY,
-               exps: m.exps.map(id => ({ id, p0: [...pos.get(id)] })),
-               stickies: m.stickies.map(id => (s => ({ s, p0: [s.x, s.y] }))(stickyOf(id))) };
+      const nested = groups.filter(inner => inside(inner, g) && !inside(g, inner));
+      const startBox = (box, elementFor) => ({ box, elementFor, x: box.x, y: box.y });
+      const boxes = [
+        ...[g, ...nested].map(box => startBox(box, groupEl)),
+        ...m.stickies.map(id => startBox(stickyOf(id), stickyEl)),
+      ];
+      drag = { kind: 'group', w0: [wx, wy], moved: 0, sx: ev.clientX, sy: ev.clientY,
+               exps: m.exps.map(id => ({ id, p0: [...pos.get(id)] })), boxes };
       return;
     }
     if (ev.ctrlKey || ev.metaKey) {   // 框选：在已选的基础上加
@@ -451,9 +456,12 @@ export function mountCanvas(root, { onOpen }) {
     } else if (d.kind === 'group') {
       if (movedBy(d, ev) < DRAG_PX) return;
       const dx = Math.round(wx - d.w0[0]), dy = Math.round(wy - d.w0[1]);
-      Object.assign(d.g, { x: d.g0[0] + dx, y: d.g0[1] + dy }); placeBox(d.el, d.g);
+      for (const { box, elementFor, x, y } of d.boxes) {
+        Object.assign(box, { x: x + dx, y: y + dy });
+        const el = elementFor(box.id);
+        if (el) placeBox(el, box);
+      }
       for (const it of d.exps) { pos.set(it.id, [it.p0[0] + dx, it.p0[1] + dy]); place(it.id); }
-      for (const it of d.stickies) { Object.assign(it.s, { x: it.p0[0] + dx, y: it.p0[1] + dy }); placeBox(stickyEl(it.s.id), it.s); }
       drawEdges();
     } else if (d.kind === 'resize') {
       const w = Math.max(220, Math.round(d.w + wx - d.sx)), h = Math.max(120, Math.round(d.h + wy - d.sy));

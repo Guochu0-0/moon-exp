@@ -5,7 +5,7 @@
 把仓库 runs/ 里的 B0、B0m（exp.toml 与 preds/*.jsonl）复制到临时目录，起一个工作台服务，然后覆盖：
 按 E 新建、菜单派生、拖到空白派生、拖到实验改父、成环被拒、已点亮实验的删除项置灰、
 拖动后刷新位置保持、终端写 exp.toml 后几秒内出现、便签新建与编辑、Ctrl+G 打组并重命名、
-拖分组框标题带走框内实验和便签、分组框调大小与换色、`?` 面板、框选加多选拖动、Ctrl+A、
+拖分组框标题带走框内实验、便签和内框、分组框调大小与换色、`?` 面板、框选加多选拖动、Ctrl+A、
 各类右键菜单的内容、Del 删除选中对象时跳过已点亮实验、双击进入节点页并返回；
 节点页：未点亮实验只有三部分、章节导航跳转、编辑并保存 Notes、「← 画布」返回，
 B0 的 Notes 显示 offset 附件图，B0m 的全表显示回退后的显示名和 ΔAUC@10；
@@ -333,6 +333,35 @@ def visual(p, has_matches, step):
     p.wait(f"document.querySelectorAll('{VIS} .detail .pane').length === 2", 20, "方法与参考方法并排")
     assert p.js("window.__errors.length") == 0, p.js("window.__errors")
     shot_detail(p, step, "28-B0m可视化结果")
+
+
+def nested_group_drag(p):
+    # 内框贴边。拖动前右侧框只部分重叠，拖动结束时才完全落入外框。
+    groups = [
+        dict(id="outer", x=-2000, y=-3000, w=620, h=410, title="外框", color="c1"),
+        dict(id="inner", x=-1900, y=-2920, w=520, h=330, title="内框", color="c2"),
+        dict(id="deep", x=-1810, y=-2880, w=430, h=290, title="最内层框", color="c3"),
+        dict(id="overlap", x=-1425, y=-2900, w=220, h=150, title="部分重叠的框", color="c4"),
+    ]
+    body = json.dumps({"groups": groups})
+    assert p.js(f"""fetch('/api/canvas', {{method: 'PUT', headers: {{'Content-Type': 'application/json'}},
+                 body: {json.dumps(body)}}}).then(r => r.ok)""")
+    p.js("""localStorage.setItem('workbench.canvas.view', JSON.stringify({tx: 2200, ty: 3150, k: 1}));
+            history.replaceState(null, '', '#/');""")
+    p.cmd("Page.reload")
+    p.wait("document.querySelector('[data-g=deep]')", what="嵌套分组框出现")
+    x, y = p.center("[data-g=outer] .gt")
+    p.drag((x, y), (x + 200, y + 60))
+    positions = "Array.from(document.querySelectorAll('.grp'), el => [el.offsetLeft, el.offsetTop])"
+    expected = [[-1800, -2940], [-1700, -2860], [-1610, -2820], [-1425, -2900]]
+    actual = p.js(positions)
+    assert actual == expected, (actual, expected)
+    p.wait("""fetch('/api/data').then(r => r.json()).then(data =>
+            data.canvas.groups.find(g => g.id === 'outer').x === -1800)""", what="外框坐标写回")
+    p.js("window.beforeNestedReload = true")
+    p.cmd("Page.reload")
+    p.wait("!window.beforeNestedReload && document.querySelector('[data-g=deep]')", what="刷新后重新出现嵌套分组框")
+    assert p.js(positions) == expected
 
 
 def main():
@@ -723,6 +752,8 @@ def main():
         assert "（默认）" in p.js("document.querySelector('#page #selR option:checked').textContent")
         step("24-B0m节点页")
         visual(p, has_matches, step)
+        nested_group_drag(p)
+        step("29-拖动嵌套分组框")
         ok = True
         print("画布冒烟全部通过")
     except Exception:

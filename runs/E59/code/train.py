@@ -87,9 +87,12 @@ def reward_sum(logp_src, logp_dst, matches, inliers, positive, fp_penalty):
 
 def features(model, images):
     padding = torch.ones_like(images, dtype=torch.bool)
-    xy, logp, selected, valid, _, out = model(images, padding, training=True)
-    desc = model.get_descs(out["coarse_descs"], images, xy, *images.shape[-2:])
-    return xy, logp, selected & valid, desc
+    # RIPE's Fabric autocasts forward and returns floating outputs in FP32.
+    with torch.autocast("cuda", dtype=torch.bfloat16):
+        xy, logp, selected, valid, _, out = model(images.to(torch.bfloat16), padding, training=True)
+    coarse = [layer.float() for layer in out["coarse_descs"]]
+    desc = model.get_descs(coarse, images, xy, *images.shape[-2:])
+    return xy, logp.float(), selected & valid, desc
 
 
 def loss_for_batch(model, matcher, descriptor_loss, batch, signal, alpha):
@@ -217,8 +220,7 @@ def train(run_dir, data_path, weights, weight_hash, cfg, *, smoke, seconds):
         with log_path.open("a", encoding="utf-8", buffering=1) as log, ScalarWriter(run_dir / "tb" / ("preflight" if smoke else "main") / "scalars") as tb:
             for data in loader:
                 scheduler.step()
-                with torch.autocast("cuda", dtype=torch.bfloat16):
-                    losses, rows = loss_for_batch(model, matcher, descriptor_loss, data, signal, alpha(batch_count))
+                losses, rows = loss_for_batch(model, matcher, descriptor_loss, data, signal, alpha(batch_count))
                 batch_count += 1
                 row = {"batch": batch_count, "updates": update_count, "lr": scheduler.get_last_lr(), "pairs": rows}
                 if losses is None or not torch.isfinite(losses[0]).item():

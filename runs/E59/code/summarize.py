@@ -4,15 +4,12 @@ from __future__ import annotations
 import csv
 import json
 import os
+import subprocess
 import tomllib
 from collections import Counter
 from pathlib import Path
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
+from runs.E59.code.predictions import prediction_location
 from workbench import evaluate, protocol
 from workbench.dataset import Dataset
 from workbench.records import Run
@@ -24,16 +21,16 @@ EXTRA = RUN / "extra"
 def validation_curve(ds, last, every):
     rows = []
     sweep = Run(RUN / "sweep/main/S")
-    formal = Run(RUN)
     metrics = {"protocol": protocol.protocol_info(), "methods": {}}
     expected = set(ds.labelled("val"))
     for update in range(0, last + 1, every):
-        run, method = {0: (formal, "init"), last: (formal, "main")}.get(update, (sweep, f"step{update}"))
+        out_dir, method = prediction_location(RUN, update, last)
+        run = Run(out_dir)
         preds = run.preds(method, "val")
         if set(preds) != expected:
             raise ValueError(f"Incomplete validation predictions at update {update}")
         result = evaluate.evaluate_preds(ds, "val", preds)
-        if run is sweep:
+        if out_dir == sweep.dir:
             metrics["methods"][method] = {"val": result}
         summary = result["summary"]
         rows.append({"updates": update, "auc_at_5": summary["auc@5"],
@@ -65,23 +62,6 @@ def training_diagnostics(log_path, expected_batches, expected_updates):
     return {"batches": count, "updates": item["updates"], "groups": groups}
 
 
-def write_curve(rows):
-    path = EXTRA / "data/val_curve.csv"
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
-    steps = [row["updates"] for row in rows]
-    fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 6), layout="constrained")
-    for ax, key, title in zip(axes, ("auc_at_5", "failure_rate"), ("AUC@5", "Registration failure rate")):
-        ax.plot(steps, [row[key] for row in rows], marker="o", markersize=3)
-        ax.set_ylabel(title)
-        ax.grid(alpha=0.25)
-    axes[-1].set_xlabel("Optimizer updates (0 = published weights)")
-    fig.savefig(EXTRA / "val_curve.png", dpi=180)
-    plt.close(fig)
-
-
 def main():
     with (RUN / "configs/main.toml").open("rb") as handle:
         cfg = tomllib.load(handle)["train"]
@@ -91,7 +71,12 @@ def main():
     training = training_diagnostics(RUN / "ckpt/main/log.jsonl", cfg["batches"], last)
     (EXTRA / "data").mkdir(parents=True, exist_ok=True)
     (EXTRA / "data/training_diagnostics.json").write_text(json.dumps(training, indent=2) + "\n", encoding="utf-8")
-    write_curve(rows)
+    path = EXTRA / "data/val_curve.csv"
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+    subprocess.run(["/opt/envs/loftr/bin/python", str(Path(__file__).with_name("plot_curve.py")), str(path)], check=True)
 
 
 if __name__ == "__main__":

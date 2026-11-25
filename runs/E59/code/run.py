@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import os
 import subprocess
 import sys
@@ -24,6 +25,7 @@ from baselines.data import Data
 from baselines.match import sha256
 from moonlib import inputs
 from moonlib.ransac import fit_affine
+from runs.E59.code.predictions import prediction_location
 from runs.E59.code.train import train
 from workbench import launch
 from workbench.records import PredWriter, Run
@@ -45,15 +47,6 @@ def verify_source(cfg):
     if head != cfg["revision"] or dirty:
         raise RuntimeError(f"Expected clean upstream RIPE at {cfg['revision']}; got {head}")
     sys.path.insert(0, str(repo))
-
-
-def checkpoint_for(step, last, weights):
-    if step == 0:
-        return weights, RUN, "init"
-    state_dict = RUN / "ckpt/main" / f"ckpt_{step}.pt"
-    if step == last:
-        return state_dict, RUN, "main"
-    return state_dict, RUN / "sweep/main/S", f"step{step}"
 
 
 def image_features(model, image, cfg):
@@ -126,6 +119,8 @@ def main():
         parser.error("--seconds must be positive")
     with (ROOT / CONFIG).open("rb") as handle:
         cfg = tomllib.load(handle)
+    if not cfg["model"]["instance_norm"] or cfg["signal"]["min_keypoints_per_image"] != 16 or cfg["signal"]["descriptor_fallback_below"] != 8:
+        raise RuntimeError("Released-model InstanceNorm and upstream matching and descriptor gates are fixed")
     verify_source(cfg["model"])
     weights = cli.weights_root / cfg["model"]["weights"]
     weight_hash = sha256(weights)
@@ -138,28 +133,33 @@ def main():
         scheduled = range(0, num_updates + 1, cfg["train"]["val_every_updates"])
         if cli.step not in scheduled or (cli.split == "test" and cli.step not in (0, num_updates)):
             parser.error("Only scheduled Val checkpoints and the fixed init/final Test are allowed")
-        checkpoint, out_dir, method = checkpoint_for(cli.step, num_updates, weights)
-        if out_dir != RUN:
-            out_dir.mkdir(parents=True, exist_ok=True)
-            (out_dir / "exp.toml").write_text('id = "S"\ntitle = "RIPE Val check points"\n', encoding="utf-8")
+        checkpoint = weights if cli.step == 0 else RUN / "ckpt/main" / f"ckpt_{cli.step}.pt"
+        out_dir, method = prediction_location(RUN, cli.step, num_updates)
         inference.update(split=cli.split, checkpoint=str(checkpoint), checkpoint_sha256=sha256(checkpoint))
         name = "init" if cli.step == 0 else "main" if cli.step == num_updates else "val_sweep"
     else:
         name = "preflight" if phase == "preflight" else "main"
-    launch.begin(RUN, name, [sys.executable, "-m", ENTRY, *sys.argv[1:]], entry=ENTRY,
-                 config_file=CONFIG.as_posix(), args=cfg, config=inference,
-                 phase=phase, release_weights_sha256=weight_hash,
-                 data_path=str(cli.data), release_weights_path=str(weights), seconds=cli.seconds)
-    try:
-        if phase == "infer":
-            result = infer(cli.data, weights, checkpoint, cfg, out_dir, method, cli.split)
-        else:
-            result = train(RUN, cli.data, weights, weight_hash, cfg, smoke=phase == "preflight", seconds=cli.seconds)
-        print(result, flush=True)
-    except BaseException:
-        launch.end(RUN, name, "fail")
-        raise
-    launch.end(RUN, name, "ok", **result)
+    claims = RUN / ".claims"
+    claims.mkdir(exist_ok=True)
+    with (claims / f"{name}.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        launch.begin(RUN, name, [sys.executable, "-m", ENTRY, *sys.argv[1:]], entry=ENTRY,
+                     config_file=CONFIG.as_posix(), args=cfg, config=inference,
+                     phase=phase, release_weights_sha256=weight_hash,
+                     data_path=str(cli.data), release_weights_path=str(weights), seconds=cli.seconds)
+        try:
+            if phase == "infer":
+                if out_dir != RUN:
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    (out_dir / "exp.toml").write_text('id = "S"\ntitle = "RIPE Val checkpoints"\n', encoding="utf-8")
+                result = infer(cli.data, weights, checkpoint, cfg, out_dir, method, cli.split)
+            else:
+                result = train(RUN, cli.data, weights, weight_hash, cfg, smoke=phase == "preflight", seconds=cli.seconds)
+            print(result, flush=True)
+        except BaseException as exc:
+            launch.end(RUN, name, "fail", error_type=type(exc).__name__, error=str(exc))
+            raise
+        launch.end(RUN, name, "ok", **result)
 
 
 if __name__ == "__main__":

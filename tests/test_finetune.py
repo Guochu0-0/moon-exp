@@ -230,6 +230,85 @@ def test_parallel_val_evaluates_every_checkpoint_once_before_return(tmp_path, mo
     assert sorted((split, int(step)) for _, split, step in calls) == [("val", s) for s in (250, 500, 750, 7907)]
 
 
+def test_driver_ddp_and_last_test_use_final_checkpoint(tmp_path, monkeypatch):
+    import importlib.util
+    from finetune.config import expand
+
+    spec = importlib.util.spec_from_file_location("run284", REPO / "scripts/finetune/run.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    cfg = expand({"model": {"name": "roma"}, "run": {"ddp": 4, "sweep": "last_test"}})
+    job = mod.Job(tmp_path, "main", cfg, "0,1,2,3")
+    job.ck.mkdir(parents=True)
+    job.S.mkdir(parents=True)
+    for step in (250, 7907):
+        (job.ck / f"ckpt_{step}.pt").touch()
+    commands, evaluations = [], []
+    monkeypatch.setattr(job, "sh", lambda cmd, *args, **kwargs: commands.append(cmd))
+
+    def evaluate(split, step):
+        evaluations.append((split, int(step)))
+        dst = job.S / "preds" / f"step{step}"
+        dst.mkdir(parents=True, exist_ok=True)
+        (dst / f"{split}.jsonl").touch()
+
+    monkeypatch.setattr(job, "evaluate", evaluate)
+    monkeypatch.setattr(job, "metrics", lambda: {"step7907": {"val": {"summary": {}}, "test": {"summary": {}}}})
+    job()
+    assert commands[0][1:7] == ["-m", "torch.distributed.run", "--standalone", "--nproc_per_node=4", "-m", "finetune.train"]
+    assert evaluations == [("val", 7907), ("test", 7907)]
+    peak = json.loads((job.sw / "peak.json").read_text())
+    assert (peak["step"], peak["metric"]) == (7907, "last")
+
+
+def test_driver_selects_one_method_and_validates_gpu_count(tmp_path, monkeypatch):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("run284", REPO / "scripts/finetune/run.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    run = tmp_path / "runs" / "E53"
+    configs = run / "configs"
+    configs.mkdir(parents=True)
+    for method, ddp in (("single", 0), ("multi", 4)):
+        (configs / f"{method}.toml").write_text(f'[model]\nname = "roma"\n[run]\nddp = {ddp}\n')
+    infer = tmp_path / "configs" / "baselines" / "anymatch_roma__minmax.json"
+    infer.parent.mkdir(parents=True)
+    infer.write_text("{}")
+    monkeypatch.setattr(mod, "REPO", tmp_path)
+    monkeypatch.setattr(mod.launch, "require_clean", lambda *_: None)
+    monkeypatch.setattr(mod.launch, "begin", lambda *a, **kw: None)
+    monkeypatch.setattr(mod.launch, "end", lambda *a, **kw: None)
+    methods = []
+    monkeypatch.setattr(mod.Job, "__call__", lambda job: methods.append(job.m))
+    args = [str(run), "--method", "multi"]
+    monkeypatch.setenv("GPU", "0")
+    with pytest.raises(mod.C.ConfigError, match="4 张 GPU"):
+        mod.main(args)
+    assert not (run / ".claims").exists()
+    monkeypatch.setenv("GPU", "1,2,3,4")
+    mod.main(args)
+    assert methods == ["multi"]
+    phases = []
+
+    def train(job):
+        job.ck.mkdir(parents=True)
+        (job.ck / "train.done").touch()
+        phases.append("train")
+
+    monkeypatch.setattr(mod.Job, "run_training", train)
+    monkeypatch.setattr(mod.Job, "run_evaluation", lambda job: phases.append("eval"))
+    single = [str(run), "--method", "single"]
+    monkeypatch.setenv("GPU", "0")
+    with pytest.raises(SystemExit):
+        mod.main(single + ["--eval-only"])
+    mod.main(single + ["--train-only"])
+    mod.main(single + ["--eval-only"])
+    assert phases == ["train", "eval"]
+    assert (run / ".claims" / "single").is_dir()
+    assert (run / ".claims" / "single_eval").is_dir()
+
+
 def test_parallel_val_rejects_shared_online_diagnostics():
     from finetune.config import expand, ConfigError
     with pytest.raises(ConfigError, match="共享负样本诊断"):
@@ -263,8 +342,18 @@ def test_optimizer_reports_amp_skip_without_changing_default_budget():
     assert opt.skipped and torch.equal(before, p)
 
 
-@pytest.mark.parametrize("count_updates,expected_calls", [(True, 4), (False, 3)])
-def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch, count_updates, expected_calls):
+@pytest.mark.parametrize("count_updates,halt_at,save_on_halt,save_every,expected_calls,expected_checkpoints,rolling", [
+    (True, None, False, 1, 4, [1, 2, 3], False),
+    (False, None, False, 1, 3, [1, 2, 3], False),
+    (False, 2, False, 3, 2, [], False),
+    (False, 2, True, 3, 2, [2], False),
+    (False, 2, True, 2, 2, [2], False),
+    (False, None, False, 1, 3, [1, 2, 3], True),
+    (False, 2, True, 1, 2, [1, 2], True),
+])
+def test_training_update_budget_and_checkpoint(
+        tmp_path, monkeypatch, count_updates, halt_at, save_on_halt, save_every, expected_calls, expected_checkpoints,
+        rolling):
     import hashlib
     import types
     import torch
@@ -295,8 +384,10 @@ def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch
     class Term:
         def __init__(self, p, model, ds):
             self.model = model
+            self.calls = 0
         def __call__(self, st):
-            return self.model.p.square().sum(), {}, True
+            self.calls += 1
+            return self.model.p.square().sum(), {"calls": self.calls}, True
 
     class SkipFirst(Optim):
         calls = 0
@@ -317,18 +408,38 @@ def test_training_counts_successful_updates_when_requested(tmp_path, monkeypatch
                          OPTIM=roma.OPTIM, RUN=roma.RUN, TORCH_HOME=roma.TORCH_HOME))
     monkeypatch.setattr(train.PARTS["pseudo"], "Term", Term)
     monkeypatch.setattr(train, "git_head", lambda *a: "test")
+    saves = []
+    original_save = torch.save
+
+    def save(state, path):
+        step = state["snapshot_step"] if "snapshot_step" in state else int(path.stem.removeprefix("ckpt_"))
+        saves.append(step)
+        original_save(state, path)
+
+    monkeypatch.setattr(torch, "save", save)
+    halt = f"halt_window=1\nhalt_above={{calls={halt_at - 1}}}\n" if halt_at else ""
     cfg = tmp_path / "main.toml"
     cfg.write_text('[model]\nname="roma"\n[optim]\nsteps=3\nlr=0.1\nwarmup=0\nsched="const"\n'
-                   f'[run]\nworkers=0\nsave_every=1\nrecord_hashes=true\ncount_updates={str(count_updates).lower()}\n'
+                   f'[run]\nworkers=0\nsave_every={save_every}\nrecord_hashes=true\n'
+                   f'count_updates={str(count_updates).lower()}\nsave_on_halt={str(save_on_halt).lower()}\n{halt}'
+                   f'sweep="last_test"\nrolling_checkpoint={str(rolling).lower()}\n'
                    f'[pseudo]\nlabels={json.dumps(str(labels_file))}\n')
     out = tmp_path / "out"
     train.main([str(cfg), "--out", str(out), "--device", "cpu"])
     logs = [json.loads(x) for x in (out / "log.jsonl").read_text().splitlines()]
     assert SkipFirst.calls == expected_calls
-    assert [r["step"] for r in logs] == [1, 2, 3]
-    assert (out / "ckpt_3.pt").exists()
-    final = torch.load(out / "ckpt_3.pt")["model"]
-    assert final.item() < (0.75 if count_updates else 0.85)
+    assert [r["step"] for r in logs] == list(range(1, (halt_at or 3) + 1))
+    assert saves == expected_checkpoints
+    if rolling:
+        last = halt_at or 3
+        assert torch.load(out / "latest.pt")["snapshot_step"] == last - 1
+        assert [p.name for p in out.glob("ckpt_*.pt")] == [f"ckpt_{last}.pt"]
+        assert not (out / "latest.pt.tmp").exists()
+    if halt_at:
+        assert json.loads((out / "halt.json").read_text())["step"] == halt_at
+    else:
+        final = torch.load(out / "ckpt_3.pt")["model"]
+        assert final.item() < (0.75 if count_updates else 0.85)
     assert (out / "overflow.jsonl").exists() == count_updates
     hashes = json.loads((out / "args.json").read_text())["source_hashes"]
     assert hashes["weights"]["sha256"] == hashlib.sha256(b"published weights").hexdigest()
@@ -2088,6 +2199,76 @@ def test_rloo_term_fine_mask_bce_and_fine_w(monkeypatch):
     assert vals[1][1] == pytest.approx(0.25 * vals[0][1], rel=1e-3)
 
 
+def test_rloo_term_fine_policy_levels_keep_all_certainty_losses(monkeypatch):
+    import torch
+
+    levels = [16, 8, 4, 2, 1]
+
+    def run(policy_levels):
+        torch.manual_seed(2)
+        term, st, coarse, dec = _fake_term_fine(
+            monkeypatch, levels=levels, fine_cert_bce=0.01, fine_policy_levels=policy_levels,
+        )
+        loss, stats, _ = term(st)
+        loss.backward()
+        grads = [q.grad.clone() for q in dec.parameters() if q.grad is not None]
+        return stats, coarse.grad.clone(), grads
+
+    default, coarse_default, grads_default = run(None)
+    for k in range(6):
+        stats, coarse_grad, grads = run(levels[:k])
+        assert all(stats[f"l_cert_{s}"] == default[f"l_cert_{s}"] for s in levels)
+        assert {s for s in levels if f"rew_{s}" in stats} == set(levels[:k])
+        assert torch.equal(coarse_grad, coarse_default) and coarse_grad.abs() > 0
+        if k == 5:
+            assert stats["l_fine"] == default["l_fine"]
+            assert len(grads) == len(grads_default)
+            assert all(torch.equal(a, b) for a, b in zip(grads, grads_default))
+        if k == 0:
+            assert stats["l_fine"] == pytest.approx(0.01 * sum(stats[f"l_cert_{s}"] for s in levels), abs=1e-5)
+
+
+def test_rloo_term_k3_position_gradients_without_certainty_losses(monkeypatch):
+    import torch
+
+    torch.manual_seed(3)
+    levels = [16, 8, 4, 2, 1]
+    active_levels = levels[:3]
+    term, st, coarse, dec = _fake_term_fine(
+        monkeypatch, levels=levels, fine_policy_levels=active_levels, cert_bce=0.0, fine_cert_bce=0.0,
+        frame_mask=True, fine_mask=True,
+    )
+    loss, stats, _ = term(st)
+    loss.backward()
+    assert coarse.grad.abs() > 0
+    assert {s for s in levels if f"rew_{s}" in stats} == set(active_levels)
+    assert not any(key == "l_cert" or key.startswith("l_cert_") for key in stats)
+    assert "in_frame" in stats and all(f"in_{s}" in stats for s in levels)
+    assert all(_fine_grad(dec, s) > 0 for s in active_levels)
+    assert all(torch.count_nonzero(dec.conv_refiner[str(s)].conv.weight.grad[2]) == 0 for s in active_levels)
+    assert all(q.grad is None for s in levels[3:] for q in dec.conv_refiner[str(s)].parameters())
+
+
+def test_config_rloo_fine_policy_levels(tmp_path):
+    from finetune import config as C
+
+    base = '[model]\nname = "roma"\n[rloo]\nreward = "ref"\nlevels = [16, 8]\n'
+    fine = 'fine_mode = "local"\nfine_cert_bce = 0.01\n'
+    good = C.load(_write(tmp_path, "ok", base + fine + 'fine_policy_levels = []\n'))
+    assert good["rloo"]["fine_policy_levels"] == []
+    zero_bce = C.load(_write(tmp_path, "no_bce", base + 'fine_mode = "local"\nfine_policy_levels = [16]\n'))
+    assert zero_bce["rloo"]["fine_policy_levels"] == [16]
+    assert zero_bce["rloo"]["fine_cert_bce"] == 0.0
+    for text in (
+        fine + 'fine_policy_levels = [16, 16]',
+        fine + 'fine_policy_levels = [4]',
+        fine + 'fine_policy_levels = 16',
+        'fine_policy_levels = []',
+    ):
+        with pytest.raises(C.ConfigError, match="fine_policy_levels"):
+            C.load(_write(tmp_path, "bad", base + text + "\n"))
+
+
 # ---------- 提前停（#221） ----------
 
 def test_halt_window_median():
@@ -2406,8 +2587,9 @@ def test_config_rloo_screen(tmp_path):
     assert d["rloo"]["screen"] == 0.0                                       # 默认不筛，同旧行为
     c = C.load(_write(tmp_path, "c", head + '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 0.35\n'))
     assert c["rloo"]["screen"] == 0.35
-    for bad in ('[rloo]\nreward = "ref"\nscreen = 0.35',                    # 参照取当前模型：没有参照模型可先推理
-                '[rloo]\nreward = "r1"\nref_ema = 0.996\nscreen = 0.35',
+    c = C.load(_write(tmp_path, "c", head + '[rloo]\nreward = "ref"\nscreen = 0.35\n'))
+    assert c["rloo"]["screen"] == 0.35 and c["rloo"]["ref_ema"] == 0.0
+    for bad in ('[rloo]\nreward = "r1"\nref_ema = 0.996\nscreen = 0.35',
                 '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 1.0',
                 '[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = -0.1',
                 '[optim]\nbatch = 2\n[rloo]\nreward = "ref"\nref_ema = 0.996\nscreen = 0.35',
@@ -2416,12 +2598,13 @@ def test_config_rloo_screen(tmp_path):
             C.load(_write(tmp_path, "b", head + bad + "\n"))
 
 
-def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypatch):
+@pytest.mark.parametrize("ref_ema, expected_fits", [(0.0, 3), (0.99, 4)])
+def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypatch, ref_ema, expected_fits):
     """screen：内点比例 = 参照拟合的内点数 ÷ num，拟合失败为 0；低于门槛的不学。学的那对在 __call__ 里沿用 screen 时的参照
     仿射（不再拟合参照，只拟合当前模型那一次），日志记这一步取了几对、所学对的比例与被丢对的比例均值；没经 screen 的对报错。"""
     import torch
     from finetune.parts import rloo as R
-    term, st, w = _fake_term(monkeypatch, ref_ema=0.99, num=20, screen=0.6)
+    term, st, w = _fake_term(monkeypatch, ref_ema=ref_ema, num=20, screen=0.6)
     I = np.array([[1.0, 0, 0], [0, 1.0, 0]])
     far = np.array([[1.0, 0, 500.0], [0, 1.0, 0]])                         # 学的那对的参照：离恒等仿射 500 px
     queue, calls = [(I, 10), (None, 0), (far, 15)], []
@@ -2437,7 +2620,7 @@ def test_rloo_screen_keeps_by_reference_inlier_ratio_and_reuses_its_fit(monkeypa
     st.batch = {"pair": ["c"]}
     loss, stats, _ = term(st)
     loss.backward()
-    assert len(calls) == 4                                                  # 3 次参照（screen）+ 1 次当前模型
+    assert len(calls) == expected_fits                                       # 3 次参照；EMA 时额外拟合当前模型供诊断
     assert (stats["scr_drawn"], stats["scr_ratio"], stats["scr_disc"]) == (3.0, 0.75, 0.25)
     d_far = stats["d_ref"]
     assert term.screen({"pair": ["d"], "image0": img, "image1": img}, "cpu")[0]   # 之后 (I, 20)：比例 1

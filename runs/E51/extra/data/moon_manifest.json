@@ -1,0 +1,258 @@
+[
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_26",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_035/Optical/patch_26.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_035/SAR/patch_26.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_80",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_035/Optical/patch_80.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_035/SAR/patch_80.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_133",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_035/Optical/patch_133.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_035/SAR/patch_133.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_035",
+    "pair": "ROI_035/patch_187",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_035/Optical/patch_187.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_035/SAR/patch_187.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_21",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_070/Optical/patch_21.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_070/SAR/patch_21.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_63",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_070/Optical/patch_63.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_070/SAR/patch_63.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_105",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_070/Optical/patch_105.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_070/SAR/patch_105.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_070",
+    "pair": "ROI_070/patch_147",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_070/Optical/patch_147.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_070/SAR/patch_147.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_5",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_071/Optical/patch_5.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_071/SAR/patch_5.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_15",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_071/Optical/patch_15.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_071/SAR/patch_15.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_25",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_071/Optical/patch_25.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_071/SAR/patch_25.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_071",
+    "pair": "ROI_071/patch_35",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_071/Optical/patch_35.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_071/SAR/patch_35.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_13",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_080/Optical/patch_13.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_080/SAR/patch_13.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_40",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_080/Optical/patch_40.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_080/SAR/patch_40.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_66",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_080/Optical/patch_66.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_080/SAR/patch_66.tif"
+    }
+  },
+  {
+    "domain": "moon",
+    "split": "val",
+    "roi": "ROI_080",
+    "pair": "ROI_080/patch_93",
+    "window_xywh": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": {
+      "optical": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_080/Optical/patch_93.tif",
+      "sar": "/remote-home/xufang/YGC/dataset/Moon/Val/ROI_080/SAR/patch_93.tif"
+    }
+  }
+]

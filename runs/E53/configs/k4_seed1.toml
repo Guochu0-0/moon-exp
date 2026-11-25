@@ -1,0 +1,4 @@
+base = "k4"
+
+[run]
+seed = 1

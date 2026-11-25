@@ -1,0 +1,226 @@
+[
+  {
+    "pair": "NI49E024017/A1",
+    "modality": "optical",
+    "status": "ok",
+    "count": 4611,
+    "key": "NI49E024017__A1__optical"
+  },
+  {
+    "pair": "NI49E024017/A1",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1978,
+    "key": "NI49E024017__A1__sar"
+  },
+  {
+    "pair": "NI49E024017/A2",
+    "modality": "optical",
+    "status": "ok",
+    "count": 2902,
+    "key": "NI49E024017__A2__optical"
+  },
+  {
+    "pair": "NI49E024017/A2",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1215,
+    "key": "NI49E024017__A2__sar"
+  },
+  {
+    "pair": "NI49E024017/A3",
+    "modality": "optical",
+    "status": "ok",
+    "count": 3387,
+    "key": "NI49E024017__A3__optical"
+  },
+  {
+    "pair": "NI49E024017/A3",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1570,
+    "key": "NI49E024017__A3__sar"
+  },
+  {
+    "pair": "NI49E024017/A4",
+    "modality": "optical",
+    "status": "ok",
+    "count": 4545,
+    "key": "NI49E024017__A4__optical"
+  },
+  {
+    "pair": "NI49E024017/A4",
+    "modality": "sar",
+    "status": "ok",
+    "count": 959,
+    "key": "NI49E024017__A4__sar"
+  },
+  {
+    "pair": "NH50E009003/B1",
+    "modality": "optical",
+    "status": "ok",
+    "count": 3272,
+    "key": "NH50E009003__B1__optical"
+  },
+  {
+    "pair": "NH50E009003/B1",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1380,
+    "key": "NH50E009003__B1__sar"
+  },
+  {
+    "pair": "NH50E009003/B2",
+    "modality": "optical",
+    "status": "ok",
+    "count": 2747,
+    "key": "NH50E009003__B2__optical"
+  },
+  {
+    "pair": "NH50E009003/B2",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1145,
+    "key": "NH50E009003__B2__sar"
+  },
+  {
+    "pair": "NH50E009003/B3",
+    "modality": "optical",
+    "status": "ok",
+    "count": 2035,
+    "key": "NH50E009003__B3__optical"
+  },
+  {
+    "pair": "NH50E009003/B3",
+    "modality": "sar",
+    "status": "ok",
+    "count": 941,
+    "key": "NH50E009003__B3__sar"
+  },
+  {
+    "pair": "NH50E009003/B4",
+    "modality": "optical",
+    "status": "ok",
+    "count": 2235,
+    "key": "NH50E009003__B4__optical"
+  },
+  {
+    "pair": "NH50E009003/B4",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1273,
+    "key": "NH50E009003__B4__sar"
+  },
+  {
+    "pair": "NH49E010020/C1",
+    "modality": "optical",
+    "status": "ok",
+    "count": 3007,
+    "key": "NH49E010020__C1__optical"
+  },
+  {
+    "pair": "NH49E010020/C1",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1856,
+    "key": "NH49E010020__C1__sar"
+  },
+  {
+    "pair": "NH49E010020/C2",
+    "modality": "optical",
+    "status": "ok",
+    "count": 4292,
+    "key": "NH49E010020__C2__optical"
+  },
+  {
+    "pair": "NH49E010020/C2",
+    "modality": "sar",
+    "status": "ok",
+    "count": 2010,
+    "key": "NH49E010020__C2__sar"
+  },
+  {
+    "pair": "NH49E010020/C3",
+    "modality": "optical",
+    "status": "ok",
+    "count": 3789,
+    "key": "NH49E010020__C3__optical"
+  },
+  {
+    "pair": "NH49E010020/C3",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1071,
+    "key": "NH49E010020__C3__sar"
+  },
+  {
+    "pair": "NH49E010020/C4",
+    "modality": "optical",
+    "status": "ok",
+    "count": 3140,
+    "key": "NH49E010020__C4__optical"
+  },
+  {
+    "pair": "NH49E010020/C4",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1583,
+    "key": "NH49E010020__C4__sar"
+  },
+  {
+    "pair": "NH49E012017/D1",
+    "modality": "optical",
+    "status": "ok",
+    "count": 2670,
+    "key": "NH49E012017__D1__optical"
+  },
+  {
+    "pair": "NH49E012017/D1",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1236,
+    "key": "NH49E012017__D1__sar"
+  },
+  {
+    "pair": "NH49E012017/D2",
+    "modality": "optical",
+    "status": "ok",
+    "count": 2740,
+    "key": "NH49E012017__D2__optical"
+  },
+  {
+    "pair": "NH49E012017/D2",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1747,
+    "key": "NH49E012017__D2__sar"
+  },
+  {
+    "pair": "NH49E012017/D3",
+    "modality": "optical",
+    "status": "ok",
+    "count": 2661,
+    "key": "NH49E012017__D3__optical"
+  },
+  {
+    "pair": "NH49E012017/D3",
+    "modality": "sar",
+    "status": "ok",
+    "count": 1970,
+    "key": "NH49E012017__D3__sar"
+  },
+  {
+    "pair": "NH49E012017/D4",
+    "modality": "optical",
+    "status": "ok",
+    "count": 3020,
+    "key": "NH49E012017__D4__optical"
+  },
+  {
+    "pair": "NH49E012017/D4",
+    "modality": "sar",
+    "status": "ok",
+    "count": 970,
+    "key": "NH49E012017__D4__sar"
+  }
+]

@@ -1,0 +1,16 @@
+id = "E56"
+title = "关闭置信度监督后的固定配置消融"
+parent = "E41"
+date = "2026-11-20"
+
+[methods.no_ema]
+name = "关闭 EMA 参照"
+ref = "E41/main__screen0.8"
+
+[methods.frozen_dino]
+name = "冻结 DINOv2"
+ref = "E41/main__screen0.8"
+
+[methods.no_screen]
+name = "关闭样本筛选"
+ref = "E41/main__screen0.8"

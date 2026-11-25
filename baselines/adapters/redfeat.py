@@ -45,7 +45,17 @@ class ReDFeatAdapter:
                       "official multiscale NMS (10px border) and ratio=%.3g; pixel-centre resize; "
                       "no essential-matrix filtering" % self.ratio)
 
+    def detect(self, image, modality):
+        """Return (N×2 pixel-centre coordinates, N repeatability scores) before matching."""
+        branch = {"optical": "forward1", "sar": "forward2"}[modality]
+        coordinates, _, scores = self._scored_features(image, branch, describe=False)
+        return coordinates, scores
+
     def _features(self, image, branch):
+        coordinates, descriptors, _ = self._scored_features(image, branch, describe=True)
+        return coordinates, descriptors
+
+    def _scored_features(self, image, branch, *, describe):
         import torch
         import torch.nn.functional as F
 
@@ -68,16 +78,18 @@ class ReDFeatAdapter:
                 y, x = (keep & mask).nonzero(as_tuple=True)[2:4]
                 kp = torch.stack((x, y), dim=-1).float().cpu().numpy()
                 coordinates.append(to_original(kp, h, w, tensor.shape[-2], tensor.shape[-1]))
-                descriptors.append(desc[0, :, y, x].t().float().cpu().numpy())
+                if describe:
+                    descriptors.append(desc[0, :, y, x].t().float().cpu().numpy())
                 scores.append(rep[0, 0, y, x].float().cpu().numpy())
             scale /= self.scale_factor
             hn, wn = round(h * scale), round(w * scale)
             tensor = F.interpolate(tensor, (hn, wn), mode="bilinear", align_corners=False)
-        if not descriptors:
-            return np.empty((0, 2)), np.empty((0, 0), dtype=np.float32)
+        if not scores:
+            return np.empty((0, 2)), np.empty((0, 0), dtype=np.float32), np.empty(0, dtype=np.float32)
         score = np.concatenate(scores)
         indices = np.argsort(-score, kind="stable")[:self.num_features]
-        return np.concatenate(coordinates)[indices], np.ascontiguousarray(np.concatenate(descriptors)[indices], dtype=np.float32)
+        selected = np.ascontiguousarray(np.concatenate(descriptors)[indices], dtype=np.float32) if describe else None
+        return np.concatenate(coordinates)[indices], selected, score[indices]
 
     def match(self, opt, sar):
         import cv2

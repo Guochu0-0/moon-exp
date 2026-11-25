@@ -1,0 +1,30 @@
+[
+  {
+    "pair": "ROI_035/patch_26",
+    "modality": "optical",
+    "status": "ok",
+    "count": 4096,
+    "key": "ROI_035__patch_26__optical"
+  },
+  {
+    "pair": "ROI_035/patch_26",
+    "modality": "sar",
+    "status": "ok",
+    "count": 4096,
+    "key": "ROI_035__patch_26__sar"
+  },
+  {
+    "pair": "ROI_080/patch_93",
+    "modality": "optical",
+    "status": "ok",
+    "count": 4096,
+    "key": "ROI_080__patch_93__optical"
+  },
+  {
+    "pair": "ROI_080/patch_93",
+    "modality": "sar",
+    "status": "ok",
+    "count": 4096,
+    "key": "ROI_080__patch_93__sar"
+  }
+]

@@ -1,0 +1,195 @@
+{
+  "source": "https://github.com/AmberHen/WHU-OPT-SAR-dataset",
+  "thumbnail_endpoint": "https://drive.google.com/thumbnail?id={optical_id}&sz=w900",
+  "preview_size": [
+    900,
+    600
+  ],
+  "selection": "Visual inspection of optical thumbnails for identifiable building groups, before detector inference",
+  "scenes": [
+    {
+      "group": "A",
+      "filename": "NI49E024017.tif",
+      "files": {
+        "optical": {
+          "drive_id": "1V_xStLBfAy1F38Y81naxqnTWbXrrVfmU",
+          "bytes": 57475280,
+          "sha256": "973db6e49a08c8cf88688a1f11fe73e295def941c96b48bcc013d238fdbba340"
+        },
+        "sar": {
+          "drive_id": "1-WQGIvnPX5LDJBhh0Ei5n0cG046cQr7f",
+          "bytes": 20811982,
+          "sha256": "1bc6b5976e44e5bd0a3a09b939bf47e2d951eba1af834cea5dbc6805b589e1ba"
+        }
+      },
+      "candidates": [
+        {
+          "subject": "Riverside blocks",
+          "preview_xy": [
+            425,
+            406
+          ]
+        },
+        {
+          "subject": "East-bank blocks",
+          "preview_xy": [
+            540,
+            390
+          ]
+        },
+        {
+          "subject": "Large roofs",
+          "preview_xy": [
+            618,
+            110
+          ]
+        },
+        {
+          "subject": "Grid housing",
+          "preview_xy": [
+            265,
+            254
+          ]
+        }
+      ]
+    },
+    {
+      "group": "B",
+      "filename": "NH50E009003.tif",
+      "files": {
+        "optical": {
+          "drive_id": "1P3Qdie4CZJGxdLqjfE-9Z4jHmV48CYHh",
+          "bytes": 53885576,
+          "sha256": "a659e8a50b95cfc1b73ca9bd03869427010355a47b206d89483651a86ca44065"
+        },
+        "sar": {
+          "drive_id": "1-E-0EET_vwjVNj7oFJewN35t9JmEHVDq",
+          "bytes": 22365518,
+          "sha256": "3e457bc3c361c01915bdc3c42c802e523726aa7936b8b5249761635d688c68ac"
+        }
+      },
+      "candidates": [
+        {
+          "subject": "South-bank roofs",
+          "preview_xy": [
+            658,
+            512
+          ]
+        },
+        {
+          "subject": "Riverside industry",
+          "preview_xy": [
+            560,
+            420
+          ]
+        },
+        {
+          "subject": "North-bank sheds",
+          "preview_xy": [
+            680,
+            265
+          ]
+        },
+        {
+          "subject": "West-bank buildings",
+          "preview_xy": [
+            125,
+            88
+          ]
+        }
+      ]
+    },
+    {
+      "group": "C",
+      "filename": "NH49E010020.tif",
+      "files": {
+        "optical": {
+          "drive_id": "10KWesPAFEJ4njSODruvSiASbQyWKqt",
+          "bytes": 57004144,
+          "sha256": "1052301cf9ddeb7b2dbd51a4a2ab8ff7268005cae3f40ef0f670c59651e1cbf5"
+        },
+        "sar": {
+          "drive_id": "1gScJ6b8XUlpx7feEfSuLnYqxKxawoLSg",
+          "bytes": 23435862,
+          "sha256": "a388ddf8dc48d5a20c38cfa1a71fe91a28a84c452ebbe69379143f857df000d9"
+        }
+      },
+      "candidates": [
+        {
+          "subject": "East-bank blocks",
+          "preview_xy": [
+            498,
+            264
+          ]
+        },
+        {
+          "subject": "Bend-side industry",
+          "preview_xy": [
+            404,
+            313
+          ]
+        },
+        {
+          "subject": "Southern roofs",
+          "preview_xy": [
+            481,
+            469
+          ]
+        },
+        {
+          "subject": "Industrial blocks",
+          "preview_xy": [
+            547,
+            536
+          ]
+        }
+      ]
+    },
+    {
+      "group": "D",
+      "filename": "NH49E012017.tif",
+      "files": {
+        "optical": {
+          "drive_id": "1mdRTo3VI3XZ_JwWJsJL4sZG80aQcq10m",
+          "bytes": 54746672,
+          "sha256": "8be4616d2ad860661073f20d09963aebac6bd528a4969c7d5a6b89fc6a41a61e"
+        },
+        "sar": {
+          "drive_id": "1rOYusQculVDL9FZXN0DvsqgzWcfiZ4W2",
+          "bytes": 22144558,
+          "sha256": "147411cb175391584f208fd2f530f0514d6ed0d7c0a0fc1ecde795ef3c312b42"
+        }
+      },
+      "candidates": [
+        {
+          "subject": "Riverside roofs",
+          "preview_xy": [
+            705,
+            277
+          ]
+        },
+        {
+          "subject": "Bend-side blocks",
+          "preview_xy": [
+            745,
+            342
+          ]
+        },
+        {
+          "subject": "Dense blocks",
+          "preview_xy": [
+            792,
+            378
+          ]
+        },
+        {
+          "subject": "Western sheds",
+          "preview_xy": [
+            700,
+            390
+          ]
+        }
+      ]
+    }
+  ]
+}

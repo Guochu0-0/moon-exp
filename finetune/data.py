@@ -10,6 +10,11 @@ from moonlib import inputs
 from . import augment
 
 
+def collate_for_pipe(samples):
+    """保留单样本内容，以普通 NumPy 对象经 worker 队列传回，绕过张量共享内存。"""
+    return [{k: v.numpy() if torch.is_tensor(v) else v for k, v in sample.items()} for sample in samples]
+
+
 class PairSet(torch.utils.data.Dataset):
     """一个 split 的全部 patch 对（train 没有标注，所以不筛 Label）。返回网络输入网格上的 (1,H,W) 张量。
     split 可用 + 连接多个（如 "val+test"，过拟合上限参考 #96），pair 标识在各 split 之间不能重名。"""

@@ -16,7 +16,7 @@
 [run] resume 给出 save_optim 存下的 ckpt 时，装回权重与续训状态，从下一步接着训（只支持第一个 epoch 内的存档）；
 [run] stop_at 与 --stop-at 一样提前停下，lr 调度仍按 [optim] steps。
 [run] halt_above / halt_below（#221）：某个日志量最近 halt_window 个记录的中位数越过阈值时停训，写 <out>/halt.json
-（停在第几步、哪个量、中位数），不另存 ckpt（最后一个存档仍是越线前按 save_every / save_at 存的）；正常退出。
+（停在第几步、哪个量、中位数），默认按 save_every / save_at 存档。开 save_on_halt 时额外保存停训当步；正常退出。
 成分可以提供 after_update(step)（参数更新之后调用）、observe(step)（每步更新之后与训练前调用，返回要存的数组或 None）、
 state_dict() / load_state_dict()（随续训状态存取）、ddp_tensors()（多卡时要检查各卡一致的张量，如 EMA 参照的权重）。
 
@@ -56,7 +56,7 @@ from workbench.tbwriter import ScalarWriter
 
 from . import config as C
 from . import dist as D
-from .data import PairSet
+from .data import PairSet, collate_for_pipe
 from .models import MODELS
 from .optim import Optim, UpdateMonitor
 from .parts import PARTS
@@ -182,6 +182,10 @@ def main(argv=None):
         cfg["run"]["resume"] = args.resume
         cfg = C.expand(cfg)
     o, r, mname = cfg["optim"], cfg["run"], cfg["model"]["name"]
+    batch_transport = os.environ.get("MOON_BATCH_TRANSPORT", "shared_memory")
+    if batch_transport not in ("shared_memory", "pipe"):
+        ap.error("MOON_BATCH_TRANSPORT must be shared_memory or pipe")
+    pipe_batches = batch_transport == "pipe"
     rank = D.init(r["ddp"])      # 多卡（#226）：每个进程绑一张卡；单卡时为 0
     main_ = rank == 0
     seed_r = r["seed"] + 1000 * rank   # 本卡的随机数种子：各卡的抽签、加噪、读图顺序各不相同；单卡时即 [run] seed
@@ -208,7 +212,8 @@ def main(argv=None):
     # 多卡：DistributedSampler 按 (seed, epoch) 打乱后分给各卡，各卡读不同的图；训练集补齐到卡数的整数倍（#226）
     smp = torch.utils.data.distributed.DistributedSampler(ds, shuffle=True, seed=r["seed"]) if r["ddp"] else None
     dl = torch.utils.data.DataLoader(ds, batch_size=o["batch"], shuffle=smp is None, sampler=smp, generator=g,
-                                     num_workers=r["workers"], drop_last=True, persistent_workers=r["workers"] > 0)
+                                     num_workers=r["workers"], drop_last=True, persistent_workers=r["workers"] > 0,
+                                     collate_fn=collate_for_pipe if pipe_batches else None)
     optim = Optim(model.params, o, model.amp, getattr(model, "groups", None), reduce=D.average_grads)
     ema = Ema(model, o["ema"]) if o["ema"] > 0 else None
     if r["log_update"] and not hasattr(model, "update_parts"):
@@ -225,7 +230,7 @@ def main(argv=None):
             hashes = {name: {"path": str(p.resolve()), "sha256": sha256(p)} for name, p in files.items()}
         (out / "args.json").write_text(json.dumps(
             {"config": cfg, "source": str(args.config), "infer_config": model.infer_cfg, "weights": model.weights,
-             "source_hashes": hashes,
+             "source_hashes": hashes, "batch_transport": batch_transport,
              "n_train": len(ds), "n_params": sum(p.numel() for p in model.params), "commit": git_head(REPO),
              "env": env_info(), "world": D.world()}, ensure_ascii=False, indent=1), encoding="utf-8")
     if r["save_zero"] and main_:
@@ -247,7 +252,7 @@ def main(argv=None):
                 f.write(json.dumps(rec) + "\n")
             print(f"ddp sync step {st}: {rec}", flush=True)
 
-    def save(st):
+    def save(st, rolling=False):
         sync_check(st)
         if not main_:
             return
@@ -255,7 +260,14 @@ def main(argv=None):
         if r["save_optim"]:
             sd["train"] = {"step": st, "optim": optim.state_dict(), "rng": rng_state(rng), "loader": loader.state(),
                            "terms": {n: t.state_dict() for n, t in terms if hasattr(t, "state_dict")}}
-        torch.save(sd, out / f"ckpt_{st}.pt")
+        if rolling:
+            sd["snapshot_step"] = st
+            path = out / "latest.pt"
+            temp = path.with_suffix(".pt.tmp")
+            torch.save(sd, temp)
+            temp.replace(path)
+        else:
+            torch.save(sd, out / f"ckpt_{st}.pt")
 
     neg = "neg" in cfg
     stops = [x for x in (args.stop_at, r["stop_at"]) if x]
@@ -294,7 +306,8 @@ def main(argv=None):
         if screens else None
     with open(out / "log.jsonl" if main_ else os.devnull, "a", encoding="utf-8") as log:
         while step < total:
-            for batch, t0 in screened(loader, screens, args.device, scr_log):
+            batches = map(torch.utils.data.default_collate, loader) if pipe_batches else loader
+            for batch, t0 in screened(batches, screens, args.device, scr_log):
                 st = Step(model, mname, batch, args.device, neg, rng, optim)
                 loss, stats, active = torch.zeros((), device=args.device), {}, False
                 for n, term in terms:
@@ -343,9 +356,11 @@ def main(argv=None):
                     print(f"step {step}: loss={loss_v:.4f} "
                           + " ".join(f"{k}={stats[k]}" for k in PRINT_KEYS if k in stats)
                           + f" elapsed={(time.time() - t_start) / 60:.1f}min", flush=True)
-                if (r["save_every"] and step % r["save_every"] == 0) or step in save_at:
-                    save(step)
                 halted = halt(*rows) if halt else None
+                saved = (r["save_every"] and step % r["save_every"] == 0) or step in save_at
+                if saved or (halted and r["save_on_halt"]):
+                    rolling = r["rolling_checkpoint"] and step < total and not halted and step not in save_at
+                    save(step, rolling=rolling)
                 if halted:
                     halted["step"] = step
                     if main_:
@@ -363,7 +378,7 @@ def main(argv=None):
     trw.flush()
     if r["save_every"] and step % r["save_every"] and not halted:
         save(step)
-    elif not (r["save_every"] and step % r["save_every"] == 0):
+    elif not (halted and r["save_on_halt"]) and not (r["save_every"] and step % r["save_every"] == 0):
         sync_check(step)        # 最后一步没有存档时也检查一次（多卡）
     D.close()
 

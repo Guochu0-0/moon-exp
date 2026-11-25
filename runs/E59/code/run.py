@@ -25,10 +25,10 @@ from baselines.data import Data
 from baselines.match import sha256
 from moonlib import inputs
 from moonlib.ransac import fit_affine
-from runs.E59.code.predictions import prediction_location
+from runs.E59.code.predictions import prediction_location, run_record
 from runs.E59.code.train import train
 from workbench import launch
-from workbench.records import PredWriter, Run
+from workbench.records import PredWriter
 
 ROOT = Path(__file__).resolve().parents[3]
 RUN = ROOT / "runs/E59"
@@ -100,7 +100,7 @@ def infer(data_path, official_weights, checkpoint, cfg, out_dir, method, split):
             writer.write(pair, matrix, matches=matches, sec=time.monotonic() - started, **extra)
             if index % 100 == 0:
                 print(f"{method}/{split}: {index}/{len(pair_ids)}", flush=True)
-    completed = Run(out_dir).preds(method, split)
+    completed = run_record(out_dir).preds(method, split)
     if set(completed) != set(pair_ids):
         raise RuntimeError(f"Incomplete {method}/{split} prediction coverage")
     return {"pairs": len(completed), "fitted": sum(pred.A is not None for pred in completed.values())}

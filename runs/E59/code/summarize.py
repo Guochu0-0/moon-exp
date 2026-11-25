@@ -9,10 +9,9 @@ import tomllib
 from collections import Counter
 from pathlib import Path
 
-from runs.E59.code.predictions import prediction_location
+from runs.E59.code.predictions import prediction_location, run_record
 from workbench import evaluate, protocol
 from workbench.dataset import Dataset
-from workbench.records import Run
 
 RUN = Path(__file__).resolve().parents[1]
 EXTRA = RUN / "extra"
@@ -20,12 +19,13 @@ EXTRA = RUN / "extra"
 
 def validation_curve(ds, last, every):
     rows = []
-    sweep = Run(RUN / "sweep/main/S")
+    sweep = run_record(RUN / "sweep/main/S")
+    records = {sweep.dir: sweep, RUN: run_record(RUN)}
     metrics = {"protocol": protocol.protocol_info(), "methods": {}}
     expected = set(ds.labelled("val"))
     for update in range(0, last + 1, every):
         out_dir, method = prediction_location(RUN, update, last)
-        run = Run(out_dir)
+        run = records[out_dir]
         preds = run.preds(method, "val")
         if set(preds) != expected:
             raise ValueError(f"Incomplete validation predictions at update {update}")

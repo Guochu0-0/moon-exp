@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import torch
 
+from runs.E59.code.predictions import prediction_location, run_record
 from runs.E59.code.train import affine_mask, pair_batches, reward_sum
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "third_party/RIPE"))
@@ -21,6 +22,18 @@ def test_positive_negative_pairing_and_deterministic_resume():
         assert any(optical != sar and optical // 3 == sar // 3 for optical, sar in pairs)
         assert all(0 <= sar < 9 for _, sar in pairs)
     assert list(pair_batches(9, 6, 19, 2, 6)) == full[2:]
+
+
+@pytest.mark.parametrize("update,method", [(0, "init"), (1000, "step1000"), (20000, "main")])
+def test_predictions_can_be_reopened_with_the_workbench_reader(tmp_path, update, method):
+    run_dir = tmp_path / "E59"
+    directory, name = prediction_location(run_dir, update, 20000)
+    assert name == method
+    out = directory / "preds" / name
+    out.mkdir(parents=True)
+    (directory / "exp.toml").write_text(f'id = "{directory.name}"\ntitle = "RIPE"\n', encoding="utf-8")
+    (out / "val.jsonl").write_text('{"pair":"ROI_001/patch_1","A":null,"fail":"few_matches"}\n', encoding="utf-8")
+    assert run_record(directory).preds(name, "val")["ROI_001/patch_1"].fail == "few_matches"
 
 
 def test_affine_mask_uses_original_pixel_threshold(monkeypatch):

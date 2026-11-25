@@ -34,6 +34,12 @@ class MoonTrain(Dataset):
         return pair, optical, sar
 
 
+class ExtractorBatchWithoutKeypoints(RuntimeError):
+    def __init__(self, rows):
+        super().__init__("RIPE++ extractor batch has no pair with 16 sampled keypoints on both sides")
+        self.rows = rows
+
+
 def batches(count, batch_size, seed, start, end):
     """Shuffle each full pass and pack a continuous stream into optimizer batches."""
     position = start
@@ -102,7 +108,7 @@ def extractor_batch(adapter, data, cfg, ramp, bf16):
             terms.append(losses)
 
     if not terms:
-        raise RuntimeError("RIPE++ extractor batch has no pair with 16 sampled keypoints on both sides")
+        raise ExtractorBatchWithoutKeypoints(rows)
     policy, keypoints, description = (torch.stack(values).mean() for values in zip(*terms))
     sums0, sums1, counts0, counts1 = zip(*entropies)
     entropy = (torch.stack(sums0).sum() / max(1, sum(counts0)) +
@@ -188,7 +194,7 @@ def train(stage, adapter, run, data_root, baseline, cfg, identity, *, smoke, sec
     batch_size = options["batch_size"]
     dataset = MoonTrain(data_root, baseline)
     target = len(dataset) * options["epochs"]
-    maximum = batch_size * accumulation if smoke else target
+    maximum = batch_size * accumulation * options.get("preflight_updates", 1) if smoke else target
     if not len(dataset):
         raise RuntimeError("No Train pairs")
     observations = snapshots(len(dataset), options)
@@ -241,7 +247,12 @@ def train(stage, adapter, run, data_root, baseline, cfg, identity, *, smoke, sec
                 progress = microbatches / max(1, math.ceil(target / batch_size) - 1)
                 optimizer.param_groups[0]["lr"] = settings["lr"] + (settings["final_lr"] - settings["lr"]) * progress
             ramp = min(1.0, seen / (target * cfg["signal"]["ramp_fraction"]))
-            terms, rows = batch_step(stage, adapter, data, cfg["signal"], ramp, optimizer_batches, bf16)
+            try:
+                terms, rows = batch_step(stage, adapter, data, cfg["signal"], ramp, optimizer_batches, bf16)
+            except ExtractorBatchWithoutKeypoints as exc:
+                log.write(json.dumps({"pairs_seen": seen + len(data), "microbatches": microbatches + 1,
+                                      "updates": updates, "pairs": exc.rows, "failure": str(exc)}) + "\n")
+                raise
             seen += len(data)
             microbatches += 1
             row = {"pairs_seen": seen, "microbatches": microbatches, "updates": updates, "pairs": rows,

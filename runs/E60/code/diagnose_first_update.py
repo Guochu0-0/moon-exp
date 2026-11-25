@@ -48,7 +48,7 @@ def replay(adapter, cfg, dataset):
     stream = batches(len(dataset), width, options["seed"], 0, stop)
     optimizer.zero_grad(set_to_none=True)
 
-    first_run_log = RUN / "ckpt/extractor_final/log.jsonl"
+    first_run_log = RUN / "ckpt/extractor_final_failed_lr_1e-3/log.jsonl"
     recorded = [json.loads(line) for line in first_run_log.read_text(encoding="utf-8").splitlines()][:accumulation]
     losses = []
     for batch in range(accumulation):
@@ -82,7 +82,9 @@ def replay(adapter, cfg, dataset):
 def main():
     data_root, weights_root = BASE / "dataset/Moon", BASE / "weights"
     baseline = json.loads((ROOT / BASELINE).read_text(encoding="utf-8"))
-    path, cfg = read_config("extractor_final")
+    path, _ = read_config("extractor_final")
+    records = json.loads((RUN / "launch/extractor_final.json").read_text(encoding="utf-8"))
+    cfg = next(row["args"] for row in records if row["phase"] == "train" and row["status"] == "fail")
     repo, files, hashes = model_files(SimpleNamespace(weights=weights_root), baseline)
     name = "first_update_diagnosis"
     launch.begin(RUN, name, [sys.executable, "-m", "runs.E60.code.diagnose_first_update"],

@@ -9,11 +9,12 @@ batch_size = 6
 accumulation = 4
 workers = 4
 precision = "bf16-if-native-else-fp32"
+preflight_updates = 12
 checkpoint_every = 50
 observation_passes = [1, 2, 4, 6, 8]
 
 [optim]
-lr = 0.001
+lr = 0.0001
 final_lr = 0.000001
 weight_decay = 0.00001
 

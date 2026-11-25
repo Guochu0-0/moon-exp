@@ -9,6 +9,11 @@ import sys
 import time
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:
+    from pip._vendor import tomli as tomllib
+
 RUN = Path(__file__).resolve().parents[1]
 ENTRY = "runs.E60.code.run"
 STAGES = ("extractor_final", "matcher_final")
@@ -20,8 +25,11 @@ def completed(method, phase, *, split=None, observation=8, extractor_sha=None):
     if not path.exists():
         return None
     records = json.loads(path.read_text(encoding="utf-8"))
+    cfg = None if method == "init" else tomllib.loads((RUN / "configs" / f"{method}.toml").read_text(encoding="utf-8"))
     for row in reversed(records):
         if row["phase"] != phase or row["split"] != split or row["observation_pass"] != observation:
+            continue
+        if row["args"] != cfg:
             continue
         if extractor_sha and row["identity"]["checkpoints"].get("extractor_final") != extractor_sha:
             continue

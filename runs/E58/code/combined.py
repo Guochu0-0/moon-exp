@@ -65,7 +65,7 @@ def main():
         with (export / "combined.csv").open("w", encoding="utf-8-sig", newline="") as stream:
             columns = ["method", "status", "step", "successful_updates", "amp_skips", "val_covered", "test_covered",
                        "val_failures", "test_failures", "val_source", "test_source", "weight_sha256", *METRICS]
-            writer = csv.DictWriter(stream, fieldnames=columns)
+            writer = csv.DictWriter(stream, fieldnames=columns, lineterminator="\n")
             writer.writeheader()
             for method, record in result.items():
                 val, test = (record["splits"].get(split, {}) for split in SPLITS)

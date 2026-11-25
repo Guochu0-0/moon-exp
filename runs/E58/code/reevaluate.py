@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import uuid
+import zipfile
 
 RUN = Path(__file__).resolve().parents[1]
 REPO = RUN.parents[1]
@@ -46,6 +47,7 @@ INFER = "configs/baselines/anymatch_roma__minmax.json"
 ENV = {
     "MOON_DATA": str(DATA), "MOON_WEIGHTS": str(WEIGHTS),
     "TORCH_HOME": str(WEIGHTS / "torch_home"), "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+    "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPYCACHEPREFIX": str(RUN / "ckpt" / "bytecode-cache"),
 }
 REAL_FAILURES = {"few_matches", "few_inliers", "no_affine", "ransac_failed", "degenerate"}
 
@@ -80,6 +82,7 @@ def sha256(path):
     return digest.hexdigest()
 
 
+@lru_cache
 def labelled(split):
     ids = set(DATASET.labelled(split))
     require(len(ids) == SPLITS[split], f"{split}: unexpected annotation count {len(ids)}")
@@ -104,6 +107,13 @@ def check_rows(path, split, *, affine):
                     f"{path}: malformed affine for {row['pair']}")
     require(not bad, f"{path}: {len(bad)} execution failures, for example {bad[:3]}")
     return data
+
+
+def check_matches(raw, split):
+    matches = check_rows(raw / f"{split}.jsonl", split, affine=False)
+    needed = {r["pair"].replace("/", "__") + ".npy" for r in matches if r["n"]}
+    with zipfile.ZipFile(raw / f"{split}.npz") as archive:
+        require(needed <= set(archive.namelist()), f"{raw}: saved points missing for {split}")
 
 
 def checked_weights(path, expected=None):
@@ -190,7 +200,7 @@ def baseline(method, split):
     if method in ("xoftr", "minima_xoftr"):
         mode, reason = "inference", "原匹配器上游存在未提交改动，重新确认有效推理"
     if method == "rift2" and split == "val":
-        check_rows(raw / f"{split}.jsonl", split, affine=False)
+        check_matches(raw, split)
         mode, reason = "refit", "原 Val 拟合提交缺失，使用原始匹配点对重拟合"
     return config_path, path, raw, mode, reason, evidence
 
@@ -221,8 +231,11 @@ def terminal(method):
             scale = next_scale
         updates = step - skip
     checkpoint = folder / f"ckpt_{step}.pt"
+    record = home / "launch" / f"{'main_train' if experiment == 'E50' else name}.json"
+    require(read(record)[-1]["status"] == "ok", f"{record}: training launch not completed")
     return home, name, step, checkpoint, {"step": step, "successful_updates": updates, "amp_skips": skip,
-                                          "stop": halt or "training_budget", "source": f"{experiment}/{name}"}
+                                          "stop": halt or "training_budget", "source": f"{experiment}/{name}",
+                                          "source_training_launch": str(record)}
 
 
 def trained(method, split):
@@ -270,6 +283,11 @@ def publish(source, target):
     pending.replace(target)
 
 
+def complete(run_name):
+    log = RUN / "launch" / f"{run_name}.json"
+    return log.is_file() and read(log)[-1]["status"] == "ok"
+
+
 def assess(method, split, allow_inference):
     if method in TRAINED:
         config, path, checkpoint, mode, reason, evidence = trained(method, split)
@@ -294,6 +312,8 @@ def assess(method, split, allow_inference):
         print(f"SKIP {method}/{split}: another worker has this split", flush=True)
         return
     try:
+        if complete(run_name):
+            return
         launch.begin(RUN, run_name, [sys.executable, *sys.argv], entry=f"runs/{RUN.name}/code/reevaluate.py",
                      config_file=config, config=read(REPO / config), split=split, mode=mode, reason=reason)
         try:
@@ -305,7 +325,7 @@ def assess(method, split, allow_inference):
                     raw = stage / method
                     meta_path = raw / f"{split}.meta.json"
                     meta = read(meta_path)
-                    check_rows(raw / f"{split}.jsonl", split, affine=False)
+                    check_matches(raw, split)
                     require(meta["finished"] and meta["n_pairs"] == SPLITS[split], f"{meta_path}: inference unfinished")
                     if checkpoint:
                         require(meta["weights_sha256"] == evidence["weights"][0]["sha256"], f"{meta_path}: checkpoint hash mismatch")
@@ -346,8 +366,7 @@ def main():
     errors = []
     for method in args.methods or (*BASELINES, *TRAINED):
         for split in (args.split,) if args.split else SPLITS:
-            log = RUN / "launch" / f"{method}__{split}.json"
-            if log.is_file() and read(log)[-1]["status"] == "ok":
+            if complete(f"{method}__{split}"):
                 continue
             try:
                 assess(method, split, args.infer)

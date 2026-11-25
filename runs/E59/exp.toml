@@ -1,0 +1,11 @@
+id = "E59"
+title = "官方 RIPE 的仿射微调能否改善月面配准？"
+parent = "B0"
+date = "2026-11-25"
+
+[methods.init]
+name = "官方 RIPE 发布权重"
+
+[methods.main]
+name = "RIPE 仿射微调末步"
+ref = "E59/init"

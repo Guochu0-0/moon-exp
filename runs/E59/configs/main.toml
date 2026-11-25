@@ -1,0 +1,49 @@
+[model]
+repo = "third_party/RIPE"
+revision = "b173418008f4cb77a2ebffb570a7cab69e87cd08"
+weights = "official/ripe/ripe_weights.pth"
+weights_url = "https://cvg.hhi.fraunhofer.de/RIPE/ripe_weights.pth"
+instance_norm = true
+
+[input]
+optical = "div255"
+sar = "p2p98"
+original_size = 512
+train_size = 560
+
+[train]
+seed = 32000
+precision = "bf16-mixed"
+batch_size = 6
+batches = 80000
+grad_accumulation = 4
+val_every_updates = 1000
+resume_every_updates = 50
+workers = 2
+
+[optim]
+lr = 0.001
+final_lr = 0.000001
+weight_decay = 0.00001
+betas = [0.9, 0.999]
+eps = 0.00000001
+
+[signal]
+min_keypoints_per_image = 16
+min_matches = 8
+inlier_threshold_px = 3.0
+false_positive_penalty = -0.0000001
+keypoint_penalty = -0.0000007
+alpha_end_plateau = 0.6666666
+descriptor_weight = 5.0
+positive_margin = 0.2
+negative_margin = 0.2
+descriptor_fallback_below = 8
+
+[inference]
+seed = 0
+threshold = 0.5
+top_k = 2048
+min_resize = 512
+max_resize = 768
+inlier_threshold_px = 3.0

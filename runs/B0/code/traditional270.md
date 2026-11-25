@@ -1,10 +1,10 @@
-# #270 传统方法接入与执行前检查
+# #270 传统方法接入与执行记录
 
-代码准备于 2026-11-17；尚未在 MATLAB 中执行，不是已完成补测。输入/收集边界已在160服务器CPU上验证。
+代码准备于 2026-11-17。原版 RIFT、OS-SIFT 和 HIMO 已在 154 完成正式推理，160 完成拟合和评测。结论见 [B0 Notes](../notes.md#himo-的-10-px-成功率在三种传统方法中最高)。
 
 ## 收集边界验证
 
-Spec预审发现：旧收集端会将全部MATLAB异常或`--limit`子集发布为正式raw，随后被统一拟合误算成模型失败。修复前在160的`/opt/envs/wb/bin/python`用真实SciPy写读MAT与假split/manifest复现，8项测试有4项失败；修复后增加坏MAT、输入准备limit、自检manifest混用、序列化失败保护等检查，12项全部通过（0.078秒）。正式MATLAB推理尚未发生，B0旧结果不受该修复影响。
+Spec 预审发现，旧收集端会将全部 MATLAB 异常或 `--limit` 子集发布为正式 raw，随后被统一拟合误算成模型失败。用真实 SciPy MAT 文件与模拟 split/manifest 复现，修复前 8 项测试有 4 项失败。收尾在 160 的工作台环境复核了 14 项回归，全部通过。
 
 正式prep/collect现在禁止非零limit；任何MATLAB异常、缺文件、缺全量manifest、坏坐标均在发布前拒绝整批。即使只有一对报错也不猜测其原因，先解决异常再发布；正常计算出的零匹配仍是合法模型失败。写文件先在同盘临时目录完成序列化，再替换正式raw，避免序列化失败破坏旧文件。自检仅允许Val与正limit，存入独立目录。
 
@@ -16,7 +16,7 @@ OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 /opt/envs/wb/bin/python runs/B0/code/te
 
 ## 环境状态
 
-154 外网 SSH 被网关关闭；经可达160探查，154的内网20020端口拒绝连接。150/160上只读检查`command -v matlab`、`/opt/matlab*`、`/opt/MATLAB*`、`/usr/local/MATLAB*`与`/root/matlab-batch.sh`，均未发现已有环境。需先恢复正式MATLAB环境，不能把这种环境阻碍计为算法失败，不在用户电脑运行正式测试。
+154 使用已获授权的 R2024b Update 10 MATLAB 会话，通过 Engine 运行匹配。共享盘写入错误后，RIFT Test 与 OS-SIFT Val 从已写好的 MAT 恢复。HIMO Test 在更新在线授权后重跑，HIMO Val 收集的 Git 超时通过延长等待恢复。推理尝试的结束状态与执行环境见 `runs/B0/launch/`。
 
 ## 已准备的方法
 
@@ -46,10 +46,10 @@ OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 /opt/envs/wb/bin/python runs/B0/code/te
 先按server技能在可连GitHub的服务器建`baseline-270`独立worktree，初始化本票三个固定submodule。不改变主checkout及共享环境。准备/输出中间mat目录放容器本地盘，例如`/opt/tmp/baseline270`，一次只运行一个MATLAB进程、2线程、关闭自动parpool。
 
 1. 先做服务器语法/收集边界检查，再每法取Val前3对做(7,-5)光学平移自检。OS-SIFT的不同分支可能导致匹配精度差异，需要分别核对MATLAB原始点为1-based xy、收集端减1、最终拟合阶段两侧+0.5。自检不通过就不能产出正式结果。
-2. 用`traditional270.py prep --method <rift|ossift> --split val --io /opt/tmp/baseline270 --limit 3 --selfcheck`准备自检；`traditional270_split`的输入输出目录分别是`<io>/<method>/val_selfcheck/in`和`out`。
-3. 恢复并确认MATLAB有效授权后，记录`workbench.launch.begin`，在脚本固定线程下调用`traditional270_split(method,repo,in_dir,out_dir,2)`。四个角像素中心和图像中心经 B0 的 3 px RANSAC 仿射映射后，和已知平移的最大差值须不超过 1 px。输入、输出和仓库根目录使用绝对路径。
+2. 用 `traditional270.py prep --method <rift|ossift|himo> --split val --io <scratch> --limit 3 --selfcheck` 准备自检，批次目录为 `<scratch>/<method>/val_selfcheck`。输入准备与 Engine 分属两台主机时，scratch 须两台主机都可读写。
+3. MATLAB 会话获授权并共享后，用 `traditional270_engine.py <session> <batch>` 调用固定两个线程的 MATLAB 入口并写启动记录。HIMO 的补丁由入口在临时目录应用。用 `traditional270.py collect` 检查四个角像素中心和图像中心经 B0 的 3 px RANSAC 后与已知平移的最大差值，须不超过 1 px。
 4. 自检通过后Val/Test各做prep→MATLAB→collect，正式运行不带limit/selfcheck。每次准备输入都用新 `--io` 路径，原启动中断时可续用同一批次。输入manifest核对完整pair列表与代码提交。缺mat时collect直接退出，不生成“算法失败”。
 5. 收集的原始结果在`runs/B0/raw/<method>`；`python -m baselines.fit runs/B0/raw/<method> --split <val|test> --run runs/B0 --name <method>`生成标准预测。任何方法全体环境报错时先修环境，不能把整组报错作为模型结果。
 6. 每次正式运行记录参数、MATLAB版本/工具箱/线程/seed0和真实命令；收尾补齐end/status。完整结果后再追加exp方法名称、B0 Notes数字表并运行eval/check。新worktree未必带旧方法全部预测，不可直接用局部结果覆盖B0旧metrics：仅合并本票新指标，或在明确防止收尾搬移的情况下只读借用权威旧预测，生成完整指标。多票B0增量由主代理串行合并。
 
-本次准备已提交代码并验证输入/收集边界；未启动MATLAB/GPU、未生成新方法预测、未声称实验验收。PR保持草稿，不自动关票。
+三种方法各收集 652 对 Val 和 953 对 Test。完整 B0 评测重新计算了 25 个原有方法，其存档指标和协议逐项一致。

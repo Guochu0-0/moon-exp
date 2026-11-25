@@ -81,3 +81,14 @@ name = "GDROS OS · 官方 LSR"
 [methods.gdros_os_ransac]
 name = "GDROS OS · RANSAC 3 px"
 ref = "B0/gdros_os_lsr"
+
+[methods.rift]
+name = "RIFT（作者公开的无旋转不变性版）"
+
+[methods.ossift]
+name = "OS-SIFT（作者公开实现）"
+caveat = "SAR 使用前两波段和的非负线性强度"
+
+[methods.himo]
+name = "HIMO（作者公开核心）"
+caveat = "保留逐尺度内部几何筛选，在最后一次全局去外点前导出候选"

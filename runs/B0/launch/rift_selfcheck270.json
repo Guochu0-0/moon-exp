@@ -1,0 +1,44 @@
+[
+ {
+  "start": "2026-11-18 11:57:10 +0800",
+  "end": "2026-11-18 11:57:33 +0800",
+  "status": "ok",
+  "commit": "1b9c9a6798ed29fe948c5e2e4757967e73ef35d9",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-270",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "runs/B0/code/traditional270_engine.py",
+   "MoonExp270",
+   "/remote-home/xufang/YGC/baseline-270-scratch/1b9c9a6-selfcheck-02/rift/val_selfcheck"
+  ],
+  "split": "val_selfcheck",
+  "config": {
+   "method": "rift",
+   "repo": "third_party/RIFT",
+   "upstream_commit": "7ea830e2f13cc3c226f975fe9e98b7666a8f26fb",
+   "seed": 0,
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "params": {
+    "scales": 4,
+    "orientations": 6,
+    "patch_size": 96,
+    "max_ratio": 1,
+    "match_threshold": 100
+   },
+   "caveat": "Official simplest no-rotation-invariance implementation; no uint8 quantization, no FSC"
+  },
+  "env": {
+   "matlab": "24.2.0.3361896 (R2024b) Update 10",
+   "threads": 2,
+   "device": "cpu",
+   "precision": "double"
+  }
+ }
+]

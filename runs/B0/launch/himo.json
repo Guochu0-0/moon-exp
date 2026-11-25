@@ -1,0 +1,173 @@
+[
+ {
+  "start": "2026-11-19 02:42:52 +0800",
+  "end": "2026-11-19 16:54:49 +0800",
+  "status": "ok",
+  "commit": "c5924b8f52723a1c811e09c2e35608a5e8486520",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-270",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "runs/B0/code/traditional270_engine.py",
+   "MoonExp270",
+   "/remote-home/xufang/YGC/baseline-270-scratch/c5924b8-himo-resume/himo/val"
+  ],
+  "split": "val",
+  "config": {
+   "method": "himo",
+   "repo": "third_party/HIMO",
+   "upstream_commit": "1a525611a22e15c0862d2af6e3f53857f09a7e70",
+   "seed": 0,
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98",
+    "auxiliary": "official Deal_Extreme and Preproscessing P-code"
+   },
+   "params": {
+    "octaves": 3,
+    "layers": 2,
+    "resize": 1.2,
+    "sigma": 1.6,
+    "patch_size": 72,
+    "location_bins": 12,
+    "orientation_bins": 12,
+    "intensity_difference": 1,
+    "detector": "PC-ShiTomasi",
+    "detector_border": 6,
+    "detector_threshold": 0.01,
+    "suppression_radius": 1,
+    "keypoint_limit": 5000,
+    "internal_threshold": 5,
+    "internal_repetitions": 1,
+    "internal_transform": "affine",
+    "rotation": 0,
+    "scale": 0,
+    "parallel": 0
+   },
+   "candidate_stage": "MATLAB 1-based converted to 0-based; original multiscale geometry through deduplication, exported before the last global outlier removal"
+  },
+  "env": {
+   "matlab": "24.2.0.3361896 (R2024b) Update 10",
+   "threads": 2,
+   "device": "cpu",
+   "precision": "double"
+  }
+ },
+ {
+  "start": "2026-11-19 16:57:30 +0800",
+  "end": "2026-11-19 16:57:36 +0800",
+  "status": "fail",
+  "commit": "c5924b8f52723a1c811e09c2e35608a5e8486520",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-270",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "runs/B0/code/traditional270_engine.py",
+   "MoonExp270",
+   "/remote-home/xufang/YGC/baseline-270-scratch/c5924b8-himo-resume/himo/test"
+  ],
+  "split": "test",
+  "config": {
+   "method": "himo",
+   "repo": "third_party/HIMO",
+   "upstream_commit": "1a525611a22e15c0862d2af6e3f53857f09a7e70",
+   "seed": 0,
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98",
+    "auxiliary": "official Deal_Extreme and Preproscessing P-code"
+   },
+   "params": {
+    "octaves": 3,
+    "layers": 2,
+    "resize": 1.2,
+    "sigma": 1.6,
+    "patch_size": 72,
+    "location_bins": 12,
+    "orientation_bins": 12,
+    "intensity_difference": 1,
+    "detector": "PC-ShiTomasi",
+    "detector_border": 6,
+    "detector_threshold": 0.01,
+    "suppression_radius": 1,
+    "keypoint_limit": 5000,
+    "internal_threshold": 5,
+    "internal_repetitions": 1,
+    "internal_transform": "affine",
+    "rotation": 0,
+    "scale": 0,
+    "parallel": 0
+   },
+   "candidate_stage": "MATLAB 1-based converted to 0-based; original multiscale geometry through deduplication, exported before the last global outlier removal"
+  },
+  "env": {
+   "matlab": "24.2.0.3361896 (R2024b) Update 10",
+   "threads": 2,
+   "device": "cpu",
+   "precision": "double"
+  }
+ },
+ {
+  "start": "2026-11-19 22:38:57 +0800",
+  "end": "2026-11-20 19:27:59 +0800",
+  "status": "ok",
+  "commit": "c5924b8f52723a1c811e09c2e35608a5e8486520",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-270",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "runs/B0/code/traditional270_engine.py",
+   "MoonExp270",
+   "/remote-home/xufang/YGC/baseline-270-scratch/c5924b8-himo-resume/himo/test"
+  ],
+  "split": "test",
+  "config": {
+   "method": "himo",
+   "repo": "third_party/HIMO",
+   "upstream_commit": "1a525611a22e15c0862d2af6e3f53857f09a7e70",
+   "seed": 0,
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98",
+    "auxiliary": "official Deal_Extreme and Preproscessing P-code"
+   },
+   "params": {
+    "octaves": 3,
+    "layers": 2,
+    "resize": 1.2,
+    "sigma": 1.6,
+    "patch_size": 72,
+    "location_bins": 12,
+    "orientation_bins": 12,
+    "intensity_difference": 1,
+    "detector": "PC-ShiTomasi",
+    "detector_border": 6,
+    "detector_threshold": 0.01,
+    "suppression_radius": 1,
+    "keypoint_limit": 5000,
+    "internal_threshold": 5,
+    "internal_repetitions": 1,
+    "internal_transform": "affine",
+    "rotation": 0,
+    "scale": 0,
+    "parallel": 0
+   },
+   "candidate_stage": "MATLAB 1-based converted to 0-based; original multiscale geometry through deduplication, exported before the last global outlier removal"
+  },
+  "env": {
+   "matlab": "24.2.0.3361896 (R2024b) Update 10",
+   "threads": 2,
+   "device": "cpu",
+   "precision": "double"
+  }
+ }
+]

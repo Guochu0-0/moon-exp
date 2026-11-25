@@ -1,0 +1,46 @@
+[
+ {
+  "start": "2026-11-18 11:58:53 +0800",
+  "end": "2026-11-18 11:59:43 +0800",
+  "status": "ok",
+  "commit": "1b9c9a6798ed29fe948c5e2e4757967e73ef35d9",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/baseline-270",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "runs/B0/code/traditional270_engine.py",
+   "MoonExp270",
+   "/remote-home/xufang/YGC/baseline-270-scratch/1b9c9a6-selfcheck-02/ossift/val_selfcheck"
+  ],
+  "split": "val_selfcheck",
+  "config": {
+   "method": "ossift",
+   "repo": "third_party/OS-SIFT",
+   "upstream_commit": "631a8060042ed89ea11e43d97e44b387443b1eb6",
+   "seed": 0,
+   "input": {
+    "optical": "div255_then_official_imadjust",
+    "sar": "nonnegative_linear_S1_div_max_then_official_imadjust"
+   },
+   "params": {
+    "sigma": 2,
+    "scale_ratio": 1.2599210498948732,
+    "layers": 8,
+    "harris_d": 0.04,
+    "harris_threshold": 1e-05,
+    "descriptor": "GLOH-like",
+    "descriptor_ratio": 0.95
+   },
+   "caveat": "First CSC2 descriptor matching stage only, before its first FSC; no geometry-guided rematching. Official demo passes all detected keypoints to descriptor despite unused strongest-5000 selection."
+  },
+  "env": {
+   "matlab": "24.2.0.3361896 (R2024b) Update 10",
+   "threads": 2,
+   "device": "cpu",
+   "precision": "double"
+  }
+ }
+]

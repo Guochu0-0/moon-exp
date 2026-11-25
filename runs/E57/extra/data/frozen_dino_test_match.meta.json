@@ -1,0 +1,87 @@
+{
+ "method": "frozen_dino",
+ "split": "test",
+ "config": {
+  "method": "frozen_dino",
+  "adapter": "romatch",
+  "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+  "weights": "/remote-home/xufang/YGC/wt/roma-rl-283/runs/E52/ckpt/frozen_dino/ckpt_7907.pt",
+  "params": {
+   "long_side": 640,
+   "weights_key": "model"
+  },
+  "input": {
+   "optical": "div255",
+   "sar": "minmax"
+  },
+  "seed": 0
+ },
+ "config_path": "configs/baselines/anymatch_roma__minmax.json",
+ "weights": "/remote-home/xufang/YGC/wt/roma-rl-283/runs/E52/ckpt/frozen_dino/ckpt_7907.pt",
+ "weights_sha256": "0dd2d899eb1b59b0bf47a1d7c516532cc5127e7850f7b26e8b5caf22ee7217df",
+ "commit": "5f2b826b78618bbfa289e7513fb6f13bf6c7fcd8",
+ "repo_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1",
+ "perturb": null,
+ "argv": [
+  "/remote-home/xufang/YGC/wt/roma-rl-283/baselines/match.py",
+  "configs/baselines/anymatch_roma__minmax.json",
+  "--split",
+  "test",
+  "--weights",
+  "/remote-home/xufang/YGC/wt/roma-rl-283/runs/E52/ckpt/frozen_dino/ckpt_7907.pt",
+  "--name",
+  "frozen_dino",
+  "--out",
+  "/tmp/moon-exp-E52-frozen-dino-test/match"
+ ],
+ "started": "2026-11-19 17:15:18",
+ "load_sec": 47.67,
+ "notes": "long_side=640, uint8 PIL at 640 grid (official match() only takes PIL RGB), weights_key=model, sample num=default(10000)",
+ "resolved_params": {
+  "model_class": "romatch.models.matcher.RegressionMatcher",
+  "coarse_resolution": [
+   560,
+   560
+  ],
+  "upsample_resolution": [
+   864,
+   864
+  ],
+  "output_resolution": [
+   864,
+   864
+  ],
+  "symmetric": true,
+  "upsample_preds": true,
+  "attenuate_cert": true,
+  "sample_mode": "threshold_balanced",
+  "sample_thresh": 0.05,
+  "sample_signature": "(matches, certainty, num=10000)",
+  "sample_num": 10000,
+  "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+  "match_batched": false,
+  "adapter_long_side": 640,
+  "adapter_swap": false,
+  "model_training": false,
+  "encoder_amp_dtype": "torch.float16",
+  "decoder_amp_dtype": "torch.float16",
+  "matmul_allow_tf32": false,
+  "cudnn_allow_tf32": true
+ },
+ "env": {
+  "python": "3.10.21",
+  "numpy": "1.26.4",
+  "host": "bcb626e99cea",
+  "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.31",
+  "cuda_visible_devices": "5",
+  "torch": "2.1.2+cu118",
+  "cv2": "4.11.0",
+  "kornia": "0.6.12",
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "cuda": "11.8"
+ },
+ "finished": "2026-11-19 17:41:26",
+ "total_sec": 1637.6,
+ "n_pairs": 953,
+ "n_errors_this_session": 0
+}

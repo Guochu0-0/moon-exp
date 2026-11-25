@@ -1,0 +1,55 @@
+[
+ {
+  "start": "2026-11-25 23:26:03 +0800",
+  "end": "2026-11-25 23:26:43 +0800",
+  "status": "ok",
+  "commit": "35e68b070fec6fd038109d2ae962aaafe7408e2e",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/rift2.json",
+  "config": {
+   "method": "rift2",
+   "adapter": "matlab:rift2_split",
+   "repo": "third_party/RIFT2",
+   "params": {
+    "s": 4,
+    "o": 6,
+    "npt": 5000,
+    "patch_size": 96,
+    "no": 6,
+    "nbin": 6,
+    "n_threads": 4
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+  },
+  "split": "val",
+  "mode": "refit",
+  "reason": "原 Val 拟合提交缺失，使用原始匹配点对重拟合",
+  "prediction_source": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/rift2/val/51a40602ecec40228813556c3a77bf40/preds/rift2/val.jsonl",
+  "prediction_sha256": "7711956a0eeac4cb89cc655bc5cc38f6ff1bd5d2d6ec77dbcd7a11cfaf8c8551",
+  "prediction_count": 652,
+  "fit_failures": 0,
+  "failure_reasons": {},
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/rift2.json",
+  "source_launch_commit": null,
+  "weights": [],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/rift2/val.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "0e980ce4124d2abd62727dcf040198db0a18b269"
+ }
+]

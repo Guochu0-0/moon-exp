@@ -1,0 +1,61 @@
+[
+ {
+  "start": "2026-11-25 23:25:33 +0800",
+  "end": "2026-11-25 23:28:30 +0800",
+  "status": "ok",
+  "commit": "35e68b070fec6fd038109d2ae962aaafe7408e2e",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": "3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py",
+   "--infer",
+   "--methods",
+   "xoftr",
+   "minima_xoftr"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/xoftr.json",
+  "config": {
+   "method": "xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "weights": "official/xoftr/weights_xoftr_640.ckpt",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "split": "val",
+  "mode": "inference",
+  "reason": "原匹配器上游存在未提交改动，重新确认有效推理",
+  "prediction_source": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/xoftr/val/2d93994bd3174562a041a07a9cbf2a35/preds/xoftr/val.jsonl",
+  "prediction_sha256": "59539ec352a6aac2d1227b40f3a47222c5fca70d81a68b6a460ab2ecb3147ef5",
+  "prediction_count": 652,
+  "fit_failures": 160,
+  "failure_reasons": {
+   "few_matches": 160
+  },
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/xoftr.json",
+  "source_launch_commit": null,
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/official/xoftr/weights_xoftr_640.ckpt",
+    "sha256": "6e7f24e553f76746ef49061bf44c7d11252e56057470d1421bcd4e6506af3a67",
+    "historical_sha256": "6e7f24e553f76746ef49061bf44c7d11252e56057470d1421bcd4e6506af3a67"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/xoftr/val/2d93994bd3174562a041a07a9cbf2a35/xoftr/val.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "e0fbea431b30be9742effbf5577c90aa8eb938f9"
+ }
+]

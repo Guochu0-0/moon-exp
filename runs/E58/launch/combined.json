@@ -1,0 +1,40 @@
+[
+ {
+  "start": "2026-11-26 00:15:27 +0800",
+  "end": "2026-11-26 00:15:37 +0800",
+  "status": "ok",
+  "commit": "768a737235109596d273af8cee71605481334f53",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/combined.py"
+  ],
+  "phase": "pooled_evaluation",
+  "scored_methods": 28,
+  "labelled_pairs": 1605
+ },
+ {
+  "start": "2026-11-26 00:19:11 +0800",
+  "end": "2026-11-26 00:19:22 +0800",
+  "status": "ok",
+  "commit": "fad2a8c7acd7c6b9143a9b06ac62ebf3da0f338f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/combined.py"
+  ],
+  "phase": "pooled_evaluation",
+  "scored_methods": 28,
+  "labelled_pairs": 1605
+ }
+]

@@ -1,0 +1,56 @@
+[
+ {
+  "start": "2026-11-25 23:31:30 +0800",
+  "end": "2026-11-25 23:31:30 +0800",
+  "status": "ok",
+  "commit": "c9b4ba07fd86fa753cefe2bcd6a197b148d4553f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/loftr.json",
+  "config": {
+   "method": "loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "official/loftr/outdoor_ds.ckpt",
+   "params": {
+    "long_side": 840,
+    "temp_bug_fix": false
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "split": "val",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/loftr/val.jsonl",
+  "prediction_sha256": "28a4c381231d23296b6aab3f6cad6646b394e2372dfb5a14d5ac9c4e97b65d41",
+  "prediction_count": 652,
+  "fit_failures": 0,
+  "failure_reasons": {},
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/loftr.json",
+  "source_launch_commit": "6c4e3f3827b5c5c4d46ec29fbe60723669e88c8e",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/official/loftr/outdoor_ds.ckpt",
+    "sha256": "21f5bec5968178e8bc8b7633441836fe5de4f47d861dd2cd7dc38e271b0479ec",
+    "historical_sha256": "21f5bec5968178e8bc8b7633441836fe5de4f47d861dd2cd7dc38e271b0479ec"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/loftr/val.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "df7ca80f917334b94cfbe32cc2901e09a80e70a8"
+ }
+]

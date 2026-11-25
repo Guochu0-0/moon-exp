@@ -1,0 +1,47 @@
+[
+ {
+  "start": "2026-11-25 23:23:41 +0800",
+  "end": "2026-11-25 23:23:42 +0800",
+  "status": "ok",
+  "commit": "35e68b070fec6fd038109d2ae962aaafe7408e2e",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/identity.json",
+  "config": {
+   "method": "identity",
+   "adapter": "identity",
+   "params": {
+    "step": 32
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0
+  },
+  "split": "test",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/identity/test.jsonl",
+  "prediction_sha256": "07729eba9650b8fa57a879c0f93f445f4a00d898ae2e9079fa504a50482740cb",
+  "prediction_count": 953,
+  "fit_failures": 0,
+  "failure_reasons": {},
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/identity.json",
+  "source_launch_commit": "6c4e3f3827b5c5c4d46ec29fbe60723669e88c8e",
+  "weights": [],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/identity/test.meta.json",
+  "resolved_params": null,
+  "upstream_commit": null
+ }
+]

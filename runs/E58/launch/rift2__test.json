@@ -1,0 +1,55 @@
+[
+ {
+  "start": "2026-11-25 23:30:39 +0800",
+  "end": "2026-11-25 23:30:40 +0800",
+  "status": "ok",
+  "commit": "c9b4ba07fd86fa753cefe2bcd6a197b148d4553f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/rift2.json",
+  "config": {
+   "method": "rift2",
+   "adapter": "matlab:rift2_split",
+   "repo": "third_party/RIFT2",
+   "params": {
+    "s": 4,
+    "o": 6,
+    "npt": 5000,
+    "patch_size": 96,
+    "no": 6,
+    "nbin": 6,
+    "n_threads": 4
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "参数写死在 baselines/matlab/rift2_split.m（与 demo_RIFT2.m 相同），这里仅作记录；跑法见 baselines/rift2.py"
+  },
+  "split": "test",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/rift2/test.jsonl",
+  "prediction_sha256": "c225956d08afa10238123921a3b2a9ff0673b460ec210bc23b9c814e9be641e8",
+  "prediction_count": 953,
+  "fit_failures": 0,
+  "failure_reasons": {},
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/rift2.json",
+  "source_launch_commit": "cb293a84c2b9f076817f457c6bf0da60df6ea6a9",
+  "weights": [],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/rift2/test.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "0e980ce4124d2abd62727dcf040198db0a18b269"
+ }
+]

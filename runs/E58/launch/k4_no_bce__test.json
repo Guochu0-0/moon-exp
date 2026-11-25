@@ -1,0 +1,96 @@
+[
+ {
+  "start": "2026-11-25 15:41:51 +0000",
+  "end": "2026-11-25 16:00:01 +0000",
+  "status": "ok",
+  "commit": "768a737235109596d273af8cee71605481334f53",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "7b3282290ade",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py",
+   "--infer",
+   "--methods",
+   "k3_no_bce",
+   "k4_no_bce",
+   "frozen_dino",
+   "--split",
+   "test"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/anymatch_roma__minmax.json",
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "split": "test",
+  "mode": "inference",
+  "reason": "缺少训练末步逐对预测或原始推理记录",
+  "prediction_source": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/k4_no_bce/test/2227194b9aca4e97817e82ded922e2c3/preds/k4_no_bce/test.jsonl",
+  "prediction_sha256": "a3053d6f0b860a971a3f8599864bf8b26f1b562a093d759b849e3e16aa3a2767",
+  "prediction_count": 953,
+  "fit_failures": 0,
+  "failure_reasons": {},
+  "step": 7907,
+  "successful_updates": 7900,
+  "amp_skips": 7,
+  "stop": "training_budget",
+  "source": "E55/k4_no_bce",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k4_no_bce/ckpt_7907.pt",
+    "sha256": "cf3b31d625942f58bbfb273a53c34d4d7fa695be8b69cfd01359a9d1ca65f653",
+    "historical_sha256": null
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/k4_no_bce/test/2227194b9aca4e97817e82ded922e2c3/k4_no_bce/test.meta.json",
+  "resolved_params": {
+   "model_class": "romatch.models.matcher.RegressionMatcher",
+   "coarse_resolution": [
+    560,
+    560
+   ],
+   "upsample_resolution": [
+    864,
+    864
+   ],
+   "output_resolution": [
+    864,
+    864
+   ],
+   "symmetric": true,
+   "upsample_preds": true,
+   "attenuate_cert": true,
+   "sample_mode": "threshold_balanced",
+   "sample_thresh": 0.05,
+   "sample_signature": "(matches, certainty, num=10000)",
+   "sample_num": 10000,
+   "match_signature": "(im_A_input, im_B_input, *args, batched=False, device=None)",
+   "match_batched": false,
+   "adapter_long_side": 640,
+   "adapter_swap": false,
+   "model_training": false,
+   "encoder_amp_dtype": "torch.float16",
+   "decoder_amp_dtype": "torch.float16",
+   "matmul_allow_tf32": false,
+   "cudnn_allow_tf32": true
+  },
+  "upstream_commit": "259ad343ffa9ca0703965f56880b3b5d2ecbc9e1"
+ }
+]

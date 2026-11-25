@@ -1,0 +1,62 @@
+[
+ {
+  "start": "2026-11-25 23:34:46 +0800",
+  "end": "2026-11-25 23:37:29 +0800",
+  "status": "ok",
+  "commit": "c9b4ba07fd86fa753cefe2bcd6a197b148d4553f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": "3",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py",
+   "--infer",
+   "--methods",
+   "xoftr",
+   "minima_xoftr"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/minima_xoftr.json",
+  "config": {
+   "method": "minima_xoftr",
+   "adapter": "xoftr",
+   "repo": "third_party/XoFTR",
+   "weights": "minima/minima_xoftr.ckpt",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "MINIMA load_xoftr（load_model.py:143-155）：子模块 XoFTR@e9635d8 同上游，inference cfg，coarse 0.3 / fine 0.1（= 默认），长边 640；权重显式用 minima_xoftr.ckpt（MINIMA 默认路径指向原版）"
+  },
+  "split": "val",
+  "mode": "inference",
+  "reason": "原匹配器上游存在未提交改动，重新确认有效推理",
+  "prediction_source": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/minima_xoftr/val/5a654aaaaaf3482ab9ef64d27f3e7b95/preds/minima_xoftr/val.jsonl",
+  "prediction_sha256": "2078a7c51e5e79e5c809b13c178b5f2cb34f4ca16b7a6d727b9f6831a5151cf7",
+  "prediction_count": 652,
+  "fit_failures": 652,
+  "failure_reasons": {
+   "few_matches": 652
+  },
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/minima_xoftr.json",
+  "source_launch_commit": "563b7380344287951e1dea843b781505407531e4",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/minima/minima_xoftr.ckpt",
+    "sha256": "551eaa814713b3c60ca380eda022be9b7609e51737302e12370f8943a1e864d7",
+    "historical_sha256": "551eaa814713b3c60ca380eda022be9b7609e51737302e12370f8943a1e864d7"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/wt/moon-296/runs/E58/raw/minima_xoftr/val/5a654aaaaaf3482ab9ef64d27f3e7b95/minima_xoftr/val.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "e0fbea431b30be9742effbf5577c90aa8eb938f9"
+ }
+]

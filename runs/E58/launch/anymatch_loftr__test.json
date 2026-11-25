@@ -1,0 +1,58 @@
+[
+ {
+  "start": "2026-11-25 23:33:44 +0800",
+  "end": "2026-11-25 23:33:45 +0800",
+  "status": "ok",
+  "commit": "c9b4ba07fd86fa753cefe2bcd6a197b148d4553f",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "e36d63048d55",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-296",
+  "cuda_visible_devices": null,
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E58/code/reevaluate.py"
+  ],
+  "entry": "runs/E58/code/reevaluate.py",
+  "config_file": "configs/baselines/anymatch_loftr.json",
+  "config": {
+   "method": "anymatch_loftr",
+   "adapter": "loftr",
+   "repo": "third_party/LoFTR",
+   "weights": "anymatch/LoFTR_AnyMatch.ckpt",
+   "params": {
+    "long_side": 640,
+    "temp_bug_fix": true,
+    "coarse_thr": 0.1
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "_note": "AnyMatch third_party/LoFTR_AnyMatch 推理代码与上游 df7ca80 相同（仅一处注释不同）；demo --thr 0.1（demo_anymatch.py:155-157），temp_bug_fix=True（训练配置），长边 640"
+  },
+  "split": "test",
+  "mode": "reuse",
+  "reason": "历史预测与运行、配置和权重记录吻合",
+  "prediction_source": "/remote-home/xufang/YGC/moon-exp/runs/B0/preds/anymatch_loftr/test.jsonl",
+  "prediction_sha256": "9179a73e04275db62c34845a67d2cd49214c3905c05e7cfef2b6785fa851e989",
+  "prediction_count": 953,
+  "fit_failures": 0,
+  "failure_reasons": {},
+  "source_launch": "/remote-home/xufang/YGC/moon-exp/runs/B0/launch/anymatch_loftr.json",
+  "source_launch_commit": "563b7380344287951e1dea843b781505407531e4",
+  "weights": [
+   {
+    "path": "/remote-home/xufang/YGC/weights/anymatch/LoFTR_AnyMatch.ckpt",
+    "sha256": "5c0851fa7db76fc776fe6a67f0e5f85a10c2c0e7e8b9b6a7afa9d01ce958a624",
+    "historical_sha256": "5c0851fa7db76fc776fe6a67f0e5f85a10c2c0e7e8b9b6a7afa9d01ce958a624"
+   }
+  ],
+  "fit": "RANSAC 3 px",
+  "inference_metadata": "/remote-home/xufang/YGC/results/baselines/anymatch_loftr/test.meta.json",
+  "resolved_params": null,
+  "upstream_commit": "df7ca80f917334b94cfbe32cc2901e09a80e70a8"
+ }
+]

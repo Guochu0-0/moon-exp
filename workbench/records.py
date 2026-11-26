@@ -214,6 +214,8 @@ class Run:
                 continue
             d = json.loads(line)
             pair, A, fail = d.pop("pair"), d.pop("A", None), d.pop("fail", None)
+            if pair in out and self.data_version == CURRENT:
+                raise ValueError(f"{path} 含重复 patch 对：{pair}")
             out[pair] = Pred(pair, A, fail, d)
         return out
 

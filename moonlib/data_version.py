@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+from importlib import import_module
 from pathlib import Path
 
 LEGACY = "v1"
@@ -24,14 +25,14 @@ def experiment_version(run_dir) -> str:
     if not path.is_file():
         return LEGACY
     try:
-        import tomllib
+        toml = import_module("tomllib")
     except ModuleNotFoundError:
         try:
-            import tomli as tomllib
+            toml = import_module("tomli")
         except ModuleNotFoundError:
-            from pip._vendor import tomli as tomllib
+            toml = import_module("pip._vendor.tomli")
     with path.open("rb") as f:
-        return version_of(tomllib.load(f))
+        return version_of(toml.load(f))
 
 
 def root_for(version, explicit=None, default=None) -> Path | None:

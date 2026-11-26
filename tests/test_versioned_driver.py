@@ -8,6 +8,7 @@ import pytest
 
 from baselines import fit
 from finetune.config import expand
+from moonlib.data_version import manifest_sha256, prediction_sha256, sha256
 from workbench.__main__ import main as workbench
 
 
@@ -62,11 +63,9 @@ def test_driver_routes_training_and_evaluation_and_selects_valid_checkpoint(tmp_
                     assert Path(args[args.index("--data") + 1]) == roots[version]
                 else:
                     assert Path(env.get("MOON_DATA", str(roots[version]))) == roots[version]
-                for step in ((1, 2, 3, 4) if version == "v2" else (1, 2, 3)):
+                for step in ((1, 2, 3, 4, 5) if version == "v2" else (1, 2, 3)):
                     (Path(logfile).parent / f"ckpt_{step}.pt").write_bytes(bytes([step]))
             elif module == "baselines.match":
-                from moonlib.data_version import manifest_sha256, sha256
-
                 get = lambda key: args[args.index(key) + 1]
                 split, name = get("--split"), get("--name")
                 out = Path(get("--out")) / name
@@ -82,9 +81,12 @@ def test_driver_routes_training_and_evaluation_and_selects_valid_checkpoint(tmp_
                     if version == "v2" and split == "val" and name == "step3" and i == 1:
                         rows.append({"pair": pair, "error": "inference failed"})
                         continue
-                    mat = matching if (split == "test" or name == "step3" or name == "step2" and i == 0) else matching[:0]
+                    mat = matching if (split == "test" or name in ("step3", "step5")
+                                       or name == "step2" and i == 0) else matching[:0]
                     rows.append({"pair": pair, "n": len(mat)})
                     store[pair.replace("/", "__")] = mat
+                if version == "v2" and split == "val" and name == "step5":
+                    rows.append(rows[0])
                 (out / f"{split}.jsonl").write_text("\n".join(map(json.dumps, rows)))
                 np.savez_compressed(out / f"{split}.npz", **store)
                 if version == "v2":
@@ -115,6 +117,7 @@ def test_driver_routes_training_and_evaluation_and_selects_valid_checkpoint(tmp_
         assert scores[3]["summary"]["inlier_mean"] is None
         assert scores[4]["coverage"]["missing"] == 1
         assert scores[4]["summary"]["execution_errors"] == 0 and scores[4]["summary"]["inlier_mean"] is None
+        assert "重复 patch 对" in scores[5]["error"]
         assert peak["test"]["auc@10"] == 1
         meta = json.loads((run / "preds/main/test.meta.json").read_text())
         assert meta["data_version"] == "v2" and meta["step"] == 2
@@ -122,6 +125,18 @@ def test_driver_routes_training_and_evaluation_and_selects_valid_checkpoint(tmp_
         calls.clear()
         job.run_evaluation()
         assert ("val", "step2") not in calls and ("test", "step2") not in calls
+
+        cached_val = job.S / "preds/step2/val.jsonl"
+        rows = cached_val.read_text(encoding="utf-8").splitlines()
+        cached_val.write_text("\n".join([*rows, rows[0]]) + "\n", encoding="utf-8")
+        cached_meta = cached_val.with_suffix(".meta.json")
+        metadata = json.loads(cached_meta.read_text(encoding="utf-8"))
+        metadata["prediction_sha256"] = prediction_sha256(cached_val)
+        cached_meta.write_text(json.dumps(metadata), encoding="utf-8")
+        calls.clear()
+        job.run_evaluation()
+        assert ("val", "step2") in calls and ("test", "step2") not in calls
+
         (job.ck / "ckpt_2.pt").write_bytes(b"updated")
         calls.clear()
         job.run_evaluation()

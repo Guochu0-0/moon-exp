@@ -89,8 +89,8 @@ class Run:
         return "test" if self.meta.get("data_version") == CURRENT else "val"
 
     @property
-    def data_version_label(self):
-        return self.meta.get("data_version", LEGACY)
+    def data_version_label(self) -> str:
+        return str(self.meta.get("data_version", LEGACY))
 
     def checkpoint_selection(self, method: str) -> dict | None:
         path = self.dir / "sweep" / method / "peak.json"
@@ -203,6 +203,10 @@ class Run:
                 items = json.loads(p.read_text(encoding="utf-8"))
                 out[m] = items if isinstance(items, list) else [items]
         return out
+
+    def prediction_meta(self, method: str, split: str) -> dict:
+        path = self.dir / "preds" / method / f"{split}.meta.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
 
     def preds(self, method: str, split: str) -> dict[str, Pred]:
         path = self.dir / "preds" / method / f"{split}.jsonl"

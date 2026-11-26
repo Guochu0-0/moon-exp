@@ -42,11 +42,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import NamedTuple
 from urllib.parse import parse_qs, unquote, urlencode, urlparse
+from zipfile import BadZipFile
 
 import numpy as np
 
 from . import canvas, inter, perturb, protocol, reference, tb
-from moonlib.data_version import CURRENT, LEGACY, root_error
+from moonlib.data_version import CURRENT, LEGACY, root_error, sha256
 
 from . import validation
 from .dataset import SPLIT_DIRS, Dataset, to_display
@@ -83,7 +84,8 @@ class Workbench:
         self.lock = threading.RLock()
         self._auc: dict[Path, tuple[tuple, float | None]] = {}
         self._res: dict[Path, tuple[tuple, dict]] = {}
-        self._preds: dict[Path, tuple[tuple, dict]] = {}
+        self._preds: dict[Path, tuple[tuple, tuple[dict[str, Pred], str | None]]] = {}
+        self._matches_verified: dict[Path, tuple[tuple[int, int, str], bool]] = {}
         self._identity: dict[tuple, dict] = {}
 
     # ---------------- 读 ----------------
@@ -111,7 +113,7 @@ class Workbench:
         sig = _prediction_signature(p, r.data_version)
         hit = self._res.get(p)
         if hit is None or hit[0] != sig:
-            preds = self._pred_rows(r, method, split, ds)
+            preds, _ = self._predictions(r, method, split, ds)
             if unlabelled_val(r, split):
                 pairs = ds.pairs(split)
                 res = {**validation.evaluate_val(pairs, preds), "_pairs": pairs}
@@ -379,11 +381,12 @@ class Workbench:
             r, m = target
             if split not in r.splits(m):
                 raise EditError(f"{key} 没有 {split} 结果")
-            pr = self._pred_rows(r, m, split, ds).get(p)
+            preds, matches_hash = self._predictions(r, m, split, ds)
+            pr = preds.get(p)
             A, fail, extra = (pr.A, pr.fail, pr.extra) if pr else (None, "no_pred", {})
             out = {"exp": r.id, "caveat": r.method_info(m)["caveat"], "A": A, "fail": fail, "extra": extra,
                    "inlier_rate": validation.inlier_rate(pr) if unlabelled_val(r, split) else None,
-                   "matches": self._matches(r, m, split, p, A) if points else None,
+                   "matches": self._matches(r, m, split, p, A, matches_hash) if points else None,
                    "inter": [{"name": k, **{f: meta[f] for f in INTER_META},
                               **self._inter_state(InterRef(r, m, k, split, p, meta))}
                              for k, meta in r.inters(m).items()] if points else None}
@@ -398,24 +401,45 @@ class Workbench:
                 mt["sar"] = np.round(q @ M[:, :2].T + M[:, 2], 2).tolist()
         return {"key": key, "label": reference.label(key, runs), "error": error, **out}
 
-    def _pred_rows(self, r: Run, method: str, split: str, ds) -> dict:
-        """preds 按文件的 mtime 和大小缓存：翻看 pair 时每次只取一行。"""
+    def _predictions(self, r: Run, method: str, split: str, ds) -> tuple[dict[str, Pred], str | None]:
+        """缓存经校验的预测与同一份元数据里的点对散列。"""
         path = r.dir / "preds" / method / f"{split}.jsonl"
         sig = _prediction_signature(path, r.data_version)
         hit = self._preds.get(path)
         if hit is None or hit[0] != sig:
             try:
-                hit = self._preds[path] = (sig, read_predictions(ds, r, method, split))
+                meta = r.prediction_meta(method, split)
+                preds = read_predictions(ds, r, method, split, meta=meta)
+                matches_hash = meta.get("matches_sha256") if r.data_version == CURRENT else None
+                hit = self._preds[path] = (sig, (preds, matches_hash))
             except ValueError as e:
                 raise EditError(str(e)) from e
         return hit[1]
 
-    @staticmethod
-    def _matches(r: Run, method: str, split: str, p: str, A) -> dict:
-        """点对与每个点到估计仿射的残差（失败时为 None）。npz 不在本地时给出拉取命令。"""
-        if not (r.dir / "preds" / method / f"{split}_matches.npz").exists():
-            return {"state": "not_synced", "sync": f"python -m workbench sync {r.id}"}
-        x = r.matches(method, split, p)
+    def _matches(self, r: Run, method: str, split: str, p: str, A, expected: str | None) -> dict:
+        """点对与每个点到估计仿射的残差（失败时为 None）。"""
+        path = r.dir / "preds" / method / f"{split}_matches.npz"
+        sig = _file_signature(path)
+        sync = f"python -m workbench sync {r.id}"
+        if sig is None:
+            self._matches_verified.pop(path, None)
+            return {"state": "not_synced", "sync": sync}
+        out_of_sync = {"state": "out_of_sync", "sync": sync}
+        try:
+            if expected:
+                key = (*sig, expected)
+                checked = self._matches_verified.get(path)
+                if checked is None or checked[0] != key:
+                    checked = self._matches_verified[path] = (key, sha256(path) == expected)
+                if not checked[1]:
+                    return out_of_sync
+            x = r.matches(method, split, p)
+        except (OSError, ValueError, BadZipFile):
+            if not expected:
+                raise
+            return out_of_sync
+        if expected and _file_signature(path) != sig:
+            return out_of_sync
         if x is None:
             return {"state": "absent"}
         x = x.astype(np.float64)
@@ -650,15 +674,16 @@ def _restrict(res: dict, pairs: list[str]) -> dict:
     return {**res, "errors": [res["errors"][i] for i in sel], "_err": res["_err"][sel], "_pairs": pairs}
 
 
-def _prediction_signature(path: Path, version: str) -> tuple:
-    def signature(p):
-        try:
-            st = p.stat()
-        except FileNotFoundError:
-            return None
-        return st.st_mtime_ns, st.st_size
+def _file_signature(path: Path) -> tuple[int, int] | None:
+    try:
+        st = path.stat()
+    except FileNotFoundError:
+        return None
+    return st.st_mtime_ns, st.st_size
 
-    return version, signature(path), signature(path.with_suffix(".meta.json"))
+
+def _prediction_signature(path: Path, version: str) -> tuple:
+    return version, _file_signature(path), _file_signature(path.with_suffix(".meta.json"))
 
 
 def _scope_reason(a: dict, b: dict) -> str | None:

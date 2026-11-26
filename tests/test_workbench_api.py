@@ -7,6 +7,7 @@ import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
 
+import numpy as np
 import pytest
 
 from test_workbench import A_TRUE, dataset, write_exp  # noqa: F401 — dataset 是 fixture
@@ -198,14 +199,44 @@ def test_two_data_versions_share_canvas_and_use_their_own_evaluation(api, runs, 
     assert api.get("/api/exp/E2")[1]["warnings"] == [warning]
 
 
-def test_invalid_data_version_leaves_other_nodes_usable(api, runs, dataset):
+def test_versioned_point_pairs_follow_prediction_metadata(api, runs, dataset, tmp_path):
+    shutil.copytree(dataset.root / "Test", tmp_path / "moon-v2" / "Test")
+    write_exp(runs, "E1", 'data_version = "v2"\n')
+    pair = dataset.labelled("test")[0]
+    with PredWriter(runs / "E1", "main", "test", repo=runs) as w:
+        w.write(pair, A_TRUE, matches=[[1, 2, 3, 4, 0.5]])
+    path = f"/api/pair?method=E1/main&split=test&pair={pair}"
+    matches = runs / "E1/preds/main/test_matches.npz"
+    original = matches.read_bytes()
+    status, d = api.get(path)
+    assert status == 200 and d["method"]["matches"]["opt"] == [[1.5, 2.5]]
+
+    np.savez_compressed(matches, **{pair.replace("/", "__"): np.array([[9, 8, 7, 6, 0.5]], dtype=np.float32)})
+    status, d = api.get(path)
+    assert status == 200 and d["method"]["A"] == A_TRUE
+    assert d["method"]["matches"] == {"state": "out_of_sync", "sync": "python -m workbench sync E1"}
+    matches.write_bytes(original)
+    assert api.get(path)[1]["method"]["matches"]["opt"] == [[1.5, 2.5]]
+
+    meta_path = runs / "E1/preds/main/test.meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta_path.write_text(json.dumps({**meta, "matches_sha256": "0" * 64}), encoding="utf-8")
+    assert api.get(path)[1]["method"]["matches"]["state"] == "out_of_sync"
+    del meta["matches_sha256"]
+    meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    assert api.get(path)[1]["method"]["matches"]["opt"] == [[1.5, 2.5]]
+
+
+@pytest.mark.parametrize("raw, label", [('"unknown"', "unknown"), ("2026-11-26", "2026-11-26")])
+def test_invalid_data_version_leaves_other_nodes_usable(api, runs, dataset, raw, label):
     write_exp(runs, "E1")
-    write_exp(runs, "E2", 'data_version = "unknown"\n')
+    write_exp(runs, "E2", f"data_version = {raw}\n")
     light(runs, dataset, "E1", "main")
     cards = api.exps()
     assert cards["E1"]["methods"][0]["auc"] == 1
     assert "data_version" in cards["E2"]["warnings"][0]
-    assert api.get("/api/exp/E2")[0] == 200
+    status, detail = api.get("/api/exp/E2")
+    assert status == 200 and cards["E2"]["data_version"] == detail["data_version"] == label
 
 
 def test_derive_places_right_of_parent_and_siblings_downward(api, runs, dataset):

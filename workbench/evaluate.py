@@ -61,16 +61,17 @@ def evaluation_pairs(ds, run: Run, split: str) -> list[str]:
     return ds.pairs(split) if unlabelled_val(run, split) else ds.labelled(split)
 
 
-def read_predictions(ds, run: Run, method: str, split: str) -> dict[str, Pred]:
+def read_predictions(ds, run: Run, method: str, split: str, *, meta: dict | None = None) -> dict[str, Pred]:
     """计算指标前核对预测来源与当前评测清单。"""
-    path = run.dir / "preds" / method / f"{split}.meta.json"
-    meta = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    if meta is None:
+        meta = run.prediction_meta(method, split)
+    path = run.dir / "preds" / method / f"{split}.jsonl"
     version = meta.get("data_version")
     digest = meta.get("manifest_sha256")
     prediction_hash = meta.get("prediction_sha256")
     if ((run.data_version == CURRENT or version) and version != run.data_version
             or digest and digest != manifest_sha256(evaluation_pairs(ds, run, split))
-            or prediction_hash and prediction_hash != prediction_sha256(path.with_name(f"{split}.jsonl"))):
+            or prediction_hash and prediction_hash != prediction_sha256(path)):
         raise ValueError(f"{run.id}/{method} {split} 的预测来源与 Moon-{run.data_version} 评测清单不符")
     return run.preds(method, split)
 

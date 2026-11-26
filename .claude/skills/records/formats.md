@@ -124,7 +124,7 @@ with InterWriter("runs/E3", "main", "certainty", "val", kind="scalar", frame="op
 
 微调实验的每个方法 `<m>` 由一份 `configs/<m>.toml` 描述（进 git，先提交再跑）：用哪个模型、哪些训练成分、与默认不同的参数；同一实验内可用 `base` 继承，文件名以 `_` 开头的只当 base。格式见 `finetune/README.md`。
 
-`scripts/finetune/run.py runs/<id>` 逐个领取这些方法，对每个方法依次做：训练 → 每个 ckpt 在 Val 上评测 → 按 Val AUC@5 峰值（不含 step 0）选 ckpt，在 Test 上补评 → 把选中 step 的 Val、Test 预测复制成 `preds/<m>/`，即这个方法的正式结果。
+`scripts/finetune/run.py runs/<id>` 逐个领取方法。每个方法训练后在 Val 上评测候选 checkpoint，选中一步在 Test 上补评，再把这一步的 Val、Test 预测复制到 `preds/<m>/` 作为正式结果。Moon-v1 默认选 Val AUC@5 峰值（不含 step 0），Moon-v2 按下文的无标注 Val 流程选权重。
 
 ```
 runs/<id>/
@@ -183,4 +183,4 @@ Notes 引用的附件：诊断图表和它们的数据。工作台只显示被 n
 
 ## 评价
 
-指标定义只在 `workbench/protocol.py` 一处，写进记录的指标都由它算。pair 误差是光学检查点经 A 映射后到 SAR 检查点的平均距离，失败记 ∞；选模用 Val AUC@5。
+配准指标由 `workbench/protocol.py` 定义和计算。pair 误差是光学检查点经 A 映射后到 SAR 检查点的平均距离，失败记 ∞。Moon-v1 默认按 Val AUC@5 选权重，Moon-v2 按无标注 Val 的逐对 RANSAC 内点率均值选权重。

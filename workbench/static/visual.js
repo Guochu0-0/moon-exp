@@ -111,7 +111,9 @@ export function mountVisual(isShown) {
     const k = `${ctxKey}|${pair}|${points}`;
     if (!cache.has(k)) {
       const p = api.pair(C.method.key, pairedRef()?.key, C.split, pair, points);
-      p.catch(() => cache.delete(k));
+      p.then(d => {
+        if ([d.method, d.ref].some(s => s?.matches?.state === 'out_of_sync')) cache.delete(k);
+      }, () => cache.delete(k));
       cache.set(k, p);
     }
     return cache.get(k);
@@ -324,9 +326,13 @@ export function mountVisual(isShown) {
     if (interName(V.view) != null) { interBody(el, sides, views, inters); return; }
     const point = isPointView(V.view);
     const missing = sides.filter(s => s.matches?.state === 'not_synced');
-    const cmds = [...new Set(missing.map(s => s.matches.sync))];
-    const cmd = cmds.length > 1 ? `python -m workbench sync ${[...new Set(missing.map(s => s.exp))].join(' ')}` : cmds[0];
-    const hint = cmd ? `<p class="synchint">本地没有 ${missing.map(s => esc(s.exp)).filter((x, j, a) => a.indexOf(x) === j).join('、')} 的点对，拉回后可看点对视图：<code>${esc(cmd)}</code><button class="copy" data-cmd="${esc(cmd)}">复制</button></p>` : '';
+    const stale = sides.filter(s => s.matches?.state === 'out_of_sync');
+    const ids = ss => [...new Set(ss.map(s => s.exp))];
+    const pending = ids([...missing, ...stale]);
+    const cmd = pending.length ? `python -m workbench sync ${pending.join(' ')}` : '';
+    const status = [missing.length && `本地没有 ${esc(ids(missing).join('、'))} 的点对`,
+      stale.length && `${esc(ids(stale).join('、'))} 的点对与预测记录不同步`].filter(Boolean).join('。');
+    const hint = cmd ? `<p class="synchint">${status}。同步后可看点对视图 <code>${esc(cmd)}</code><button class="copy" data-cmd="${esc(cmd)}">复制</button></p>` : '';
     const withConf = point ? sides.filter(s => s.matches?.state === 'ok' && s.matches.conf) : [];
     const flat = withConf.map(s => flatConf(s.matches));
     const flatNote = withConf.length && flat.every(v => v != null)
@@ -467,6 +473,7 @@ export function mountVisual(isShown) {
       const mt = s.matches;
       if (!mt) msg = '未配准没有点对';
       else if (mt.state === 'not_synced') msg = '本地没有点对';
+      else if (mt.state === 'out_of_sync') msg = '点对与预测记录不同步';
       else if (mt.state === 'absent') msg = '没有点对（该 pair 出错）';
       else if (!mt.n) msg = '0 个点';
     }

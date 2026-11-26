@@ -1,0 +1,37 @@
+[
+ {
+  "start": "2026-11-26 14:23:38 +0800",
+  "end": "2026-11-26 14:25:23 +0800",
+  "status": "ok",
+  "commit": "ebfda5e68f9fd88870c29667fe578efb412bf1be",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-301",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E61/code/evaluate_grid.py",
+   "audit"
+  ],
+  "config_file": "configs/baselines/anymatch_roma__minmax.json",
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "pending": 28,
+  "missing": {}
+ }
+]

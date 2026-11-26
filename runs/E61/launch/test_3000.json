@@ -1,0 +1,46 @@
+[
+ {
+  "start": "2026-11-26 15:07:51 +0800",
+  "end": "2026-11-26 15:31:03 +0800",
+  "status": "ok",
+  "commit": "ebfda5e68f9fd88870c29667fe578efb412bf1be",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-301",
+  "cuda_visible_devices": "1",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/wb/bin/python",
+   "runs/E61/code/evaluate_grid.py",
+   "worker",
+   "--minutes",
+   "220"
+  ],
+  "config_file": "configs/baselines/anymatch_roma__minmax.json",
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "step": 3000,
+  "split": "test",
+  "weights": {
+   "path": "/remote-home/xufang/YGC/moon-exp/runs/E55/ckpt/k5_no_bce/ckpt_3000.pt",
+   "historical_sha256": "e71852f9f5d2a12177434f94443e28792492254ccdaea36d7b5bac067c996065",
+   "sha256": "e71852f9f5d2a12177434f94443e28792492254ccdaea36d7b5bac067c996065"
+  },
+  "count": 953,
+  "prediction_sha256": "d6bb9317a4ba74f221fccaf82ba534c91227897994bf4be1f9e0bfa991f64b8c"
+ }
+]

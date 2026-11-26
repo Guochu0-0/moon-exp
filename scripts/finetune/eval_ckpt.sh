@@ -11,7 +11,8 @@ set -euo pipefail
 R=$1; M=$2; CK=$3; CFG=${4:-configs/baselines/anymatch_roma__minmax.json}; PERT=${5:-}
 Y=/remote-home/xufang/YGC
 PY=/opt/envs/loftr/bin/python; WB=/opt/envs/wb/bin/python
-export MOON_DATA=$Y/dataset/Moon MOON_WEIGHTS=$Y/weights TORCH_HOME=$Y/weights/torch_home
+export MOON_DATA=${MOON_DATA:-$Y/dataset/Moon} MOON_DATA_V2=${MOON_DATA_V2:-$Y/dataset/Moon-v2}
+export MOON_WEIGHTS=$Y/weights TORCH_HOME=$Y/weights/torch_home
 export CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=$GPU
 EXTRA=()
 [ "$CK" != - ] && EXTRA+=(--weights "$CK")
@@ -19,9 +20,10 @@ EXTRA=()
 $WB -m workbench.launch begin "$R" "$M" -- bash scripts/finetune/eval_ckpt.sh "$@"
 ok=fail
 trap '$WB -m workbench.launch end "$R" "$M" $ok' EXIT
+version=$($WB -c 'import sys; from moonlib.data_version import experiment_version; print(experiment_version(sys.argv[1]))' "$R")
 for split in val test; do
-  if [ ! -f "$R/preds/$M/$split.jsonl" ]; then
-    nice -n 10 $PY -m baselines.match "$CFG" --split $split "${EXTRA[@]}" --name "$M" --out "$R/sweep/$M/match"
+  if [ "$version" = v2 ] || [ ! -f "$R/preds/$M/$split.jsonl" ]; then
+    nice -n 10 $PY -m baselines.match "$CFG" --run "$R" --split "$split" "${EXTRA[@]}" --name "$M" --out "$R/sweep/$M/match"
     $WB -m baselines.fit "$R/sweep/$M/match/$M" --split $split --run "$R"
   fi
 done

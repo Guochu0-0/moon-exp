@@ -42,6 +42,7 @@
 .node .ttl:empty::before { content: "（未命名）"; color: #6B6E76; }
 .node [contenteditable=true] { cursor: text; outline: 1px solid rgba(255,255,255,.5); user-select: text; text-overflow: clip; background: #111214; border-radius: 3px; padding: 0 3px; }
 .node .chip { font-size: 11px; color: #C9B27C; border: 1px solid #5A4E33; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+.node .data-warning { color: #E8BC6B; flex: none; }
 .node .st { width: 8px; height: 8px; border-radius: 50%; background: #4FB47E; box-shadow: 0 0 0 3px rgba(79,180,126,.18); flex: none; }
 .node .io { position: relative; display: flex; justify-content: space-between; padding: 7px 14px 5px; font-size: 11.5px; color: #8B8D94; }
 .node .row { position: relative; display: grid; grid-template-columns: 1fr 104px; gap: 10px; align-items: center; padding: 3px 14px; }

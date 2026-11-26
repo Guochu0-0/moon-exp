@@ -2,26 +2,22 @@
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
+from moonlib.data_version import CURRENT, LEGACY, ROOT_ENV, VERSIONS, experiment_version, root_error, root_for
+
 REPO = Path(__file__).resolve().parent.parent
 DEFAULT_RUNS = REPO / "runs"
-DATA_ENV = "MOON_DATA"  # 数据集根目录，例如 G:/Lunar_Optical_SAR_Registration_Dataset
-
-
-def _data_root(args) -> Path:
-    root = args.data or os.environ.get(DATA_ENV)
-    if not root:
-        sys.exit(f"需要数据集根目录：--data 或环境变量 {DATA_ENV}")
-    return Path(root)
+def _data_roots(args):
+    return {LEGACY: root_for(LEGACY, args.data), CURRENT: root_for(CURRENT, args.data_v2)}
 
 
 def cmd_serve(args):
     from .server import serve
 
-    serve(Path(args.runs), _data_root(args), REPO, args.host, args.port)
+    roots = _data_roots(args)
+    serve(Path(args.runs), roots[LEGACY], REPO, args.host, args.port, data_root_v2=roots[CURRENT])
 
 
 def cmd_eval(args):
@@ -29,20 +25,42 @@ def cmd_eval(args):
     from .evaluate import evaluate_run, write_metrics
     from .records import load_runs
 
-    ds = Dataset(_data_root(args))
+    roots = _data_roots(args)
+    datasets = {v: Dataset(p) for v, p in roots.items() if p is not None}
     runs = load_runs(Path(args.runs))
+    failed = False
     for rid in args.ids or list(runs):
-        if runs[rid].analysis:
+        run = runs[rid]
+        if run.analysis:
             print(f"{rid}: 分析没有预测，跳过")
             continue
-        m = evaluate_run(ds, runs[rid])
-        path = write_metrics(runs[rid], m)
+        try:
+            version = run.data_version
+            ds = datasets.get(version)
+            for split in sorted({s for m in run.methods for s in run.splits(m)}):
+                if ds is None or not ds.has_split(split):
+                    raise ValueError(root_error(version, roots[version], split))
+            if ds is None:
+                continue
+            m = evaluate_run(ds, run)
+            path = write_metrics(run, m)
+        except ValueError as e:
+            print(f"{rid}: {e}", file=sys.stderr)
+            failed = True
+            continue
         main = m["protocol"]["main"]
         for meth, splits in m["methods"].items():
-            line = "  ".join(f"{s} {main}={v['summary'][main]:.3f} 缺{v['coverage']['missing']}"
-                             for s, v in splits.items())
+            parts = []
+            for s, v in splits.items():
+                key = "inlier_mean" if v.get("metric") else main
+                value = v["summary"][key]
+                score = "无有效分数" if value is None else f"{value:.3f}"
+                parts.append(f"{s} {key}={score} 缺{v['coverage']['missing']}")
+            line = "  ".join(parts)
             print(f"{rid}/{meth}: {line}")
         print(f"  → {path.relative_to(REPO) if path.is_relative_to(REPO) else path}")
+    if failed:
+        sys.exit(1)
 
 
 def cmd_check(args):
@@ -58,11 +76,15 @@ def cmd_check(args):
 
 
 def cmd_new(args):
-    from .records import EditError, create_experiment
+    from .records import create_experiment
 
     try:
-        d = create_experiment(Path(args.runs), args.id, args.title, args.parent, args.init, args.analysis)
-    except EditError as e:
+        root = Path(args.runs)
+        resolved = root.resolve()
+        run = next((p for p in (resolved, *resolved.parents) if (p / "exp.toml").is_file()), None)
+        version = args.data_version or (experiment_version(run) if run else CURRENT)
+        d = create_experiment(root, args.id, args.title, args.parent, args.init, args.analysis, data_version=version)
+    except ValueError as e:
         sys.exit(str(e))
     print(f"已建 {d}/exp.toml")
 
@@ -82,7 +104,8 @@ def cmd_sync(args):
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="python -m workbench")
     ap.add_argument("--runs", default=str(DEFAULT_RUNS), help="实验记录目录（默认 runs/）")
-    ap.add_argument("--data", help=f"数据集根目录（默认读环境变量 {DATA_ENV}）")
+    ap.add_argument("--data", help=f"Moon-v1 数据根（默认读 {ROOT_ENV[LEGACY]}）")
+    ap.add_argument("--data-v2", help=f"Moon-v2 数据根（默认读 {ROOT_ENV[CURRENT]}）")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("serve", help="启动工作台页面")
@@ -103,6 +126,7 @@ def main(argv=None):
     p.add_argument("--init", help="<父实验>/<方法>")
     p.add_argument("--title", default="")
     p.add_argument("--analysis", action="store_true", help="建分析：不训练、没有预测，只有 Notes 和附件")
+    p.add_argument("--data-version", choices=VERSIONS, help="数据版本（新实验默认 v2，实验内的评测子目录默认继承）")
     p.set_defaults(fn=cmd_new)
 
     p = sub.add_parser("sync", help="从服务器按实验拉回点对、中间结果、TB 日志（ckpt 永不拉）")

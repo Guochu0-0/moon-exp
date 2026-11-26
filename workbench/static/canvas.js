@@ -119,8 +119,8 @@ export function mountCanvas(root, { onOpen }) {
           : S.expanded.has(e.id) && ms.length > SHOWN ? '<div class="more">▾ 收起</div>' : '<div class="rows-end"></div>');
     } else body = '<div class="empty">尚无结果</div>';
     return `<div class="node${e.lit ? '' : ' off'}${e.analysis ? ' ana' : ''}${S.sel.has(ek(e.id)) ? ' sel' : ''}${S.fresh === e.id ? ' new' : ''}" data-id="${esc(e.id)}">
-      <div class="hdr"><span class="nid">${esc(e.id)}</span><span class="ttl" title="${esc(e.title)}">${esc(e.title)}</span>${e.baseline ? '<span class="chip">基线</span>' : ''}${e.analysis ? '<span class="chip ana">分析</span>' : ''}<span class="st" title="${e.lit ? '已点亮' : '未点亮'}"></span></div>
-      <div class="io"><span class="port in"></span><span>父实验</span><span>${e.lit && !e.analysis ? 'AUC@10（Val）' : ''}</span><span>子实验</span><span class="port out fam-none" data-m="_" title="拖出：拖到实验上改它的父实验，拖到空白处派生新实验"></span></div>
+      <div class="hdr"><span class="nid">${esc(e.id)}</span><span class="ttl" title="${esc(e.title)}">${esc(e.title)}</span>${e.baseline ? '<span class="chip">基线</span>' : ''}${e.analysis ? '<span class="chip ana">分析</span>' : `<span class="chip">Moon-${esc(e.data_version)}</span>`}${e.warnings?.length ? `<span class="data-warning" title="${esc(e.warnings.join('；'))}" aria-label="${esc(e.warnings.join('；'))}">⚠</span>` : ''}<span class="st" title="${e.lit ? '已点亮' : '未点亮'}"></span></div>
+      <div class="io"><span class="port in"></span><span>父实验</span><span>${e.lit && !e.analysis ? `AUC@10（${e.metric?.split === 'test' ? 'Test' : 'Val'}）` : ''}</span><span>子实验</span><span class="port out fam-none" data-m="_" title="拖出：拖到实验上改它的父实验，拖到空白处派生新实验"></span></div>
       ${body}</div>`;
   }
   const groupHTML = g => `<div class="grp ${esc(g.color)}" data-g="${esc(g.id)}" style="left:${g.x}px;top:${g.y}px;width:${g.w}px;height:${g.h}px">
@@ -267,12 +267,12 @@ export function mountCanvas(root, { onOpen }) {
     toast(`已新建 ${r.id}${parent ? `，父实验 ${parent}${init ? `，init = ${init}` : ''}` : ''}`);
     editTitle(r.id);
   }
-  async function newExpAt(x, y, parent = null, init = null) {
-    await created(await attempt(api.create({ x: Math.round(x), y: Math.round(y), parent, init })), parent, init);
+  async function newExpAt(x, y, parent = null, init = null, data_version = 'v2') {
+    await created(await attempt(api.create({ x: Math.round(x), y: Math.round(y), parent, init, data_version })), parent, init);
   }
-  async function derive(parent, m) {   // 由服务端摆到父实验右侧、往下避开已有实验
+  async function derive(parent, m, data_version = 'v2') {   // 由服务端摆到父实验右侧、往下避开已有实验
     const init = initOf(parent, m);
-    await created(await attempt(api.create({ parent, init })), parent, init);
+    await created(await attempt(api.create({ parent, init, data_version })), parent, init);
   }
   async function reparent(child, parent, m) {
     const init = initOf(parent, m);
@@ -393,6 +393,7 @@ export function mountCanvas(root, { onOpen }) {
       if (S.sel.size > 1) items.push(groupItem());
       if (m) items.push({ t: `从 ${m} 派生新实验`, f: () => derive(e.id, m) });
       items.push({ t: `从 ${e.id} 派生新实验`, f: () => derive(e.id, null) });
+      items.push({ t: '派生 Moon-v1 实验', f: () => derive(e.id, m || null, 'v1') });
       if (e.parent) items.push({ t: '断开父实验', f: () => disconnect(e.id) });
       items.push('-', { t: '改标题', f: () => editTitle(e.id) },
         { t: '改编号', off: e.lit, why: '已点亮的实验不能改编号', f: () => editId(e.id) },
@@ -409,6 +410,7 @@ export function mountCanvas(root, { onOpen }) {
       const g = groupOf(gr.dataset.g);
       showMenu(ev.clientX, ev.clientY, `分组：${esc(g.title)}`, [
         { t: '在此新建实验', k: 'E', f: () => newExpAt(wx - 150, wy - 40) },
+        { t: '在此新建 Moon-v1 实验', f: () => newExpAt(wx - 150, wy - 40, null, null, 'v1') },
         { t: '重命名', k: '双击标题', f: () => renameGroup(g.id) },
         { t: '换颜色', f: () => recolor(g) },
         { t: '贴合框内内容', f: () => fitGroup(g) },
@@ -416,6 +418,7 @@ export function mountCanvas(root, { onOpen }) {
     } else {
       showMenu(ev.clientX, ev.clientY, null, [
         { t: '新建实验', k: 'E', f: () => newExpAt(wx - 150, wy - 40) },
+        { t: '新建 Moon-v1 实验', f: () => newExpAt(wx - 150, wy - 40, null, null, 'v1') },
         { t: '新建便签', k: 'N', f: () => newSticky(wx, wy) },
         { t: '新建分组框', k: 'G', f: () => newGroup(wx, wy) },
         groupItem(), '-',

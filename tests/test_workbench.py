@@ -302,7 +302,9 @@ def test_cli_new_writes_v2_template(tmp_path, capsys):
     cli.main(["--runs", str(runs), "new", "E2"])
     e1 = tomllib.loads((runs / "E1" / "exp.toml").read_text(encoding="utf-8"))
     e2 = tomllib.loads((runs / "E2" / "exp.toml").read_text(encoding="utf-8"))
-    assert set(e1) == {"id", "title", "parent", "date"} and set(e2) == {"id", "title", "date"}
+    assert set(e1) == {"id", "title", "parent", "date", "data_version"}
+    assert set(e2) == {"id", "title", "date", "data_version"}
+    assert e1["data_version"] == e2["data_version"] == "v2"
     assert e1["id"] == "E1" and e1["parent"] == "B0" and e1["title"] == '含"引号"的标题'
     assert len(e1["date"]) == 10
     with pytest.raises(SystemExit) as e:
@@ -364,6 +366,14 @@ def test_check_analysis_rules(tmp_path):
     assert any(p.startswith("A2") and "预测" in p for p in problems)
 
 
+def test_cli_new_sweep_inherits_version_of_owning_experiment(tmp_path):
+    runs = tmp_path / "runs"
+    legacy = write_exp(runs, "E1")
+    scratch = legacy / "sweep/main"
+    cli.main(["--runs", str(scratch), "new", "S"])
+    assert tomllib.loads((scratch / "S/exp.toml").read_text(encoding="utf-8"))["data_version"] == "v1"
+
+
 def test_cli_new_analysis(tmp_path):
     runs = tmp_path / "runs"
     write_exp(runs, "B0", "baseline = true\n")
@@ -371,7 +381,8 @@ def test_cli_new_analysis(tmp_path):
     cli.main(["--runs", str(runs), "new", "E2", "--analysis", "--parent", "B0"])
     text = (runs / "E1" / "exp.toml").read_text(encoding="utf-8")
     e1 = tomllib.loads(text)
-    assert set(e1) == {"id", "title", "kind", "date"} and e1["kind"] == "analysis" and "init" not in text
+    assert set(e1) == {"id", "title", "kind", "date", "data_version"}
+    assert e1["kind"] == "analysis" and "init" not in text
     assert tomllib.loads((runs / "E2" / "exp.toml").read_text(encoding="utf-8"))["parent"] == "B0"
     with pytest.raises(SystemExit) as e:
         cli.main(["--runs", str(runs), "new", "E3", "--analysis", "--parent", "B0", "--init", "B0/roma"])

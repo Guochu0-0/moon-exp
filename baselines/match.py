@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import platform
@@ -31,6 +30,7 @@ from pathlib import Path
 import numpy as np
 
 from moonlib import inputs
+from moonlib.data_version import (CURRENT, LEGACY, experiment_version, manifest_sha256, required_root, sha256)
 
 from . import adapters
 from .data import Data
@@ -45,14 +45,6 @@ class PairTimeout(Exception):
 
 def _alarm(signum, frame):
     raise PairTimeout()
-
-
-def sha256(path, bufsize=1 << 22) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for b in iter(lambda: f.read(bufsize), b""):
-            h.update(b)
-    return h.hexdigest()
 
 
 def git_head(path) -> str | None:
@@ -100,7 +92,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("config")
     ap.add_argument("--split", required=True, choices=("train", "val", "test"))
-    ap.add_argument("--data", default=os.environ.get("MOON_DATA"))
+    ap.add_argument("--data", help="覆盖本机的实验数据根")
+    ap.add_argument("--run", help="从实验目录读取数据版本（缺省沿用旧划分）")
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda")
@@ -113,6 +106,8 @@ def main(argv=None):
     ap.add_argument("--perturb", help="runs/<id>/perturb/<变体> 目录：SAR 侧叠加已知 T（#138）")
     args = ap.parse_args(argv)
 
+    version = experiment_version(args.run) if args.run else LEGACY
+    data = Data(required_root(version, args.data))
     cfg = json.loads(Path(args.config).read_text(encoding="utf-8"))
     if args.weights:
         cfg["weights"] = str(Path(args.weights).resolve())
@@ -133,7 +128,6 @@ def main(argv=None):
     map_sar = inputs.get("sar", cfg["input"]["sar"])
     seed = int(cfg.get("seed", 0))
 
-    data = Data(args.data)
     perturb = None
     if args.perturb:
         from finetune.augment import warp
@@ -141,7 +135,8 @@ def main(argv=None):
 
         pd = Path(args.perturb)
         perturb = P.load(pd.parent.parent, pd.name, args.split)
-    pairs = data.pairs(args.split, labelled_only=args.split != "train")   # Train 无标注，全跑（RoMa 伪标签 #65）
+    labelled_only = args.split == "test" or (args.split == "val" and version == LEGACY)
+    pairs = data.pairs(args.split, labelled_only=labelled_only)
     if args.shard:
         k, n = map(int, args.shard.split("/"))
         pairs = pairs[k::n]
@@ -149,6 +144,10 @@ def main(argv=None):
         pairs = pairs[:args.limit]
 
     store, done = {}, set()
+    weights_hash = sha256(weights) if weights else None
+    if version == CURRENT and args.resume:
+        # 新版缓存由调用者按完整预测验证，单独重跑匹配时从头生成一套原始输出。
+        ap.error("Moon-v2 匹配请完整重跑，训练驱动会自动复用已经核对的预测")
     if args.resume and log_path.exists():
         done = {json.loads(l)["pair"] for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()}
         if npz_path.exists():
@@ -161,11 +160,15 @@ def main(argv=None):
     meta = {
         "method": method, "split": args.split, "config": cfg, "config_path": str(args.config),
         "weights": str(weights) if weights else None,
-        "weights_sha256": sha256(weights) if weights else None,
+        "weights_sha256": weights_hash,
         "commit": git_head(REPO), "repo_commit": git_head(repo) if repo else None,
         "perturb": str(args.perturb) if args.perturb else None,
         "argv": sys.argv, "started": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
+    if version == CURRENT:
+        meta.update(data_version=version, manifest_sha256=manifest_sha256(pairs),
+                    config_sha256=sha256(args.config))
+        meta_path.unlink(missing_ok=True)
     Adapter = adapters.load(cfg["adapter"])
     seed_all(seed)
     t0 = time.time()

@@ -32,6 +32,8 @@ from pathlib import Path
 
 import numpy as np
 
+from moonlib.data_version import CURRENT, LEGACY, VERSIONS, experiment_version, prediction_sha256, sha256, version_of
+
 try:
     import tomllib
 except ModuleNotFoundError:            # 训练环境是 py3.10（写 preds 的推理脚本在那里跑）
@@ -42,7 +44,7 @@ except ModuleNotFoundError:            # 训练环境是 py3.10（写 preds 的�
 
 SPLITS = ("val", "test")
 MAIN_METHOD = "main"
-FIELDS = ("id", "title", "kind", "parent", "init", "baseline", "date", "perturb", "methods")
+FIELDS = ("id", "title", "kind", "parent", "init", "baseline", "date", "perturb", "methods", "data_version")
 ANALYSIS = "analysis"   # kind 的唯一取值；不写即普通实验
 METHOD_FIELDS = ("name", "caveat", "ref")
 LEGACY_FIELDS = ("status", "commit", "hypothesis", "change", "verdict", "next")
@@ -77,6 +79,37 @@ class Run:
     @property
     def parent(self) -> str | None:
         return self.meta.get("parent") or None
+
+    @property
+    def data_version(self) -> str:
+        return version_of(self.meta)
+
+    @property
+    def primary_split(self) -> str:
+        return "test" if self.meta.get("data_version") == CURRENT else "val"
+
+    @property
+    def data_version_label(self):
+        return self.meta.get("data_version", LEGACY)
+
+    def checkpoint_selection(self, method: str) -> dict | None:
+        path = self.dir / "sweep" / method / "peak.json"
+        if not path.is_file():
+            return None
+        selection = json.loads(path.read_text(encoding="utf-8"))
+        version = selection.get("data_version")
+        if version != self.data_version or selection.get("step") is None:
+            return None
+        for split in SPLITS:
+            meta_path = self.dir / "preds" / method / f"{split}.meta.json"
+            if not meta_path.is_file():
+                return None
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            if any(meta.get(k) != selection.get(k) for k in ("data_version", "step", "weights_sha256")):
+                return None
+            if split == "val" and meta.get("manifest_sha256") != selection.get("val_manifest_sha256"):
+                return None
+        return selection
 
     @property
     def init(self) -> str | None:
@@ -283,6 +316,8 @@ def check_runs(runs: dict[str, Run]) -> tuple[list[str], list[str]]:
             problems.append(f"{r.id}: baseline 应为 true / false，现为 {m['baseline']!r}")
         if "kind" in m and m["kind"] != ANALYSIS:
             problems.append(f"{r.id}: kind 只能是 {ANALYSIS!r}（普通实验不写），现为 {m['kind']!r}")
+        if "data_version" in m and m["data_version"] not in VERSIONS:
+            problems.append(f"{r.id}: data_version 应为 v1 或 v2，现为 {m['data_version']!r}")
         if r.analysis and r.methods:
             problems.append(f"{r.id}: 分析不应有预测，preds/ 下有 {', '.join(r.methods)}")
         if "perturb" in m and not isinstance(m["perturb"], bool):
@@ -320,6 +355,7 @@ ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
 
 EXP_TEMPLATE = """id = {id}
 title = {title}
+data_version = {data_version}
 {kind}{links}date = "{date}"
 """
 
@@ -351,11 +387,15 @@ def next_id(root: Path) -> str:
 
 
 def create_experiment(root: Path, rid: str, title: str = "", parent: str | None = None,
-                      init: str | None = None, analysis: bool = False) -> Path:
+                      init: str | None = None, analysis: bool = False, *, data_version: str = CURRENT) -> Path:
     """新建未点亮实验：只写 runs/<id>/exp.toml。analysis 为真时建分析（kind = "analysis"，没有 init）。"""
     root = Path(root)
     if not ID_RE.fullmatch(rid or ""):
         raise EditError(f"编号 {rid!r} 不合法：只能用字母、数字、_ . -，且以字母或数字开头")
+    try:
+        version_of({"data_version": data_version})
+    except ValueError as e:
+        raise EditError(str(e)) from e
     d = root / rid
     if d.exists():
         raise EditError(f"{rid} 已存在")
@@ -367,7 +407,7 @@ def create_experiment(root: Path, rid: str, title: str = "", parent: str | None 
         (f"init = {_q(init)}\n" if init else "" if analysis else
          '# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步\n')
     d.mkdir(parents=True)
-    (d / "exp.toml").write_text(EXP_TEMPLATE.format(id=_q(rid), title=_q(title), links=links,
+    (d / "exp.toml").write_text(EXP_TEMPLATE.format(id=_q(rid), title=_q(title), links=links, data_version=_q(data_version),
                                                     kind=f"kind = {_q(ANALYSIS)}\n" if analysis else "",
                                                     date=datetime.date.today().isoformat()),
                                 encoding="utf-8", newline="\n")
@@ -520,12 +560,15 @@ class PredWriter:
     close 时写 <split>.meta.json：commit 与 dirty（取自构造时的 repo，默认本仓库）、主机与写入时间。
     """
 
-    def __init__(self, run_dir, method: str, split: str, repo=REPO):
+    def __init__(self, run_dir, method: str, split: str, repo=REPO, *, provenance=None):
         assert split in SPLITS, split
         self.dir = Path(run_dir) / "preds" / method
         self.dir.mkdir(parents=True, exist_ok=True)
         self.split = split
         self._git = git_state(Path(repo))
+        version = experiment_version(run_dir)
+        self._provenance = provenance if provenance is not None else (
+            {"data_version": version} if version == CURRENT else None)
         self._f = open(self.dir / f"{split}.jsonl", "w", encoding="utf-8")
         self._matches: dict[str, np.ndarray] = {}
 
@@ -548,9 +591,16 @@ class PredWriter:
 
     def close(self):
         self._f.close()
+        matches_path = self.dir / f"{self.split}_matches.npz"
         if self._matches:
-            np.savez_compressed(self.dir / f"{self.split}_matches.npz", **self._matches)
+            np.savez_compressed(matches_path, **self._matches)
         meta = {**self._git, "host": socket.gethostname(), "written": time.strftime("%Y-%m-%d %H:%M:%S %z")}
+        if self._provenance is not None:
+            meta.update(self._provenance, prediction_sha256=prediction_sha256(self.dir / f"{self.split}.jsonl"))
+            if self._matches:
+                meta["matches_sha256"] = sha256(matches_path)
+            else:
+                matches_path.unlink(missing_ok=True)
         (self.dir / f"{self.split}.meta.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
 
     def __enter__(self):

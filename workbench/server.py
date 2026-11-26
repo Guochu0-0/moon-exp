@@ -46,16 +46,17 @@ from urllib.parse import parse_qs, unquote, urlencode, urlparse
 import numpy as np
 
 from . import canvas, inter, perturb, protocol, reference, tb
+from moonlib.data_version import CURRENT, LEGACY, root_error
+
+from . import validation
 from .dataset import SPLIT_DIRS, Dataset, to_display
-from .evaluate import IDENTITY, evaluate_preds, jsonable, pair_error, pair_errors
+from .evaluate import IDENTITY, evaluate_preds, jsonable, pair_error, pair_errors, read_predictions, unlabelled_val
 from .records import (INTER_META, SPLITS, EditError, NotFound, Pred, Run, create_experiment, delete_experiment, load_runs,
                       next_id, rename_experiment, save_notes, set_parent, set_title)
 
 STATIC = Path(__file__).parent / "static"
-CARD_AUC = 10.0           # 画布卡片上的数值条：AUC@10（Val），不算 bootstrap CI
-CARD_SPLIT = "val"
+CARD_AUC = 10.0           # 画布卡片上的 AUC@10 不算 bootstrap CI
 DELTA = "auc@10"          # 节点页全表末列：相对父实验同名基础方法的 ΔAUC@10
-INLIER_PX = 3.0           # 点对的内点 / 外点：到估计仿射的残差不超过 3 px（与匹配类方法的 RANSAC 阈值相同）
 CTYPES = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
           ".html": "text/html; charset=utf-8", ".woff2": "font/woff2", ".svg": "image/svg+xml"}
 
@@ -74,27 +75,29 @@ class InterRef(NamedTuple):
 
 
 class Workbench:
-    def __init__(self, runs_dir: Path, ds: Dataset, repo: Path):
+    def __init__(self, runs_dir: Path, ds: Dataset | None, repo: Path, *, ds_v2: Dataset | None = None):
         self.runs_dir, self.ds, self.repo = Path(runs_dir), ds, repo
+        self.datasets = {LEGACY: ds, CURRENT: ds_v2}
         self._boards: tb.TensorBoards | None = None   # 第一次「在 TensorBoard 中打开」时才建
         self._tb: dict[Path, tuple[tuple, dict]] = {}
         self.lock = threading.RLock()
         self._auc: dict[Path, tuple[tuple, float | None]] = {}
         self._res: dict[Path, tuple[tuple, dict]] = {}
         self._preds: dict[Path, tuple[tuple, dict]] = {}
-        self._identity: dict[str, dict] = {}
+        self._identity: dict[tuple, dict] = {}
 
     # ---------------- 读 ----------------
 
     def _card_auc(self, r: Run, method: str) -> float | None:
-        p = r.dir / "preds" / method / f"{CARD_SPLIT}.jsonl"
+        split = r.primary_split
+        p = r.dir / "preds" / method / f"{split}.jsonl"
         if not p.exists():
             return None
-        st = p.stat()
-        sig = (st.st_mtime_ns, st.st_size)
+        ds = self._ds(r, method, split)
+        sig = _prediction_signature(p, r.data_version)
         hit = self._auc.get(p)
         if hit is None or hit[0] != sig:
-            v = protocol.auc(pair_errors(self._ds(r, method), CARD_SPLIT, r.preds(method, CARD_SPLIT)), CARD_AUC)
+            v = protocol.auc(pair_errors(ds, split, read_predictions(ds, r, method, split)), CARD_AUC)
             hit = self._auc[p] = (sig, v)
         return hit[1]
 
@@ -104,37 +107,73 @@ class Workbench:
         p = r.dir / "preds" / method / f"{split}.jsonl"
         if not p.exists():
             return None
-        st = p.stat()
-        sig = (st.st_mtime_ns, st.st_size)
+        ds = self._ds(r, method, split)
+        sig = _prediction_signature(p, r.data_version)
         hit = self._res.get(p)
         if hit is None or hit[0] != sig:
-            hit = self._res[p] = (sig, self._evaluate(split, r.preds(method, split), self._ds(r, method)))
+            preds = self._pred_rows(r, method, split, ds)
+            if unlabelled_val(r, split):
+                pairs = ds.pairs(split)
+                res = {**validation.evaluate_val(pairs, preds), "_pairs": pairs}
+            else:
+                res = self._evaluate(split, preds, ds)
+            hit = self._res[p] = (sig, {**res, "_data_version": r.data_version, "_split": split})
         return hit[1]
 
-    def _ds(self, r: Run, method: str):
-        """方法评测用的数据集：难版评测的扰动变体换成扰动后的真值（workbench/perturb.py），其余就是 self.ds。"""
-        return perturb.dataset_for(self.ds, r, method)
+    def _dataset(self, version: str, split: str) -> Dataset:
+        ds = self.datasets[version]
+        if ds is None or not ds.has_split(split):
+            raise EditError(root_error(version, ds.root if ds else None, split))
+        return ds
 
-    def _identity_result(self, split: str, ds=None) -> dict:
-        ds = ds or self.ds
-        k = (split, getattr(ds, "key", None))
+    def _ds(self, r: Run, method: str, split: str):
+        return perturb.dataset_for(self._dataset(r.data_version, split), r, method)
+
+    def _identity_result(self, split: str, ds, version) -> dict:
+        k = (version, split, getattr(ds, "key", None))
         if k not in self._identity:
-            self._identity[k] = self._evaluate(split, {p: Pred(p, IDENTITY) for p in ds.pairs(split)}, ds)
+            self._identity[k] = {**self._evaluate(split, {p: Pred(p, IDENTITY) for p in ds.pairs(split)}, ds),
+                                 "_data_version": version, "_split": split}
         return self._identity[k]
 
     def _evaluate(self, split: str, preds: dict, ds) -> dict:
         """"_pairs" 是误差的 pair 顺序（ds.labelled），扰动变体会剔掉一些 pair，比较两边时据此对齐。"""
         e = evaluate_preds(ds, split, preds)
         return {"summary": e["summary"], "errors": e["errors"], "_err": pair_errors(ds, split, preds),
-                "_pairs": ds.labelled(split)}
+                "_pairs": ds.labelled(split), "_perturb": getattr(ds, "key", None)}
 
-    def _score(self, runs: dict[str, Run]):
+    def _try_result(self, r: Run, method: str, split: str) -> dict | None:
+        try:
+            return self._result(r, method, split)
+        except (EditError, ValueError):
+            return None
+
+    def _reference_result(self, run: Run, target: Run, method: str, split: str):
+        available = target.splits(method)
+        if target.data_version != run.data_version and available and split not in available:
+            split = target.primary_split if target.primary_split in available else available[0]
+        return self._result(target, method, split)
+
+    def _score(self, runs: dict[str, Run], split: str | None = None):
         main = protocol.protocol_info()["main"]
 
         def score(rid: str, m: str) -> float | None:
-            res = self._result(runs[rid], m, "val")
-            return res["summary"][main] if res else None
+            r = runs[rid]
+            res = self._try_result(r, m, split or r.primary_split)
+            return res["summary"].get("inlier_mean" if res.get("metric") else main) if res else None
         return score
+
+    def _warnings(self, r: Run) -> list[str]:
+        warnings = list(r.warnings)
+        if r.analysis:
+            return warnings
+        splits = {r.primary_split} | {s for m in r.methods for s in r.splits(m)}
+        for split in sorted(splits):
+            try:
+                self._dataset(r.data_version, split)
+            except (EditError, ValueError) as e:
+                warnings.append(str(e))
+        return warnings
 
     def detail(self, rid: str) -> dict:
         """节点页：一个实验的全部事实。"""
@@ -143,21 +182,55 @@ class Workbench:
             runs, score = r.runs, self._score(r.runs)
             p = runs.get(r.parent) if r.parent else None
             methods = []
+            warnings = self._warnings(r)
             for m in reference.ranked(r, score):
-                res = {s: x for s in SPLITS if (x := self._result(r, m, s))}
+                res = {}
+                for s in r.splits(m):
+                    try:
+                        res[s] = self._result(r, m, s)
+                    except (EditError, ValueError) as e:
+                        if str(e) not in warnings:
+                            warnings.append(str(e))
                 base = reference.base_method(m)
                 base = f"{p.id}/{base}" if p is not None and base in p.methods else None
-                delta = {}
+                delta, reasons, refs, unmatched = {}, {}, {}, {}
                 for s, x in res.items():
-                    b = self._result(p, base.partition("/")[2], s) if base else None
-                    if b and x["summary"][DELTA] is not None and b["summary"][DELTA] is not None:
-                        delta[s] = x["summary"][DELTA] - b["summary"][DELTA]
-                methods.append({"id": m, **r.method_info(m), "ref": reference.default_ref(r, m, runs, score),
-                                "base": base, "delta": delta, "results": {k: _public(x) for k, x in res.items()}})
+                    def eligible(key):
+                        if key == reference.UNREGISTERED:
+                            return not x.get("metric")
+                        target, meth = reference.parse(key, runs)
+                        ref = self._try_result(target, meth, s)
+                        return ref is not None and _scope_reason(x, ref) is None
+
+                    rank_score = score if r.data_version == LEGACY else self._score(runs, s)
+                    refs[s] = reference.default_ref(r, m, runs, rank_score, eligible)
+                    original_ref = reference.default_ref(r, m, runs, score)
+                    if original_ref and "/" in original_ref and original_ref != refs[s]:
+                        target, meth = reference.parse(original_ref, runs)
+                        try:
+                            b = self._reference_result(r, target, meth, s)
+                        except (EditError, ValueError):
+                            b = None
+                        if b:
+                            unmatched[s] = {"key": original_ref, "reason": _scope_reason(x, b),
+                                            "summary": b["summary"], "data_version": b["_data_version"],
+                                            "split": b["_split"], "metric": b.get("metric")}
+                    if base:
+                        b = self._try_result(p, base.partition("/")[2], s)
+                        reason = _scope_reason(x, b) if b else f"父实验没有可用的 {s.title()} 结果"
+                        if reason:
+                            reasons[s] = reason
+                        elif x["summary"].get(DELTA) is not None and b["summary"].get(DELTA) is not None:
+                            delta[s] = x["summary"][DELTA] - b["summary"][DELTA]
+                methods.append({"id": m, **r.method_info(m), "ref": refs.get(r.primary_split), "refs": refs,
+                                "base": base, "unmatched_reference": unmatched, "delta": delta, "delta_reason": reasons,
+                                "results": {k: _public(x) for k, x in res.items()},
+                                "selection": r.checkpoint_selection(m) if r.data_version_label == CURRENT else None})
             return jsonable({"id": rid, "title": r.title, "parent": r.parent, "init": r.init,
                              "baseline": r.baseline, "analysis": r.analysis, "date": r.date, "lit": r.lit, "methods": methods,
+                             "data_version": r.data_version_label, "default_split": r.primary_split,
                              "children": [k for k, x in runs.items() if x.parent == rid],
-                             "commit": r.commit(), "launch": r.launches(), "delta_key": DELTA, "warnings": r.warnings,
+                             "commit": r.commit(), "launch": r.launches(), "delta_key": DELTA, "warnings": warnings,
                              "notes": r.notes, "tb": self._tb_methods(r),
                              "reference": {"groups": reference.groups(r, runs, score)},
                              "protocol": protocol.protocol_info()})
@@ -209,8 +282,8 @@ class Workbench:
         if self._boards is not None:
             self._boards.close()
 
-    def _split(self, q: dict) -> str:
-        split = q.get("split", "val")
+    def _split(self, q: dict, run: Run) -> str:
+        split = q.get("split", run.primary_split)
         if split not in SPLITS:
             raise EditError(f"split 应为 {' / '.join(SPLITS)}")
         return split
@@ -231,58 +304,71 @@ class Workbench:
         """方法 vs 参考方法：两边的 summary 与逐 pair 误差，以及差值（方法 − 参考方法）。"""
         with self.lock:
             runs = load_runs(self.runs_dir)
-            split = self._split(q)
-            side, mds = {}, self.ds
-            for name in ("method", "ref"):
-                key, target = self._target(q, name, runs)
-                if target is None:
-                    side[name] = None
-                    continue
-                if name == "method":
-                    mds = self._ds(*target)
-                # 未配准按方法那一侧的真值算：扰动变体的「未配准」就是恒等仿射对扰动后的真值
-                res = self._identity_result(split, mds) if target == reference.UNREGISTERED else self._result(*target, split)
-                if res is None:
-                    raise EditError(f"{key} 没有 {split} 结果")
-                side[name] = {"key": key, "label": reference.label(key, runs), **res}
-            a, b = side["method"], side["ref"]
-            pairs, subset = a["_pairs"], None
-            if b and b["_pairs"] != pairs:   # 两边评测的 pair 不同（如扰动变体缺了某些 pair 的 T）：只在共同的 pair 上逐对比较
+            key, (run, method) = self._target(q, "method", runs)
+            split = self._split(q, run)
+            a = self._result(run, method, split)
+            if a is None:
+                raise EditError(f"{key} 没有 {split} 结果")
+            a = {"key": key, "label": reference.label(key, runs), "data_version": run.data_version, "split": split, **a}
+            ref, target = self._target(q, "ref", runs)
+            b = None
+            if target == reference.UNREGISTERED:
+                if a.get("metric"):
+                    raise EditError("无标注 Val 没有未配准参考值")
+                b = self._identity_result(split, self._ds(run, method, split), run.data_version)
+            elif target:
+                b = self._reference_result(run, *target, split)
+                if b is None:
+                    raise EditError(f"{ref} 没有 {split} 结果")
+            if b:
+                b = {"key": ref, "label": reference.label(ref, runs), "data_version": b["_data_version"],
+                     "split": b["_split"], **b}
+            pairs, subset, diff = a["_pairs"], None, None
+            reason = _scope_reason(a, b) if b else None
+            if reason and _legacy_perturb_pairing(a, b):
                 common = set(b["_pairs"])
-                pairs = [p for p in pairs if p in common]
-                a, b = (_restrict(x, pairs) for x in (a, b))
-                subset = len(pairs)
-            if not b:
-                diff = None
-            elif subset is None:
-                diff = reference.paired_diff(a["_err"], b["_err"], a["summary"], b["summary"])
-            else:                            # 差值也只在共同的 pair 上算；两边各自的 summary 仍是它自己全部 pair 上的
-                diff = reference.paired_diff(a["_err"], b["_err"], protocol.summarize(a["_err"]),
-                                             protocol.summarize(b["_err"]))
-            no = self.ds.numbers(split)
+                overlap = [p for p in pairs if p in common]
+                if overlap:
+                    pairs, subset, reason = overlap, len(overlap), None
+                    a, b = (_restrict(x, pairs) for x in (a, b))
+            if b and not reason:
+                if a.get("metric"):
+                    diff = {k: a["summary"][k] - b["summary"][k] for k in ("inlier_mean", "inlier_median")
+                            if a["summary"][k] is not None and b["summary"][k] is not None}
+                else:
+                    summary = lambda s: protocol.summarize(s["_err"]) if subset is not None else s["summary"]
+                    diff = reference.paired_diff(a["_err"], b["_err"], summary(a), summary(b))
+            no = self._dataset(run.data_version, split).numbers(split)
             return jsonable({"split": split, "method": _public(a), "ref": b and _public(b), "diff": diff,
-                             "pairs": pairs, "no": [no[p] for p in pairs], "subset": subset})
+                             "pairs": pairs, "no": [no[p] for p in pairs], "subset": subset, "comparison_reason": reason})
 
     def pair(self, q: dict) -> dict:
         """单个 pair 的可视化素材：影像尺寸、检查点（无标注为 None），以及方法和参考方法各自的仿射与点对。"""
         with self.lock:
             runs = load_runs(self.runs_dir)
-            split, p = self._split(q), q.get("pair") or ""
-            if p not in self.ds.numbers(split):
+            key, (run, method) = self._target(q, "method", runs)
+            split, p = self._split(q, run), q.get("pair") or ""
+            ds = self._dataset(run.data_version, split)
+            if p not in ds.numbers(split):
                 raise EditError(f"{SPLIT_DIRS[split]} 中没有 pair {p}")
             points = q.get("points") != "0"
             # 画面按方法那一侧的坐标系：扰动变体的 SAR 影像与检查点都套上它的 T；参考方法在别的坐标系时换算过来显示
-            key, target = self._target(q, "method", runs)
-            mds = self._ds(*target)
+            mds = self._ds(run, method, split)
             cp, T = mds.checkpoints(split, p), _T(mds, split, p)
-            side = {"method": self._pair_side(key, target, runs, split, p, mds, T, points)}
+            side = {"method": self._pair_side(key, (run, method), runs, split, p, mds, T, points)}
             key, target = self._target(q, "ref", runs)
-            rds = mds if target == reference.UNREGISTERED else self._ds(*target) if target else None
-            side["ref"] = target and self._pair_side(key, target, runs, split, p, rds, T, points)
-            return jsonable({"split": split, "pair": p, "no": self.ds.numbers(split)[p],
-                             "size": self.ds.size(split, p, "Optical"), "sar_size": self.ds.size(split, p, "SAR"),
+            side["ref"] = None
+            if target == reference.UNREGISTERED and not unlabelled_val(run, split):
+                side["ref"] = self._pair_side(key, target, runs, split, p, mds, T, points)
+            elif isinstance(target, tuple):
+                a, b = self._result(run, method, split), self._result(*target, split)
+                if a and b and (_scope_reason(a, b) is None or
+                                (_legacy_perturb_pairing(a, b) and p in b["_pairs"])):
+                    side["ref"] = self._pair_side(key, target, runs, split, p, self._ds(*target, split), T, points)
+            return jsonable({"split": split, "pair": p, "no": ds.numbers(split)[p], "data_version": run.data_version,
+                             "size": ds.size(split, p, "Optical"), "sar_size": ds.size(split, p, "SAR"),
                              "checkpoints": cp and {"opt": cp[0].tolist(), "sar": cp[1].tolist()},
-                             "perturb": getattr(mds, "key", None), "inlier_px": INLIER_PX, **side})
+                             "perturb": getattr(mds, "key", None), "inlier_px": protocol.RANSAC_PX, **side})
 
     def _pair_side(self, key, target, runs, split, p, ds, T_view, points: bool) -> dict:
         """误差按这一侧自己的真值算（ds）；仿射与点对换到画面的坐标系（T_view，方法那一侧的 T）里显示。"""
@@ -293,9 +379,10 @@ class Workbench:
             r, m = target
             if split not in r.splits(m):
                 raise EditError(f"{key} 没有 {split} 结果")
-            pr = self._pred_rows(r, m, split).get(p)
+            pr = self._pred_rows(r, m, split, ds).get(p)
             A, fail, extra = (pr.A, pr.fail, pr.extra) if pr else (None, "no_pred", {})
             out = {"exp": r.id, "caveat": r.method_info(m)["caveat"], "A": A, "fail": fail, "extra": extra,
+                   "inlier_rate": validation.inlier_rate(pr) if unlabelled_val(r, split) else None,
                    "matches": self._matches(r, m, split, p, A) if points else None,
                    "inter": [{"name": k, **{f: meta[f] for f in INTER_META},
                               **self._inter_state(InterRef(r, m, k, split, p, meta))}
@@ -311,14 +398,16 @@ class Workbench:
                 mt["sar"] = np.round(q @ M[:, :2].T + M[:, 2], 2).tolist()
         return {"key": key, "label": reference.label(key, runs), "error": error, **out}
 
-    def _pred_rows(self, r: Run, method: str, split: str) -> dict:
+    def _pred_rows(self, r: Run, method: str, split: str, ds) -> dict:
         """preds 按文件的 mtime 和大小缓存：翻看 pair 时每次只取一行。"""
         path = r.dir / "preds" / method / f"{split}.jsonl"
-        st = path.stat()
-        sig = (st.st_mtime_ns, st.st_size)
+        sig = _prediction_signature(path, r.data_version)
         hit = self._preds.get(path)
         if hit is None or hit[0] != sig:
-            hit = self._preds[path] = (sig, r.preds(method, split))
+            try:
+                hit = self._preds[path] = (sig, read_predictions(ds, r, method, split))
+            except ValueError as e:
+                raise EditError(str(e)) from e
         return hit[1]
 
     @staticmethod
@@ -346,10 +435,10 @@ class Workbench:
 
     def _inter_target(self, q: dict) -> InterRef:
         runs = load_runs(self.runs_dir)
-        split, p, name = self._split(q), q.get("pair") or "", q.get("name") or ""
-        if p not in self.ds.numbers(split):
-            raise EditError(f"{SPLIT_DIRS[split]} 中没有 pair {p}")
         key, (r, m) = self._target(q, "method", runs)
+        split, p, name = self._split(q, r), q.get("pair") or "", q.get("name") or ""
+        if p not in self._dataset(r.data_version, split).numbers(split):
+            raise EditError(f"{SPLIT_DIRS[split]} 中没有 pair {p}")
         meta = r.inters(m).get(name)
         if meta is None:
             raise NotFound(f"{key} 没有中间结果 {name}")
@@ -387,8 +476,9 @@ class Workbench:
             if kind == "scalar":
                 return inter.png(inter.heatmap(a))
         frame = "Optical" if x.meta["frame"] == "opt" else "SAR"
-        other = to_display(self.ds.sar(x.split, x.pair) if frame == "Optical" else self.ds.optical(x.split, x.pair))
-        return inter.png(inter.warp(a, self.ds.size(x.split, x.pair, frame), other))
+        ds = self._dataset(x.run.data_version, x.split)
+        other = to_display(ds.sar(x.split, x.pair) if frame == "Optical" else ds.optical(x.split, x.pair))
+        return inter.png(inter.warp(a, ds.size(x.split, x.pair, frame), other))
 
     def data(self) -> dict:
         with self.lock:
@@ -396,17 +486,27 @@ class Workbench:
             c = canvas.load(self.runs_dir)
             exps = {}
             for rid, r in runs.items():
-                ms = [{"id": m, **r.method_info(m), "auc": self._card_auc(r, m)} for m in r.methods]
+                warnings, ms = self._warnings(r), []
+                for m in r.methods:
+                    try:
+                        auc = self._card_auc(r, m)
+                    except (EditError, ValueError) as e:
+                        auc = None
+                        if str(e) not in warnings:
+                            warnings.append(str(e))
+                    ms.append({"id": m, **r.method_info(m), "auc": auc})
                 ms.sort(key=lambda x: (x["auc"] is None, -(x["auc"] or 0)))
                 exps[rid] = {"id": rid, "title": r.title, "parent": r.parent, "init": r.init, "baseline": r.baseline,
-                             "analysis": r.analysis, "date": r.date, "lit": r.lit, "methods": ms, "warnings": r.warnings}
+                             "analysis": r.analysis, "date": r.date, "lit": r.lit, "methods": ms, "warnings": warnings,
+                             "data_version": r.data_version_label,
+                             "metric": {"key": f"auc@{CARD_AUC:g}", "split": r.primary_split}}
                 if r.analysis:
                     exps[rid]["n_extra"] = len(r.extras())
             pos = canvas.place({k: {"parent": e["parent"], "h": self._height(e, exps)} for k, e in exps.items()},
                                c["experiments"])
             for k, e in exps.items():
                 e.update(pos[k], placed=k in c["experiments"])
-            return jsonable({"metric": {"key": f"auc@{CARD_AUC:g}", "split": CARD_SPLIT},
+            return jsonable({"metric": {"key": f"auc@{CARD_AUC:g}", "split": "val"},
                              "experiments": list(exps.values()),
                              "canvas": {"groups": c["groups"], "stickies": c["stickies"]}})
 
@@ -440,7 +540,7 @@ class Workbench:
             self._pin()
             rid = body.get("id") or next_id(self.runs_dir)
             create_experiment(self.runs_dir, rid, body.get("title") or "", body.get("parent") or None,
-                              body.get("init") or None)
+                              body.get("init") or None, data_version=body.get("data_version", CURRENT))
             if None in xy.values():   # 由 canvas.place 摆到父实验右侧、往下避开已有实验
                 e = next(e for e in self.data()["experiments"] if e["id"] == rid)
                 xy = {"x": e["x"], "y": e["y"]}
@@ -503,14 +603,17 @@ class Workbench:
     # ---------------- 影像 ----------------
 
     @lru_cache(maxsize=512)
-    def image_png(self, split: str, pair: str, kind: str, pkey: str | None = None) -> bytes:
+    def image_png(self, split: str, pair: str, kind: str, pkey: str | None = None, version: str = LEGACY) -> bytes:
         """pkey = <实验>/<变体>：SAR 套上难版评测的已知 T（workbench/perturb.py）。"""
         from PIL import Image
 
-        img = to_display(self.ds.optical(split, pair) if kind == "opt" else self.ds.sar(split, pair))
+        ds = self._dataset(version, split)
+        if pair not in ds.numbers(split):
+            raise NotFound(f"{SPLIT_DIRS[split]} 中没有 pair {pair}")
+        img = to_display(ds.optical(split, pair) if kind == "opt" else ds.sar(split, pair))
         if kind == "sar" and pkey:
             rid, _, v = pkey.partition("/")
-            img = perturb.view(self.ds, self.runs_dir / rid / "perturb" / v).sar_display(img, split, pair)
+            img = perturb.view(ds, self.runs_dir / rid / "perturb" / v).sar_display(img, split, pair)
         buf = io.BytesIO()
         Image.fromarray(img).save(buf, format="PNG", optimize=False, compress_level=3)
         return buf.getvalue()
@@ -545,6 +648,31 @@ def _restrict(res: dict, pairs: list[str]) -> dict:
     idx = {p: i for i, p in enumerate(res["_pairs"])}
     sel = [idx[p] for p in pairs]
     return {**res, "errors": [res["errors"][i] for i in sel], "_err": res["_err"][sel], "_pairs": pairs}
+
+
+def _prediction_signature(path: Path, version: str) -> tuple:
+    def signature(p):
+        try:
+            st = p.stat()
+        except FileNotFoundError:
+            return None
+        return st.st_mtime_ns, st.st_size
+
+    return version, signature(path), signature(path.with_suffix(".meta.json"))
+
+
+def _scope_reason(a: dict, b: dict) -> str | None:
+    if a.get("metric") != b.get("metric"):
+        return "两边使用的评测指标不同"
+    if a["_split"] != b["_split"]:
+        return "两边使用的数据划分不同"
+    if a["_pairs"] != b["_pairs"]:
+        return "两边的评测 patch 对清单不同"
+    return None
+
+
+def _legacy_perturb_pairing(a: dict, b: dict) -> bool:
+    return a["_data_version"] == b["_data_version"] == LEGACY and bool(a.get("_perturb") or b.get("_perturb"))
 
 
 def _public(res: dict) -> dict:
@@ -632,12 +760,13 @@ def make_handler(wb: Workbench):
                 if path == "/inter.png":
                     return self.send(wb.inter_png(q), "image/png")
                 if path == "/img":
-                    if q.get("split") in SPLIT_DIRS and q.get("kind") in ("opt", "sar") \
-                            and q.get("pair") in wb.ds.pairs(q["split"]):
+                    if q.get("split") in SPLIT_DIRS and q.get("kind") in ("opt", "sar") and q.get("pair"):
                         pk = q.get("perturb") or None
+                        rid = q.get("exp") or (pk.partition("/")[0] if pk else None)
+                        version = _get_run(wb.runs_dir, rid).data_version if rid else LEGACY
                         if pk and not wb.perturb_key_ok(pk):
                             raise EditError(f"找不到扰动 {pk}")
-                        return self.send(wb.image_png(q["split"], q["pair"], q["kind"], pk), "image/png")
+                        return self.send(wb.image_png(q["split"], q["pair"], q["kind"], pk, version), "image/png")
                 if path.startswith("/runs/"):
                     rid, _, rel = path[len("/runs/"):].partition("/")
                     d = wb.runs_dir / rid
@@ -691,8 +820,10 @@ def make_handler(wb: Workbench):
     return Handler
 
 
-def serve(runs_dir: Path, data_root: Path, repo: Path, host: str, port: int):
-    wb = Workbench(runs_dir, Dataset(data_root), repo)
+def serve(runs_dir: Path, data_root: Path | None, repo: Path, host: str, port: int, *,
+          data_root_v2: Path | None = None):
+    wb = Workbench(runs_dir, Dataset(data_root) if data_root else None, repo,
+                   ds_v2=Dataset(data_root_v2) if data_root_v2 else None)
     httpd = ThreadingHTTPServer((host, port), make_handler(wb))
     print(f"工作台：http://{host}:{port}/  （{len(load_runs(runs_dir))} 个实验；runs/ 的改动几秒内自动出现在画布上）")
     try:

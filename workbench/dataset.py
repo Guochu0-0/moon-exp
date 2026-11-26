@@ -29,6 +29,9 @@ class Dataset:
             root = root / "Processed_Data"
         self.root = root
 
+    def has_split(self, split: str) -> bool:
+        return (self.root / SPLIT_DIRS[split]).is_dir()
+
     @lru_cache(maxsize=None)
     def pairs(self, split: str) -> list[str]:
         """split 内全部 pair，按编号顺序。"""
@@ -55,6 +58,7 @@ class Dataset:
         a[:, [1, 3]] *= -1  # Label 里 y 存为负值
         return a[:, :2], a[:, 2:4]
 
+    @lru_cache(maxsize=None)
     def labelled(self, split: str) -> list[str]:
         return [p for p in self.pairs(split) if self._path(split, p, "Label").exists()]
 

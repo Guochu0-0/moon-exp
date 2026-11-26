@@ -89,7 +89,8 @@ def test_fit_affine_recovers_and_fails():
     assert fit_affine(M[:2], 3.0)[2] == "few_matches"
 
 
-def test_identity_pipeline_equals_unregistered(tmp_path, monkeypatch):
+@pytest.mark.parametrize("version", ["v1", "v2"])
+def test_identity_pipeline_equals_unregistered(tmp_path, monkeypatch, version):
     """identity 适配器走完 match → fit → eval，结果应与工作台的「未配准」逐 pair 相同。"""
     from baselines import fit, match
     from workbench.dataset import Dataset
@@ -107,7 +108,7 @@ def test_identity_pipeline_equals_unregistered(tmp_path, monkeypatch):
                              compression="zlib")
             tifffile.imwrite(d / "SAR" / f"patch_{n}.tif", rng.random((64, 64, 4), dtype=np.float32),
                              compression="zlib", planarconfig="contig", photometric="minisblack")
-            if n == 1:
+            if n == 1 or version == "v2" and split == "Val":
                 continue
             opt = rng.uniform(0, 64, (8, 2))
             sar = opt + rng.normal(0, 2, (8, 2))
@@ -115,20 +116,22 @@ def test_identity_pipeline_equals_unregistered(tmp_path, monkeypatch):
                        delimiter="\t")
     run = tmp_path / "runs" / "B0"
     run.mkdir(parents=True)
-    (run / "exp.toml").write_text('id = "B0"\ntitle = "t"\nstatus = "baseline"\n', encoding="utf-8")
+    version_line = 'data_version = "v2"\n' if version == "v2" else ""
+    (run / "exp.toml").write_text('id = "B0"\ntitle = "t"\nstatus = "baseline"\n' + version_line, encoding="utf-8")
     cfg = tmp_path / "identity.json"
     cfg.write_text(json.dumps({"method": "identity", "adapter": "identity", "params": {"step": 16},
                                "input": {"optical": "div255", "sar": "p2p98"}}), encoding="utf-8")
     out = tmp_path / "raw"
+    monkeypatch.setenv("MOON_DATA_V2" if version == "v2" else "MOON_DATA", str(tmp_path))
     for split in ("val", "test"):
-        match.main([str(cfg), "--split", split, "--data", str(tmp_path), "--out", str(out), "--device", "cpu"])
-        fit.main([str(out / "identity"), "--split", split, "--run", str(run), "--data", str(tmp_path)])
+        match.main([str(cfg), "--split", split, "--run", str(run), "--out", str(out), "--device", "cpu"])
+        fit.main([str(out / "identity"), "--split", split, "--run", str(run)])
     meta = json.loads((out / "identity" / "val.meta.json").read_text(encoding="utf-8"))
-    assert meta["n_pairs"] == 2 and meta["n_errors_this_session"] == 0
+    assert meta["n_pairs"] == (3 if version == "v2" else 2) and meta["n_errors_this_session"] == 0
 
     ds = Dataset(tmp_path)
     b0 = load_runs(tmp_path / "runs")["B0"]
-    pair = ds.labelled("val")[0]
+    pair = ds.pairs("val")[0]
     with np.load(out / "identity" / "val.npz") as z:
         raw_m = z[pair.replace("/", "__")]
     got_m = b0.matches("identity", "val", pair)          # RANSAC 前的全部点，坐标 +0.5
@@ -138,4 +141,8 @@ def test_identity_pipeline_equals_unregistered(tmp_path, monkeypatch):
     ref = evaluate_identity(ds)
     for s in ("val", "test"):
         assert got[s]["coverage"]["missing"] == 0
-        np.testing.assert_allclose(got[s]["errors"], ref[s]["errors"], atol=1e-4)
+        if version == "v2" and s == "val":
+            assert meta["data_version"] == "v2" and not ds.labelled(s)
+            assert got[s]["inlier_rates"] == [1.0, 1.0, 1.0]
+        else:
+            np.testing.assert_allclose(got[s]["errors"], ref[s]["errors"], atol=1e-4)

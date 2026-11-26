@@ -34,6 +34,7 @@ runs/<id>/
 |---|---|
 | `id` | 必填，与目录名一致 |
 | `title` | 必填，一句话说出这个实验要回答的问题 |
+| `data_version` | 实验与其全部方法共用的数据划分。新建默认 `"v2"`，用 `new --data-version v1` 显式选旧版。历史记录缺省为 `"v1"` |
 | `kind` | 分析写 `"analysis"`；普通实验省略这一行 |
 | `parent` | 父实验 id；根节点省略 |
 | `init` | 可选，`<实验>/<方法>`（如 `B0/roma`），表示从父实验的哪个方法起步 |
@@ -85,6 +86,7 @@ with PredWriter("runs/E3", "main", "val") as w:
 - 其余关键字参数原样写进这一行。
 - `matches` 用 matcher 的坐标约定（整数 = 像素中心），内容是 RANSAC 前的全部点。+0.5 换算、按 conf 截断到 2000 个点、写 npz 都由 `PredWriter` 负责；没有 conf 就省略。0 个点的 pair 照写；出错的 pair 省略 `matches`。
 - `PredWriter` 在 close 时写 `<split>.meta.json`（`commit`、`dirty`）。
+- Moon-v2 的预测元数据保存 `data_version` 和 `prediction_sha256`（JSONL 以 LF 计算）。包含点对时保存 `matches_sha256`。训练驱动还记录 `step`、`weights_sha256`、`config_sha256`、`manifest_sha256`（排序后的评测 patch 对清单）和 `ransac_px`。逐对的 `few_matches`、`few_inliers` 计为拟合失败，`not_run` 计为漏跑，`error: …` 计为执行错误。
 
 ## 中间结果：inter
 
@@ -137,6 +139,8 @@ runs/<id>/
   preds/<m>/           选中 step 的预测
   .claims/<m>/         队列占位（不进 git）
 ```
+
+Moon-v2 的 `peak.json` 另含 `data_version`、选权重规则 `metric`、各候选步的 `candidates`（分数和覆盖率，或执行失败原因），以及选中权重和 Val 清单的 SHA-256。Val 覆盖全部无标注 patch 对，逐对内点率按 E61 口径计算。只有覆盖完整且没有执行错误的候选参加均值排名。同分取最早步。正式 Test 使用合并测试集的人工标注和现有 AUC、SR 协议。最近一次失败的评测记录在 `peak_attempt.json`，成功发布后清除。
 
 工作台上只出现 `preds/<m>/`，sweep 里的各个 step 只作为评测记录。换选模规则时，在 Notes 里写明，再把对应 step 的预测复制过去。
 

@@ -1,4 +1,4 @@
-"""微调实验的驱动：训练 → 逐 ckpt 在 Val 上评测 → 按 Val AUC@5 峰值选 ckpt 补评 Test → 写成正式记录（#76、#86）。
+"""微调实验的驱动：训练 → 逐 ckpt 在 Val 上评测 → 按实验的数据版本选 ckpt 补评 Test → 写成正式记录。
 规矩见 .claude/skills/server/SKILL.md，配置格式见 finetune/config.py，产物布局见 .claude/skills/records/formats.md「训练产物」。
 
     GPU=<空卡[,空卡...]> /opt/envs/loftr/bin/python scripts/finetune/run.py runs/<id> [--method <方法>]
@@ -32,14 +32,30 @@ REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from finetune import config as C  # noqa: E402
 from finetune.models import MODELS  # noqa: E402
+from moonlib.data_version import (CURRENT, INLIER_SELECTION, LEGACY, ROOT_ENV, experiment_version,
+                                  manifest_sha256, prediction_sha256, root_error, root_for, sha256)  # noqa: E402
 from workbench import launch  # noqa: E402
 
 Y = "/remote-home/xufang/YGC"
 PY, WB = "/opt/envs/loftr/bin/python", "/opt/envs/wb/bin/python"
 NICE = ["nice", "-n", "10", "ionice", "-c3"]
-ENV = {"MOON_DATA": f"{Y}/dataset/Moon", "MOON_WEIGHTS": f"{Y}/weights", "MOON_RESULTS": f"{Y}/results",
+ENV = {"MOON_WEIGHTS": f"{Y}/weights", "MOON_RESULTS": f"{Y}/results",
        "CUDA_DEVICE_ORDER": "PCI_BUS_ID"}   # GPU 编号与 nvidia-smi 一致（A6000 上默认顺序不同）
+DATA_DEFAULT = {LEGACY: f"{Y}/dataset/Moon", CURRENT: f"{Y}/dataset/Moon-v2"}
 ENTRY = "scripts/finetune/run.py"
+
+
+class EvaluationError(RuntimeError):
+    pass
+
+
+def validate_selection(cfg, version):
+    opts = cfg["run"]
+    inlier = opts["select"] == INLIER_SELECTION
+    if version == CURRENT and (not inlier or opts["sweep"] != "all" or opts["split"] != "train"):
+        raise C.ConfigError('Moon-v2 要求 [run] select = "val_inlier_mean"、sweep = "all"，且仅使用 Train 训练')
+    if version == LEGACY and inlier:
+        raise C.ConfigError('select = "val_inlier_mean" 适用于 Moon-v2')
 
 
 def log(msg):
@@ -65,8 +81,12 @@ def methods(R: Path) -> list[str]:
 class Job:
     def __init__(self, R: Path, m: str, cfg: dict, gpu):
         self.R, self.m, self.cfg, self.gpu = R, m, cfg, gpu
+        self.version = experiment_version(R)
+        validate_selection(cfg, self.version)
         self.infer = cfg["model"]["config"]          # 推理配置，评测用
-        self.env = {"TORCH_HOME": MODELS[cfg["model"]["name"]].TORCH_HOME}
+        self.roots = {v: root_for(v, default=DATA_DEFAULT[v]) for v in ROOT_ENV}
+        self.env = {"TORCH_HOME": MODELS[cfg["model"]["name"]].TORCH_HOME,
+                    **{name: str(self.roots[v]) for v, name in ROOT_ENV.items()}}
         self.ck, self.sw = R / "ckpt" / m, R / "sweep" / m
         self.S = self.sw / "S"
 
@@ -82,11 +102,73 @@ class Job:
         run(cmd, self.ck / logname, self.env, self.gpu if gpu else None)
 
     def evaluate(self, split, st):
+        if self.version == CURRENT:
+            return self.evaluate_versioned(split, int(st))
         if not (self.S / "preds" / f"step{st}" / f"{split}.jsonl").exists():
             self.sh([PY, "-m", "baselines.match", self.infer, "--split", split, "--weights",
                      self.ck / f"ckpt_{st}.pt", "--name", f"step{st}", "--out", self.sw / "match"], "sweep.log")
             self.sh([WB, "-m", "baselines.fit", self.sw / "match" / f"step{st}", "--split", split, "--run", self.S],
                     "sweep.log", gpu=False)
+
+    def evaluate_versioned(self, split, step):
+        from workbench.dataset import Dataset
+        from workbench.evaluate import evaluate_preds
+        from workbench.protocol import RANSAC_PX
+        from workbench.records import Run
+        from workbench.validation import evaluate_val, inlier_rate
+
+        ds = Dataset(self.roots[self.version])
+        if not ds.has_split(split):
+            raise EvaluationError(root_error(self.version, ds.root, split))
+        if split == "val" and ds.labelled(split):
+            raise EvaluationError("Moon-v2 Val 应为无标注验证集，请核对 MOON_DATA_V2")
+        pairs = ds.pairs(split) if split == "val" else ds.labelled(split)
+        if not pairs:
+            raise EvaluationError(f"Moon-v2 {split} 评测清单为空")
+        method = f"step{step}"
+        weight = self.ck / f"ckpt_{step}.pt"
+        src = self.S / "preds" / method
+        prediction = src / f"{split}.jsonl"
+        meta_path = src / f"{split}.meta.json"
+        expected = {"data_version": self.version, "split": split, "step": step, "ransac_px": RANSAC_PX,
+                    "manifest_sha256": manifest_sha256(pairs), "weights_sha256": sha256(weight),
+                    "config_sha256": sha256(REPO / self.infer)}
+        run = Run("S", self.S, {"data_version": self.version}, [method])
+
+        def result():
+            try:
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                if (any(meta.get(k) != v for k, v in expected.items())
+                        or meta.get("prediction_sha256") != prediction_sha256(prediction)):
+                    return None
+                preds = run.preds(method, split)
+                if set(preds) != set(pairs):
+                    return None
+                if split == "val":
+                    evaluation = evaluate_val(pairs, preds)
+                    if evaluation["summary"]["inlier_mean"] is None:
+                        return evaluation
+                if any(inlier_rate(p) is None for p in preds.values()):
+                    return None
+                if meta.get("matches_sha256") != sha256(src / f"{split}_matches.npz"):
+                    return None
+                return evaluation if split == "val" else evaluate_preds(ds, split, preds)
+            except (OSError, ValueError, KeyError):
+                return None
+
+        cached = result()
+        if cached and (split == "test" or cached["summary"]["inlier_mean"] is not None):
+            return cached
+        # 匹配或拟合异常后保留逐对原因，只有符合本次清单的完整候选可以复用。
+        meta_path.unlink(missing_ok=True)
+        self.sh([PY, "-m", "baselines.match", self.infer, "--split", split, "--weights", weight,
+                 "--name", method, "--out", self.sw / "match", "--run", self.R], "sweep.log")
+        self.sh([WB, "-m", "baselines.fit", self.sw / "match" / method, "--split", split, "--run", self.S],
+                "sweep.log", gpu=False)
+        fresh = result()
+        if fresh is None:
+            raise EvaluationError(f"{method}/{split} 的预测来源或逐对覆盖不完整，详见 sweep.log")
+        return fresh
 
     def metrics(self):
         self.sh([WB, "-m", "workbench", "--runs", self.sw, "eval", "S"], "sweep.log", gpu=False)
@@ -104,6 +186,8 @@ class Job:
         ddp = self.cfg["run"]["ddp"]
         launcher = [PY, "-m", "torch.distributed.run", "--standalone", f"--nproc_per_node={ddp}"] if ddp else [PY]
         base = launcher + ["-m", "finetune.train", src, "--out", self.ck, "--tb", self.R / "tb" / self.m / "scalars"]
+        if self.version == CURRENT:
+            base += ["--data", self.roots[self.version]]
         interval = self.cfg["run"]["segment_steps"]
         if not interval:
             self.sh(base, "train.log")
@@ -136,9 +220,19 @@ class Job:
 
     def sweep_val(self, ckpts, online):
         """每个存档的原始Val推理独立，结果目录按step隔离；不在工作线程选模或评Test。"""
+        candidates = {}
+
         def evaluate(job, c):
             st = c.stem[5:]
-            job.evaluate("val", st)
+            try:
+                result = job.evaluate("val", st)
+            except (EvaluationError, subprocess.CalledProcessError, OSError, ValueError) as e:
+                if self.version != CURRENT:
+                    raise
+                candidates[int(st)] = {"step": int(st), "error": str(e)}
+                return
+            if self.version == CURRENT:
+                candidates[int(st)] = {"step": int(st), "summary": result["summary"], "coverage": result["coverage"]}
             if online and not (job.sw / "neg" / f"step{st}.jsonl").exists():
                 job.sh([PY, "-m", "finetune.negpairs", job.infer, "--split", "val", "--n", "200",
                         "--weights", f"step{st}={c}", "--out", job.sw / "neg"], "neg.log")
@@ -147,7 +241,7 @@ class Job:
         if not gpus:
             for c in ckpts:
                 evaluate(self, c)
-            return
+            return [candidates[k] for k in sorted(candidates)]
         from concurrent.futures import ThreadPoolExecutor
         from queue import Queue, Empty
         queue = Queue()
@@ -167,6 +261,7 @@ class Job:
             futures = [pool.submit(worker, gpu) for gpu in gpus]
             for f in futures:
                 f.result()
+        return [candidates[k] for k in sorted(candidates)]
 
     def __call__(self):
         self.run_training()
@@ -180,13 +275,32 @@ class Job:
             (self.ck / "train.done").touch()
 
     def run_evaluation(self):
+        if self.version == LEGACY:
+            self.evaluate_checkpoints()
+            return
+        # 全流程和 --eval-only 使用不同的队列占位，评测产物共用同一把锁。
+        lock = self.ck / ".evaluating"
+        try:
+            lock.mkdir()
+        except FileExistsError:
+            raise EvaluationError(f"{self.m} 已有评测进程") from None
+        try:
+            self.evaluate_checkpoints()
+        finally:
+            lock.rmdir()
+
+    def evaluate_checkpoints(self):
         R, m, ck = self.R, self.m, self.ck
         online = self.cfg["model"]["name"] == "loftr" and ("cexp" in self.cfg or "neg" in self.cfg)
         log(f"SWEEP {m}")
         if not self.S.exists():
-            self.sh([WB, "-m", "workbench", "--runs", self.sw, "new", "S", "--title", f"{R.name}/{m} ckpt sweep"],
+            self.sh([WB, "-m", "workbench", "--runs", self.sw, "new", "S", "--title", f"{R.name}/{m} ckpt sweep",
+                     "--data-version", self.version],
                     "sweep.log", gpu=False)
         ckpts = sorted(ck.glob("ckpt_*.pt"), key=lambda p: int(p.stem[5:]))
+        if self.version == CURRENT:
+            self.select_by_inlier_rate(ckpts, online)
+            return
         sweep = self.cfg["run"]["sweep"]
         val_only = sweep == "last"
         last_only = sweep != "all"
@@ -211,6 +325,55 @@ class Job:
         self.sh([WB, "-m", "workbench", "eval", R.name], "sweep.log", gpu=False)
         log(f"DONE {m}")
 
+    def select_by_inlier_rate(self, ckpts, online):
+        from tempfile import TemporaryDirectory
+
+        from workbench.evaluate import jsonable
+
+        if experiment_version(self.S) != self.version:
+            raise EvaluationError(f"{self.S}/exp.toml 的数据版本与实验不符")
+        candidates = self.sweep_val(ckpts, False)
+        rated = [c for c in candidates if c.get("summary", {}).get("inlier_mean") is not None]
+        chosen = max(rated, key=lambda c: c["summary"]["inlier_mean"], default=None)
+        step = chosen["step"] if chosen else None
+        peak = {"data_version": self.version, "metric": INLIER_SELECTION, "step": step, "candidates": candidates,
+                "val": chosen["summary"] if chosen else None, "test": None}
+        def write_peak(name):
+            with TemporaryDirectory(dir=self.sw) as tmp:
+                path = Path(tmp) / name
+                path.write_text(json.dumps(jsonable(peak), indent=1, allow_nan=False) + "\n", encoding="utf-8")
+                path.replace(self.sw / name)
+
+        try:
+            if step is None:
+                raise EvaluationError("所有 Moon-v2 Val 候选均缺少完整有效的逐对预测")
+            log(f"TEST {self.m} step{step}")
+            peak["test"] = self.evaluate("test", step)["summary"]
+            src = self.S / "preds" / f"step{step}"
+            meta = json.loads((src / "val.meta.json").read_text(encoding="utf-8"))
+            peak.update(weights_sha256=meta["weights_sha256"], val_manifest_sha256=meta["manifest_sha256"])
+            dst = self.R / "preds" / self.m
+            dst.mkdir(parents=True, exist_ok=True)
+            with TemporaryDirectory(dir=dst) as tmp:
+                for split in ("val", "test"):
+                    for suffix in (".jsonl", "_matches.npz", ".meta.json"):
+                        name = split + suffix
+                        shutil.copy2(src / name, Path(tmp) / name)
+                for split in ("val", "test"):
+                    for suffix in (".jsonl", "_matches.npz", ".meta.json"):
+                        name = split + suffix
+                        (Path(tmp) / name).replace(dst / name)
+        except (EvaluationError, subprocess.CalledProcessError, OSError, ValueError) as e:
+            peak["error"] = str(e)
+            write_peak("peak_attempt.json")
+            raise
+        write_peak("peak.json")
+        (self.sw / "peak_attempt.json").unlink(missing_ok=True)
+        if online:
+            log("Moon-v2 Val 无标注，跳过旧版基于有标注 Val 的负样本诊断")
+        self.sh([WB, "-m", "workbench", "eval", self.R.name], "sweep.log", gpu=False)
+        log(f"DONE {self.m}")
+
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -225,6 +388,7 @@ def main(argv=None):
     R = Path(a.run).resolve()
     if R.parent != REPO / "runs" or not (R / "configs").is_dir():
         ap.error(f"应给本仓库的实验目录 runs/<id>，且其下有 configs/：{R}")
+    version = experiment_version(R)
     gpu = os.environ["GPU"]
     devices = gpu.split(",")
     if any(not d.isdecimal() for d in devices) or len(devices) != len(set(devices)):
@@ -239,6 +403,7 @@ def main(argv=None):
 
     def load(m):
         cfg = C.load(R / "configs" / f"{m}.toml")
+        validate_selection(cfg, version)
         expected = 1 if a.eval_only else (cfg["run"]["ddp"] or 1)
         if len(devices) != expected:
             raise C.ConfigError(f"{m} 需要 {expected} 张 GPU，得到 GPU={gpu}")
@@ -251,9 +416,13 @@ def main(argv=None):
     phase_name = "test" if a.eval_only else "train" if a.train_only else "train_eval"
     claims = R / ".claims"
     claims.mkdir(exist_ok=True)
+    attempted = set()
+    failed = False
     while True:
         picked = None
         for m in candidates():   # 每轮重新列，中途新增的方法也会被领走
+            if m in attempted:
+                continue
             try:
                 record = f"{m}_eval" if a.eval_only else m
                 (claims / record).mkdir()
@@ -263,8 +432,11 @@ def main(argv=None):
             break
         if picked is None:
             log("queue empty")
+            if failed:
+                raise SystemExit(1)
             return
         m = picked
+        attempted.add(m)
         (claims / record / "host").write_text(f"{socket.gethostname()} gpu{gpu} {time.strftime('%F %T %z')}\n")
         log(f"START {R.name}/{m} gpu{gpu}")
         src = R / "configs" / f"{m}.toml"
@@ -276,6 +448,7 @@ def main(argv=None):
         infer = json.loads((REPO / cfg["model"]["config"]).read_text(encoding="utf-8"))
         launch.begin(R, record, [sys.executable, *sys.argv], repo=REPO, entry=ENTRY,
                      config_file=src.relative_to(REPO).as_posix(), args=cfg, config=infer, phase=phase_name,
+                     data_version=version,
                      batch_transport=os.environ.get("MOON_BATCH_TRANSPORT", "shared_memory"))
         try:
             job = Job(R, m, cfg, gpu)
@@ -287,9 +460,13 @@ def main(argv=None):
                 job()
             launch.end(R, record, "ok")
             log(f"OK {m}")
-        except subprocess.CalledProcessError as e:
+        except (subprocess.CalledProcessError, EvaluationError, OSError, ValueError) as e:
             launch.end(R, record, "fail")
             log(f"FAIL {m}: {e}")
+            if version == CURRENT:
+                failed = True
+                (claims / record / "host").unlink()
+                (claims / record).rmdir()
 
 
 if __name__ == "__main__":

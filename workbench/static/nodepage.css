@@ -193,3 +193,4 @@
   .np .grid, .np .vr-top:not(.noref) .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .np .tbgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+.np .data-note { padding: 8px 12px; border-left: 3px solid #A97227; background: #FBF4E7; }

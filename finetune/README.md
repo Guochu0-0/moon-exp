@@ -75,6 +75,8 @@ geo = false
 
 多卡时给 `GPU` 传入逗号分隔的卡号，数量须与 `[run] ddp` 一致。用 `--method <方法>` 指定一个方法；追加 `--train-only` 可单独训练，之后用一张卡和 `--eval-only` 评测。
 
+实验下所有方法采用 `exp.toml` 的 `data_version`。Moon-v1 继续默认按有标注 Val 的 AUC@5 选存档。Moon-v2 的方法配置设 `[run] select = "val_inlier_mean"`，使用 Train 训练，并保留 `sweep = "all"`。驱动扫完整的无标注 Val，记录各候选的内点率均值和中位数，只用选中的 checkpoint 评正式 Test。Moon-v2 的 Test 含历史开发阶段使用过的原 Val。
+
 单独训练（调试）：`python -m finetune.train runs/<id>/configs/<方法>.toml --out <目录> [--stop-at N]`；`--stop-at` 提前停下，lr 调度仍按配置的总步数。
 
 只训一段、从中间续训（#209）：`[run] stop_at` 与 `--stop-at` 相同；`save_optim = true` 时 ckpt 另存续训状态（AdamW、GradScaler、随机数、数据顺序），`resume = "<ckpt 路径>"` 从这样的 ckpt 接着训（只支持第一个 epoch 内的存档）。`sweep = "last"` 只评最后一个存档的 Val，`sweep = "last_test"` 评最后一个存档的 Val 和 Test。
@@ -90,8 +92,9 @@ geo = false
 `run.py` 之外手工评测时，原始点对也放进实验目录（不进 git）：
 
 ```bash
-export MOON_DATA=/remote-home/xufang/YGC/dataset/Moon MOON_WEIGHTS=/remote-home/xufang/YGC/weights
+export MOON_DATA=/remote-home/xufang/YGC/dataset/Moon MOON_DATA_V2=/remote-home/xufang/YGC/dataset/Moon-v2
+export MOON_WEIGHTS=/remote-home/xufang/YGC/weights
 CUDA_VISIBLE_DEVICES=<空卡> nice -n 10 /opt/envs/loftr/bin/python -m baselines.match configs/baselines/anymatch_loftr.json \
-    --split val --weights runs/<id>/ckpt/<m>/ckpt_<step>.pt --name <m> --out runs/<id>/sweep/<m>/match
+    --run runs/<id> --split val --weights runs/<id>/ckpt/<m>/ckpt_<step>.pt --name <m> --out runs/<id>/sweep/<m>/match
 /opt/envs/wb/bin/python -m baselines.fit runs/<id>/sweep/<m>/match/<m> --split val --run runs/<id>
 ```

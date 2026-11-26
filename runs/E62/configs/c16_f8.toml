@@ -1,0 +1,5 @@
+base = "_k5_no_bce"
+
+[rloo]
+group = 16
+fine_group = 8

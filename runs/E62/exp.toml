@@ -1,0 +1,6 @@
+id = "E62"
+title = "Moon-v2 粗级与细级采样次数消融"
+data_version = "v2"
+parent = "E55"
+# init = "<父实验>/<方法>"   # 可选：从父实验的哪个方法起步
+date = "2026-11-26"

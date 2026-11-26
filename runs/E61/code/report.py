@@ -87,7 +87,7 @@ def plot(table, curve):
     })
     navy, orange, teal, purple = "#225b95", "#b64a20", "#147670", "#75499a"
     fig, (accuracy, inliers, rewards) = plt.subplots(3, 1, figsize=(8.35, 7.2), sharex=True)
-    fig.subplots_adjust(left=.12, right=.975, bottom=.09, top=.97, hspace=.62)
+    fig.subplots_adjust(left=.12, right=.975, bottom=.09, top=.91, hspace=.66)
     steps = [r["step"] for r in table]
     for ax in (accuracy, inliers, rewards):
         ax.set_xlim(-110, 8115)
@@ -105,11 +105,11 @@ def plot(table, curve):
         for key, label, color, marker in series:
             values = [100 * r[key] if r[key] is not None else math.nan for r in table]
             ax.plot(steps, values, color=color, linewidth=1.45, marker=marker, markersize=3.3, label=label)
-    accuracy.set_title("A  Registration accuracy", loc="left", fontweight="bold")
+    accuracy.set_title("A  Registration accuracy", loc="left", fontweight="bold", pad=25)
     accuracy.set_ylabel("AUC@5 (%)")
-    inliers.set_title("B  Validation inlier rate per patch pair", loc="left", fontweight="bold")
+    inliers.set_title("B  Validation inlier rate per patch pair", loc="left", fontweight="bold", pad=25)
     inliers.set_ylabel("Inlier rate (%)")
-    rewards.set_title("C  Training position rewards (trailing 250-step means)", loc="left", fontweight="bold")
+    rewards.set_title("C  Training position rewards (trailing 250-step means)", loc="left", fontweight="bold", pad=25)
     rewards.set_ylabel("Mean reward")
     rewards.set_xlabel("Training step")
     training_steps = [r["step"] for r in curve]
@@ -117,7 +117,8 @@ def plot(table, curve):
         rewards.plot(training_steps, [r[f"{key}_trailing_{WINDOW}"] for r in curve],
                      color=color, linewidth=1.45, label=label)
     for ax in (accuracy, inliers, rewards):
-        ax.legend(frameon=False, ncol=2, loc="upper right", handletextpad=.45, columnspacing=1.1)
+        ax.legend(frameon=False, ncol=2, loc="upper right", bbox_to_anchor=(1, 1.17),
+                  borderaxespad=0, handletextpad=.45, columnspacing=1.1)
         ax.margins(y=.18)
     fig.savefig(EXTRA / "training_progress.png", facecolor="white")
     plt.close(fig)

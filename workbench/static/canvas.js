@@ -129,6 +129,7 @@ export function mountCanvas(root, { onOpen }) {
       <div class="hdr">便签</div><div class="body">${esc(s.text)}</div></div>`;
   function render() {
     layer.innerHTML = groups.map(groupHTML).join('') + stickies.map(stickyHTML).join('') + EXPS.map(nodeHTML).join('');
+    stackGroups();
     for (const e of EXPS) place(e.id);
     S.fresh = null;
     $('.count').textContent = `${EXPS.length} 个实验，${EXPS.filter(e => e.lit).length} 个已点亮`;
@@ -185,6 +186,19 @@ export function mountCanvas(root, { onOpen }) {
     return { x0, y0, x1: Math.max(...rs.map(r => r.x + r.w)), y1: Math.max(...rs.map(r => r.y + r.h)) };
   }
   const inside = (r, g) => r.x >= g.x && r.y >= g.y && r.x + r.w <= g.x + g.w && r.y + r.h <= g.y + g.h;
+  const strictlyInside = (r, g) => inside(r, g) && !inside(g, r);
+  function stackGroups() {
+    // 从顶到底按原绘制顺序排。若外框已经在列表中，就把内框提到最高的外框上方。
+    const ordered = [];
+    for (let i = groups.length - 1; i >= 0; i--) {
+      const g = groups[i];
+      const firstOuter = ordered.findIndex(outer => strictlyInside(g, outer));
+      if (firstOuter < 0) ordered.push(g);
+      else ordered.splice(firstOuter, 0, g);
+    }
+    // 负层级把分组框留在连线和卡片下方。
+    ordered.forEach((g, i) => { groupEl(g.id).style.zIndex = -1 - i; });
+  }
   function members(g) {   // 几何包含：整个落在框里的实验和便签
     const rs = rects().filter(r => !r.el.classList.contains('grp') && inside(r, g));
     return { exps: rs.filter(r => r.el.dataset.id).map(r => r.el.dataset.id), stickies: rs.filter(r => r.el.dataset.s).map(r => r.el.dataset.s) };
@@ -437,7 +451,7 @@ export function mountCanvas(root, { onOpen }) {
     }
     if (gr && ev.target.closest('.gt')) {   // 拖标题栏：冻结框内成员及其起点
       const g = groupOf(gr.dataset.g), m = members(g);
-      const nested = groups.filter(inner => inside(inner, g) && !inside(g, inner));
+      const nested = groups.filter(inner => strictlyInside(inner, g));
       const startBox = (box, elementFor) => ({ box, elementFor, x: box.x, y: box.y });
       const boxes = [
         ...[g, ...nested].map(box => startBox(box, groupEl)),
@@ -519,9 +533,9 @@ export function mountCanvas(root, { onOpen }) {
         if (id && d.target.closest('.more')) { S.expanded.has(id) ? S.expanded.delete(id) : S.expanded.add(id); render(); }
       }
     } else if (d.kind === 'group') {
-      if (d.moved >= DRAG_PX) saveLayout(d.exps.map(it => it.id));
+      if (d.moved >= DRAG_PX) { stackGroups(); saveLayout(d.exps.map(it => it.id)); }
     } else if (d.kind === 'resize') {
-      if (d.moved) saveLayout();
+      if (d.moved) { stackGroups(); saveLayout(); }
     } else if (d.kind === 'box') d.box.remove();
     else if (d.kind === 'pan' && d.moved < DRAG_PX && S.sel.size) setSel([]);
   });

@@ -3,7 +3,8 @@
     MOON_DATA=G:/Lunar_Optical_SAR_Registration_Dataset python scripts/smoke_canvas.py [--shots DIR]
 
 把仓库 runs/ 里的 B0、B0m（exp.toml 与 preds/*.jsonl）复制到临时目录，起一个工作台服务，然后覆盖：
-手动缩小到 30% 以下并放大、按 E 新建、菜单派生、拖到空白派生、拖到实验改父、成环被拒、已点亮实验的删除项置灰、
+手动缩小到 30% 以下并放大、按 E 新建 Moon-v2、从旧实验派生 Moon-v2、拖到空白派生、拖到实验改父、成环被拒、
+已点亮实验的删除项置灰、
 拖动后刷新位置保持、终端写 exp.toml 后几秒内出现、便签新建与编辑、Ctrl+G 打组并重命名、
 拖分组框标题带走框内实验、便签和内框、两种顺序下拖动和缩放内框、分组框换色、`?` 面板、框选加多选拖动、Ctrl+A、
 各类右键菜单的内容、Del 删除选中对象时跳过已点亮实验、双击进入节点页并返回；
@@ -540,7 +541,7 @@ def main():
         p.type("按 E 新建")
         p.key("Enter")
         until(lambda: toml("E1")["title"] == "按 E 新建", "E1 标题写回 exp.toml")
-        assert "parent" not in toml("E1")
+        assert "parent" not in toml("E1") and toml("E1")["data_version"] == "v2"
         assert p.js(f"document.querySelector('{node('E1')}').classList.contains('off')")
         step("02-按E新建")
 
@@ -551,6 +552,7 @@ def main():
         p.wait(f"document.querySelector('{node('E2')} .ttl[contenteditable=true]')", what="E2 进入标题编辑")
         p.key("Escape")
         assert toml("E2")["parent"] == "B0" and toml("E2")["init"] == f"B0/{m}"
+        assert toml("E2")["data_version"] == "v2"
         e2 = p.js(f"(() => {{ const a = document.querySelector('{node('B0')}').getBoundingClientRect(),"
                   f" b = document.querySelector('{node('E2')}').getBoundingClientRect(); return b.left > a.right; }})()")
         assert e2, "派生的实验应在父实验右侧"
@@ -624,7 +626,8 @@ def main():
         p.click(bx, by, button="right")
         p.wait("document.querySelector('.menu:not([hidden])')", what="空白处菜单")
         items = menu_items(p)
-        assert items == ["新建实验", "新建便签", "新建分组框", "把选中的对象打成一组", "适应窗口"], items
+        assert items == ["新建实验", "新建 Moon-v1 实验", "新建便签", "新建分组框",
+                         "把选中的对象打成一组", "适应窗口"], items
         assert p.js("[...document.querySelectorAll('.menu button')].find(b => b.textContent.includes('打成一组')).disabled")
         step("12-空白处菜单")
 
@@ -711,7 +714,8 @@ def main():
         # 分组框右键：在此新建实验、重命名、换颜色、贴合框内内容、删除（内容保留）
         p.click(*p.center(f"{grp} .gt"), button="right")
         items = menu_items(p)
-        assert items == ["在此新建实验", "重命名", "换颜色", "贴合框内内容", "删除分组框（内容保留）"], items
+        assert items == ["在此新建实验", "在此新建 Moon-v1 实验", "重命名", "换颜色",
+                         "贴合框内内容", "删除分组框（内容保留）"], items
         color0 = canvas_all()["groups"][0]["color"]
         menu_click(p, "换颜色")
         until(lambda: canvas_all()["groups"][0]["color"] != color0, "换颜色写回 canvas.json")

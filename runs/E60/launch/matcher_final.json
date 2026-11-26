@@ -1,0 +1,145 @@
+[
+ {
+  "start": "2026-11-26 06:08:50 +0800",
+  "end": "2026-11-26 06:09:13 +0800",
+  "status": "ok",
+  "commit": "8e762e5c8e464373ac2d09734c26e4e94b606bab",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-299",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E60.code.run",
+   "preflight",
+   "matcher_final",
+   "--seconds",
+   "1800"
+  ],
+  "entry": "runs.E60.code.run",
+  "config_file": "runs/E60/configs/matcher_final.toml",
+  "config": {
+   "method": "minima_splg",
+   "adapter": "splg",
+   "repo": "third_party/LightGlue",
+   "weights": "minima/minima_lightglue.pth",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "superpoint": {
+    "descriptor_dim": 256,
+    "nms_radius": 4,
+    "max_num_keypoints": 2048,
+    "detection_threshold": 0.0005,
+    "remove_borders": 4
+   },
+   "lightglue": {
+    "name": "lightglue",
+    "input_dim": 256,
+    "descriptor_dim": 256,
+    "add_scale_ori": false,
+    "n_layers": 9,
+    "num_heads": 4,
+    "flash": true,
+    "mp": false,
+    "depth_confidence": 0.95,
+    "width_confidence": 0.99,
+    "filter_threshold": 0.1,
+    "weights": null
+   },
+   "inference_affine_threshold_px": 3.0
+  },
+  "args": {
+   "source": {
+    "revision": "192baa367afc800614b224093b733433e012592b",
+    "baseline": "configs/baselines/minima_splg.json"
+   },
+   "train": {
+    "seed": 0,
+    "epochs": 8,
+    "batch_size": 32,
+    "accumulation": 1,
+    "workers": 4,
+    "precision": "fp32",
+    "checkpoint_every": 50,
+    "observation_passes": [
+     1,
+     2,
+     4,
+     6,
+     8
+    ]
+   },
+   "optim": {
+    "lr": 1e-05
+   },
+   "signal": {
+    "min_candidates": 8,
+    "threshold_px": 3.0,
+    "background": -1e-07,
+    "inlier": 1.0,
+    "outlier": -1.0,
+    "dustbin_penalty": 0.0001,
+    "ramp_fraction": 0.3333333333333333,
+    "filter_threshold": 0.1,
+    "flash": false
+   }
+  },
+  "phase": "preflight",
+  "split": null,
+  "observation_pass": 8,
+  "data_root": "/remote-home/xufang/YGC/dataset/Moon",
+  "weight_files": {
+   "superpoint": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+   "minima": "/remote-home/xufang/YGC/weights/minima/minima_lightglue.pth",
+   "lightglue_before_minima_override": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_lightglue_v0-1_arxiv.pth"
+  },
+  "checkpoint_files": {},
+  "identity": {
+   "release": {
+    "superpoint": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+    "minima": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126",
+    "lightglue_before_minima_override": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a"
+   },
+   "revision": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+   "checkpoints": {}
+  },
+  "segment_seconds": 1800,
+  "pairs_seen": 32,
+  "train_pairs": 7907,
+  "microbatches": 1,
+  "updates": 1,
+  "complete": true,
+  "reason": "complete",
+  "gradients_and_updates": {
+   "posenc.Wr.weight": {
+    "gradient_max": 0.04471457004547119,
+    "parameter_change_max": 1.0013580322265625e-05
+   },
+   "log_assignment.0.matchability.weight": {
+    "gradient_max": 0.03123800829052925,
+    "parameter_change_max": 1.0013580322265625e-05
+   },
+   "log_assignment.8.final_proj.weight": {
+    "gradient_max": 0.011435730382800102,
+    "parameter_change_max": 1.000240445137024e-05
+   },
+   "token_confidence.0.token.0.weight": {
+    "gradient_max": 0.04276774078607559,
+    "parameter_change_max": 1.0013580322265625e-05
+   }
+  },
+  "extractor_frozen": true,
+  "precision": "fp32",
+  "peak_cuda_gib": 0.6362247467041016,
+  "elapsed_seconds": 19.03674607211724
+ }
+]

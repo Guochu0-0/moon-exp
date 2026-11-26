@@ -1,0 +1,27 @@
+[source]
+revision = "192baa367afc800614b224093b733433e012592b"
+baseline = "configs/baselines/minima_splg.json"
+
+[train]
+seed = 0
+epochs = 8
+batch_size = 32
+accumulation = 1
+workers = 4
+precision = "fp32"
+checkpoint_every = 50
+observation_passes = [1, 2, 4, 6, 8]
+
+[optim]
+lr = 0.00001
+
+[signal]
+min_candidates = 8
+threshold_px = 3.0
+background = -0.0000001
+inlier = 1.0
+outlier = -1.0
+dustbin_penalty = 0.0001
+ramp_fraction = 0.3333333333333333
+filter_threshold = 0.1
+flash = false

@@ -1,0 +1,391 @@
+[
+ {
+  "start": "2026-11-26 06:07:52 +0800",
+  "end": "2026-11-26 06:08:03 +0800",
+  "status": "ok",
+  "commit": "8e762e5c8e464373ac2d09734c26e4e94b606bab",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-299",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E60.code.run",
+   "preflight",
+   "extractor_final",
+   "--seconds",
+   "1800"
+  ],
+  "entry": "runs.E60.code.run",
+  "config_file": "runs/E60/configs/extractor_final.toml",
+  "config": {
+   "method": "minima_splg",
+   "adapter": "splg",
+   "repo": "third_party/LightGlue",
+   "weights": "minima/minima_lightglue.pth",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "superpoint": {
+    "descriptor_dim": 256,
+    "nms_radius": 4,
+    "max_num_keypoints": 2048,
+    "detection_threshold": 0.0005,
+    "remove_borders": 4
+   },
+   "lightglue": {
+    "name": "lightglue",
+    "input_dim": 256,
+    "descriptor_dim": 256,
+    "add_scale_ori": false,
+    "n_layers": 9,
+    "num_heads": 4,
+    "flash": true,
+    "mp": false,
+    "depth_confidence": 0.95,
+    "width_confidence": 0.99,
+    "filter_threshold": 0.1,
+    "weights": null
+   },
+   "inference_affine_threshold_px": 3.0
+  },
+  "args": {
+   "source": {
+    "revision": "0666e62bf00569870bbcc1fe4b2e03976fc563f8",
+    "baseline": "configs/baselines/minima_splg.json"
+   },
+   "train": {
+    "seed": 0,
+    "epochs": 8,
+    "batch_size": 6,
+    "accumulation": 4,
+    "workers": 4,
+    "precision": "bf16-if-native-else-fp32",
+    "checkpoint_every": 50,
+    "observation_passes": [
+     1,
+     2,
+     4,
+     6,
+     8
+    ]
+   },
+   "optim": {
+    "lr": 0.001,
+    "final_lr": 1e-06,
+    "weight_decay": 1e-05
+   },
+   "signal": {
+    "min_candidates": 8,
+    "threshold_px": 3.0,
+    "min_keypoints": 16,
+    "background": -1e-07,
+    "inlier": 1.0,
+    "outlier": -0.1,
+    "keypoint_penalty": -7e-07,
+    "entropy_weight": 1e-06,
+    "descriptor_weight": 2.5,
+    "descriptor_margin": 0.2,
+    "descriptor_fallback_below": 8,
+    "ramp_fraction": 0.3333333333333333
+   }
+  },
+  "phase": "preflight",
+  "split": null,
+  "observation_pass": 8,
+  "data_root": "/remote-home/xufang/YGC/dataset/Moon",
+  "weight_files": {
+   "superpoint": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+   "minima": "/remote-home/xufang/YGC/weights/minima/minima_lightglue.pth",
+   "lightglue_before_minima_override": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_lightglue_v0-1_arxiv.pth"
+  },
+  "checkpoint_files": {},
+  "identity": {
+   "release": {
+    "superpoint": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+    "minima": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126",
+    "lightglue_before_minima_override": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a"
+   },
+   "revision": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+   "checkpoints": {}
+  },
+  "segment_seconds": 1800,
+  "pairs_seen": 24,
+  "train_pairs": 7907,
+  "microbatches": 4,
+  "updates": 1,
+  "complete": true,
+  "reason": "complete",
+  "gradients_and_updates": {
+   "conv4b.weight": {
+    "gradient_max": 0.1815488487482071,
+    "parameter_change_max": 0.0009997189044952393
+   },
+   "convPb.weight": {
+    "gradient_max": 1.3625420791640863e-08,
+    "parameter_change_max": 0.0005765557289123535
+   },
+   "convDb.weight": {
+    "gradient_max": 0.0005481484113261104,
+    "parameter_change_max": 0.0009999275207519531
+   }
+  },
+  "extractor_frozen": false,
+  "precision": "fp32",
+  "peak_cuda_gib": 2.6166934967041016,
+  "elapsed_seconds": 6.204527387861162
+ },
+ {
+  "start": "2026-11-26 06:12:49 +0800",
+  "end": "2026-11-26 06:12:59 +0800",
+  "status": "fail",
+  "commit": "f5511a936e41a54275c8d476624ae709f22feb91",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-299",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E60.code.run",
+   "train",
+   "extractor_final",
+   "--seconds",
+   "13049"
+  ],
+  "entry": "runs.E60.code.run",
+  "config_file": "runs/E60/configs/extractor_final.toml",
+  "config": {
+   "method": "minima_splg",
+   "adapter": "splg",
+   "repo": "third_party/LightGlue",
+   "weights": "minima/minima_lightglue.pth",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "superpoint": {
+    "descriptor_dim": 256,
+    "nms_radius": 4,
+    "max_num_keypoints": 2048,
+    "detection_threshold": 0.0005,
+    "remove_borders": 4
+   },
+   "lightglue": {
+    "name": "lightglue",
+    "input_dim": 256,
+    "descriptor_dim": 256,
+    "add_scale_ori": false,
+    "n_layers": 9,
+    "num_heads": 4,
+    "flash": true,
+    "mp": false,
+    "depth_confidence": 0.95,
+    "width_confidence": 0.99,
+    "filter_threshold": 0.1,
+    "weights": null
+   },
+   "inference_affine_threshold_px": 3.0
+  },
+  "args": {
+   "source": {
+    "revision": "0666e62bf00569870bbcc1fe4b2e03976fc563f8",
+    "baseline": "configs/baselines/minima_splg.json"
+   },
+   "train": {
+    "seed": 0,
+    "epochs": 8,
+    "batch_size": 6,
+    "accumulation": 4,
+    "workers": 4,
+    "precision": "bf16-if-native-else-fp32",
+    "checkpoint_every": 50,
+    "observation_passes": [
+     1,
+     2,
+     4,
+     6,
+     8
+    ]
+   },
+   "optim": {
+    "lr": 0.001,
+    "final_lr": 1e-06,
+    "weight_decay": 1e-05
+   },
+   "signal": {
+    "min_candidates": 8,
+    "threshold_px": 3.0,
+    "min_keypoints": 16,
+    "background": -1e-07,
+    "inlier": 1.0,
+    "outlier": -0.1,
+    "keypoint_penalty": -7e-07,
+    "entropy_weight": 1e-06,
+    "descriptor_weight": 2.5,
+    "descriptor_margin": 0.2,
+    "descriptor_fallback_below": 8,
+    "ramp_fraction": 0.3333333333333333
+   }
+  },
+  "phase": "train",
+  "split": null,
+  "observation_pass": 8,
+  "data_root": "/remote-home/xufang/YGC/dataset/Moon",
+  "weight_files": {
+   "superpoint": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+   "minima": "/remote-home/xufang/YGC/weights/minima/minima_lightglue.pth",
+   "lightglue_before_minima_override": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_lightglue_v0-1_arxiv.pth"
+  },
+  "checkpoint_files": {},
+  "identity": {
+   "release": {
+    "superpoint": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+    "minima": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126",
+    "lightglue_before_minima_override": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a"
+   },
+   "revision": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+   "checkpoints": {}
+  },
+  "segment_seconds": 13049,
+  "error_type": "RuntimeError",
+  "error": "RIPE++ extractor batch has no pair with 16 sampled keypoints on both sides"
+ },
+ {
+  "start": "2026-11-26 06:18:52 +0800",
+  "end": "2026-11-26 06:19:02 +0800",
+  "status": "fail",
+  "commit": "a6b7503143fa0a5a5635cf07f4547e3b443631d7",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/moon-299",
+  "cuda_visible_devices": "0",
+  "cuda_device_order": "PCI_BUS_ID",
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "-m",
+   "runs.E60.code.run",
+   "preflight",
+   "extractor_final",
+   "--seconds",
+   "13049"
+  ],
+  "entry": "runs.E60.code.run",
+  "config_file": "runs/E60/configs/extractor_final.toml",
+  "config": {
+   "method": "minima_splg",
+   "adapter": "splg",
+   "repo": "third_party/LightGlue",
+   "weights": "minima/minima_lightglue.pth",
+   "params": {
+    "long_side": 640
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "p2p98"
+   },
+   "seed": 0,
+   "superpoint": {
+    "descriptor_dim": 256,
+    "nms_radius": 4,
+    "max_num_keypoints": 2048,
+    "detection_threshold": 0.0005,
+    "remove_borders": 4
+   },
+   "lightglue": {
+    "name": "lightglue",
+    "input_dim": 256,
+    "descriptor_dim": 256,
+    "add_scale_ori": false,
+    "n_layers": 9,
+    "num_heads": 4,
+    "flash": true,
+    "mp": false,
+    "depth_confidence": 0.95,
+    "width_confidence": 0.99,
+    "filter_threshold": 0.1,
+    "weights": null
+   },
+   "inference_affine_threshold_px": 3.0
+  },
+  "args": {
+   "source": {
+    "revision": "0666e62bf00569870bbcc1fe4b2e03976fc563f8",
+    "baseline": "configs/baselines/minima_splg.json"
+   },
+   "train": {
+    "seed": 0,
+    "epochs": 8,
+    "batch_size": 6,
+    "accumulation": 4,
+    "workers": 4,
+    "precision": "bf16-if-native-else-fp32",
+    "preflight_updates": 12,
+    "checkpoint_every": 50,
+    "observation_passes": [
+     1,
+     2,
+     4,
+     6,
+     8
+    ]
+   },
+   "optim": {
+    "lr": 0.0001,
+    "final_lr": 1e-06,
+    "weight_decay": 1e-05
+   },
+   "signal": {
+    "min_candidates": 8,
+    "threshold_px": 3.0,
+    "min_keypoints": 16,
+    "background": -1e-07,
+    "inlier": 1.0,
+    "outlier": -0.1,
+    "keypoint_penalty": -7e-07,
+    "entropy_weight": 1e-06,
+    "descriptor_weight": 2.5,
+    "descriptor_margin": 0.2,
+    "descriptor_fallback_below": 8,
+    "ramp_fraction": 0.3333333333333333
+   }
+  },
+  "phase": "preflight",
+  "split": null,
+  "observation_pass": 8,
+  "data_root": "/remote-home/xufang/YGC/dataset/Moon",
+  "weight_files": {
+   "superpoint": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_v1.pth",
+   "minima": "/remote-home/xufang/YGC/weights/minima/minima_lightglue.pth",
+   "lightglue_before_minima_override": "/remote-home/xufang/YGC/weights/supplement268_torch_home/hub/checkpoints/superpoint_lightglue_v0-1_arxiv.pth"
+  },
+  "checkpoint_files": {},
+  "identity": {
+   "release": {
+    "superpoint": "52b6708629640ca883673b5d5c097c4ddad37d8048b33f09c8ca0d69db12c40e",
+    "minima": "bd981be2f5e8cdab120bb0380d132bf7d2ec20cd61499f92f283660bf2f5b126",
+    "lightglue_before_minima_override": "6ff7040d0a497fc6639337946d7538dae07428c18f77a067a0b5a960e7cc551a"
+   },
+   "revision": "edb2b838efb2ecfe3f88097c5fad9887d95aedad",
+   "checkpoints": {}
+  },
+  "segment_seconds": 13049,
+  "error_type": "ExtractorBatchWithoutKeypoints",
+  "error": "RIPE++ extractor batch has no pair with 16 sampled keypoints on both sides"
+ }
+]

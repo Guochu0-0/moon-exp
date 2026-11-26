@@ -1,0 +1,72 @@
+[
+ {
+  "start": "2026-11-26 16:26:07 +0800",
+  "end": "2026-11-26 16:26:09 +0800",
+  "status": "ok",
+  "commit": "e5f82d1802b7c15796ae76fd9f95a634bd0ef701",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-301",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E61/code/report.py"
+  ],
+  "config_file": "configs/baselines/anymatch_roma__minmax.json",
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "evaluated_steps": 33,
+  "scheduled_steps": 33,
+  "training_steps": 7907
+ },
+ {
+  "start": "2026-11-26 16:28:09 +0800",
+  "end": "2026-11-26 16:28:11 +0800",
+  "status": "ok",
+  "commit": "38af44d74aa2a205b37c4989be604dff602cf220",
+  "dirty": false,
+  "allow_dirty": false,
+  "host": "afb5eacb8165",
+  "cwd": "/remote-home/xufang/YGC/wt/roma-rl-301",
+  "cuda_visible_devices": null,
+  "cuda_device_order": null,
+  "cmd": [
+   "/opt/envs/loftr/bin/python",
+   "runs/E61/code/report.py"
+  ],
+  "config_file": "configs/baselines/anymatch_roma__minmax.json",
+  "config": {
+   "method": "anymatch_roma__minmax",
+   "adapter": "romatch",
+   "repo": "third_party/AnyMatch/third_party/RoMa_AnyMatch",
+   "weights": "anymatch/RoMa_AnyMatch.pth",
+   "params": {
+    "long_side": 640,
+    "weights_key": "model"
+   },
+   "input": {
+    "optical": "div255",
+    "sar": "minmax"
+   },
+   "seed": 0
+  },
+  "evaluated_steps": 33,
+  "scheduled_steps": 33,
+  "training_steps": 7907
+ }
+]

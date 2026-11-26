@@ -12,7 +12,6 @@
 .cv .world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .cv .edges { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
 .cv .layer > * { position: absolute; }
-.cv .layer > .grp { z-index: -1; }   /* 分组框垫在连线和卡片下面 */
 
 /* 外框：左上标题与计数，右上操作条，右下小地图，左下快捷键 */
 .cv .title { position: absolute; left: 14px; top: 12px; z-index: 5; display: flex; align-items: baseline; gap: 12px; padding: 7px 14px; background: #1E1F23; border: 1px solid #2E3035; border-radius: 10px; }

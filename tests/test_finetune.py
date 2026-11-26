@@ -425,7 +425,7 @@ def test_training_update_budget_and_checkpoint(
                    f'sweep="last_test"\nrolling_checkpoint={str(rolling).lower()}\n'
                    f'[pseudo]\nlabels={json.dumps(str(labels_file))}\n')
     out = tmp_path / "out"
-    train.main([str(cfg), "--out", str(out), "--device", "cpu"])
+    train.main([str(cfg), "--out", str(out), "--device", "cpu", "--data", str(tmp_path)])
     logs = [json.loads(x) for x in (out / "log.jsonl").read_text().splitlines()]
     assert SkipFirst.calls == expected_calls
     assert [r["step"] for r in logs] == list(range(1, (halt_at or 3) + 1))

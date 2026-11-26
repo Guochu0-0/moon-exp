@@ -37,10 +37,12 @@ export function mountNodePage(root, { onBack }) {
   // ---------------- 选择 ----------------
   const multi = () => D.methods.length > 1;
   const cur = () => D.methods.find(m => m.id === S.method) || D.methods[0];
-  const refKey = () => S.ref === undefined ? cur().ref : S.ref;
+  const defaultRef = () => cur()?.refs?.[S.split] ?? null;
+  const refKey = () => S.ref === undefined ? defaultRef() : S.ref;
   const options = () => D.reference.groups.flatMap(g => g.options);
-  const refSplits = () => refKey() == null ? ['val', 'test'] : options().find(o => o.key === refKey())?.splits || [];
-  const splitOk = s => s in cur().results && refSplits().includes(s);
+  const splitOk = s => s in (cur()?.results || {});
+  const refAllowed = o => o.key == null || ((o.splits.includes(S.split) || o.data_version && o.data_version !== D.data_version && o.splits.length) &&
+    !(o.key === 'identity' && cur().results[S.split]?.metric));
   const SPLIT = () => S.split === 'val' ? 'Val' : 'Test';
 
   async function load(id) {
@@ -50,7 +52,7 @@ export function mountNodePage(root, { onBack }) {
     try {
       const d = await api.detail(id);
       if (my !== seq) return;
-      D = d; Object.assign(S, { method: d.methods[0]?.id ?? null, ref: undefined, split: 'val' });
+      D = d; Object.assign(S, { method: d.methods[0]?.id ?? null, ref: undefined, split: d.default_split });
       CMP = null; TB = null; VFIGS = 0;
       page();
       if (D.tb.length && !D.analysis) loadScalars(d.id);
@@ -62,15 +64,22 @@ export function mountNodePage(root, { onBack }) {
   }
 
   async function compare() {
-    if (!splitOk(S.split)) S.split = 'val';
     const my = ++seq, id = D.id;
+    if (!splitOk(S.split)) S.split = ['val', 'test'].find(splitOk) || D.default_split;
+    if (!splitOk(S.split)) {
+      CMP = { error: D.warnings.join('；') || '当前方法没有可用的逐对结果' };
+      info(); launch(); results(); visual(); train();
+      return;
+    }
+    if (S.ref && !options().some(o => o.key === S.ref && refAllowed(o))) S.ref = undefined;
+    let comparison;
     try {
-      CMP = await api.compare(`${id}/${cur().id}`, refKey(), S.split);
+      comparison = await api.compare(`${id}/${cur().id}`, refKey(), S.split);
     } catch (err) {
-      if (my !== seq) return;
-      CMP = { error: err.message };
+      comparison = { error: err.message };
     }
     if (my !== seq || D?.id !== id) return;
+    CMP = comparison;
     info(); launch(); results(); visual(); train();
   }
 
@@ -120,6 +129,7 @@ export function mountNodePage(root, { onBack }) {
     const p = D.parent, rows = [
       ['父实验', p ? link(p) : '无'],
       ...(D.analysis ? [] : [['起点方法', D.init ? `<span class="mono">${esc(D.init)}</span>` : '无']]),
+      ...(D.analysis ? [] : [['数据版本', `Moon-${esc(D.data_version)}`]]),
       ['子实验', D.children.length ? D.children.map(link).join('，') : '无'],
       ['状态', (D.lit ? '已点亮' : '未点亮') + (D.baseline ? '，基线' : '') + (D.analysis ? '，分析' : '')],
       ['日期', esc(D.date || '—')],
@@ -128,6 +138,7 @@ export function mountNodePage(root, { onBack }) {
     const scored = D.lit && !D.analysis;
     $('#sec-info .body').innerHTML = `<h1><span class="id">${esc(D.id)}</span>${esc(D.title)}</h1>
       <dl class="meta">${rows.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>
+      ${D.warnings.length ? `<p class="data-note" role="status">${D.warnings.map(esc).join('；')}</p>` : ''}
       ${scored ? settings() : ''}`;
     if (!scored) return;
     $('#selM')?.addEventListener('change', ev => pickMethod(ev.target.value));
@@ -135,17 +146,21 @@ export function mountNodePage(root, { onBack }) {
     root.querySelectorAll('.radio button').forEach(b => b.addEventListener('click', () => { S.split = b.dataset.split; compare(); }));
   }
   function settings() {
-    const m = cur(), def = m.ref, now = refKey(), me = `${D.id}/${m.id}`;
-    const opt = o => `<option value="${esc(o.key ?? '')}" ${o.key === now ? 'selected' : ''}>${esc(o.label)}${o.key === def ? '（默认）' : ''}</option>`;
+    const m = cur(), def = defaultRef(), now = refKey(), me = `${D.id}/${m.id}`;
+    const opt = o => {
+      const split = o.splits.includes(S.split) ? S.split : o.splits.includes(o.primary_split) ? o.primary_split : o.splits[0];
+      const scope = o.data_version ? `（Moon-${esc(o.data_version)} ${split === 'test' ? 'Test' : 'Val'}）` : '';
+      return `<option value="${esc(o.key ?? '')}" ${o.key === now ? 'selected' : ''}>${esc(o.label)}${scope}${o.key === def ? '（默认）' : ''}</option>`;
+    };
     const groups = D.reference.groups.map(g => {
-      const os = g.options.filter(o => o.key !== me);
+      const os = g.options.filter(o => o.key !== me && refAllowed(o));
       return os.length ? `<optgroup label="${esc(g.label)}">${os.map(opt).join('')}</optgroup>` : '';
     }).join('');
     const methodCtl = multi()
       ? `<label for="selM"><span class="key"></span>方法</label><select id="selM" class="me">${D.methods.map(x =>
           `<option value="${esc(x.id)}" ${x.id === m.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>`
       : `<span class="lbl"><span class="key"></span>方法</span>${esc(m.name === 'main' ? D.id : m.name)}`;
-    const radio = ['val', 'test'].map(s => `<button data-split="${s}" aria-pressed="${S.split === s}" ${splitOk(s) ? '' : 'disabled title="没有 Test 结果"'}>${s === 'val' ? 'Val' : 'Test'}</button>`).join('');
+    const radio = ['val', 'test'].map(s => `<button data-split="${s}" aria-pressed="${S.split === s}" ${splitOk(s) ? '' : 'disabled title="该划分没有可用结果"'}>${s === 'val' ? 'Val' : 'Test'}</button>`).join('');
     return `<div class="cmp">
       <span>${methodCtl}</span>
       <span><label for="selR"><span class="key ref"></span>参考方法</label><select id="selR">${groups}</select></span>
@@ -204,9 +219,26 @@ export function mountNodePage(root, { onBack }) {
     if (CMP.error) { body.innerHTML = `<p>读取比较结果失败：${esc(CMP.error)}</p>`; return; }
     const n = { tab: 0, fig: 0 };
     let h = S.split === 'test' ? '<p class="testflag block">以下为 Test 集上的结果。</p>' : '';
+    const m = cur(), reason = m.delta_reason?.[S.split], prev = m.unmatched_reference?.[S.split];
+    if (prev && prev.key !== CMP.ref?.key) {
+      const key = prev.metric ? 'inlier_mean' : D.delta_key;
+      const score = num(prev.summary[key]) ? `${pct(prev.summary[key])}%` : '—';
+      h += `<p class="data-note">${esc(prev.key)} 的 Moon-${esc(prev.data_version)} ${prev.split === 'test' ? 'Test' : 'Val'}
+        ${prev.metric ? '平均内点率' : 'AUC@10'} 为 ${score}。${esc(prev.reason)}。</p>`;
+    } else if (reason && !CMP.comparison_reason) {
+      h += `<p class="data-note">${esc(m.base)}：${esc(reason)}。</p>`;
+    }
+    if (CMP.comparison_reason) h += `<p class="data-note">${esc(CMP.comparison_reason)}，两边成绩分别显示。</p>`;
+    if (CMP.method.metric || CMP.ref?.metric) {
+      body.innerHTML = h + [CMP.method, CMP.ref].filter(Boolean).map(side =>
+        side.metric ? validationSummary(side) : registrationTable(n, side, null)).join('')
+        + (CMP.method.metric ? selectionTable(m.selection) : '');
+      FIGS = 0;
+      return;
+    }
     if (multi()) h += methodsTable(n);
     if (!multi() || CMP.ref) h += pairTable(n);
-    h += `<div class="figs">${cdfFigure(n)}${binFigure(n)}</div>`;
+    if (!CMP.comparison_reason) h += `<div class="figs">${cdfFigure(n)}${binFigure(n)}</div>`;
     body.innerHTML = h;
     FIGS = n.fig;
     body.querySelectorAll('tr.pick').forEach(tr => tr.addEventListener('click', () => pickMethod(tr.dataset.m)));
@@ -224,19 +256,44 @@ export function mountNodePage(root, { onBack }) {
       <tbody>${rows.map(m => { const v = m.results[s]?.summary || {};
         return `<tr class="pick ${m.id === cur().id ? 'on' : ''}" data-m="${esc(m.id)}" title="${esc(m.id)}"><td>${esc(m.name)}</td>
           ${cols.map(k => `<td>${pct(v[k])}${k === MAIN ? ci(v[k + '_ci']) : ''}</td>`).join('')}<td>${pct(v.fail_rate)}</td><td>${median(v)}</td>
-          ${withBase ? `<td>${signed(m.delta[s] * 100, a => a.toFixed(1))}</td>` : ''}</tr>`; }).join('')}</tbody></table></div>`;
+          ${withBase ? `<td title="${esc(m.delta_reason?.[s])}">${signed(m.delta[s] * 100, a => a.toFixed(1))}</td>` : ''}</tr>`; }).join('')}</tbody></table></div>`;
   }
   function pairTable(n) {
-    const P = D.protocol, a = CMP.method, b = CMP.ref, d = CMP.diff || {};
+    if (CMP.comparison_reason) {
+      return registrationTable(n, CMP.method, null) + registrationTable(n, CMP.ref, null);
+    }
+    return registrationTable(n, CMP.method, CMP.ref, CMP.diff);
+  }
+  function registrationTable(n, a, b, d = {}) {
+    const P = D.protocol;
     const rows = [...P.auc_thresholds.map(t => [`AUC@${t}`, `auc@${t}`, 'pct']), ...P.sr_thresholds.map(t => [`SR@${t}`, `sr@${t}`, 'pct']),
       ['失败率', 'fail_rate', 'pct'], ['误差中位数（px）', 'median', 'px']];
     const val = (sm, k, u) => u === 'px' ? median(sm) : pct(sm[k]);
-    const dv = (k, u) => u === 'px' ? signed(d[k], x => x.toFixed(2)) : signed(d[k] * 100, x => x.toFixed(1));
-    const dci = k => d[k + '_ci'] ? `<span class="ci">[${d[k + '_ci'].map(x => signed(x * 100, y => y.toFixed(1))).join(', ')}]</span>` : '';
-    return `<p class="caption"><b>表 ${++n.tab}</b>${esc(a.label)}${b ? ` 与参考方法 ${esc(b.label)}` : ''} 在 ${SPLIT()} 上的全部指标（n = <span class="num">${a.summary.n}</span> 个有标注 pair）。AUC、SR、失败率单位为 %；AUC 与 SR 后方括号内为 bootstrap 95% 置信区间${b ? '；差值 = 方法 − 参考方法，单位为百分点或 px，其置信区间由配对 bootstrap 得到' : ''}。</p>
+    const dv = (k, u) => u === 'px' ? signed(d?.[k], x => x.toFixed(2)) : signed(d?.[k] * 100, x => x.toFixed(1));
+    const dci = k => d?.[k + '_ci'] ? `<span class="ci">[${d[k + '_ci'].map(x => signed(x * 100, y => y.toFixed(1))).join(', ')}]</span>` : '';
+    return `<p class="caption"><b>表 ${++n.tab}</b>${esc(a.label)}${b ? ` 与参考方法 ${esc(b.label)}` : ''} 在 Moon-${esc(a.data_version)} ${a.split === 'test' ? 'Test' : 'Val'} 上的指标（n = <span class="num">${a.summary.n}</span> 个有标注 patch 对）。AUC、SR、失败率单位为 %；AUC 与 SR 后方括号内为 bootstrap 95% 置信区间${b ? '；差值 = 方法 − 参考方法，单位为百分点或 px，其置信区间由配对 bootstrap 得到' : ''}。</p>
       <table class="tab num"><thead><tr><th>指标</th><th>${esc(a.label)}</th>${b ? `<th>${esc(b.label)}</th><th>差值</th>` : ''}</tr></thead>
       <tbody>${rows.map(([nm, k, u]) => `<tr><td>${nm}</td><td class="me">${val(a.summary, k, u)}${ci(a.summary[k + '_ci'])}</td>
         ${b ? `<td class="ref">${val(b.summary, k, u)}${ci(b.summary[k + '_ci'])}</td><td>${dv(k, u)}${dci(k)}</td>` : ''}</tr>`).join('')}</tbody></table>`;
+  }
+
+  function validationSummary(side) {
+    const s = side.summary, missing = side.coverage.missing;
+    return `<h3>${esc(side.label)} · Moon-${esc(side.data_version)} 无标注 Val</h3>
+      <dl class="meta"><div><dt>平均内点率（%）</dt><dd>${pct(s.inlier_mean)}</dd></div>
+      <div><dt>内点率中位数（%）</dt><dd>${pct(s.inlier_median)}</dd></div>
+      <div><dt>patch 对</dt><dd>${s.n}</dd></div><div><dt>拟合失败</dt><dd>${s.fit_failures}</dd></div>
+      <div><dt>未跑到</dt><dd>${missing}</dd></div><div><dt>执行错误</dt><dd>${s.execution_errors}</dd></div></dl>`;
+  }
+
+  function selectionTable(selection) {
+    if (!selection) return '<p class="muted">暂无选权重记录。</p>';
+    return `<h3>Checkpoint 选择</h3>
+      <p>按逐对等权平均内点率选峰值。选中 ${selection.step == null ? '—' : `step ${esc(selection.step)}`}。</p>
+      <table class="tab num"><thead><tr><th>步数</th><th>平均内点率（%）</th><th>中位数（%）</th><th>状态</th></tr></thead>
+      <tbody>${selection.candidates.map(c => `<tr><td>${esc(c.step)}</td><td>${pct(c.summary?.inlier_mean)}</td>
+        <td>${pct(c.summary?.inlier_median)}</td><td>${c.step === selection.step ? '选中' : c.summary?.inlier_mean != null ? '完成' :
+          c.error ? `<span title="${esc(c.error)}">执行失败</span>` : `漏跑 ${c.coverage?.missing ?? 0}，执行错误 ${c.summary?.execution_errors ?? 0}`}</td></tr>`).join('')}</tbody></table>`;
   }
 
   // ---------------- 可视化结果 ----------------

@@ -10,6 +10,8 @@ import math
 
 import numpy as np
 
+RANSAC_PX = 3.0
+
 # ---- 档位（#9 锁定） ----
 AUC_THRESHOLDS = (3.0, 5.0, 10.0, 20.0)       # 全部计算、落盘
 SR_THRESHOLDS = (1.0, 2.0, 3.0, 5.0, 10.0, 20.0)

@@ -70,7 +70,7 @@ RUN = {
     "halt_window": 50,      # 提前停的滑动窗口（日志里有这个量的步数）
     "ddp": 0,               # 单机多卡数据并行的卡数（#226，由 torchrun 起这么多个进程，见 finetune/train.py）；0 = 单卡
 }
-SELECT = ("val_peak", "last")
+SELECT = ("val_peak", "last", "val_inlier_mean")
 SWEEP = ("all", "last", "last_test")
 SPLITS = ("train", "val", "test")
 TOP = ("base", "model", "optim", "run")

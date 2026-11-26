@@ -51,6 +51,7 @@ import numpy as np
 import torch
 
 from baselines.match import env_info, git_head, seed_all, sha256
+from moonlib.data_version import LEGACY, experiment_version, required_root
 from workbench.launch import require_clean
 from workbench.tbwriter import ScalarWriter
 
@@ -169,7 +170,7 @@ def main(argv=None):
     ap.add_argument("config", help="runs/<id>/configs/<方法>.toml")
     ap.add_argument("--out", required=True)
     ap.add_argument("--tb", help="TB 标量目录（runs/<id>/tb/<方法>/scalars）；不给则只写 log.jsonl")
-    ap.add_argument("--data", default=os.environ.get("MOON_DATA"))
+    ap.add_argument("--data", help="覆盖本机的实验数据根")
     ap.add_argument("--weights-root", default=os.environ.get("MOON_WEIGHTS", ""))
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--stop-at", type=int, default=0, help="只跑前 N 步（核对用），lr 调度不变")
@@ -182,6 +183,11 @@ def main(argv=None):
         cfg["run"]["resume"] = args.resume
         cfg = C.expand(cfg)
     o, r, mname = cfg["optim"], cfg["run"], cfg["model"]["name"]
+    config_dir = Path(args.config).resolve().parent
+    version = experiment_version(config_dir.parent) if config_dir.name == "configs" else LEGACY
+    data_root = required_root(version, args.data)
+    if version != LEGACY and r["split"] != "train":
+        ap.error("Moon-v2 仅使用 Train 训练")
     batch_transport = os.environ.get("MOON_BATCH_TRANSPORT", "shared_memory")
     if batch_transport not in ("shared_memory", "pipe"):
         ap.error("MOON_BATCH_TRANSPORT must be shared_memory or pipe")
@@ -203,7 +209,7 @@ def main(argv=None):
     kw = {}
     for n in names:
         kw.update(PARTS[n].data_kw(cfg[n]))
-    ds = PairSet(args.data, r["split"], model.resize, **model.input, seed=r["seed"],
+    ds = PairSet(data_root, r["split"], model.resize, **model.input, seed=r["seed"],
                  resize_hi=getattr(model, "resize_hi", None), **kw)
     terms = [(n, PARTS[n].Term(cfg[n], model, ds)) for n in names if PARTS[n].Term is not None]
     if r["limit"]:
@@ -230,7 +236,7 @@ def main(argv=None):
             hashes = {name: {"path": str(p.resolve()), "sha256": sha256(p)} for name, p in files.items()}
         (out / "args.json").write_text(json.dumps(
             {"config": cfg, "source": str(args.config), "infer_config": model.infer_cfg, "weights": model.weights,
-             "source_hashes": hashes, "batch_transport": batch_transport,
+             "source_hashes": hashes, "batch_transport": batch_transport, "data_version": version,
              "n_train": len(ds), "n_params": sum(p.numel() for p in model.params), "commit": git_head(REPO),
              "env": env_info(), "world": D.world()}, ensure_ascii=False, indent=1), encoding="utf-8")
     if r["save_zero"] and main_:

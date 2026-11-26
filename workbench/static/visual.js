@@ -37,7 +37,7 @@ const errTxt = e => e == null ? '失败' : e.toFixed(1);
 const order = (x, y) => x < y ? -1 : x > y ? 1 : 0;
 const pad = n => String(n).padStart(4, '0');
 // perturb：难版评测的扰动变体（<实验>/<变体>），SAR 底图套上它的已知 T，与 /api/pair 给出的检查点同一坐标系
-const img = (split, pair, kind, perturb) => `/img?${new URLSearchParams({ split, pair, kind, ...(kind === 'sar' && perturb ? { perturb } : {}) })}`;
+const imageURL = (exp, split, pair, kind, perturb) => `/img?${new URLSearchParams({ exp, split, pair, kind, ...(kind === 'sar' && perturb ? { perturb } : {}) })}`;
 const f2 = v => +v.toFixed(2);
 
 // 仿射 A（光学 → SAR）的逆，写成 SVG matrix(a b c d e f)：把 SAR 坐标摆回光学坐标
@@ -102,12 +102,18 @@ export function mountVisual(isShown) {
     view: prev?.view || 'swipe', swipe: prev?.swipe ?? 50, vb: null, vbl: null, conf: 0, find: '', alpha: prev?.alpha ?? 60, iv: null });
   const $ = s => host.querySelector(s);
   const SPLIT = () => C.split === 'val' ? 'Val' : 'Test';
+  const unlabelled = () => Array.isArray(C.method.inlier_rates);
+  const pairedRef = () => C.comparison_reason ? null : C.ref;
+  const img = (split, pair, kind, perturb) => imageURL(C.method.key.split('/')[0], split, pair, kind, perturb);
+  const rateText = rate => rate == null ? '未完成' : `${(rate * 100).toFixed(1)}%`;
 
   function pairData(pair, points) {
     const k = `${ctxKey}|${pair}|${points}`;
     if (!cache.has(k)) {
-      const p = api.pair(C.method.key, C.ref?.key, C.split, pair, points);
-      p.catch(() => cache.delete(k));
+      const p = api.pair(C.method.key, pairedRef()?.key, C.split, pair, points);
+      p.then(d => {
+        if ([d.method, d.ref].some(s => s?.matches?.state === 'out_of_sync')) cache.delete(k);
+      }, () => cache.delete(k));
       cache.set(k, p);
     }
     return cache.get(k);
@@ -115,14 +121,17 @@ export function mountVisual(isShown) {
 
   // ---------------- 列表：分类、筛选、排序 ----------------
   function info() {
-    const eM = C.method.errors, eR = C.ref?.errors || null, n = C.pairs.length, idx = [...Array(n).keys()];
+    const eM = unlabelled() ? C.method.inlier_rates : C.method.errors;
+    const eR = unlabelled() ? null : pairedRef()?.errors || null;
+    const idx = [...C.pairs.keys()], n = idx.length;
     const cap = v => Math.min(fin(v), CAP);
     const cat = eR && (i => {
       const a = fin(eM[i]) <= GOOD, b = fin(eR[i]) <= GOOD;
       return a && !b ? 'better' : !a && b ? 'worse' : a ? 'both' : 'neither';
     });
     const count = cat && Object.fromEntries(CATS.map(([c]) => [c, c === 'all' ? n : idx.filter(i => cat(i) === c).length]));
-    const key = { gain: i => cap(eM[i]) - cap(eR[i]), loss: i => cap(eR[i]) - cap(eM[i]), me: i => -fin(eM[i]), no: i => C.no[i] }[V.sort];
+    const key = { gain: i => cap(eM[i]) - cap(eR[i]), loss: i => cap(eR[i]) - cap(eM[i]),
+      me: i => unlabelled() ? -(eM[i] ?? -1) : -fin(eM[i]), no: i => C.no[i] }[V.sort];
     const list = idx.filter(i => !cat || V.filter === 'all' || cat(i) === V.filter)
       .sort((a, b) => order(key(a), key(b)) || C.no[a] - C.no[b]);
     return { eM, eR, cat, count, list };
@@ -131,9 +140,12 @@ export function mountVisual(isShown) {
   // ---------------- 渲染 ----------------
   function render(el, cmp, fig) {
     host = el; C = cmp; FIG = fig;
-    const k = `${cmp.method.key}|${cmp.ref?.key ?? ''}|${cmp.split}`;
-    if (k !== ctxKey) { ctxKey = k; V = fresh(V, cmp.ref); cache.clear(); }
-    if (!C.pairs.length) { host.innerHTML = `<p>${SPLIT()} 上没有有标注 pair。</p>`; return FIG; }
+    const k = `${cmp.method.key}|${pairedRef()?.key ?? ''}|${cmp.split}|${cmp.method.data_version}`;
+    if (k !== ctxKey) {
+      ctxKey = k; V = fresh(V, !unlabelled() && pairedRef()); cache.clear();
+      if (unlabelled() && V.view === 'resid') V.view = 'raw';
+    }
+    if (!C.pairs.length) { host.innerHTML = `<p>${SPLIT()} 上没有可展示的 patch 对。</p>`; return FIG; }
     draw();
     return V.detailFig;   // 本节用到的最后一个图号，供后面的章节接着编
   }
@@ -143,7 +155,9 @@ export function mountVisual(isShown) {
     if (!C.pairs.includes(V.sel)) V.sel = I.list.length ? C.pairs[I.list[0]] : null;
     const n = { fig: FIG };
     const flag = C.split === 'test' ? '<p class="testflag block">以下为 Test 集上的逐对结果。</p>' : '';
-    const cap = `<p class="caption">缩略图为 ${esc(C.method.label)} 的残差图（光学原图上的检查点与原尺寸残差箭头）；数字为方法误差${I.eR ? ` / 参考方法 ${esc(C.ref.label)} 的误差` : ''}（px）。${I.eR ? `改善、退化以 ${GOOD} px 为界。` : ''}点击缩略图在下方查看详情。</p>`;
+    const cap = unlabelled()
+      ? '<p class="caption">数字为每个 patch 对的 RANSAC 内点率。点击缩略图查看影像、拟合结果和点对。</p>'
+      : `<p class="caption">缩略图为 ${esc(C.method.label)} 的残差图（光学原图上的检查点与原尺寸残差箭头）；数字为方法误差${I.eR ? ` / 参考方法 ${esc(C.ref.label)} 的误差` : ''}（px）。${I.eR ? `改善、退化以 ${GOOD} px 为界。` : ''}点击缩略图在下方查看详情。</p>`;
     const side = `<div>${controls(I)}<div class="grid"></div><div class="more"></div></div>`;
     host.innerHTML = flag + cap + (I.eR
       ? `<div class="vr-top"><figure class="sc-fig"><div class="sc"></div><p class="caption figcap"><b>图 ${++n.fig}</b>每个点为一个有标注 pair，横轴为参考方法误差，纵轴为方法误差；虚线为 y = x，细线为 ${GOOD} px。灰色边缘带内的点误差大于 ${EDGE} px 或估计失败，带内位置只为错开显示，不代表数值。深色点属于当前筛选。</p></figure>${side}</div>`
@@ -157,7 +171,7 @@ export function mountVisual(isShown) {
   function controls(I) {
     const chips = I.eR ? `<span><span class="lbl">筛选</span><span class="chips" role="group" aria-label="筛选">${CATS.map(([id, t]) =>
       `<button data-f="${id}" aria-pressed="${V.filter === id}">${t} <span class="num">${I.count[id]}</span></button>`).join('')}</span></span>` : '';
-    const sorts = I.eR ? SORTS_REF : SORTS_NOREF;
+    const sorts = unlabelled() ? [['me', '内点率高在前'], ['no', '编号']] : I.eR ? SORTS_REF : SORTS_NOREF;
     return `<div class="vr-ctl">${chips}
       <span><label for="vsort">排序</label><select id="vsort">${sorts.map(([v, t]) => `<option value="${v}" ${V.sort === v ? 'selected' : ''}>${t}</option>`).join('')}</select></span>
       <span class="find"><label for="vfind">查找编号</label><input id="vfind" class="num" size="7" placeholder="如 12" value="${esc(V.find)}"><button id="vgo">查找</button><span class="msg" role="status"></span></span></div>`;
@@ -178,7 +192,7 @@ export function mountVisual(isShown) {
     V.find = text.trim();
     const t = V.find.replace(/^#/, ''), msg = $('.vr-ctl .msg');
     const i = /^\d+$/.test(t) ? C.no.indexOf(+t) : C.pairs.indexOf(t);
-    if (i < 0) { msg.textContent = `${SPLIT()} 中没有编号为 ${t} 的有标注 pair`; return; }
+    if (i < 0) { msg.textContent = `${SPLIT()} 中找不到 ${t}`; return; }
     msg.textContent = info().list.includes(i) ? '' : '不在当前筛选中';
     select(C.pairs[i], { scroll: true });
   }
@@ -209,7 +223,7 @@ export function mountVisual(isShown) {
     if (I.eR) redrawScatter(I);
     const shown = I.list.slice(0, V.n);
     $('.grid').innerHTML = shown.map(i => `<button class="th" data-pair="${esc(C.pairs[i])}" aria-current="${C.pairs[i] === V.sel}">
-      <div class="im"></div><div class="cap num"><span>#${pad(C.no[i])}</span><span>${errTxt(I.eM[i])}${I.eR ? ` / ${errTxt(I.eR[i])}` : ''}</span></div></button>`).join('')
+      <div class="im"></div><div class="cap num"><span>#${pad(C.no[i])}</span><span>${unlabelled() ? rateText(I.eM[i]) : errTxt(I.eM[i])}${I.eR ? ` / ${errTxt(I.eR[i])}` : ''}</span></div></button>`).join('')
       || '<p class="muted">当前筛选下没有 pair。</p>';
     $('.more').innerHTML = `<span class="muted num">${shown.length ? `显示第 1–${shown.length} 个，` : ''}共 ${I.list.length} 个</span>${I.list.length > V.n ? `<button>再显示 ${PAGE} 个</button>` : ''}`;
     $('.more button')?.addEventListener('click', () => { V.n += PAGE; drawList(info()); });
@@ -308,21 +322,27 @@ export function mountVisual(isShown) {
     if (!hasPts && isPointView(V.view)) V.view = 'swipe';
     const inters = [...new Map(sides.flatMap(s => s.inter || []).map(x => [x.name, x])).values()];
     if (interName(V.view) != null && !inters.some(x => x.name === interName(V.view))) V.view = 'swipe';
-    const views = [...VIEWS, ...(hasPts ? POINT_VIEWS : [])];
+    const views = [...VIEWS.filter(([v]) => v !== 'resid' || !unlabelled()), ...(hasPts ? POINT_VIEWS : [])];
     if (interName(V.view) != null) { interBody(el, sides, views, inters); return; }
     const point = isPointView(V.view);
     const missing = sides.filter(s => s.matches?.state === 'not_synced');
-    const cmds = [...new Set(missing.map(s => s.matches.sync))];
-    const cmd = cmds.length > 1 ? `python -m workbench sync ${[...new Set(missing.map(s => s.exp))].join(' ')}` : cmds[0];
-    const hint = cmd ? `<p class="synchint">本地没有 ${missing.map(s => esc(s.exp)).filter((x, j, a) => a.indexOf(x) === j).join('、')} 的点对，拉回后可看点对视图：<code>${esc(cmd)}</code><button class="copy" data-cmd="${esc(cmd)}">复制</button></p>` : '';
+    const stale = sides.filter(s => s.matches?.state === 'out_of_sync');
+    const ids = ss => [...new Set(ss.map(s => s.exp))];
+    const pending = ids([...missing, ...stale]);
+    const cmd = pending.length ? `python -m workbench sync ${pending.join(' ')}` : '';
+    const status = [missing.length && `本地没有 ${esc(ids(missing).join('、'))} 的点对`,
+      stale.length && `${esc(ids(stale).join('、'))} 的点对与预测记录不同步`].filter(Boolean).join('。');
+    const hint = cmd ? `<p class="synchint">${status}。同步后可看点对视图 <code>${esc(cmd)}</code><button class="copy" data-cmd="${esc(cmd)}">复制</button></p>` : '';
     const withConf = point ? sides.filter(s => s.matches?.state === 'ok' && s.matches.conf) : [];
     const flat = withConf.map(s => flatConf(s.matches));
     const flatNote = withConf.length && flat.every(v => v != null)
       ? `<span class="muted">conf 全部为 ${[...new Set(flat)].join(' / ')}，按分位数过滤不起作用</span>` : '';
     const caveats = point ? sides.filter(s => s.caveat).map(s => `<p class="caveat">${esc(s.label)}：${esc(s.caveat)}</p>`).join('') : '';
+    const sideLabel = s => unlabelled() ? `内点率 ${rateText(s.inlier_rate)}${s.fail ? `（${esc(s.fail)}）` : ''}`
+      : s.A ? `误差 ${errTxt(s.error)} px` : `估计失败（${esc(s.fail)}）`;
     const panes = V.view === 'raw'
       ? pane(d, null, '光学', '', 'opt') + pane(d, null, 'SAR', '', 'sar')
-      : sides.map(s => pane(d, s, esc(s.label), s.A ? `误差 ${errTxt(s.error)} px` : `估计失败（${esc(s.fail)}）`, V.view)).join('');
+      : sides.map(s => pane(d, s, esc(s.label), sideLabel(s), V.view)).join('');
     const cap = {
       swipe: '左侧为光学，右侧为按估计仿射变换到光学坐标系的 SAR；拖动下方滑杆改变分界位置。估计失败的一侧只显示光学原图。',
       resid: '光学原图上标出检查点（黄圈）与残差：红色箭头从检查点指向其 SAR 真值经估计仿射变回光学坐标后的位置，按原尺寸绘制。',
@@ -453,6 +473,7 @@ export function mountVisual(isShown) {
       const mt = s.matches;
       if (!mt) msg = '未配准没有点对';
       else if (mt.state === 'not_synced') msg = '本地没有点对';
+      else if (mt.state === 'out_of_sync') msg = '点对与预测记录不同步';
       else if (mt.state === 'absent') msg = '没有点对（该 pair 出错）';
       else if (!mt.n) msg = '0 个点';
     }

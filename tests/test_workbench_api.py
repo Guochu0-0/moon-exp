@@ -1,11 +1,13 @@
 """工作台 v2 的 HTTP JSON API：画布摘要与实验编辑。临时 runs/ + 合成数据集，经真实 HTTP 读写，再看磁盘。"""
 import json
+import shutil
 import threading
 import tomllib
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
 
+import numpy as np
 import pytest
 
 from test_workbench import A_TRUE, dataset, write_exp  # noqa: F401 — dataset 是 fixture
@@ -53,7 +55,7 @@ def runs(tmp_path):
 @pytest.fixture
 def api(runs, dataset, tmp_path):
     runs.mkdir(exist_ok=True)
-    wb = server.Workbench(runs, dataset, tmp_path)
+    wb = server.Workbench(runs, dataset, tmp_path, ds_v2=server.Dataset(tmp_path / "moon-v2"))
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.make_handler(wb))
     t = threading.Thread(target=httpd.serve_forever, daemon=True)
     t.start()
@@ -104,6 +106,7 @@ def test_create_writes_toml_and_shows_unlit_with_default_position(api, runs):
     assert code == 200 and r["id"] == "E2"                               # 自动建议下一个 E<n>
     t = toml(runs, "E2")
     assert t["id"] == "E2" and t["title"] == "想法" and len(t["date"]) == 10 and "parent" not in t
+    assert t["data_version"] == "v2"
     e2 = api.exps()["E2"]
     assert not e2["lit"] and isinstance(e2["x"], (int, float))
     assert canvas(runs)["experiments"]["E2"] == {"x": e2["x"], "y": e2["y"]}
@@ -112,6 +115,128 @@ def test_create_writes_toml_and_shows_unlit_with_default_position(api, runs):
     assert code == 200 and canvas(runs)["experiments"]["E9"] == {"x": 12, "y": -30}
     assert api.post("/api/exp", {"id": "E9"})[0] == 400                  # 已存在
     assert api.post("/api/exp", {"id": "../x"})[0] == 400                # 非法编号
+    assert api.post("/api/exp", {"id": "E10", "data_version": "v1"})[0] == 200
+    assert toml(runs, "E10")["data_version"] == "v1"
+
+
+def test_two_data_versions_share_canvas_and_use_their_own_evaluation(api, runs, dataset, tmp_path):
+    from workbench.__main__ import main
+
+    root = tmp_path / "moon-v2"
+    shutil.copytree(dataset.root / "Test", root / "Test")
+    roi = dataset.pairs("val")[0].split("/")[0]
+    shutil.copytree(dataset.root / "Val" / roi, root / "Val" / "ROI_001",
+                    ignore=shutil.ignore_patterns("Label"))
+    shutil.copytree(dataset.root / "Val" / roi, root / "Test" / "ROI_035")
+    ds2 = server.Dataset(root)
+    write_exp(runs, "E1")
+    write_exp(runs, "E2", 'parent = "E1"\ndata_version = "v2"\n')
+    for s in ("val", "test"):
+        light(runs, dataset, "E1", "main", s)
+    provenance = {"data_version": "v2", "step": 20, "weights_sha256": "test-checkpoint"}
+    with PredWriter(runs / "E2", "main", "test", repo=runs, provenance=provenance) as w:
+        for pair in ds2.pairs("test"):
+            w.write(pair, A_TRUE)
+    with PredWriter(runs / "E2", "main", "val", repo=runs, provenance=provenance) as w:
+        for pair in ds2.pairs("val"):
+            w.write(pair, None, fail="few_matches", n_matches=0)
+    peak = runs / "E2/sweep/main/peak.json"
+    peak.parent.mkdir(parents=True)
+    peak.write_text(json.dumps({**provenance, "metric": "val_inlier_mean",
+                                "candidates": [{"step": 20, "summary": {"inlier_mean": 0}}]}))
+    test_preds = runs / "E2/preds/main/test.jsonl"
+    test_preds.write_bytes(test_preds.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+
+    cards = api.exps()
+    assert cards["E2"]["parent"] == "E1"
+    assert cards["E1"]["metric"]["split"] == "val" and cards["E2"]["metric"]["split"] == "test"
+    assert cards["E1"]["methods"][0]["auc"] == cards["E2"]["methods"][0]["auc"] == 1
+
+    status, detail = api.get("/api/exp/E2")
+    assert status == 200 and detail["default_split"] == "test"
+    method = detail["methods"][0]
+    assert method["selection"]["step"] == 20
+    assert method["delta"] == {} and method["delta_reason"]["test"]
+    assert method["refs"]["test"] != "E1/main"
+    status, comparison = api.get("/api/compare?method=E2/main&ref=E1/main")
+    assert status == 200 and comparison["split"] == "test"
+    assert comparison["diff"] is None and comparison["comparison_reason"]
+    assert comparison["method"]["summary"]["n"] > comparison["ref"]["summary"]["n"]
+    assert method["unmatched_reference"]["test"]["key"] == "E1/main"
+
+    status, val = api.get("/api/compare?method=E2/main&split=val")
+    assert status == 200 and val["method"]["inlier_rates"] == [0] * len(ds2.pairs("val"))
+    pair = ds2.pairs("val")[0]
+    assert api.get(f"/api/pair?method=E2/main&split=val&pair={pair}")[1]["checkpoints"] is None
+    with urllib.request.urlopen(f"{api.base}/img?exp=E2&split=val&kind=opt&pair={pair}") as response:
+        assert response.read().startswith(b"\x89PNG")
+    pair = ds2.pairs("test")[-1]
+    with urllib.request.urlopen(f"{api.base}/img?exp=E2&split=test&kind=sar&pair={pair}") as response:
+        assert response.read().startswith(b"\x89PNG")
+
+    main(["--runs", str(runs), "--data", str(dataset.root), "--data-v2", str(root), "eval", "E1", "E2"])
+    old, new = [json.loads((runs / rid / "metrics.json").read_text())["methods"]["main"] for rid in ("E1", "E2")]
+    assert old["val"]["summary"]["auc@10"] == 1
+    assert new["val"]["summary"]["inlier_mean"] == 0
+    assert new["test"]["summary"]["n"] == comparison["method"]["summary"]["n"]
+
+    (runs / "E1/preds/main/test.jsonl").unlink()
+    _, cross_split = api.get("/api/compare?method=E2/main&ref=E1/main")
+    assert cross_split["ref"]["split"] == "val"
+    assert cross_split["diff"] is None and cross_split["comparison_reason"]
+    _, detail = api.get("/api/exp/E2")
+    assert detail["methods"][0]["unmatched_reference"]["test"]["split"] == "val"
+
+    test_preds.write_bytes(test_preds.read_bytes().replace(b'"A":', b'"changed":'))
+    assert api.get(f"/api/pair?method=E2/main&split=test&pair={pair}")[0] == 400
+
+    shutil.move(str(root / "Test"), str(root / "Test-unavailable"))
+    cards = api.exps()
+    assert cards["E1"]["methods"][0]["auc"] == 1
+    assert cards["E2"]["methods"][0]["auc"] is None
+    warning = cards["E2"]["warnings"][0]
+    assert "Moon-v2 Test" in warning and "MOON_DATA_V2" in warning
+    assert api.get("/api/exp/E2")[1]["warnings"] == [warning]
+
+
+def test_versioned_point_pairs_follow_prediction_metadata(api, runs, dataset, tmp_path):
+    shutil.copytree(dataset.root / "Test", tmp_path / "moon-v2" / "Test")
+    write_exp(runs, "E1", 'data_version = "v2"\n')
+    pair = dataset.labelled("test")[0]
+    with PredWriter(runs / "E1", "main", "test", repo=runs) as w:
+        w.write(pair, A_TRUE, matches=[[1, 2, 3, 4, 0.5]])
+    path = f"/api/pair?method=E1/main&split=test&pair={pair}"
+    matches = runs / "E1/preds/main/test_matches.npz"
+    original = matches.read_bytes()
+    status, d = api.get(path)
+    assert status == 200 and d["method"]["matches"]["opt"] == [[1.5, 2.5]]
+
+    np.savez_compressed(matches, **{pair.replace("/", "__"): np.array([[9, 8, 7, 6, 0.5]], dtype=np.float32)})
+    status, d = api.get(path)
+    assert status == 200 and d["method"]["A"] == A_TRUE
+    assert d["method"]["matches"] == {"state": "out_of_sync", "sync": "python -m workbench sync E1"}
+    matches.write_bytes(original)
+    assert api.get(path)[1]["method"]["matches"]["opt"] == [[1.5, 2.5]]
+
+    meta_path = runs / "E1/preds/main/test.meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta_path.write_text(json.dumps({**meta, "matches_sha256": "0" * 64}), encoding="utf-8")
+    assert api.get(path)[1]["method"]["matches"]["state"] == "out_of_sync"
+    del meta["matches_sha256"]
+    meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    assert api.get(path)[1]["method"]["matches"]["opt"] == [[1.5, 2.5]]
+
+
+@pytest.mark.parametrize("raw, label", [('"unknown"', "unknown"), ("2026-11-26", "2026-11-26")])
+def test_invalid_data_version_leaves_other_nodes_usable(api, runs, dataset, raw, label):
+    write_exp(runs, "E1")
+    write_exp(runs, "E2", f"data_version = {raw}\n")
+    light(runs, dataset, "E1", "main")
+    cards = api.exps()
+    assert cards["E1"]["methods"][0]["auc"] == 1
+    assert "data_version" in cards["E2"]["warnings"][0]
+    status, detail = api.get("/api/exp/E2")
+    assert status == 200 and cards["E2"]["data_version"] == detail["data_version"] == label
 
 
 def test_derive_places_right_of_parent_and_siblings_downward(api, runs, dataset):

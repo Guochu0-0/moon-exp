@@ -1,0 +1,4 @@
+base = "c16_f8"
+
+[run]
+seed = 1

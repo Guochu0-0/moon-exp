@@ -1,0 +1,15 @@
+{
+  "commit": "59c29a42681a17f244795c002d0add5159e04781",
+  "dirty": false,
+  "host": "afb5eacb8165",
+  "written": "2026-11-28 05:23:14 +0800",
+  "data_version": "v2",
+  "split": "val",
+  "manifest_sha256": "14d35551214267f86201caad19afbe66a6abf4e910bd908a5b72fa60dc7e7c7c",
+  "ransac_px": 3.0,
+  "config_sha256": "17ce546c4e4939f7cf3a9d5f459faa84eaa7eef0d2b0c99aa78b1aff6f7a57fb",
+  "weights_sha256": "ee9cb986e9e6cfa1048044d302711b0bdd4585dd5daf034f7db1a849109d2b1a",
+  "step": 7000,
+  "prediction_sha256": "31d70759f00298fb207447c81a492944847fcebe3efbc1c590c2ef9b36ce506e",
+  "matches_sha256": "e73aa801da2ba65810ae7b7d90f824ae2ef372d88c78200f05f7f6feb597681d"
+}

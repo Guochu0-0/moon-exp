@@ -1,0 +1,53 @@
+# E55 k5_no_bce 的训练配方，使用 #310 规定的 Moon-v2 训练步数与选权重协议。
+[model]
+name = "roma"
+lora_r = 8
+train_vgg = true
+refine_lr = 0.47
+vgg_lr = 0.47
+lora_lr = 4e-4
+
+[optim]
+steps = 8000
+batch = 1
+lr = 2e-4
+warmup = 125
+sched = "const"
+
+[aug]
+shift = 128.0
+shift_disk = true
+rot = 20.0
+scale = 0.2
+photo = false
+erase = true
+
+[rloo]
+reward = "ref"
+baseline = "loo"
+temp = 0.3
+shape = "gauss"
+delta = 8.0
+frame_mask = true
+cert_bce = 0.0
+fine_shape = "cauchy"
+levels = [16, 8, 4, 2, 1]
+k = 0.5
+fine_mode = "local"
+fine_mask = true
+fine_cert_bce = 0.0
+fine_w = 4.2
+ref_ema = 0.996
+screen = 0.8
+
+[run]
+seed = 0
+ddp = 4
+split = "train"
+save_every = 250
+save_zero = false
+sweep = "all"
+select = "val_inlier_mean"
+halt_above = {d_ref = 100.0}
+halt_below = {in_frame = 0.5}
+halt_window = 200
